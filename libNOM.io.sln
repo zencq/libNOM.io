@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libNOM.io", "libNOM.io\libNOM.io.csproj", "{1CF4755B-FC89-4FF3-AA4D-2C1FFF7D9AE5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libNOM.test", "libNOM.test\libNOM.test.csproj", "{88D38F91-BD66-480E-849E-8C604307E661}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1CF4755B-FC89-4FF3-AA4D-2C1FFF7D9AE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CF4755B-FC89-4FF3-AA4D-2C1FFF7D9AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CF4755B-FC89-4FF3-AA4D-2C1FFF7D9AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CF4755B-FC89-4FF3-AA4D-2C1FFF7D9AE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88D38F91-BD66-480E-849E-8C604307E661}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D38F91-BD66-480E-849E-8C604307E661}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88D38F91-BD66-480E-849E-8C604307E661}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88D38F91-BD66-480E-849E-8C604307E661}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C13D583C-8F92-4A59-AB9D-4327E84EFF15}
+	EndGlobalSection
+EndGlobal

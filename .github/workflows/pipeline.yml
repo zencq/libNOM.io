@@ -1,0 +1,74 @@
+name: libNOM.io
+
+on:
+  push
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    env:
+      libNOMmap: '0.7.0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Replace
+        uses: jacobtomlinson/gha-find-replace@v2
+        with:
+          find: "#{STEAM_API_KEY}#"
+          replace: ${{ secrets.STEAM_API_KEY }}
+          include: "libNOM.io/Properties/**"
+          regex: false
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '6.0.x'
+      # TODO: Remove when pushing libNOM.map to nuget.org
+      - name: Download libNOM.map
+        uses: Legion2/download-release-action@v2.1.0
+        with:
+          repository: zencq/libNOM.map
+          tag: ${{ env.libNOMmap }}
+          path: nupkg
+          file: libNOM.map.${{ env.libNOMmap }}.nupkg
+      # TODO: Update when pushing libNOM.map to nuget.org
+      - name: Dependencies
+        run: dotnet restore -s ./nupkg -s https://api.nuget.org/v3/index.json
+      - name: Unit Test
+        run: dotnet test libNOM.test --no-restore --configuration Debug --framework net6.0
+      - name: Pack
+        run: dotnet pack libNOM.io --no-restore --configuration Release
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: libNOM.io NuGet Package
+          path: libNOM.io/bin/Release/libNOM.io.*nupkg
+          if-no-files-found: error
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    # Only if commit was tagged.
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    needs: build
+    steps:
+      # Checkout again to access the changelog.
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download
+        uses: actions/download-artifact@v3
+        with:
+          name: libNOM.io NuGet Package
+      - name: Version
+        run: echo "nupkg_version=$((((Get-Item -Path .\libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
+        shell: pwsh
+      # Exit if version mismatch.
+      - name: Mismatch
+        if: ${{ github.ref_name != env.nupkg_version }}
+        run: |
+          echo "There is a version mismatch between git tag (${{ github.ref_name }}) and nupkg version (${{ env.nupkg_version }})!"
+          exit 1
+      - name: Create
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ github.workspace }}/.github/changelogs/${{ github.ref_name }}.md
+          files: libNOM.io.*nupkg
