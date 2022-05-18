@@ -1,4 +1,4 @@
-﻿namespace libNOM.io;
+﻿namespace libNOM.io.Data;
 
 
 /// <summary>
@@ -44,5 +44,5 @@ public record class ContainerTransferData
     /// <summary>
     /// Identification of the user in the source platform.
     /// </summary>
-    public UserIdentification UserIdentification { get; set; } = null!;
+    public UserIdentificationData UserIdentification { get; set; } = null!;
 }

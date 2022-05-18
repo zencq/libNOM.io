@@ -1,4 +1,5 @@
-﻿global using libNOM.io.Enums;
+﻿global using libNOM.io.Data;
+global using libNOM.io.Enums;
 global using libNOM.io.Extensions;
 
 using Newtonsoft.Json.Linq;

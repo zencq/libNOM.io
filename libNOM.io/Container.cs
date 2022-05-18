@@ -1,4 +1,5 @@
-﻿using libNOM.io.Delegates;
+﻿using libNOM.io.Data;
+using libNOM.io.Delegates;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 
@@ -33,7 +34,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public string? IncompatibilityTag { get; internal set; }
 
-    internal UserIdentification? UserIdentification { get; set; }
+    internal UserIdentificationData? UserIdentification { get; set; }
 
     /// <summary>
     /// List of unknown keys collected during deobfuscation.
@@ -85,7 +86,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public DateTimeOffset LastWriteTime // { get; set; }
     {
-        get => _lastWriteTime ?? DataFile?.LastWriteTime ?? default;
+        get => _lastWriteTime ?? DataFile?.LastWriteTime ?? DateTimeOffset.MinValue;
         set => _lastWriteTime = value;
     }
 

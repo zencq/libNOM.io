@@ -13,6 +13,14 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.3.0 (2022-05-18)
+
+### Changed
+* Moved data records to separate `Data` namespace
+
+### Fixed
+* A few things regarding the Microsoft platform
+
 ## 0.2.0 (2022-05-05)
 
 ### Added

@@ -487,9 +487,9 @@ public class PlatformPlaystation : Platform
         {
             jsonObject = binary.GetJson();
         }
-        catch (Exception e) when (e is JsonReaderException or JsonSerializationException)
+        catch (Exception x) when (x is JsonReaderException or JsonSerializationException)
         {
-            container.IncompatibilityException = e;
+            container.IncompatibilityException = x;
             container.IncompatibilityTag = "F002_Deserialization";
             return null;
         }

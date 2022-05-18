@@ -144,7 +144,7 @@ public class PlatformMicrosoft : Platform
             {
                 _accountId = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
             }
-            catch (FormatException) { }
+            catch (Exception x) when (x is FormatException or OverflowException) { }
             _containersIndexFile = new FileInfo(Path.Combine(directory.FullName, CONTAINERSINDEX_NAME));
         }
 
@@ -281,7 +281,7 @@ public class PlatformMicrosoft : Platform
         // Refresh to get the new offsets.
         if (write)
         {
-            WriteContainersIndex();
+            WriteContainersIndex(CreateContainersIndex());
             RefreshContainerCollection();
         }
     }
@@ -343,6 +343,25 @@ public class PlatformMicrosoft : Platform
 
     #endregion
 
+    #region Getter
+
+    private static string GetBlobContainerPath(MicrosoftContainer microsoft)
+    {
+        return GetBlobContainerPath(microsoft, microsoft.Extension);
+    }
+
+    private static string GetBlobContainerPath(MicrosoftContainer microsoft, byte extension)
+    {
+        return Path.Combine(microsoft!.BlobDirectory.FullName, $"container.{extension}");
+    }
+
+    private static FileInfo GetBlobFileInfo(string path, Guid guid)
+    {
+        return new(Path.Combine(path, guid.ToPath()));
+    }
+
+    #endregion
+
     #region Read
 
     #region Build
@@ -354,11 +373,16 @@ public class PlatformMicrosoft : Platform
     protected override IEnumerable<Container> BuildContainerCollection()
     {
         var bag = new ConcurrentBag<Container>();
-        var tasks = new Task[COUNT_SLOTS * COUNT_SAVES_PER_SLOT + 1];
+        var tasks = new List<Task>();
 
         var microsoft = ReadContainersIndex();
         if (microsoft.Count == 0)
             return bag;
+
+        if (microsoft.ContainsKey(0))
+        {
+            tasks.Add(Task.Run(() => AccountContainer = BuildContainer(0, microsoft[0])));
+        }
 
         // Just store it to write it later.
         if (microsoft.ContainsKey(1))
@@ -375,24 +399,16 @@ public class PlatformMicrosoft : Platform
                 var metaIndex = containerIndex + Global.OFFSET_INDEX;
                 _ = microsoft.TryGetValue(metaIndex, out var extra);
 
-                tasks[containerIndex] = Task.Run(() =>
+                tasks.Add(Task.Run(() =>
                 {
                     var container = BuildContainer(metaIndex, extra);
                     LoadBackupCollection(container);
                     bag.Add(container);
-                });
+                }));
             }
         }
-        if (microsoft.ContainsKey(0))
-        {
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-            tasks[tasks.Length - 1] = Task.Run(() => AccountContainer = BuildContainer(0, microsoft[0]));
-#elif NET5_0_OR_GREATER
-            tasks[^1] = Task.Run(() => AccountContainer = BuildContainer(0, microsoft[0]));
-#endif
-        }
 
-        Task.WaitAll(tasks);
+        Task.WaitAll(tasks.ToArray());
 
         _init = false;
         return bag;
@@ -469,7 +485,7 @@ public class PlatformMicrosoft : Platform
             container.Extension = readerIndex.ReadByte();
             container.SyncFlag = readerIndex.ReadInt32().DenumerateTo<MicrosoftSyncFlagEnum>();
             container.BlobGuid = readerIndex.ReadBytes(0x10).GetGuid();
-            container.BlobDirectory = new DirectoryInfo(System.IO.Path.Combine(Location!.FullName, container.BlobGuid.ToPath()));
+            container.BlobDirectory = new DirectoryInfo(Path.Combine(Location!.FullName, container.BlobGuid.ToPath()));
             container.LastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
 
             readerIndex.BaseStream.Seek(8, SeekOrigin.Current); // unknown data
@@ -478,41 +494,75 @@ public class PlatformMicrosoft : Platform
 
             if (container.SyncFlag != MicrosoftSyncFlagEnum.Deleted)
             {
-                var directory = System.IO.Path.Combine(container.BlobDirectory.FullName, $"container.{container.Extension}");
+                var blobContainer = GetBlobContainerPath(container);
+                var fileInfos = new HashSet<FileInfo>();
 
-                using var readerBlob = new BinaryReader(File.Open(directory, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-
-                if (readerBlob.BaseStream.Length != CONTAINER_SIZE)
-                    continue;
-
-                if (readerBlob.ReadInt32() != CONTAINER_HEADER)
-                    continue;
-
-                var blobCount = readerBlob.ReadInt32();
-                if (blobCount != CONTAINER_BLOB_COUNT)
-                    continue;
-
-                for (var j = 0; j < blobCount; j++)
+                // In case the blob container extension does not match the containers.index value, try all existing ones until a data file is found.
+                if (!File.Exists(blobContainer))
                 {
-                    var blobIdentifier = readerBlob.ReadBytes(CONTAINER_BLOB_IDENTIFIER_LENGTH).GetUnicode().Trim('\0');
-
-                    // Needs to be the second GUID as the first one not always contains the local name.
-                    readerBlob.BaseStream.Seek(0x10, SeekOrigin.Current);
-                    var guid = readerBlob.ReadBytes(0x10).GetGuid();
-
-                    var file = new FileInfo(System.IO.Path.Combine(container.BlobDirectory.FullName, guid.ToPath()));
-
-                    if (blobIdentifier == "data")
+                    foreach (var file in container.BlobDirectory.GetFiles("container.*"))
                     {
-                        container.BlobDataFile = file;
+                        fileInfos.Add(file);
+                    }
+                }
+                else
+                {
+                    fileInfos.Add(new(blobContainer));
+                }
+
+                foreach (var file in fileInfos)
+                {
+                    using var readerBlob = new BinaryReader(File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+
+                    if (readerBlob.BaseStream.Length != CONTAINER_SIZE)
                         continue;
+
+                    if (readerBlob.ReadInt32() != CONTAINER_HEADER)
+                        continue;
+
+                    var blobCount = readerBlob.ReadInt32();
+                    if (blobCount != CONTAINER_BLOB_COUNT)
+                        continue;
+
+                    for (var j = 0; j < blobCount; j++)
+                    {
+                        var blobIdentifier = readerBlob.ReadBytes(CONTAINER_BLOB_IDENTIFIER_LENGTH).GetUnicode().Trim('\0');
+
+                        // Needs to be the second GUID as the first one not always contains the local name.
+                        readerBlob.BaseStream.Seek(0x10, SeekOrigin.Current);
+                        var guid = readerBlob.ReadBytes(0x10).GetGuid();
+
+                        var blobFile = GetBlobFileInfo(container.BlobDirectory.FullName, guid);
+
+                        if (blobIdentifier == "data")
+                        {
+                            container.BlobDataFile = blobFile;
+                            continue;
+                        }
+
+                        if (blobIdentifier == "meta")
+                        {
+                            container.BlobMetaFile = blobFile;
+                            continue;
+                        }
                     }
 
-                    if (blobIdentifier == "meta")
+                    // Update extension in case the read one was not found and break the loop.
+                    if (container.BlobDataFile?.Exists == true)
                     {
-                        container.BlobMetaFile = file;
-                        continue;
+#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+                        container.Extension = System.Convert.ToByte(file.Extension.Substring(1));
+#elif NET5_0_OR_GREATER
+                        container.Extension = System.Convert.ToByte(file.Extension[1..]);
+#endif
+                        break;
                     }
+                }
+
+                // Mark as deleted if there is no existing data file.
+                if (container.BlobDataFile?.Exists != true)
+                {
+                    container.SyncFlag = MicrosoftSyncFlagEnum.Deleted;
                 }
             }
 
@@ -738,39 +788,31 @@ public class PlatformMicrosoft : Platform
             base.Write(container, writeTime: writeTime);
         }
 
-        WriteBlobContainer(container);
-        WriteContainersIndex();
+        // After writing the save files itself, first create the blob to update the related container and then re-create the containers.index with those data.
+        // Order is important and WriteContainersHierarchy signature is aligned to it.
+        WriteContainersHierarchy(container, CreateBlob(container), CreateContainersIndex());
     }
 
     /// <summary>
-    /// Writes to updated blob container to disk.
+    /// Creates to updated blob container content and updates the related data.
     /// </summary>
     /// <param name="container"></param>
-    private static void WriteBlobContainer(Container container)
+    private static MicrosoftBlobReturnData CreateBlob(Container container)
     {
-        // Generate.
+        // Generate things.
         var dataGuid = Guid.NewGuid();
         var metaGuid = Guid.NewGuid();
 
-        // Combine.
-        var dataPath = Path.Combine(container.DataFile!.Directory!.FullName, dataGuid.ToPath());
-        var metaPath = Path.Combine(container.MetaFile!.Directory!.FullName, metaGuid.ToPath());
+        var microsoft = new MicrosoftBlobReturnData
+        {
+            Bytes = File.ReadAllBytes(GetBlobContainerPath(container.Microsoft!)),
+            DataFile = GetBlobFileInfo(container.DataFile!.Directory!.FullName, dataGuid),
+            Extension = container.Microsoft!.Extension,
+            MetaFile = GetBlobFileInfo(container.MetaFile!.Directory!.FullName, metaGuid),
+        };
 
-        // Rename File.
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-        File.Move(container.DataFile.FullName, dataPath);
-        File.Move(container.MetaFile.FullName, metaPath);
-#elif NET5_0_OR_GREATER
-        File.Move(container.DataFile.FullName, dataPath, true);
-        File.Move(container.MetaFile.FullName, metaPath, true);
-#endif
-
-        // Update Container.
-        container.DataFile = new FileInfo(dataPath);
-        container.MetaFile = new FileInfo(metaPath);
-
-        var directory = Path.Combine(container.Microsoft!.BlobDirectory.FullName, $"container.{container.Microsoft.Extension}");
-        using (var writerBlob = new BinaryWriter(File.Open(directory, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite)))
+        // Update blob container content.
+        using (var writerBlob = new BinaryWriter(new MemoryStream(microsoft.Bytes)))
         {
             writerBlob.Seek(CONTAINER_OFFSET_DATA, SeekOrigin.Begin);
             writerBlob.Write(dataGuid.ToByteArray());
@@ -779,41 +821,36 @@ public class PlatformMicrosoft : Platform
             writerBlob.Write(metaGuid.ToByteArray());
         }
 
-        if (container.Microsoft.SyncFlag == MicrosoftSyncFlagEnum.Synced)
+        // Update container information as they are need to generate the containers.index file.
+        container.Microsoft!.Extension = (byte)(container.Microsoft!.Extension == byte.MaxValue ? 1 : container.Microsoft!.Extension + 1);
+
+        if (container.Microsoft!.SyncFlag == MicrosoftSyncFlagEnum.Synced)
         {
-            container.Microsoft.SyncFlag = MicrosoftSyncFlagEnum.Modified;
+            container.Microsoft!.SyncFlag = MicrosoftSyncFlagEnum.Modified;
         }
 
-        // Rename Blob Container.
-        container.Microsoft.Extension = (byte)(container.Microsoft.Extension == byte.MaxValue ? 1 : container.Microsoft.Extension + 1);
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-        File.Move(directory, Path.Combine(container.Microsoft.BlobDirectory.FullName, $"container.{container.Microsoft.Extension}"));
-#elif NET5_0_OR_GREATER
-        File.Move(directory, Path.Combine(container.Microsoft.BlobDirectory.FullName, $"container.{container.Microsoft.Extension}"), true);
-#endif
+        return microsoft;
     }
 
     /// <summary>
-    /// Writes the updated containers.index to disk.
+    /// Creates the updated containers.index content.
     /// </summary>
-    private void WriteContainersIndex()
+    private byte[] CreateContainersIndex()
     {
-        DisableWatcher();
-
         var hasAccountData = AccountContainer is not null;
         var hasSettings = _settingsContainer is not null;
 
         var collection = ContainerCollection.Where(c => c.Microsoft?.SyncFlag > MicrosoftSyncFlagEnum.Unknown_Zero);
         var count = collection.Count() + (hasAccountData ? 1 : 0) + (hasSettings ? 1 : 0);
 
-        var buffer = new byte[CONTAINERSINDEX_OFFSET_CONTAINER + (count * 0x90)];
+        var bytes = new byte[CONTAINERSINDEX_OFFSET_CONTAINER + (count * 0x90)];
 
-        using (var readerIndex = new BinaryReader(File.Open(_containersIndexFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.Read)))
+        using (var readerIndex = new BinaryReader(File.Open(_containersIndexFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
         {
-            readerIndex.Read(buffer, 0, CONTAINERSINDEX_OFFSET_CONTAINER);
+            readerIndex.Read(bytes, 0, CONTAINERSINDEX_OFFSET_CONTAINER);
         }
 
-        using (var writer = new BinaryWriter(new MemoryStream(buffer)))
+        using (var writer = new BinaryWriter(new MemoryStream(bytes)))
         {
             writer.Seek(CONTAINERSINDEX_OFFSET_COUNT, SeekOrigin.Begin);
             writer.Write(count);
@@ -894,15 +931,70 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(0L);
 
-                writer.Write(container.DataFile!.Length + container.DataFile!.Length);
+                writer.Write(container.DataFile?.Length ?? 0 + container.MetaFile?.Length ?? 0);
             }
 
-            buffer = buffer.Take((int)(writer.BaseStream.Position)).ToArray();
+            bytes = bytes.Take((int)(writer.BaseStream.Position)).ToArray();
         }
 
-        File.WriteAllBytes(_containersIndexFile.FullName, buffer);
+        return bytes;
+    }
+
+    /// <summary>
+    /// Writes the specified bytes to the containers.index file.
+    /// </summary>
+    private void WriteContainersIndex(byte[] bytes)
+    {
+        DisableWatcher();
+
+        File.WriteAllBytes(_containersIndexFile!.FullName, bytes);
 
         EnableWatcher();
+    }
+
+    /// <summary>
+    /// Writes all Microsoft Store files at once in a good order.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="containersIndex"></param>
+    /// <param name="blob"></param>
+    private void WriteContainersHierarchy(Container container, MicrosoftBlobReturnData blob, byte[] containersIndex)
+    {
+        var blobContainerPath = GetBlobContainerPath(container.Microsoft!, blob.Extension);
+
+        // First write containers.index in case it does not work.
+        WriteContainersIndex(containersIndex);
+
+        // Second write blob container content.
+        File.WriteAllBytes(blobContainerPath, blob.Bytes);
+
+        // Finally rename blob files and set the new FileInfo as well as updating them.
+        CopyDelete(blobContainerPath, GetBlobContainerPath(container.Microsoft!));
+        container.DataFile = CopyDelete(container.DataFile!, blob.DataFile);
+        container.MetaFile = CopyDelete(container.MetaFile!, blob.MetaFile);
+        container.RefreshFileInfo();
+    }
+
+    /// <inheritdoc cref="CopyDelete(string, string)"/>
+    private static FileInfo CopyDelete(FileInfo sourceFileName, FileInfo destFileName)
+    {
+        CopyDelete(sourceFileName.FullName, destFileName.FullName);
+
+        return destFileName;
+    }
+
+    /// <summary>
+    /// Moves a file to another location by copying first and then deleting it.
+    /// </summary>
+    /// <param name="sourceFileName"></param>
+    /// <param name="destFileName"></param>
+    /// <returns>The destination parameter.</returns>
+    private static string CopyDelete(string sourceFileName, string destFileName)
+    {
+        File.Copy(sourceFileName, destFileName, true);
+        File.Delete(sourceFileName);
+
+        return destFileName;
     }
 
     protected override byte[] CompressData(Container container, byte[] data)

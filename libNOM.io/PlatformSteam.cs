@@ -338,7 +338,7 @@ public partial class PlatformSteam : Platform
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the USN by calling the Steam Web-API.
+    /// Gets the <see cref="UserIdentificationData"/> information for the USN by calling the Steam Web-API.
     /// </summary>
     /// <returns></returns>
     private string? GetUserIdentificationBySteam()

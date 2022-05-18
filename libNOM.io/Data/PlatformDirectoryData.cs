@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace libNOM.io;
+namespace libNOM.io.Data;
 
 
 /// <summary>

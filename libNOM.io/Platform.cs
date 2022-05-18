@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
@@ -77,6 +78,11 @@ public abstract partial class Platform
 
     public bool IsLoaded => ContainerCollection.Any(); // { get; }
 
+    /// <summary>
+    /// Whether the game is currently running on this platform.
+    /// Throws a Win32Exception if the using app only targets x86 as the game is a x64 process.
+    /// </summary>
+    /// <exception cref="Win32Exception" />
     public bool IsRunning // { get; }
     {
         get
@@ -111,7 +117,7 @@ public abstract partial class Platform
 
     protected abstract string PlatformToken { get; }
 
-    public UserIdentification PlatformUserIdentification { get; } = new();
+    public UserIdentificationData PlatformUserIdentification { get; } = new();
 
     #endregion
 
@@ -156,7 +162,7 @@ public abstract partial class Platform
     }
 
     /// <summary>
-    /// Collects the <see cref="UserIdentification"/> for the platform by searching through all containers.
+    /// Collects the <see cref="UserIdentificationData"/> for the platform by searching through all containers.
     /// </summary>
     /// <param name="propertyName"></param>
     /// <returns></returns>
@@ -644,7 +650,7 @@ public abstract partial class Platform
                     {
                         File.Delete(container.DataFile.FullName);
                     }
-                    catch (Exception e) when (e is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException) { }
+                    catch (Exception x) when (x is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException) { }
                 }
                 if (container.MetaFile?.Exists == true)
                 {
@@ -652,7 +658,7 @@ public abstract partial class Platform
                     {
                         File.Delete(container.MetaFile.FullName);
                     }
-                    catch (Exception e) when (e is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException) { }
+                    catch (Exception x) when (x is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException) { }
                 }
             }
             container.Reset();
@@ -908,7 +914,7 @@ public abstract partial class Platform
     }
 
     /// <summary>
-    /// Gets an enumerable of <see cref="DirectoryInfo"/> that matches the specified <see cref="libNOM.io.PlatformDirectoryData"/>.
+    /// Gets an enumerable of <see cref="DirectoryInfo"/> that matches the specified <see cref="Data.PlatformDirectoryData"/>.
     /// </summary>
     /// <param name="directoryData"></param>
     /// <returns></returns>
@@ -970,7 +976,10 @@ public abstract partial class Platform
     protected virtual IEnumerable<Container> BuildContainerCollection()
     {
         var bag = new ConcurrentBag<Container>();
-        var tasks = new Task[COUNT_SLOTS * COUNT_SAVES_PER_SLOT + 1];
+        var tasks = new List<Task>
+        {
+            Task.Run(() => AccountContainer = BuildContainer(0)),
+        };
 
         _init = true;
 
@@ -978,21 +987,16 @@ public abstract partial class Platform
         {
             foreach (var containerIndex in new[] { (COUNT_SAVES_PER_SLOT * slotIndex), (COUNT_SAVES_PER_SLOT * slotIndex + 1) })
             {
-                tasks[containerIndex] = Task.Run(() =>
+                tasks.Add(Task.Run(() =>
                 {
                     var container = BuildContainer(containerIndex + Global.OFFSET_INDEX);
                     LoadBackupCollection(container);
                     bag.Add(container);
-                });
+                }));
             }
         }
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-        tasks[tasks.Length - 1] = Task.Run(() => AccountContainer = BuildContainer(0));
-#elif NET5_0_OR_GREATER
-        tasks[^1] = Task.Run(() => AccountContainer = BuildContainer(0));
-#endif
 
-        Task.WaitAll(tasks);
+        Task.WaitAll(tasks.ToArray());
 
         _init = false;
         return bag;
@@ -1243,7 +1247,7 @@ public abstract partial class Platform
             using var reader = new BinaryReader(File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             return reader.ReadBytes((int)(reader.BaseStream.Length));
         }
-        catch (Exception e) when (e is PathTooLongException or IOException or UnauthorizedAccessException or NotSupportedException)
+        catch (Exception x) when (x is PathTooLongException or IOException or UnauthorizedAccessException or NotSupportedException)
         {
             return Array.Empty<byte>();
         }
@@ -1285,9 +1289,9 @@ public abstract partial class Platform
         {
             jsonObject = binary.GetJson();
         }
-        catch (Exception e) when (e is JsonReaderException or JsonSerializationException)
+        catch (Exception x) when (x is JsonReaderException or JsonSerializationException)
         {
-            container.IncompatibilityException = e;
+            container.IncompatibilityException = x;
             container.IncompatibilityTag = "F002_Deserialization";
             return null;
         }
@@ -2033,13 +2037,13 @@ public abstract partial class Platform
     #region UserIdentification
 
     /// <summary>
-    /// Gets the <see cref="UserIdentification"/> for this platform.
+    /// Gets the <see cref="UserIdentificationData"/> for this platform.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
-    protected UserIdentification GetUserIdentification(JObject jsonObject)
+    protected UserIdentificationData GetUserIdentification(JObject jsonObject)
     {
-        return new UserIdentification
+        return new UserIdentificationData
         {
             LID = GetUserIdentification(jsonObject, "LID"),
             UID = GetUserIdentification(jsonObject, "UID"),
@@ -2049,7 +2053,7 @@ public abstract partial class Platform
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the specified property key.
+    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
@@ -2075,7 +2079,7 @@ public abstract partial class Platform
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the specified property key from bases.
+    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from bases.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
@@ -2095,7 +2099,7 @@ public abstract partial class Platform
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the specified property key from discoveries.
+    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from discoveries.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
@@ -2113,7 +2117,7 @@ public abstract partial class Platform
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the specified property key from settlements.
+    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from settlements.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
@@ -2152,14 +2156,14 @@ public abstract partial class Platform
     }
 
     /// <summary>
-    /// Updates the <see cref="UserIdentification"/> with data from all loaded containers.
+    /// Updates the <see cref="UserIdentificationData"/> with data from all loaded containers.
     /// </summary>
     protected void UpdatePlatformUserIdentification()
     {
-        PlatformUserIdentification.LID = GetPlatformUserIdentificationPropertyValue(nameof(UserIdentification.LID));
+        PlatformUserIdentification.LID = GetPlatformUserIdentificationPropertyValue(nameof(UserIdentificationData.LID));
         PlatformUserIdentification.PTK = PlatformToken;
-        PlatformUserIdentification.UID = GetPlatformUserIdentificationPropertyValue(nameof(UserIdentification.UID));
-        PlatformUserIdentification.USN = GetPlatformUserIdentificationPropertyValue(nameof(UserIdentification.USN));
+        PlatformUserIdentification.UID = GetPlatformUserIdentificationPropertyValue(nameof(UserIdentificationData.UID));
+        PlatformUserIdentification.USN = GetPlatformUserIdentificationPropertyValue(nameof(UserIdentificationData.USN));
     }
 
     #endregion

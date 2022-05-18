@@ -1,4 +1,4 @@
-﻿namespace libNOM.io;
+﻿namespace libNOM.io.Data;
 
 
 /// <summary>

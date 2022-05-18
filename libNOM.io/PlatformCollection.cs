@@ -15,6 +15,8 @@ public class PlatformCollection
 
     #endregion
 
+    // //
+    
     #region Constructor
 
     public PlatformCollection()
@@ -34,6 +36,8 @@ public class PlatformCollection
     }
 
     #endregion
+
+    // //
 
     #region Analyze
 
@@ -189,7 +193,7 @@ public class PlatformCollection
         {
             directory = new DirectoryInfo(path);
         }
-        catch (Exception e) when (e is ArgumentNullException or SecurityException or ArgumentException or PathTooLongException)
+        catch (Exception x) when (x is ArgumentNullException or SecurityException or ArgumentException or PathTooLongException)
         {
             directory = null;
             return true;

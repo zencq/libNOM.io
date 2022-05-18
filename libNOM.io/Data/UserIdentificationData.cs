@@ -1,10 +1,10 @@
-﻿namespace libNOM.io;
+﻿namespace libNOM.io.Data;
 
 
 /// <summary>
 /// Holds information about the users identity.
 /// </summary>
-public record class UserIdentification
+public record class UserIdentificationData
 {
     #region Property
 
