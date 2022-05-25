@@ -1357,15 +1357,15 @@ public abstract partial class Platform
     {
         var mode = Global.GetGameModeEnum(container);
         if (mode < PresetGameModeEnum.Seasonal)
-            return SeasonEnum.Unspecified;
+            return SeasonEnum.Pioneers;
 
-        for (var i = Enum.GetNames(typeof(SeasonEnum)).Length; i > 0; i--)
+        for (var i = Enum.GetNames(typeof(SeasonEnum)).Length; i > 1; i--)
         {
-            if (Global.CalculateBaseVersion(container.Version, mode, i) is > Global.THRESHOLD_BASE and < Global.THRESHOLD_GAMEMODE)
+            if (Global.CalculateBaseVersion(container.Version, mode, i) is > Global.THRESHOLD and < Global.THRESHOLD_GAMEMODE)
                 return i.DenumerateTo<SeasonEnum>();
         }
 
-        return SeasonEnum.Unspecified;
+        return SeasonEnum.Pioneers;
     }
 
     /// <summary>
@@ -1380,6 +1380,9 @@ public abstract partial class Platform
 
         GameVersion = CreativeVersion/BaseVersion (Obfuscated = Deobfuscated)
         ??? = ????/???? (??? = ?)
+
+        Leviathan
+        390 = 5162/4138 (Sd6 = NextLoadSpawnsWithFreshStart)
 
         Outlaws
         389 = 5162/4138
@@ -1498,8 +1501,12 @@ public abstract partial class Platform
         209 = 5141/4117
         */
 
-        if (container.BaseVersion >= 4138) // 3.85
+        if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
+            var nextLoadSpawnsWithFreshStart = jsonObject.SelectToken(Settings.Mapping ? "PlayerStateData.NextLoadSpawnsWithFreshStart" : "6f=.Sd6");
+            if (nextLoadSpawnsWithFreshStart is not null)
+                return VersionEnum.Leviathan;
+
             return VersionEnum.Outlaws;
         }
 
@@ -1512,12 +1519,12 @@ public abstract partial class Platform
             return VersionEnum.SentinelWithWeaponResource;
         }
 
-        if (container.BaseVersion >= 4136) // 3.8
+        if (container.BaseVersion >= 4136) // 3.80
         {
             return VersionEnum.Sentinel;
         }
 
-        if (container.BaseVersion >= 4135) // 3.6, 3.7
+        if (container.BaseVersion >= 4135) // 3.60, 3.70
         {
             var sandwormOverrides = jsonObject.SelectTokens(Settings.Mapping ? "PlayerStateData.SeasonData.SandwormOverrides" : "6f=.Rol.qs?");
             if (sandwormOverrides.Any())
@@ -1526,7 +1533,7 @@ public abstract partial class Platform
             return VersionEnum.Frontiers;
         }
 
-        if (container.BaseVersion >= 4129) // 3.3, 3.4, 3.5, 3.51
+        if (container.BaseVersion >= 4129) // 3.30, 3.40, 3.50, 3.51
         {
             var authorOnlineID = jsonObject.SelectTokens(Settings.Mapping ? "PlayerStateData.ByteBeatLibrary.MySongs..AuthorOnlineID" : "6f=.8iI.ON4..m7b");
             if (authorOnlineID.Any())
@@ -1543,7 +1550,7 @@ public abstract partial class Platform
             return VersionEnum.Expeditions;
         }
 
-        if (container.BaseVersion >= 4127) // 3.1, 3.2
+        if (container.BaseVersion >= 4127) // 3.10, 3.20
         {
             var pets = jsonObject.SelectToken(Settings.Mapping ? "PlayerStateData.Pets" : "6f=.;4P");
             if (pets is not null)
@@ -1552,7 +1559,7 @@ public abstract partial class Platform
             return VersionEnum.NextGeneration;
         }
 
-        if (container.BaseVersion >= 4126) // 2.5, 2.6, 3.0
+        if (container.BaseVersion >= 4126) // 2.50, 2.60, 3.00
         {
             var previousUniverseAddress = jsonObject.SelectToken(Settings.Mapping ? "PlayerStateData.PreviousUniverseAddress" : "6f=.ux@");
             if (previousUniverseAddress is not null)
@@ -1565,12 +1572,12 @@ public abstract partial class Platform
             return VersionEnum.Crossplay;
         }
 
-        if (container.BaseVersion >= 4125) // 2.4
+        if (container.BaseVersion >= 4125) // 2.40
         {
             return VersionEnum.ExoMech;
         }
 
-        if (container.BaseVersion >= 4124) // 2.26, 2.3
+        if (container.BaseVersion >= 4124) // 2.26, 2.30
         {
             var currentPos = jsonObject.SelectTokens(Settings.Mapping ? "PlayerStateData..CurrentPos" : "6f=..Xf4");
             if (currentPos.Any())
@@ -1579,7 +1586,7 @@ public abstract partial class Platform
             return VersionEnum.SynthesisWithJetpack;
         }
 
-        if (container.BaseVersion >= 4122) // 2.2
+        if (container.BaseVersion >= 4122) // 2.20
         {
             return VersionEnum.Synthesis;
         }
@@ -1595,8 +1602,12 @@ public abstract partial class Platform
     /// <inheritdoc cref="GetVersionEnum(Container, JObject)"/>
     protected static VersionEnum GetVersionEnum(Container container, string json)
     {
-        if (container.BaseVersion >= 4138) // 3.85
+        if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
+            var nextLoadSpawnsWithFreshStart = json.Contains("\"Sd6\":"); // NextLoadSpawnsWithFreshStart
+            if (nextLoadSpawnsWithFreshStart)
+                return VersionEnum.Leviathan;
+
             return VersionEnum.Outlaws;
         }
 
@@ -1609,12 +1620,12 @@ public abstract partial class Platform
             return VersionEnum.SentinelWithWeaponResource;
         }
 
-        if (container.BaseVersion >= 4136) // 3.8
+        if (container.BaseVersion >= 4136) // 3.80
         {
             return VersionEnum.Sentinel;
         }
 
-        if (container.BaseVersion >= 4135) // 3.6, 3.7
+        if (container.BaseVersion >= 4135) // 3.60, 3.70
         {
             var sandwormOverrides = json.Contains("\"qs?\":"); // SandwormOverrides
             if (sandwormOverrides)
@@ -1623,7 +1634,7 @@ public abstract partial class Platform
             return VersionEnum.Frontiers;
         }
 
-        if (container.BaseVersion >= 4129) // 3.3, 3.4, 3.5, 3.51
+        if (container.BaseVersion >= 4129) // 3.30, 3.40, 3.50, 3.51
         {
             var authorOnlineID = json.Contains("\"m7b\":"); // AuthorOnlineID
             if (authorOnlineID)
@@ -1640,7 +1651,7 @@ public abstract partial class Platform
             return VersionEnum.Expeditions;
         }
 
-        if (container.BaseVersion >= 4127) // 3.1, 3.2
+        if (container.BaseVersion >= 4127) // 3.10, 3.20
         {
             var pets = json.Contains("\"Mcl\":"); // Pets
             if (pets)
@@ -1649,7 +1660,7 @@ public abstract partial class Platform
             return VersionEnum.NextGeneration;
         }
 
-        if (container.BaseVersion >= 4126) // 2.5, 2.6, 3.0
+        if (container.BaseVersion >= 4126) // 2.50, 2.60, 3.00
         {
             var previousUniverseAddress = json.Contains("\"ux@\":"); // PreviousUniverseAddress
             if (previousUniverseAddress)
@@ -1662,12 +1673,12 @@ public abstract partial class Platform
             return VersionEnum.Crossplay;
         }
 
-        if (container.BaseVersion >= 4125) // 2.4
+        if (container.BaseVersion >= 4125) // 2.40
         {
             return VersionEnum.ExoMech;
         }
 
-        if (container.BaseVersion >= 4124) // 2.26, 2.3
+        if (container.BaseVersion >= 4124) // 2.26, 2.30
         {
             var currentPos = json.Contains("\"Xf4\":"); // CurrentPos
             if (currentPos)
@@ -1676,7 +1687,7 @@ public abstract partial class Platform
             return VersionEnum.SynthesisWithJetpack;
         }
 
-        if (container.BaseVersion >= 4122) // 2.2
+        if (container.BaseVersion >= 4122) // 2.20
         {
             return VersionEnum.Synthesis;
         }

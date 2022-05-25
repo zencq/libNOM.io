@@ -23,8 +23,8 @@ internal static class Global
     internal const int OFFSET_INDEX = 2;
     internal const int OFFSET_SEASON = 128;
 
-    internal const int THRESHOLD_BASE = 4100;
-    internal const int THRESHOLD_GAMEMODE = THRESHOLD_BASE + OFFSET_GAMEMODE;
+    internal const int THRESHOLD = 4100;
+    internal const int THRESHOLD_GAMEMODE = THRESHOLD + OFFSET_GAMEMODE;
 
     private static readonly Regex REGEX_TOTALPLAYTIME = new("\\\"Lg8\\\":(\\d+),", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
     private static readonly Regex REGEX_VERSION = new("\\\"F2P\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
@@ -145,6 +145,10 @@ internal static class Global
         // Season 2 = 138277 = BaseVersion + (6 * 512) + (256 * 512) = BaseVersion + ((6 + (2 * 128)) * 512)
         // Season 3 = 203815 = BaseVersion + (6 * 512) + (384 * 512) = BaseVersion + ((6 + (3 * 128)) * 512)
         // Season 4 = 269351 = BaseVersion + (6 * 512) + (512 * 512) = BaseVersion + ((6 + (4 * 128)) * 512)
+        if (mode < (int)(PresetGameModeEnum.Seasonal))
+        {
+            return baseVersion + (mode * OFFSET_GAMEMODE);
+        }
         return baseVersion + ((mode + (season * OFFSET_SEASON)) * OFFSET_GAMEMODE);
     }
 

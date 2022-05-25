@@ -168,9 +168,11 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public bool IsOutlaws => IsVersion(VersionEnum.Outlaws); // { get; }
 
+    public bool IsLeviathan => IsVersion(VersionEnum.Leviathan); // { get; }
+
     public SaveTypeEnum SaveTypeEnum { get; }
 
-    public SeasonEnum SeasonEnum { get; internal set; } = SeasonEnum.Unspecified;
+    public SeasonEnum SeasonEnum { get; internal set; } = SeasonEnum.Pioneers;
 
     public long TotalPlayTime // { get; set; }
     {
@@ -381,7 +383,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         IsBackup = false;
         IsOld = false;
         IsSynced = true;
-        SeasonEnum = SeasonEnum.Unspecified;
+        SeasonEnum = SeasonEnum.Pioneers;
         VersionEnum = VersionEnum.Unknown;
         UserIdentification = null;
         UnknownKeys.Clear();

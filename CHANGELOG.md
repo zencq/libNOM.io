@@ -13,6 +13,15 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.3.1 (2022-05-25)
+
+### Added
+* Support for game version **Leviathan 3.90**
+
+### Fixed
+* Calculation of GameMode version number when switching between Seasonal and others
+* Calculation of SeasonEnum in rare occasions
+
 ## 0.3.0 (2022-05-18)
 
 ### Changed
