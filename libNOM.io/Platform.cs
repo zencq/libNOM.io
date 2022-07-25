@@ -651,6 +651,7 @@ public abstract partial class Platform
                         File.Delete(container.DataFile.FullName);
                     }
                     catch (Exception x) when (x is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException) { }
+                    container.DataFile.Refresh();
                 }
                 if (container.MetaFile?.Exists == true)
                 {
@@ -659,6 +660,7 @@ public abstract partial class Platform
                         File.Delete(container.MetaFile.FullName);
                     }
                     catch (Exception x) when (x is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException) { }
+                    container.MetaFile.Refresh();
                 }
             }
             container.Reset();
@@ -1381,7 +1383,15 @@ public abstract partial class Platform
         GameVersion = CreativeVersion/BaseVersion (Obfuscated = Deobfuscated)
         ??? = ????/???? (??? = ?)
 
+        Endurance
+        396 = 5163/4139
+        395 = 5163/4139
+        394 = 5163/4139
+
         Leviathan
+        393 = 5162/4138
+        392 = 5162/4138
+        391 = 5162/4138
         390 = 5162/4138 (Sd6 = NextLoadSpawnsWithFreshStart)
 
         Outlaws
@@ -1501,6 +1511,11 @@ public abstract partial class Platform
         209 = 5141/4117
         */
 
+        if (container.BaseVersion >= 4139) // 3.94
+        {
+            return VersionEnum.Endurance;
+        }
+
         if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
             var nextLoadSpawnsWithFreshStart = jsonObject.SelectToken(Settings.Mapping ? "PlayerStateData.NextLoadSpawnsWithFreshStart" : "6f=.Sd6");
@@ -1602,6 +1617,11 @@ public abstract partial class Platform
     /// <inheritdoc cref="GetVersionEnum(Container, JObject)"/>
     protected static VersionEnum GetVersionEnum(Container container, string json)
     {
+        if (container.BaseVersion >= 4139) // 3.94
+        {
+            return VersionEnum.Endurance;
+        }
+
         if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
             var nextLoadSpawnsWithFreshStart = json.Contains("\"Sd6\":"); // NextLoadSpawnsWithFreshStart
@@ -1888,9 +1908,9 @@ public abstract partial class Platform
 
         var destinationContainers = GetSlotContainers(destinationSlot);
 
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))
 #endif
         {
@@ -2279,6 +2299,7 @@ public abstract partial class Platform
     protected virtual void WriteData(Container container, byte[] data)
     {
         File.WriteAllBytes(container.DataFile!.FullName, data);
+        container.DataFile!.Refresh();
     }
 
     /// <summary>
@@ -2322,16 +2343,30 @@ public abstract partial class Platform
     protected virtual void WriteMeta(Container container, byte[] meta)
     {
         File.WriteAllBytes(container.MetaFile!.FullName, meta);
+        container.MetaFile!.Refresh();
     }
 
     /// <summary>
-    /// Writes the modification time of the container to the files.
+    /// Writes the creation and last write time of the container to the files.
     /// </summary>
     /// <param name="container"></param>
+    /// <param name="creation"></param>
+    /// <param name="lastWrite"></param>
     protected static void WriteTime(Container container)
     {
-        File.SetLastWriteTime(container.DataFile!.FullName, container.LastWriteTime.LocalDateTime);
-        File.SetLastWriteTime(container.MetaFile!.FullName, container.LastWriteTime.LocalDateTime);
+        if (container.DataFile is not null)
+        {
+            File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
+            File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
+            container.DataFile.Refresh();
+        }
+
+        if (container.MetaFile is not null)
+        {
+            File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
+            File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
+            container.MetaFile.Refresh();
+        }
     }
 
     #endregion

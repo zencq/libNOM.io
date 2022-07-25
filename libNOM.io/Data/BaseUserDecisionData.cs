@@ -8,9 +8,9 @@ public record class BaseUserDecisionData
 {
     public bool DoTransfer { get; set; }
 
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
     public string Name { get; internal set; } = null!;
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
     public string Name { get; init; } = null!;
 #endif
 }

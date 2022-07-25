@@ -43,4 +43,5 @@ public enum VersionEnum
     SentinelWithVehicleAI = 384,
     Outlaws = 385,
     Leviathan = 390,
+    Endurance = 394,
 }

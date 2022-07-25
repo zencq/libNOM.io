@@ -1,7 +1,7 @@
 # libNOM.io
 
 ![Maintained](https://img.shields.io/maintenance/yes/2022)
-[![.NET Framework 4.7 | Standard 2.0 | 5.0 | 6.0](https://img.shields.io/badge/.NET-Framework%204.7%20%7C%20Standard%202.0%20%7C%205.0%20%7C%206.0-lightgrey)](https://dotnet.microsoft.com/en-us/)
+[![.NET Standard 2.0 | 5.0 | 6.0](https://img.shields.io/badge/.NET-Standard%202.0%20%7C%205.0%20%7C%206.0-lightgrey)](https://dotnet.microsoft.com/en-us/)
 [![C# 10.0](https://img.shields.io/badge/C%23-10.0-lightgrey)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![Release](https://img.shields.io/github/v/release/zencq/libNOM.io?display_name=tag)](https://github.com/zencq/libNOM.io/releases/latest)
 
@@ -29,6 +29,9 @@ it will be marked as `IsOld`.
 Each platform has anchor file patterns to check whether it is worth to look further
 into the selected directory. This must be in or one level below the selected one.
 
+* Apple
+    * Notes: No Man's Sky is coming to both Mac and iPad later this year and can
+      hopefully be supported short after its release.
 * [GOG.com](https://www.gog.com/game/no_mans_sky) (PC)
     * Location: **%AppData%\HelloGames\NMS\DefaultUser**
     * File Patterns: **save\*.hg**
@@ -52,7 +55,7 @@ into the selected directory. This must be in or one level below the selected one
     * Notes: Reloading of modified saves while the game is running does not work
       properly and you do not see an updated timestamp immediately.
 * [Nintendo Switch](https://www.nintendo.com/store/products/no-mans-sky-switch)
-    * Notes: No Man's Sky is coming to the Nintendo Switch in summer 2022 and can
+    * Notes: No Man's Sky is coming to the Nintendo Switch on October 7th and can
       hopefully be supported short after its release.
 * [Xbox One/Series X\|S](https://www.microsoft.com/p/no-mans-sky/bqvqtl3pch05)
     * Notes: Not directly supported but can easily achieved with cloud sync via
@@ -97,7 +100,7 @@ Thanks to the following people for their help in one way or another.
 
 ## Projects using libNOM.io
 * [NomNom](https://github.com/zencq/NomNom) (2022-03-14)
-* [NMS Collections](https://www.nexusmods.com/nomanssky/mods/1879) (2022-05-01)
+* [NMS Companion](https://www.nexusmods.com/nomanssky/mods/1879) (2022-05-01)
 
 ## Dependencies
 

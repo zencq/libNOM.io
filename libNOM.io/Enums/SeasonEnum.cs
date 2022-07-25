@@ -17,5 +17,6 @@ public enum SeasonEnum
     Exobiology = 9,
     Blighted = 10,
     Leviathan = 11,
+    Polestar = 12,
     Future,
 }

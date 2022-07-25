@@ -145,9 +145,9 @@ public partial class PlatformSteam : Platform
         // Proceed to base method even if no directory.
         if (directory is not null)
         {
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
             _steamId = directory.Name.Substring(3); // remove "st_"
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
             _steamId = directory.Name[3..]; // remove "st_"
 #endif
         }
@@ -229,9 +229,9 @@ public partial class PlatformSteam : Platform
             Header = values[0],
             Format = values[1],
             SpookyHash = new[] { BitConverter.ToUInt64(bytes, 8), BitConverter.ToUInt64(bytes, 16) },
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
             SHA256 = bytes.Skip(24).Take(32).ToArray(),
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
             SHA256 = bytes[24..56],
 #endif
             DecompressedSize = values[14],
@@ -484,10 +484,10 @@ public partial class PlatformSteam : Platform
             var i2 = (values[0] * 4) ^ (value >> 5);
             var i3 = (value ^ keys[idx_key ^ 1]);
             var i4 = (values[0] ^ hash);
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
             values[values.Length - 1] += (i1 + i2) ^ (i3 + i4);
             value = values[values.Length - 1];
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
             values[^1] += (i1 + i2) ^ (i3 + i4);
             value = values[^1];
 #endif

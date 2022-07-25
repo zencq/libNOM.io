@@ -2,7 +2,7 @@
 
   <!-- Application -->
   <PropertyGroup>
-    <TargetFrameworks>net47;netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
   </PropertyGroup>
 
   <!-- Build -->
@@ -16,7 +16,7 @@
 
   <!-- Package -->
   <PropertyGroup>
-    <Version>0.3.1</Version>
+    <Version>0.4.0</Version>
     <Authors>zencq</Authors>
     <Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.16" />
     <PackageReference Include="LazyCache" Version="2.4.0" />
-    <PackageReference Include="libNOM.map" Version="0.7.0" />
+    <PackageReference Include="libNOM.map" Version="0.8.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

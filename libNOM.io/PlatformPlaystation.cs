@@ -532,9 +532,9 @@ public class PlatformPlaystation : Platform
         {
             var destinationContainers = GetSlotContainers(destinationSlot);
 
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
             foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
             foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))
 #endif
             {
@@ -610,7 +610,6 @@ public class PlatformPlaystation : Platform
             if (Settings.LastWriteTime)
             {
                 container.LastWriteTime = writeTime.Equals(default) ? DateTimeOffset.Now.LocalDateTime : writeTime;
-                WriteTime(container);
             }
 
             WriteMemoryDat();
@@ -707,6 +706,7 @@ public class PlatformPlaystation : Platform
         }
 
         File.WriteAllBytes(_memoryDatFile!.FullName, content.ToArray());
+        _memoryDatFile!.Refresh();
 
         EnableWatcher();
     }
@@ -729,8 +729,6 @@ public class PlatformPlaystation : Platform
             // Append data to already written meta.
             using var stream = new FileStream(container.DataFile!.FullName, FileMode.Append);
             stream.Write(data, 0, data.Length);
-
-            File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
         }
         else
         {

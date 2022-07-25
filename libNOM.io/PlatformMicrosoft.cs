@@ -26,7 +26,7 @@ internal record class MicrosoftContainer
 
     internal string SyncHex = string.Empty;
 
-    internal MicrosoftSyncFlagEnum SyncFlag;
+    internal MicrosoftSyncStateEnum SyncState;
 
     internal ulong TotalSize;
 }
@@ -44,7 +44,7 @@ internal record class PlatformDirectoryDataMicrosoft : PlatformDirectoryData
 {
     internal override string DirectoryPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
 
-    internal override string DirectoryPathPattern { get; } = "*_*";
+    internal override string DirectoryPathPattern { get; } = "*_29070100B936489ABCE8B9AF3980429C";
 
     internal override string[] AnchorFileGlob { get; } = new[] { "containers.index" };
 
@@ -201,7 +201,7 @@ public class PlatformMicrosoft : Platform
                     {
                         BlobGuid = Guid.NewGuid(),
                         Extension = 0,
-                        SyncFlag = MicrosoftSyncFlagEnum.Created,
+                        SyncState = MicrosoftSyncStateEnum.Created,
                         LastModifiedTime = Source.Microsoft.LastModifiedTime,
                     };
 
@@ -263,7 +263,7 @@ public class PlatformMicrosoft : Platform
             if (!container.Exists || container.Microsoft is null)
                 continue;
 
-            container.Microsoft.SyncFlag = MicrosoftSyncFlagEnum.Deleted;
+            container.Microsoft.SyncState = MicrosoftSyncStateEnum.Deleted;
 
             if (write)
             {
@@ -358,6 +358,16 @@ public class PlatformMicrosoft : Platform
     private static FileInfo GetBlobFileInfo(string path, Guid guid)
     {
         return new(Path.Combine(path, guid.ToPath()));
+    }
+
+    private string GetTemporaryName(string fileToWrite)
+    {
+        return Path.Combine(DirectoryData.DirectoryPath, "t", $"{_containersIndexFile!.DirectoryName}_{fileToWrite}");
+    }
+
+    private string GetTemporaryName(string fileToWrite, Container container)
+    {
+        return Path.Combine(DirectoryData.DirectoryPath, "t", $"{_containersIndexFile!.DirectoryName}_{container.Microsoft!.BlobDirectory.Name}_{fileToWrite}");
     }
 
     #endregion
@@ -483,7 +493,7 @@ public class PlatformMicrosoft : Platform
 
             container.SyncHex = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
             container.Extension = readerIndex.ReadByte();
-            container.SyncFlag = readerIndex.ReadInt32().DenumerateTo<MicrosoftSyncFlagEnum>();
+            container.SyncState = readerIndex.ReadInt32().DenumerateTo<MicrosoftSyncStateEnum>();
             container.BlobGuid = readerIndex.ReadBytes(0x10).GetGuid();
             container.BlobDirectory = new DirectoryInfo(Path.Combine(Location!.FullName, container.BlobGuid.ToPath()));
             container.LastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
@@ -492,7 +502,11 @@ public class PlatformMicrosoft : Platform
 
             container.TotalSize = readerIndex.ReadUInt64();
 
-            if (container.SyncFlag != MicrosoftSyncFlagEnum.Deleted)
+            // Stop if directory specified in the entry does not exist. 
+            if (!container.BlobDirectory.Exists)
+                continue;
+
+            if (container.SyncState != MicrosoftSyncStateEnum.Deleted)
             {
                 var blobContainer = GetBlobContainerPath(container);
                 var fileInfos = new HashSet<FileInfo>();
@@ -537,6 +551,7 @@ public class PlatformMicrosoft : Platform
                         if (blobIdentifier == "data")
                         {
                             container.BlobDataFile = blobFile;
+                            container.LastModifiedTime = new[] { container.LastModifiedTime, container.BlobDataFile.CreationTime }.Max();
                             continue;
                         }
 
@@ -550,9 +565,9 @@ public class PlatformMicrosoft : Platform
                     // Update extension in case the read one was not found and break the loop.
                     if (container.BlobDataFile?.Exists == true)
                     {
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
                         container.Extension = System.Convert.ToByte(file.Extension.Substring(1));
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
                         container.Extension = System.Convert.ToByte(file.Extension[1..]);
 #endif
                         break;
@@ -562,7 +577,7 @@ public class PlatformMicrosoft : Platform
                 // Mark as deleted if there is no existing data file.
                 if (container.BlobDataFile?.Exists != true)
                 {
-                    container.SyncFlag = MicrosoftSyncFlagEnum.Deleted;
+                    container.SyncState = MicrosoftSyncStateEnum.Deleted;
                 }
             }
 
@@ -631,9 +646,9 @@ public class PlatformMicrosoft : Platform
 
         var destinationContainers = GetSlotContainers(destinationSlot);
 
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))
 #endif
         {
@@ -659,7 +674,7 @@ public class PlatformMicrosoft : Platform
                     {
                         BlobGuid = Guid.NewGuid(),
                         Extension = 0,
-                        SyncFlag = MicrosoftSyncFlagEnum.Created,
+                        SyncState = MicrosoftSyncStateEnum.Created,
                         LastModifiedTime = Source.LastWriteTime,
                     };
 
@@ -777,31 +792,44 @@ public class PlatformMicrosoft : Platform
         if (!CanUpdate || !container.IsLoaded)
             return;
 
-        if (Settings.LastWriteTime)
+        container.Exists = true;
+        container.IsSynced = true;
+
+        var (data, decompressedSize) = CreateData(container);
+        var meta = CreateMeta(container, data, decompressedSize);
+
+        // Writing all Microsoft Store files at once in the same way as the game itself does.
         {
-            _lastModifiedTime = DateTimeOffset.Now.LocalDateTime;
+            // First update blob with new values.
+            var blobReturn = CreateBlob(container);
 
-            writeTime = writeTime.Equals(default) ? _lastModifiedTime : writeTime;
-            var ticks = writeTime.Ticks % (long)(Math.Pow(10, 4)) * -1;
+            // Second write the previously created data and meta blob files.
+            WriteMeta(container, meta);
+            WriteData(container, data);
 
-            container.LastWriteTime = writeTime.AddTicks(ticks);
-        }
+            // Third write the blob container.
+            var tBlob = GetTemporaryName($"container.{container.Microsoft!.Extension}", container);
+            File.WriteAllBytes(tBlob, blobReturn.UpdatedContainerBytes);
+            File.Move(tBlob, GetBlobContainerPath(container.Microsoft!));
 
-        if (container.IsSynced)
-        {
+            // Update timestamps if enabled.
+            if (Settings.LastWriteTime)
+            {
+                _lastModifiedTime = DateTimeOffset.Now.LocalDateTime;
+
+                writeTime = writeTime.Equals(default) ? _lastModifiedTime : writeTime;
+                var ticks = writeTime.Ticks % (long)(Math.Pow(10, 4)) * -1;
+
+                container.LastWriteTime = writeTime.AddTicks(ticks);
+            }
+
+            // Finally write the containers.index file and delete all old blob files.
             WriteContainersIndex();
+
+            File.Delete(GetBlobContainerPath(container.Microsoft!, blobReturn.OldExtension));
+            File.Delete(blobReturn.OldDataFile!.FullName);
+            File.Delete(blobReturn.OldMetaFile!.FullName);
         }
-        else
-        {
-            container.Exists = true;
-            container.IsSynced = true;
-
-            var (data, decompressedSize) = CreateData(container);
-            var meta = CreateMeta(container, data, decompressedSize);
-
-            WriteContainersHierarchy(container, data, meta);
-        }
-
 
         // Always refresh in case something above was executed.
         container.RefreshFileInfo();
@@ -809,7 +837,7 @@ public class PlatformMicrosoft : Platform
     }
 
     /// <summary>
-    /// Creates to updated blob container content and updates the related data.
+    /// Updates the library container with new blob data and returns the old ones.
     /// </summary>
     /// <param name="container"></param>
     private static CreateBlobReturnData CreateBlob(Container container)
@@ -818,16 +846,16 @@ public class PlatformMicrosoft : Platform
         var dataGuid = Guid.NewGuid();
         var metaGuid = Guid.NewGuid();
 
-        var microsoft = new CreateBlobReturnData
+        var blobReturn = new CreateBlobReturnData
         {
-            Bytes = File.ReadAllBytes(GetBlobContainerPath(container.Microsoft!)),
-            DataFile = container.DataFile!,
-            Extension = container.Microsoft!.Extension,
-            MetaFile = container.MetaFile!,
+            OldDataFile = container.DataFile!,
+            OldExtension = container.Microsoft!.Extension,
+            OldMetaFile = container.MetaFile!,
+            UpdatedContainerBytes = File.ReadAllBytes(GetBlobContainerPath(container.Microsoft!)),
         };
 
         // Update blob container content.
-        using (var writerBlob = new BinaryWriter(new MemoryStream(microsoft.Bytes)))
+        using (var writerBlob = new BinaryWriter(new MemoryStream(blobReturn.UpdatedContainerBytes)))
         {
             writerBlob.Seek(CONTAINER_OFFSET_DATA, SeekOrigin.Begin);
             writerBlob.Write(dataGuid.ToByteArray());
@@ -841,12 +869,12 @@ public class PlatformMicrosoft : Platform
         container.MetaFile = GetBlobFileInfo(container.MetaFile!.Directory!.FullName, metaGuid);
         container.Microsoft!.Extension = (byte)(container.Microsoft!.Extension == byte.MaxValue ? 1 : container.Microsoft!.Extension + 1);
 
-        if (container.Microsoft!.SyncFlag == MicrosoftSyncFlagEnum.Synced)
+        if (container.Microsoft!.SyncState == MicrosoftSyncStateEnum.Synced)
         {
-            container.Microsoft!.SyncFlag = MicrosoftSyncFlagEnum.Modified;
+            container.Microsoft!.SyncState = MicrosoftSyncStateEnum.Modified;
         }
 
-        return microsoft;
+        return blobReturn;
     }
 
     /// <summary>
@@ -857,7 +885,7 @@ public class PlatformMicrosoft : Platform
         var hasAccountData = AccountContainer is not null;
         var hasSettings = _settingsContainer is not null;
 
-        var collection = ContainerCollection.Where(c => c.Microsoft?.SyncFlag > MicrosoftSyncFlagEnum.Unknown_Zero);
+        var collection = ContainerCollection.Where(c => c.Microsoft?.SyncState > MicrosoftSyncStateEnum.Unknown_Zero);
         var count = collection.Count() + (hasAccountData ? 1 : 0) + (hasSettings ? 1 : 0);
 
         // Longest name (e.g. Slot10Manual) has a total length of 0x8C and therefore 0x90 is more than enough.
@@ -892,7 +920,7 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(AccountContainer!.Microsoft.Extension);
 
-                writer.Write(AccountContainer!.Microsoft.SyncFlag.Numerate());
+                writer.Write(AccountContainer!.Microsoft.SyncState.Numerate());
 
                 writer.Write(AccountContainer!.Microsoft.BlobGuid.ToByteArray());
 
@@ -918,7 +946,7 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(_settingsContainer!.Extension);
 
-                writer.Write(_settingsContainer!.SyncFlag.Numerate());
+                writer.Write(_settingsContainer!.SyncState.Numerate());
 
                 writer.Write(_settingsContainer!.BlobGuid.ToByteArray());
 
@@ -942,7 +970,7 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(container.Microsoft!.Extension);
 
-                writer.Write(container.Microsoft!.SyncFlag.Numerate());
+                writer.Write(container.Microsoft!.SyncState.Numerate());
 
                 writer.Write(container.Microsoft!.BlobGuid.ToByteArray());
 
@@ -950,7 +978,11 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(0L);
 
-                writer.Write(container.DataFile?.Length ?? 0 + container.MetaFile?.Length ?? 0);
+                // Make sure to get the latest data.
+                container.DataFile?.Refresh();
+                container.MetaFile?.Refresh();
+
+                writer.Write((container.DataFile?.Length ?? 0) + (container.MetaFile?.Length ?? 0));
             }
 
             bytes = bytes.Take((int)(writer.BaseStream.Position)).ToArray();
@@ -959,41 +991,27 @@ public class PlatformMicrosoft : Platform
         // Write the generated content while the watcher is disabled.
         DisableWatcher();
 
-        File.WriteAllBytes(_containersIndexFile!.FullName, bytes);
+        File.Delete(_containersIndexFile!.FullName);
+
+        var tIndex = GetTemporaryName(_containersIndexFile!.Name);
+        File.WriteAllBytes(tIndex, bytes);
+        File.Move(tIndex, _containersIndexFile!.FullName);
 
         EnableWatcher();
-    }
-
-    /// <summary>
-    /// Writes all Microsoft Store files at once in the same way as the game itself does.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="containersIndex"></param>
-    /// <param name="blob"></param>
-    private void WriteContainersHierarchy(Container container, byte[] data, byte[] meta)
-    {
-        // First create new blob container to generate the new values.
-        var blob = CreateBlob(container);
-
-        // Second write the previously created data and meta blob files.
-        WriteMeta(container, meta);
-        WriteData(container, data);
-
-        // Third write the blob container.
-        File.WriteAllBytes(GetBlobContainerPath(container.Microsoft!), blob.Bytes);
-
-        // Finally write the containers.index file and delete all old blob files.
-        WriteContainersIndex();
-
-        File.Delete(GetBlobContainerPath(container.Microsoft!, blob.Extension));
-        File.Delete(blob.DataFile!.FullName);
-        File.Delete(blob.MetaFile!.FullName);
     }
 
     protected override byte[] CompressData(Container container, byte[] data)
     {
         _ = LZ4_Encode(data, out byte[] target);
         return target;
+    }
+    
+    protected override void WriteData(Container container, byte[] data)
+    {
+        var t = GetTemporaryName(container.DataFile!.Name, container);
+        File.WriteAllBytes(t, data);
+        File.Move(t, container.DataFile!.FullName);
+        container.DataFile!.Refresh();
     }
 
     protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
@@ -1006,7 +1024,7 @@ public class PlatformMicrosoft : Platform
         // 5. UNKNOWN           ( 4)
         //                      (24)
 
-        var buffer = File.ReadAllBytes(container.MetaFile!.FullName); // new byte[META_SIZE];
+        var buffer = File.ReadAllBytes(container.MetaFile!.FullName);
 
         // Update only changeable parts.
         if (container.MetaIndex == 0)
@@ -1014,7 +1032,7 @@ public class PlatformMicrosoft : Platform
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
             writer.Seek(0xF, SeekOrigin.Begin); // 16
-            writer.Write(decompressedSize); // 4 >> 1
+            writer.Write(decompressedSize); // 4
         }
         else
         {
@@ -1029,6 +1047,14 @@ public class PlatformMicrosoft : Platform
         }
 
         return EncryptMeta(container, data, CompressMeta(container, data, buffer));
+    }
+    
+    protected override void WriteMeta(Container container, byte[] meta)
+    {
+        var t = GetTemporaryName(container.MetaFile!.Name, container);
+        File.WriteAllBytes(t, meta);
+        File.Move(t, container.MetaFile!.FullName);
+        container.MetaFile!.Refresh();
     }
 
     #endregion

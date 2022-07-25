@@ -4,7 +4,7 @@
 /// <summary>
 /// Specifies synchronization states used in the containers.index of the <see cref="PlatformMicrosoft"/>.
 /// </summary>
-internal enum MicrosoftSyncFlagEnum
+internal enum MicrosoftSyncStateEnum
 {
     Unknown_Zero = 0,
     Synced = 1,

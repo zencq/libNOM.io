@@ -13,6 +13,19 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.4.0 (2022-07-25)
+
+### Changed
+* Use separate setter for `GameModeEnum` that automatically adds/removes the creative primary mission
+* Lots of tweaks to improve compatibility
+
+### Removed
+* .NET Framework as explicit target as .NET Standard is enough
+
+### Fixed
+* Total size of a save (data + meta) not correctly calculated for use in containers.index
+* Crash when there is a entry in the containers.index without actual files
+
 ## 0.3.1 (2022-05-25)
 
 ### Added

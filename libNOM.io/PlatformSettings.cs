@@ -6,7 +6,7 @@
 /// </summary>
 public record class PlatformSettings
 {
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
     /// <summary>
     /// Where to store backups.
     /// </summary>
@@ -41,7 +41,7 @@ public record class PlatformSettings
     /// Whether to enable a FileSystemWatcher to detect changes in the background.
     /// </summary>
     public bool Watcher { get; set; } = true;
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
     /// <summary>
     /// Where to store backups.
     /// </summary>

@@ -16,7 +16,7 @@ public class PlatformCollection
     #endregion
 
     // //
-    
+
     #region Constructor
 
     public PlatformCollection()
@@ -72,9 +72,9 @@ public class PlatformCollection
                 possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 11 or 31
             }
         }
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
         else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString.Substring(0, 7) == Global.HEADER_PLAINTEXT_OBFUSCATED || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
         else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString[..7] == Global.HEADER_PLAINTEXT_OBFUSCATED || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
 #endif
         {
@@ -134,29 +134,26 @@ public class PlatformCollection
         if (string.IsNullOrWhiteSpace(path))
             return null;
 
+        var invalid = IsPathInvalid(path, out DirectoryInfo? directory);
+        if (invalid)
+            return null;
+
         if (Collection.ContainsKey(path))
         {
             Collection[path].SetSettings(platformSettings);
             return Collection[path];
         }
 
-        var invalid = IsPathInvalid(path, out DirectoryInfo? directory);
-        if (invalid)
-            return null;
-
         // Try preferred platform first.
         var platforms = preferredPlatform is null ? new HashSet<PlatformEnum>() : new HashSet<PlatformEnum> { preferredPlatform.Value };
-#if NET47_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+#if NETSTANDARD2_0
         foreach (PlatformEnum platform in Enum.GetValues(typeof(PlatformEnum)))
-        {
-            platforms.Add(platform);
-        }
-#elif NET5_0_OR_GREATER
+#else // NET5_0_OR_GREATER
         foreach (var platform in Enum.GetValues<PlatformEnum>())
+#endif
         {
             platforms.Add(platform);
         }
-#endif
 
         foreach (var platformEnum in platforms)
         {

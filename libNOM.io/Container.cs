@@ -1,5 +1,5 @@
-﻿using libNOM.io.Data;
-using libNOM.io.Delegates;
+﻿using libNOM.io.Delegates;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 
@@ -11,6 +11,12 @@ namespace libNOM.io;
 /// </summary>
 public partial class Container : IComparable<Container>, IEquatable<Container>
 {
+    #region Constant
+
+    private const string MISSION_CREATIVE = "^CREATIVE";
+
+    #endregion
+
     #region Field
 
     private bool? _exists;
@@ -43,6 +49,9 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region Flags
 
+    /// <summary>
+    /// Whether this is from a backup file.
+    /// </summary>
     public bool IsBackup { get; internal set; }
 
     /// <summary>
@@ -50,6 +59,9 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     /// </summary>
     public bool IsCompatible => Exists && string.IsNullOrEmpty(IncompatibilityTag); // { get; }
 
+    /// <summary>
+    /// Whether the game mode is either Survival or Permadeath.
+    /// </summary>
     public bool IsHardMode => GameModeEnum is PresetGameModeEnum.Survival or PresetGameModeEnum.Permadeath; // { get; }
 
     /// <summary>
@@ -114,15 +126,17 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region Save
 
+    // public //
+
     public int BaseVersion { get; internal set; }
 
-    public PresetGameModeEnum GameModeEnum // { get; set; }
+    public PresetGameModeEnum GameModeEnum // { get; private set; }
     {
         get
         {
             return Global.GetGameModeEnum(this);
         }
-        set
+        private set
         {
             Version = Global.CalculateVersion(BaseVersion, value, SeasonEnum);
         }
@@ -170,6 +184,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public bool IsLeviathan => IsVersion(VersionEnum.Leviathan); // { get; }
 
+    public bool IsEndurance => IsVersion(VersionEnum.Endurance); // { get; }
+
     public SaveTypeEnum SaveTypeEnum { get; }
 
     public SeasonEnum SeasonEnum { get; internal set; } = SeasonEnum.Pioneers;
@@ -194,6 +210,10 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         }
     }
 
+    public VersionEnum VersionEnum { get; internal set; } = VersionEnum.Unknown;
+
+    // internal //
+
     internal int Version // { get; set; }
     {
         get => _jsonObject is not null ? Global.GetVersion(_jsonObject) : _version;
@@ -214,8 +234,6 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         }
     }
 
-    public VersionEnum VersionEnum { get; internal set; } = VersionEnum.Unknown;
-
     #endregion
 
     #endregion
@@ -235,6 +253,56 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     #endregion
 
     #region Setter
+
+    public void SetGameMode(PresetGameModeEnum gameMode)
+    {
+        if (_jsonObject is null)
+            return;
+
+        var mapping = _jsonObject.UseMapping();
+        var mission = _jsonObject.SelectToken(mapping ? $"PlayerStateData.MissionProgress[?(@.Mission == '{MISSION_CREATIVE}')]" : $"6f=.dwb[?(@.p0c == '{MISSION_CREATIVE}')]");
+
+        // Remove MISSION_CREATIVE if new mode is not Creative.
+        if (gameMode != PresetGameModeEnum.Creative)
+        {
+            mission?.Remove();
+        }
+        // Add MISSION_CREATIVE if new mode is Creative but mission not existing.
+        else if (mission is null)
+        {
+#if NETSTANDARD2_0
+            var participantTypes = Enum.GetNames(typeof(ParticipantTypeEnum));
+#else // NET5_0_OR_GREATER
+            var participantTypes = Enum.GetNames<ParticipantTypeEnum>();
+#endif
+
+            var jsonAnonymous = new
+            {
+                Mission = "^CREATIVE",
+                Progress = 1,
+                Seed = 0,
+                Data = 0,
+                Participants = new object[participantTypes.Length],
+            };
+            for (var i = 0; i < participantTypes.Length; i++)
+            {
+                jsonAnonymous.Participants[i] = new
+                {
+                    UA = 0,
+                    BuildingSeed = new object[] { true, "0x0" },
+                    BuildingLocation = new[] { 0, 0, 0 },
+                    ParticipantType = new { ParticipantType = participantTypes[i] },
+                };
+            }
+
+            var jsonReturn = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(jsonAnonymous));
+
+            (_jsonObject.SelectToken(mapping ? $"PlayerStateData.MissionProgress" : $"6f=.dwb") as JArray)?.Add(jsonReturn);
+        }
+
+        // Set value.
+        GameModeEnum = gameMode;
+    }
 
     public void SetJsonObject(JObject? value)
     {

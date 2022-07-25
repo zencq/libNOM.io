@@ -6,11 +6,11 @@
 /// </summary>
 internal record struct CreateBlobReturnData
 {
-    internal byte[] Bytes;
+    internal byte[] UpdatedContainerBytes;
 
-    internal FileInfo DataFile;
+    internal FileInfo OldDataFile;
 
-    internal byte Extension;
+    internal byte OldExtension;
 
-    internal FileInfo MetaFile;
+    internal FileInfo OldMetaFile;
 }
