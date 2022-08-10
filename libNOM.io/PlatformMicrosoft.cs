@@ -26,7 +26,7 @@ internal record class MicrosoftContainer
 
     internal string SyncHex = string.Empty;
 
-    internal MicrosoftSyncStateEnum SyncState;
+    internal MicrosoftBlobStateEnum State;
 
     internal ulong TotalSize;
 }
@@ -57,20 +57,19 @@ public class PlatformMicrosoft : Platform
 {
     #region Constant
 
-    private const string CONTAINERSINDEX_GAME_IDENTIFIER = "HelloGames.NoMansSky_bs190hzg1sesy!NoMansSky";
-    private const uint CONTAINERSINDEX_HEADER = 0xEU; // 14
+    private const int CONTAINERSINDEX_HEADER = 0xE; // 14
     private const string CONTAINERSINDEX_NAME = "containers.index";
+    private const long CONTAINERSINDEX_UNKNOWN_CONST = 0x10000000; // 268,435,456
     private const int CONTAINERSINDEX_OFFSET_CONTAINER = 0xC8; // 200
-    private const int CONTAINERSINDEX_OFFSET_COUNT = 0x4; // 4
-    private const int CONTAINERSINDEX_OFFSET_GLOBAL_TIMESTAMP = 0x68; // 104
+    private const int CONTAINERSINDEX_OFFSET_DYNAMIC = 0xC; // 12
 
-    private const uint CONTAINER_BLOB_COUNT = 0x2U; // 2
+    private const int CONTAINER_BLOB_COUNT = 0x2; // 2
     private const int CONTAINER_BLOB_IDENTIFIER_LENGTH = 0x80; // 128
-    private const uint CONTAINER_BLOB_SIZE = 0xA0U; // 160
-    private const uint CONTAINER_HEADER = 0x4U; // 4
+    private const int CONTAINER_BLOB_SIZE = 0xA0; // 160
+    private const int CONTAINER_HEADER = 0x4; // 4
     private const int CONTAINER_OFFSET_DATA = 0x98; // 152
     private const int CONTAINER_OFFSET_META = 0x138; // 312
-    private const uint CONTAINER_SIZE = 0x4U + 0x4U + CONTAINER_BLOB_COUNT * (0x80U + 2 * 0x10U); // 328
+    private const int CONTAINER_SIZE = 0x4 + 0x4 + CONTAINER_BLOB_COUNT * (0x80 + 2 * 0x10); // 328
 
     private const uint META_SIZE = 0x18U; // 24
 
@@ -201,7 +200,7 @@ public class PlatformMicrosoft : Platform
                     {
                         BlobGuid = Guid.NewGuid(),
                         Extension = 0,
-                        SyncState = MicrosoftSyncStateEnum.Created,
+                        State = MicrosoftBlobStateEnum.Created,
                         LastModifiedTime = Source.Microsoft.LastModifiedTime,
                     };
 
@@ -263,7 +262,7 @@ public class PlatformMicrosoft : Platform
             if (!container.Exists || container.Microsoft is null)
                 continue;
 
-            container.Microsoft.SyncState = MicrosoftSyncStateEnum.Deleted;
+            container.Microsoft.State = MicrosoftBlobStateEnum.Deleted;
 
             if (write)
             {
@@ -428,6 +427,7 @@ public class PlatformMicrosoft : Platform
     /// Reads the containers.index file to get information where each blob is.
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidDataException"/>
     private Dictionary<int, MicrosoftContainer> ReadContainersIndex()
     {
         /** containers.index structure
@@ -438,7 +438,7 @@ public class PlatformMicrosoft : Platform
          2. GAME IDENTIFIER LENGTH (44)     (  4)
          3. GAME IDENTIFIER                 ( 88) (UTF-16)
          4. LAST MODIFIED TIME              (  8)
-         5. ?                               (  4)
+         5. SYNC STATE                      (  4) (0 = ?, 1 = ?, 2 = MODIFIED, 3 = SYNCED)
          6. ACCOUNT IDENTIFIER LENGTH (36)  (  4)
          7. ACCOUNT IDENTIFIER              ( 72) (UTF-16)
          8. ?                               (  8)
@@ -452,7 +452,7 @@ public class PlatformMicrosoft : Platform
         14. SYNC HEX LENGTH                 (  4)
         15. SYNC HEX                        (VAR) (UTF-16)
         16. BLOB CONTAINER FILE EXTENSION   (  1)
-        17. SYNC FLAG                       (  4) (0 = ?, 1 = SYNCED, 2 = MODIFIED, 3 = DELETED, 4 = ?, 5 = CREATED)
+        17. SYNC STATE                      (  4) (0 = ?, 1 = SYNCED, 2 = MODIFIED, 3 = DELETED, 4 = ?, 5 = CREATED)
         18. DIRECTORY                       ( 16) (GUID)
         19. LAST MODIFIED TIME              (  8)
         20. ?                               (  8)
@@ -463,24 +463,23 @@ public class PlatformMicrosoft : Platform
 
         using var readerIndex = new BinaryReader(File.Open(_containersIndexFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
 
-        if (readerIndex.BaseStream.Length < CONTAINERSINDEX_OFFSET_CONTAINER)
-            return result;
-
-        if (readerIndex.ReadInt32() != CONTAINERSINDEX_HEADER)
-            return result;
+        if (readerIndex.ReadInt32() is int version && version != CONTAINERSINDEX_HEADER)
+            throw new InvalidDataException($"Wrong version of containers.index file! Expected {CONTAINERSINDEX_HEADER} but got {version}.");
 
         // Total number of blob containers in the containers.index file.
         var containerCount = readerIndex.ReadInt64();
 
         // Read length of the identifier and then the identifier itself.
-        if (readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode() != CONTAINERSINDEX_GAME_IDENTIFIER)
-            return result;
+        readerIndex.BaseStream.Seek(readerIndex.ReadInt32() * 2, SeekOrigin.Current);
 
+        // Store timestamp.
         _lastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
 
-        readerIndex.BaseStream.Seek(88, SeekOrigin.Current); // unknown data (4) + account identifier (4 + 2 * 36) + unknown data (8)
-        if (readerIndex.BaseStream.Position != CONTAINERSINDEX_OFFSET_CONTAINER)
-            return result;
+        // Skip containers.index state enum.
+        readerIndex.BaseStream.Seek(0x4, SeekOrigin.Current);
+
+        // Skip account identifier and unknown data (0x8) end the end of the header.
+        readerIndex.BaseStream.Seek(readerIndex.ReadInt32() * 2 + 0x8, SeekOrigin.Current);
 
         for (var i = 0; i < containerCount; i++)
         {
@@ -493,7 +492,7 @@ public class PlatformMicrosoft : Platform
 
             container.SyncHex = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
             container.Extension = readerIndex.ReadByte();
-            container.SyncState = readerIndex.ReadInt32().DenumerateTo<MicrosoftSyncStateEnum>();
+            container.State = readerIndex.ReadInt32().DenumerateTo<MicrosoftBlobStateEnum>();
             container.BlobGuid = readerIndex.ReadBytes(0x10).GetGuid();
             container.BlobDirectory = new DirectoryInfo(Path.Combine(Location!.FullName, container.BlobGuid.ToPath()));
             container.LastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
@@ -502,11 +501,11 @@ public class PlatformMicrosoft : Platform
 
             container.TotalSize = readerIndex.ReadUInt64();
 
-            // Stop if directory specified in the entry does not exist. 
+            // Stop if directory specified in the entry does not exist.
             if (!container.BlobDirectory.Exists)
                 continue;
 
-            if (container.SyncState != MicrosoftSyncStateEnum.Deleted)
+            if (container.State != MicrosoftBlobStateEnum.Deleted)
             {
                 var blobContainer = GetBlobContainerPath(container);
                 var fileInfos = new HashSet<FileInfo>();
@@ -577,7 +576,7 @@ public class PlatformMicrosoft : Platform
                 // Mark as deleted if there is no existing data file.
                 if (container.BlobDataFile?.Exists != true)
                 {
-                    container.SyncState = MicrosoftSyncStateEnum.Deleted;
+                    container.State = MicrosoftBlobStateEnum.Deleted;
                 }
             }
 
@@ -646,7 +645,7 @@ public class PlatformMicrosoft : Platform
 
         var destinationContainers = GetSlotContainers(destinationSlot);
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0_OR_GREATER
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
 #else // NET5_0_OR_GREATER
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))
@@ -674,7 +673,7 @@ public class PlatformMicrosoft : Platform
                     {
                         BlobGuid = Guid.NewGuid(),
                         Extension = 0,
-                        SyncState = MicrosoftSyncStateEnum.Created,
+                        State = MicrosoftBlobStateEnum.Created,
                         LastModifiedTime = Source.LastWriteTime,
                     };
 
@@ -869,9 +868,9 @@ public class PlatformMicrosoft : Platform
         container.MetaFile = GetBlobFileInfo(container.MetaFile!.Directory!.FullName, metaGuid);
         container.Microsoft!.Extension = (byte)(container.Microsoft!.Extension == byte.MaxValue ? 1 : container.Microsoft!.Extension + 1);
 
-        if (container.Microsoft!.SyncState == MicrosoftSyncStateEnum.Synced)
+        if (container.Microsoft!.State == MicrosoftBlobStateEnum.Synced)
         {
-            container.Microsoft!.SyncState = MicrosoftSyncStateEnum.Modified;
+            container.Microsoft!.State = MicrosoftBlobStateEnum.Modified;
         }
 
         return blobReturn;
@@ -885,27 +884,46 @@ public class PlatformMicrosoft : Platform
         var hasAccountData = AccountContainer is not null;
         var hasSettings = _settingsContainer is not null;
 
-        var collection = ContainerCollection.Where(c => c.Microsoft?.SyncState > MicrosoftSyncStateEnum.Unknown_Zero);
-        var count = collection.Count() + (hasAccountData ? 1 : 0) + (hasSettings ? 1 : 0);
+        var collection = ContainerCollection.Where(c => c.Microsoft?.State > MicrosoftBlobStateEnum.Unknown_Zero);
+        var count = (long)(collection.Count() + (hasAccountData ? 1 : 0) + (hasSettings ? 1 : 0));
 
         // Longest name (e.g. Slot10Manual) has a total length of 0x8C and therefore 0x90 is more than enough.
         // Leftover will be cut off by using only data up to the current writer position.
         var bytes = new byte[CONTAINERSINDEX_OFFSET_CONTAINER + (count * 0x90)];
 
+        var accountIdentifier = string.Empty;
+        var gameIdentifier = string.Empty;
+        var state = MicrosoftIndexStateEnum.Unknown_Zero;
+
         using (var readerIndex = new BinaryReader(File.Open(_containersIndexFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
         {
-            readerIndex.Read(bytes, 0, CONTAINERSINDEX_OFFSET_CONTAINER);
+            // Skip version and count.
+            readerIndex.BaseStream.Seek(CONTAINERSINDEX_OFFSET_DYNAMIC, SeekOrigin.Begin);
+            gameIdentifier = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
+
+            // Skip timestamp.
+            readerIndex.BaseStream.Seek(0x8, SeekOrigin.Current);
+            state = readerIndex.ReadInt32().DenumerateTo<MicrosoftIndexStateEnum>();
+
+            accountIdentifier = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
         }
 
         using (var writer = new BinaryWriter(new MemoryStream(bytes)))
         {
-            writer.Seek(CONTAINERSINDEX_OFFSET_COUNT, SeekOrigin.Begin);
+            writer.Write(CONTAINERSINDEX_HEADER);
             writer.Write(count);
 
-            writer.Seek(CONTAINERSINDEX_OFFSET_GLOBAL_TIMESTAMP, SeekOrigin.Begin);
+            writer.Write(gameIdentifier.Length);
+            writer.Write(gameIdentifier.GetUnicodeBytes());
+
             writer.Write(_lastModifiedTime.ToUniversalTime().ToFileTime());
 
-            writer.Seek(CONTAINERSINDEX_OFFSET_CONTAINER, SeekOrigin.Begin);
+            writer.Write((state == MicrosoftIndexStateEnum.Synced ? MicrosoftIndexStateEnum.Modified : state).Numerate());
+
+            writer.Write(accountIdentifier.Length);
+            writer.Write(accountIdentifier.GetUnicodeBytes());
+
+            writer.Write(CONTAINERSINDEX_UNKNOWN_CONST);
 
             if (hasAccountData)
             {
@@ -920,7 +938,7 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(AccountContainer!.Microsoft.Extension);
 
-                writer.Write(AccountContainer!.Microsoft.SyncState.Numerate());
+                writer.Write(AccountContainer!.Microsoft.State.Numerate());
 
                 writer.Write(AccountContainer!.Microsoft.BlobGuid.ToByteArray());
 
@@ -946,7 +964,7 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(_settingsContainer!.Extension);
 
-                writer.Write(_settingsContainer!.SyncState.Numerate());
+                writer.Write(_settingsContainer!.State.Numerate());
 
                 writer.Write(_settingsContainer!.BlobGuid.ToByteArray());
 
@@ -970,7 +988,7 @@ public class PlatformMicrosoft : Platform
 
                 writer.Write(container.Microsoft!.Extension);
 
-                writer.Write(container.Microsoft!.SyncState.Numerate());
+                writer.Write(container.Microsoft!.State.Numerate());
 
                 writer.Write(container.Microsoft!.BlobGuid.ToByteArray());
 
@@ -1005,7 +1023,7 @@ public class PlatformMicrosoft : Platform
         _ = LZ4_Encode(data, out byte[] target);
         return target;
     }
-    
+
     protected override void WriteData(Container container, byte[] data)
     {
         var t = GetTemporaryName(container.DataFile!.Name, container);
@@ -1024,31 +1042,37 @@ public class PlatformMicrosoft : Platform
         // 5. UNKNOWN           ( 4)
         //                      (24)
 
-        var buffer = File.ReadAllBytes(container.MetaFile!.FullName);
+        var buffer = new byte[META_SIZE];
 
-        // Update only changeable parts.
         if (container.MetaIndex == 0)
         {
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
+            // Always 1.
+            writer.Write(1); // 4
+
+            // GAME MODE/SEASON and TOTAL PLAY TIME not used.
             writer.Seek(0xF, SeekOrigin.Begin); // 16
+
             writer.Write(decompressedSize); // 4
         }
         else
         {
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
-            writer.Seek(0x4, SeekOrigin.Begin); // 4
+            writer.Write(container.BaseVersion); // 4
+
             writer.Write((ushort)(container.GameModeEnum)); // 2
             writer.Write((ushort)(container.SeasonEnum)); // 2
 
             writer.Write(container.TotalPlayTime); // 8
+
             writer.Write(decompressedSize); // 4
         }
 
         return EncryptMeta(container, data, CompressMeta(container, data, buffer));
     }
-    
+
     protected override void WriteMeta(Container container, byte[] meta)
     {
         var t = GetTemporaryName(container.MetaFile!.Name, container);

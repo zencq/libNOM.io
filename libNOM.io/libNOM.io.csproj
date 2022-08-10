@@ -2,7 +2,7 @@
 
   <!-- Application -->
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
   </PropertyGroup>
 
   <!-- Build -->
@@ -16,7 +16,7 @@
 
   <!-- Package -->
   <PropertyGroup>
-    <Version>0.4.0</Version>
+    <Version>0.4.1</Version>
     <Authors>zencq</Authors>
     <Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>

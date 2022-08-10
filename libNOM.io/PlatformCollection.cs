@@ -146,7 +146,7 @@ public class PlatformCollection
 
         // Try preferred platform first.
         var platforms = preferredPlatform is null ? new HashSet<PlatformEnum>() : new HashSet<PlatformEnum> { preferredPlatform.Value };
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0_OR_GREATER
         foreach (PlatformEnum platform in Enum.GetValues(typeof(PlatformEnum)))
 #else // NET5_0_OR_GREATER
         foreach (var platform in Enum.GetValues<PlatformEnum>())

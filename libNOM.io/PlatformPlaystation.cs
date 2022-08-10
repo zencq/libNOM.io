@@ -532,7 +532,7 @@ public class PlatformPlaystation : Platform
         {
             var destinationContainers = GetSlotContainers(destinationSlot);
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0_OR_GREATER
             foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
 #else // NET5_0_OR_GREATER
             foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))

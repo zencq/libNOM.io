@@ -99,7 +99,7 @@ public abstract partial class Platform
 
     public virtual bool IsWindowsPlatform { get; }
 
-    public virtual bool HasAccountData => AccountContainer is not null; // { get; }
+    public virtual bool HasAccountData => AccountContainer?.Exists == true; // { get; }
 
     public virtual bool HasModding { get; }
 
@@ -1908,7 +1908,7 @@ public abstract partial class Platform
 
         var destinationContainers = GetSlotContainers(destinationSlot);
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0_OR_GREATER
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
 #else // NET5_0_OR_GREATER
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))

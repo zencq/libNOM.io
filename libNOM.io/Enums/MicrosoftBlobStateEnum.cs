@@ -2,9 +2,9 @@
 
 
 /// <summary>
-/// Specifies synchronization states used in the containers.index of the <see cref="PlatformMicrosoft"/>.
+/// Specifies states used in the containers.index of the <see cref="PlatformMicrosoft"/>.
 /// </summary>
-internal enum MicrosoftSyncStateEnum
+internal enum MicrosoftBlobStateEnum
 {
     Unknown_Zero = 0,
     Synced = 1,

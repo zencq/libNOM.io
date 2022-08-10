@@ -270,7 +270,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         // Add MISSION_CREATIVE if new mode is Creative but mission not existing.
         else if (mission is null)
         {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0_OR_GREATER
             var participantTypes = Enum.GetNames(typeof(ParticipantTypeEnum));
 #else // NET5_0_OR_GREATER
             var participantTypes = Enum.GetNames<ParticipantTypeEnum>();

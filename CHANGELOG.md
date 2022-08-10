@@ -13,6 +13,15 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.4.1 (2022-08-10)
+
+### Changed
+* Further adaptions for the Microsoft platform
+* Now targeting .NET Standard 2.x and supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
+
+### Fixed
+* HasAccountData flag not properly calculated in same cases
+
 ## 0.4.0 (2022-07-25)
 
 ### Changed

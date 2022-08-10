@@ -6,7 +6,7 @@
 /// </summary>
 public record class PlatformSettings
 {
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0_OR_GREATER
     /// <summary>
     /// Where to store backups.
     /// </summary>
