@@ -272,7 +272,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         {
 #if NETSTANDARD2_0_OR_GREATER
             var participantTypes = Enum.GetNames(typeof(ParticipantTypeEnum));
-#else // NET5_0_OR_GREATER
+#else
             var participantTypes = Enum.GetNames<ParticipantTypeEnum>();
 #endif
 

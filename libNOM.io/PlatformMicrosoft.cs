@@ -566,7 +566,7 @@ public class PlatformMicrosoft : Platform
                     {
 #if NETSTANDARD2_0
                         container.Extension = System.Convert.ToByte(file.Extension.Substring(1));
-#else // NET5_0_OR_GREATER
+#else
                         container.Extension = System.Convert.ToByte(file.Extension[1..]);
 #endif
                         break;
@@ -647,7 +647,7 @@ public class PlatformMicrosoft : Platform
 
 #if NETSTANDARD2_0_OR_GREATER
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
-#else // NET5_0_OR_GREATER
+#else
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))
 #endif
         {

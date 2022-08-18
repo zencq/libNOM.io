@@ -147,7 +147,7 @@ public partial class PlatformSteam : Platform
         {
 #if NETSTANDARD2_0
             _steamId = directory.Name.Substring(3); // remove "st_"
-#else // NET5_0_OR_GREATER
+#else
             _steamId = directory.Name[3..]; // remove "st_"
 #endif
         }
@@ -231,7 +231,7 @@ public partial class PlatformSteam : Platform
             SpookyHash = new[] { BitConverter.ToUInt64(bytes, 8), BitConverter.ToUInt64(bytes, 16) },
 #if NETSTANDARD2_0
             SHA256 = bytes.Skip(24).Take(32).ToArray(),
-#else // NET5_0_OR_GREATER
+#else
             SHA256 = bytes[24..56],
 #endif
             DecompressedSize = values[14],
@@ -247,9 +247,8 @@ public partial class PlatformSteam : Platform
 
     protected override byte[] DecompressData(Container container, uint[] meta, byte[] data)
     {
-        // No compression before Frontiers.
-        bool isFrontiers = data.Take(4).GetUInt32().FirstOrDefault() == Global.HEADER_SAVE_STREAMING_CHUNK;
-        if (!isFrontiers)
+        // No compression for account data and before Frontiers.
+        if (!container.IsSave || data.Take(4).GetUInt32().FirstOrDefault() != Global.HEADER_SAVE_STREAMING_CHUNK)
             return data;
 
         var result = new List<byte>();
@@ -367,7 +366,7 @@ public partial class PlatformSteam : Platform
 
     protected override byte[] CompressData(Container container, byte[] data)
     {
-        if (container.MetaIndex == 0 || !container.IsFrontiers)
+        if (!container.IsSave || !container.IsFrontiers)
             return data;
 
         var result = new List<byte>();
@@ -409,10 +408,10 @@ public partial class PlatformSteam : Platform
 
         var buffer = new byte[META_SIZE];
 
-        if (container.MetaIndex == 0 || !container.IsFrontiers)
+        if (!container.IsSave || !container.IsFrontiers)
         {
-            // TODO does not work as below even though goatfungus seems to be the same
-            if (container.MetaIndex == 0)
+            // TODO does not work as below even though goatfungus seems to be the same...
+            if (!container.IsSave)
                 return ReadMeta(container);
 
             var sha256 = SHA256.Create().ComputeHash(data);
@@ -487,7 +486,7 @@ public partial class PlatformSteam : Platform
 #if NETSTANDARD2_0
             values[values.Length - 1] += (i1 + i2) ^ (i3 + i4);
             value = values[values.Length - 1];
-#else // NET5_0_OR_GREATER
+#else
             values[^1] += (i1 + i2) ^ (i3 + i4);
             value = values[^1];
 #endif

@@ -111,7 +111,7 @@ public class PlatformPlaystation : Platform
     protected bool GetSaveWizardUsage(DirectoryInfo directory)
     {
         // _MemoryDatFile is set when this is called.
-        var file = _useSaveStreaming ? directory.GetFiles().FirstOrDefault(f => PlatformDirectoryData.AnchorFileRegex[AnchorFileIndex].IsMatch(f.Name)) : _memoryDatFile!;
+        var file = _useSaveStreaming ? directory.GetFiles().FirstOrDefault(f => PlatformDirectoryData.AnchorFileRegex[AnchorFileIndex].IsMatch(f.Name) && !f.Name.Contains("00")) : _memoryDatFile!;
         if (file is null)
             return false;
 
@@ -412,13 +412,13 @@ public class PlatformPlaystation : Platform
 
     protected override byte[] LoadData(Container container, uint[] meta)
     {
-        var data = container.PlayStation!.Bytes is not null ? container.PlayStation!.Bytes : ReadData(container);
+        var data = container.PlayStation?.Bytes is not null ? container.PlayStation!.Bytes : ReadData(container);
         return LoadData(container, meta, data);
     }
 
     protected override byte[] ReadData(Container container)
     {
-        if (!_useSaveStreaming || _useSaveWizard)
+        if (!_useSaveStreaming || (_useSaveWizard && container.IsSave))
         {
             var path = _useSaveStreaming ? container.DataFile!.FullName : _memoryDatFile!.FullName;
 
@@ -448,6 +448,10 @@ public class PlatformPlaystation : Platform
         // Same as for Steam.
         if (_useSaveStreaming)
         {
+            // No compression for account data.
+            if (!container.IsSave)
+                return data;
+
             var result = new List<byte>();
 
             var offset = 0;
@@ -534,7 +538,7 @@ public class PlatformPlaystation : Platform
 
 #if NETSTANDARD2_0_OR_GREATER
             foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
-#else // NET5_0_OR_GREATER
+#else
             foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))
 #endif
             {
@@ -713,13 +717,51 @@ public class PlatformPlaystation : Platform
 
     protected override byte[] CompressData(Container container, byte[] data)
     {
-        container.PlayStation!.SizeDecompressed = data.Length;
-        container.PlayStation!.SizeCompressed = LZ4_Encode(data, out byte[] target);
+        // Same as for Steam.
+        if (_useSaveStreaming)
+        {
+            if (!container.IsSave)
+                return data;
 
-        if (_useSaveWizard)
-            return data;
+            var result = new List<byte>();
 
-        return target;
+            var offset = 0;
+            while (offset < data.Length)
+            {
+                var source = data.Skip(offset).Take(SAVE_STREAMING_CHUNK_SIZE).ToArray();
+                _ = LZ4_Encode(source, out byte[] target);
+
+                offset += SAVE_STREAMING_CHUNK_SIZE;
+
+                var chunkHeader = new uint[4];
+                chunkHeader[0] = Global.HEADER_SAVE_STREAMING_CHUNK;
+                chunkHeader[1] = (uint)(target.Length);
+                chunkHeader[2] = (uint)(source.Length);
+
+                result.AddRange(chunkHeader.GetBytes());
+                result.AddRange(target);
+            }
+
+            // SaveWizard will do the compression.
+            if (_useSaveWizard)
+            {
+                container.PlayStation!.SizeDecompressed = data.Length;
+                container.PlayStation!.SizeCompressed = result.Count;
+                return data;
+            }
+
+            return result.ToArray();
+        }
+        else
+        {
+            container.PlayStation!.SizeDecompressed = data.Length;
+            container.PlayStation!.SizeCompressed = LZ4_Encode(data, out byte[] target);
+
+            if (_useSaveWizard)
+                return data;
+
+            return target;
+        }
     }
 
     protected override void WriteData(Container container, byte[] data)
@@ -787,8 +829,8 @@ public class PlatformPlaystation : Platform
 
             if (container.Exists)
             {
-                var legacyOffset = container.MetaIndex == 0 ? 0x20000 : (uint)(MEMORYDAT_OFFSET_CONTAINER + (container.CollectionIndex * MEMORYDAT_SIZE_CONTAINER));
-                var legacyLength = container.MetaIndex == 0 ? MEMORYDAT_SIZE_ACCOUNTDATA : MEMORYDAT_SIZE_CONTAINER;
+                var legacyOffset = !container.IsSave ? 0x20000 : (uint)(MEMORYDAT_OFFSET_CONTAINER + (container.CollectionIndex * MEMORYDAT_SIZE_CONTAINER));
+                var legacyLength = !container.IsSave ? MEMORYDAT_SIZE_ACCOUNTDATA : MEMORYDAT_SIZE_CONTAINER;
                 var unixSeconds = (uint)(container.LastWriteTime.ToUniversalTime().ToUnixTimeSeconds());
 
                 using var writer = new BinaryWriter(new MemoryStream(buffer));

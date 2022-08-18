@@ -74,7 +74,7 @@ public class PlatformCollection
         }
 #if NETSTANDARD2_0
         else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString.Substring(0, 7) == Global.HEADER_PLAINTEXT_OBFUSCATED || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
-#else // NET5_0_OR_GREATER
+#else
         else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString[..7] == Global.HEADER_PLAINTEXT_OBFUSCATED || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
 #endif
         {
@@ -148,7 +148,7 @@ public class PlatformCollection
         var platforms = preferredPlatform is null ? new HashSet<PlatformEnum>() : new HashSet<PlatformEnum> { preferredPlatform.Value };
 #if NETSTANDARD2_0_OR_GREATER
         foreach (PlatformEnum platform in Enum.GetValues(typeof(PlatformEnum)))
-#else // NET5_0_OR_GREATER
+#else
         foreach (var platform in Enum.GetValues<PlatformEnum>())
 #endif
         {

@@ -10,7 +10,7 @@ public record class BaseUserDecisionData
 
 #if NETSTANDARD2_0_OR_GREATER
     public string Name { get; internal set; } = null!;
-#else // NET5_0_OR_GREATER
+#else
     public string Name { get; init; } = null!;
 #endif
 }

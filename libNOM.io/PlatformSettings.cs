@@ -41,7 +41,7 @@ public record class PlatformSettings
     /// Whether to enable a FileSystemWatcher to detect changes in the background.
     /// </summary>
     public bool Watcher { get; set; } = true;
-#else // NET5_0_OR_GREATER
+#else
     /// <summary>
     /// Where to store backups.
     /// </summary>
