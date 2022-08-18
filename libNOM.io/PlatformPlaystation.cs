@@ -782,7 +782,7 @@ public class PlatformPlaystation : Platform
     {
         if (_useSaveStreaming)
         {
-            if (_useSaveWizard)
+            if (_useSaveWizard && container.IsSave)
             {
                 var buffer = new byte[0x70];
 
