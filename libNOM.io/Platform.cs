@@ -587,6 +587,10 @@ public abstract partial class Platform
                     throw new InvalidOperationException(Source.IncompatibilityTag);
                 }
 
+                // Faking relevant properties to force it to Write().
+                Destination.Exists = true;
+                Destination.IsSynced = false;
+
                 Destination.SetJsonObject(Source.GetJsonObject());
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
@@ -1842,16 +1846,23 @@ public abstract partial class Platform
 
             foreach (var playerBase in container.GetJsonObject()!.SelectTokens(Settings.Mapping ? "PlayerStateData.PersistentPlayerBases[*]" : "6f=.F?0[*]"))
             {
-                var baseType = playerBase.SelectToken(Settings.Mapping ? "BaseType.PersistentBaseTypes" : "peI.DPp")!.Value<string>();
+                var baseType = playerBase.SelectToken(Settings.Mapping ? "BaseType.PersistentBaseTypes" : "peI.DPp")?.Value<string>();
                 var freighterBase = PersistentBaseTypesEnum.FreighterBase.ToString();
 
                 var isHomePlanetBase = baseType == PersistentBaseTypesEnum.HomePlanetBase.ToString();
                 var isFreighterBase = baseType == freighterBase;
 
-                var name = playerBase.SelectToken(Settings.Mapping ? "Name" : "NKm")!.Value<string>();
-                if (string.IsNullOrEmpty(name) && isFreighterBase)
+                var name = playerBase.SelectToken(Settings.Mapping ? "Name" : "NKm")?.Value<string>();
+                if (string.IsNullOrEmpty(name))
                 {
-                    name = freighterBase;
+                    if (isFreighterBase)
+                    {
+                        name = freighterBase;
+                    }
+                    else if (!isHomePlanetBase)
+                    {
+                        name = "Unknown Base Type";
+                    }
                 }
 
                 var isOwnBase = isHomePlanetBase || isFreighterBase;
@@ -1929,6 +1940,9 @@ public abstract partial class Platform
                     throw new InvalidOperationException(Source.IncompatibilityTag);
                 }
 
+                // Faking relevant properties to force it to Write().
+                Destination.Exists = true;
+                Destination.IsSynced = false;
                 // VersionEnum must be updated to determine what needs to be transferred after setting the jsonObject in Destination.
                 Destination.VersionEnum = Source.VersionEnum;
 
@@ -2049,15 +2063,15 @@ public abstract partial class Platform
         jToken[UID] = PlatformUserIdentification.UID;
 
         // Replace LID, PTK, and USN if it is not empty.
-        if (!string.IsNullOrEmpty(jToken[LID]!.Value<string>()))
+        if (!string.IsNullOrEmpty(jToken[LID]?.Value<string>()))
         {
             jToken[LID] = PlatformUserIdentification.LID;
         }
-        if (!string.IsNullOrEmpty(jToken[USN]!.Value<string>()))
+        if (!string.IsNullOrEmpty(jToken[USN]?.Value<string>()))
         {
             jToken[USN] = PlatformUserIdentification.USN;
         }
-        if (!string.IsNullOrEmpty(jToken[PTK]!.Value<string>()))
+        if (!string.IsNullOrEmpty(jToken[PTK]?.Value<string>()))
         {
             jToken[PTK] = PlatformToken;
         }

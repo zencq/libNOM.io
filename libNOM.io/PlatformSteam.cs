@@ -401,9 +401,10 @@ public partial class PlatformSteam : Platform
         //  5. COMPRESSED SIZE      (  4)
         //  6. PROFILE HASH         (  4)
         //  7. SAVE VERSION         (  4)
-        //  8. GAME MODE            (  4)
-        //  9. TOTAL PLAY TIME      (  4)
-        // 10. UNKNOWN              ( 24)
+        //  8. GAME MODE            (  2)
+        //  9. SEASON               (  2)
+        // 10. TOTAL PLAY TIME      (  4)
+        // 11. UNKNOWN              ( 24)
         //                          (104)
 
         var buffer = new byte[META_SIZE];

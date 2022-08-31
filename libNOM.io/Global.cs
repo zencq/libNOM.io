@@ -27,7 +27,9 @@ internal static class Global
     internal const int THRESHOLD_GAMEMODE = THRESHOLD + OFFSET_GAMEMODE;
 
     private static readonly Regex REGEX_TOTALPLAYTIME = new("\\\"Lg8\\\":(\\d+),", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+    private static readonly Regex REGEX_TOTALPLAYTIME_PLAIN = new("\\\"TotalPlayTime\\\":(\\d+),", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
     private static readonly Regex REGEX_VERSION = new("\\\"F2P\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+    private static readonly Regex REGEX_VERSION_PLAIN = new("\\\"Version\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 
     #endregion
 
@@ -97,7 +99,7 @@ internal static class Global
     #region TotalPlayTime
 
     /// <summary>
-    /// Gets the in-file version.
+    /// Gets the total play time from within the save file.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
@@ -110,7 +112,11 @@ internal static class Global
     internal static long GetTotalPlayTime(string json)
     {
         var match = REGEX_TOTALPLAYTIME.Match(json);
-        return match.Success ? System.Convert.ToInt64(match.Groups[1].Value) : 0;
+        if (match.Success)
+            return System.Convert.ToInt32(match.Groups[1].Value);
+
+        var plain = REGEX_TOTALPLAYTIME_PLAIN.Match(json);
+        return plain.Success ? System.Convert.ToInt32(plain.Groups[1].Value) : -1;
     }
 
     #endregion
@@ -166,7 +172,11 @@ internal static class Global
     internal static int GetVersion(string json)
     {
         var match = REGEX_VERSION.Match(json);
-        return match.Success ? System.Convert.ToInt32(match.Groups[1].Value) : -1;
+        if (match.Success)
+            return System.Convert.ToInt32(match.Groups[1].Value);
+
+        var plain = REGEX_VERSION_PLAIN.Match(json);
+        return plain.Success ? System.Convert.ToInt32(plain.Groups[1].Value) : -1;
     }
 
     #endregion

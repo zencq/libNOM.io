@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections;
+using System.Collections.Concurrent;
 using System.Security;
 
 namespace libNOM.io;
@@ -7,11 +8,11 @@ namespace libNOM.io;
 /// <summary>
 /// Holds all detected platforms.
 /// </summary>
-public class PlatformCollection
+public class PlatformCollection : IEnumerable<Platform>
 {
-    #region Member
+    #region Field
 
-    private readonly ConcurrentDictionary<string, Platform> Collection = new();
+    private readonly ConcurrentDictionary<string, Platform> _collection = new();
 
     #endregion
 
@@ -138,10 +139,10 @@ public class PlatformCollection
         if (invalid)
             return null;
 
-        if (Collection.ContainsKey(path))
+        if (_collection.ContainsKey(path))
         {
-            Collection[path].SetSettings(platformSettings);
-            return Collection[path];
+            _collection[path].SetSettings(platformSettings);
+            return _collection[path];
         }
 
         // Try preferred platform first.
@@ -169,7 +170,7 @@ public class PlatformCollection
             };
             if (platform?.IsLoaded == true)
             {
-                Collection.TryAdd(path, platform);
+                _collection.TryAdd(path, platform);
                 return platform;
             }
         }
@@ -210,18 +211,25 @@ public class PlatformCollection
     /// <returns></returns>
     public Platform? Get(string path)
     {
-        _ = Collection.TryGetValue(path, out Platform? platform);
+        _ = _collection.TryGetValue(path, out Platform? platform);
         return platform;
     }
 
-    /// <summary>
-    /// Gets all <see cref="Platform"/> in this collection.
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    public IEnumerable<Platform> Get()
+    #endregion
+
+    #region IEnumerable
+
+    public IEnumerator<Platform> GetEnumerator()
     {
-        return Collection.Select(p => p.Value);
+        foreach (var pair in _collection)
+        {
+            yield return pair.Value;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 
     #endregion
@@ -234,7 +242,7 @@ public class PlatformCollection
     /// </summary>
     public void Reinitialize()
     {
-        Collection.Clear();
+        _collection.Clear();
         var tasks = new List<Task>();
 
         // Only PC platforms can be located directly on the machine.
@@ -262,7 +270,7 @@ public class PlatformCollection
                 var platform = (T)(Activator.CreateInstance(typeof(T), directory))!;
                 if (platform.IsValid)
                 {
-                    Collection.TryAdd(directory.FullName, platform);
+                    _collection.TryAdd(directory.FullName, platform);
                 }
             }));
         }
