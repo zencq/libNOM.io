@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SpookilySharp;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -35,7 +36,16 @@ public partial class Container
 
 internal record class PlatformDirectoryDataSteam : PlatformDirectoryData
 {
-    internal override string DirectoryPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
+    internal override string DirectoryPath { get; } = ((Func<string>)(() =>
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "Steam", "steamapps", "compatdata", "275850", "pfx", "drive_c", "users", "steamuser", "Application Data", "HelloGames", "NMS");
+
+        return string.Empty; // same as if not defined at all
+    }))();
 
     internal override string DirectoryPathPattern { get; } = "st_*";
 

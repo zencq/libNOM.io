@@ -23,7 +23,7 @@ internal static class Global
     internal const int OFFSET_INDEX = 2;
     internal const int OFFSET_SEASON = 128;
 
-    internal const int THRESHOLD = 4100;
+    internal const int THRESHOLD = 4098;
     internal const int THRESHOLD_GAMEMODE = THRESHOLD + OFFSET_GAMEMODE;
 
     private static readonly Regex REGEX_TOTALPLAYTIME = new("\\\"Lg8\\\":(\\d+),", RegexOptions.Compiled, TimeSpan.FromSeconds(1));

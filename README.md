@@ -52,8 +52,7 @@ into the selected directory. This must be in or one level below the selected one
 * [Microsoft Store](https://www.microsoft.com/p/no-mans-sky/bqvqtl3pch05) (PC)
     * Location: **%LocalAppData%\Packages\HelloGames.NoMansSky_bs190hzg1sesy\SystemAppData\wgs\\<XboxID\>_<GUID\>**
     * File Patterns: **containers.index**
-    * Notes: Reloading of modified saves while the game is running does not work
-      properly and you do not see an updated timestamp immediately.
+    * Notes: Reloading of modified saves while the game is running does not work.
 * [Nintendo Switch](https://www.nintendo.com/store/products/no-mans-sky-switch)
     * Notes: No Man's Sky is coming to the Nintendo Switch on October 7th and can
       hopefully be supported short after its release.
@@ -80,6 +79,10 @@ var jsonObject = container.GetJsonObject();
 platform.Write(container); // jsonObject is modified by reference
 ```
 
+## Projects using libNOM.io
+* [NomNom](https://github.com/zencq/NomNom) (2022-03-14)
+* [NMS Companion](https://www.nexusmods.com/nomanssky/mods/1879) (2022-05-01)
+
 ## License
 
 This project is licensed under the GNU GPLv3 license - see the [LICENSE](LICENSE)
@@ -97,10 +100,6 @@ Thanks to the following people for their help in one way or another.
 * [MetaIdea](https://github.com/MetaIdea/nms-savetool) - Decrypt and encrypt Steam saves
 * [u/MegaGold_Fighter](https://www.reddit.com/r/NoMansSkyMods/comments/hhe2he/ps4_nms_save_editing_general_guide/) - [Storm21](https://psxtools.de/index.php?user/38756-storm21/) - Helping and verifying to make PlayStation support possible
 * [Moo](https://discord.gg/22ZAU9H) - Helping and verifying to make Microsoft Store support possible
-
-## Projects using libNOM.io
-* [NomNom](https://github.com/zencq/NomNom) (2022-03-14)
-* [NMS Companion](https://www.nexusmods.com/nomanssky/mods/1879) (2022-05-01)
 
 ## Dependencies
 

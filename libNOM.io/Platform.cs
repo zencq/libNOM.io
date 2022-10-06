@@ -1365,9 +1365,9 @@ public abstract partial class Platform
         if (mode < PresetGameModeEnum.Seasonal)
             return SeasonEnum.Pioneers;
 
-        for (var i = Enum.GetNames(typeof(SeasonEnum)).Length; i > 1; i--)
+        for (var i = Enum.GetValues(typeof(SeasonEnum)).Length; i > 1; i--)
         {
-            if (Global.CalculateBaseVersion(container.Version, mode, i) is > Global.THRESHOLD and < Global.THRESHOLD_GAMEMODE)
+            if (Global.CalculateBaseVersion(container.Version, mode, i) is >= Global.THRESHOLD and < Global.THRESHOLD_GAMEMODE)
                 return i.DenumerateTo<SeasonEnum>();
         }
 

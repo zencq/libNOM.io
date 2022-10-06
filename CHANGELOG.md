@@ -7,10 +7,19 @@ All notable changes to this project will be documented in this file. It uses the
 ## Unreleased
 
 ### Added
+* OS dependent default paths for Steam
 ### Changed
+* PlatformCollection itself is now iterable and therefore `Get()` was removed
+* Threshold is now the lowest ever used base version
 ### Deprecated
 ### Removed
 ### Fixed
+* Explicitly do not use compression for account data
+* SaveWizard usage detection if savedata00.hg file (account data) is present
+* Handling for compression when PlayStation platform is used
+* Save Transfer for old saves
+* Getter for deobfuscated JSON string (mostly old SaveWizard memory.dat)
+* Unable to copy/transfer a save to an empty slot
 ### Security
 
 ## 0.4.1 (2022-08-10)
