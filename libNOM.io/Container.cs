@@ -195,6 +195,44 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public bool IsWaypointWithAgileStat => IsVersion(VersionEnum.WaypointWithAgileStat); // { get; }
 
+    public string SaveName // { get; set; }
+    {
+        get => _jsonObject is not null ? _jsonObject.GetValue<string?>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty : string.Empty;
+        set
+        {
+            if (_jsonObject is not null)
+            {
+                if (_jsonObject.UseMapping())
+                {
+                    _jsonObject["PlayerStateData"]![nameof(SaveName)] = value;
+                }
+                else
+                {
+                    _jsonObject["6f="]!["Pk4"] = value;
+                }
+            }
+        }
+    }
+
+    public string SaveSummary // { get; set; }
+    {
+        get => _jsonObject is not null ? _jsonObject.GetValue<string?>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty : string.Empty;
+        set
+        {
+            if (_jsonObject is not null)
+            {
+                if (_jsonObject.UseMapping())
+                {
+                    _jsonObject["PlayerStateData"]![nameof(SaveSummary)] = value;
+                }
+                else
+                {
+                    _jsonObject["6f="]!["n:R"] = value;
+                }
+            }
+        }
+    }
+
     public SaveTypeEnum SaveTypeEnum { get; }
 
     public SeasonEnum SeasonEnum { get; internal set; } = SeasonEnum.Pioneers;
