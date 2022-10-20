@@ -4,17 +4,18 @@ namespace libNOM.io.Enums;
 
 
 /// <summary>
-/// Specifies platforms the game is avaiable on.
+/// Specifies platforms the game is available on.
+/// PlayStation is last as it has the least specific identification characteristics (only Steam like save file in worst case).
 /// </summary>
 public enum PlatformEnum
 {
     Unknown,
-    [Description("GOG.com")]
-    Gog,
     Steam,
     Microsoft,
-    [Description("PlayStation")]
-    Playstation,
+    [Description("GOG.com")]
+    Gog,
     [Description("Nintendo Switch")]
     Switch,
+    [Description("PlayStation")]
+    Playstation,
 }

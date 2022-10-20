@@ -8,41 +8,41 @@ namespace libNOM.io.Extensions;
 public static class NewtonsoftExtensions
 {
     /// <inheritdoc cref="GetBytes(JObject, bool, bool)"/>
-    public static byte[] GetBytes(this JObject input)
+    public static byte[] GetBytes(this JObject self)
     {
-        return GetBytes(input, true);
+        return GetBytes(self, true);
     }
 
     /// <summary>
     /// Serializes and encodes the object into a sequence of bytes in UTF-8 format.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding and serializing the object.</returns>
-    public static byte[] GetBytes(this JObject input, bool obfuscate)
+    public static byte[] GetBytes(this JObject self, bool obfuscate)
     {
-        if (input is null)
+        if (self is null)
             return Array.Empty<byte>();
 
-        return input.GetString(false, obfuscate).GetUTF8Bytes();
+        return self.GetString(false, obfuscate).GetUTF8Bytes();
     }
 
     /// <summary>
     /// Serializes the object to a JSON string according to the specified options.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <param name="indent">Whether the result will be indented.</param>
     /// <param name="obfuscate">Whether the result will be obfuscated.</param>
     /// <returns>A JSON string representation of the object.</returns>
-    public static string GetString(this JObject input, bool indent, bool obfuscate)
+    public static string GetString(this JObject self, bool indent, bool obfuscate)
     {
-        if (input is null)
+        if (self is null)
             return string.Empty;
 
-        var jsonObject = input;
+        var jsonObject = self;
 
         if (obfuscate)
         {
-            jsonObject = input.DeepClone() as JObject;
+            jsonObject = self.DeepClone() as JObject;
 
             Mapping.Obfuscate(jsonObject!);
         }
@@ -59,6 +59,15 @@ public static class NewtonsoftExtensions
         }
 
         return json.Replace("/", "\\/");
+    }
+
+    internal static T? GetValue<T>(this JObject self, string pathObfuscated, string pathDeobfuscated)
+    {
+        var token = self.SelectToken(self.UseMapping() ? pathDeobfuscated : pathObfuscated);
+        if (token is null)
+            return default;
+
+        return token.Value<T>();
     }
 
     /// <summary>

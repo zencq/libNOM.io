@@ -20,6 +20,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     #region Field
 
     private bool? _exists;
+    private PresetGameModeEnum? _gameMode;
     private JObject? _jsonObject;
     private DateTimeOffset? _lastWriteTime;
     private long _totalPlayTime;
@@ -130,15 +131,19 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public int BaseVersion { get; internal set; }
 
-    public PresetGameModeEnum GameModeEnum // { get; private set; }
+    public PresetGameModeEnum? GameModeEnum // { get; private set; }
     {
         get
         {
-            return Global.GetGameModeEnum(this);
+            return _jsonObject is not null ? Global.GetGameModeEnum(this, _jsonObject) : _gameMode;
         }
-        private set
+        internal set
         {
-            Version = Global.CalculateVersion(BaseVersion, value, SeasonEnum);
+            if (_jsonObject is not null)
+            {
+                Version = Global.CalculateVersion(BaseVersion, value, SeasonEnum);
+            }
+            _gameMode = value;
         }
     }
 
@@ -185,6 +190,10 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     public bool IsLeviathan => IsVersion(VersionEnum.Leviathan); // { get; }
 
     public bool IsEndurance => IsVersion(VersionEnum.Endurance); // { get; }
+
+    public bool IsWaypoint => IsVersion(VersionEnum.Waypoint); // { get; }
+
+    public bool IsWaypointWithAgileStat => IsVersion(VersionEnum.WaypointWithAgileStat); // { get; }
 
     public SaveTypeEnum SaveTypeEnum { get; }
 

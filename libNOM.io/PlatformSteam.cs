@@ -9,29 +9,6 @@ using System.Text.RegularExpressions;
 namespace libNOM.io;
 
 
-#region Container
-
-internal record struct SteamContainer
-{
-    internal uint Header; // 0
-    internal uint Format; // 1
-    internal ulong[] SpookyHash; // 2 - 5
-    internal byte[] SHA256;// 6 - 13
-    internal uint DecompressedSize; // 14
-    internal uint CompressedSize; // 15
-    internal uint ProfileHash; // 16
-    internal uint SaveVersion; // 17
-    internal uint GameModeEnum; // 18
-    internal uint TotalPlayTime; // 19
-}
-
-public partial class Container
-{
-    internal SteamContainer? Steam { get; set; }
-}
-
-#endregion
-
 #region PlatformDirectoryData
 
 internal record class PlatformDirectoryDataSteam : PlatformDirectoryData
@@ -60,8 +37,9 @@ public partial class PlatformSteam : Platform
 {
     #region Constant
 
-    protected const uint META_HEADER = 0xEEEEEEBEU; // 4008636094
+    protected new const uint META_HEADER = 0xEEEEEEBEU; // 4008636094
     protected const int META_SIZE = 0x68; // 104
+    protected const int META_SIZE_WAYPOINT = 0x168; // 360
 
     #endregion
 
@@ -153,7 +131,7 @@ public partial class PlatformSteam : Platform
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         // Proceed to base method even if no directory.
-        if (directory is not null)
+        if (directory is not null && directory.Name.Length > 3)
         {
 #if NETSTANDARD2_0
             _steamId = directory.Name.Substring(3); // remove "st_"
@@ -196,10 +174,9 @@ public partial class PlatformSteam : Platform
 
     protected override uint[] DecryptMeta(Container container, byte[] meta)
     {
-        if (meta.Length != META_SIZE)
-        {
+        // TODO known method below does not work for account data and the new Waypoint format
+        if (!container.IsSave || meta.Length is not META_SIZE) // or META_SIZE_WAYPOINT
             return Array.Empty<uint>();
-        }
 
         var hash = 0xF1BBCDC8U;
         var keys = GetKeys(container);
@@ -231,26 +208,6 @@ public partial class PlatformSteam : Platform
 
             hash += 0x61C88647U;
         }
-
-        var bytes = values.GetBytes();
-
-        container.Steam = new SteamContainer()
-        {
-            Header = values[0],
-            Format = values[1],
-            SpookyHash = new[] { BitConverter.ToUInt64(bytes, 8), BitConverter.ToUInt64(bytes, 16) },
-#if NETSTANDARD2_0
-            SHA256 = bytes.Skip(24).Take(32).ToArray(),
-#else
-            SHA256 = bytes[24..56],
-#endif
-            DecompressedSize = values[14],
-            CompressedSize = values[15],
-            ProfileHash = values[16],
-            SaveVersion = values[17],
-            GameModeEnum = values[18],
-            TotalPlayTime = values[19],
-        };
 
         return values;
     }
@@ -417,14 +374,18 @@ public partial class PlatformSteam : Platform
         // 11. UNKNOWN              ( 24)
         //                          (104)
 
+        // 11. UNKNOWN              (280) // Waypoint
+        //                          (360)
+
+        // TODO account does not work as below even though goatfungus seems to be the same...
+        // TODO meta got extended with SaveName and SaveSummary and decrypting does not work with old method...
+        if (!container.IsSave || container.IsWaypoint)
+            return ReadMeta(container);
+
         var buffer = new byte[META_SIZE];
 
-        if (!container.IsSave || !container.IsFrontiers)
+        if (!container.IsFrontiers)
         {
-            // TODO does not work as below even though goatfungus seems to be the same...
-            if (!container.IsSave)
-                return ReadMeta(container);
-
             var sha256 = SHA256.Create().ComputeHash(data);
 
             var sh = new SpookyHash(0x155af93ac304200, 0x8ac7230489e7ffff);
@@ -434,33 +395,33 @@ public partial class PlatformSteam : Platform
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
-            writer.Write(META_HEADER); // 4 >> 1
-            writer.Write(SAVE_FORMAT_110); // 4 >> 1
+            writer.Write(META_HEADER); // 4
+            writer.Write(SAVE_FORMAT_110); // 4
 
-            writer.Write(spookyHash1); // 8 >> 2
-            writer.Write(spookyHash2); // 8 >> 2
+            writer.Write(spookyHash1); // 8
+            writer.Write(spookyHash2); // 8
 
-            writer.Write(sha256); // 256 / 8 = 32 >> 8
+            writer.Write(sha256); // 256 / 8 = 32
         }
         else
         {
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
-            writer.Write(META_HEADER); // 4 >> 1
-            writer.Write(SAVE_FORMAT_360); // 4 >> 1
+            writer.Write(META_HEADER); // 4
+            writer.Write(SAVE_FORMAT_360); // 4
 
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current);
 
-            writer.Write(decompressedSize); // 4 >> 1
+            writer.Write(decompressedSize); // 4
 
             // COMPRESSED SIZE and PROFILE HASH not used.
             writer.Seek(0x8, SeekOrigin.Current);
 
-            writer.Write(container.BaseVersion); // 4 >> 1
-            writer.Write((ushort)(container.GameModeEnum)); // 2 >> 0.5
-            writer.Write((ushort)(container.SeasonEnum)); // 2 >> 0.5
-            writer.Write(container.TotalPlayTime); // 8 >> 2
+            writer.Write(container.BaseVersion); // 4
+            writer.Write((ushort)(container.GameModeEnum ?? 0)); // 2
+            writer.Write((ushort)(container.SeasonEnum)); // 2
+            writer.Write(container.TotalPlayTime); // 4
         }
 
         return EncryptMeta(container, data, CompressMeta(container, data, buffer));

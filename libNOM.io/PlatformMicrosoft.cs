@@ -24,6 +24,8 @@ internal record class MicrosoftContainer
 
     internal DateTimeOffset LastModifiedTime;
 
+    internal byte[]? MetaTail;
+
     internal string SyncHex = string.Empty;
 
     internal MicrosoftBlobStateEnum State;
@@ -71,7 +73,9 @@ public class PlatformMicrosoft : Platform
     private const int CONTAINER_OFFSET_META = 0x138; // 312
     private const int CONTAINER_SIZE = 0x4 + 0x4 + CONTAINER_BLOB_COUNT * (0x80 + 2 * 0x10); // 328
 
-    private const uint META_SIZE = 0x18U; // 24
+    private const int META_KNOWN = 0x14; // 20
+    private const int META_SIZE = 0x18; // 24
+    private const int META_SIZE_WAYPOINT = 0x118; // 280
 
     #endregion
 
@@ -200,8 +204,9 @@ public class PlatformMicrosoft : Platform
                     {
                         BlobGuid = Guid.NewGuid(),
                         Extension = 0,
-                        State = MicrosoftBlobStateEnum.Created,
                         LastModifiedTime = Source.Microsoft.LastModifiedTime,
+                        MetaTail = Source.Microsoft.MetaTail,
+                        State = MicrosoftBlobStateEnum.Created,
                     };
 
                     var directory = new DirectoryInfo(Path.Combine(Location!.FullName, Destination.Microsoft.BlobGuid.ToPath()));
@@ -233,6 +238,9 @@ public class PlatformMicrosoft : Platform
                     Directory.CreateDirectory(Destination.Microsoft.BlobDirectory.FullName);
                     File.WriteAllBytes(Destination.Microsoft.BlobContainerFile.FullName, blobContainerBinary);
                 }
+
+                // Properties requied to properly build the container below.
+                Destination.BaseVersion = Source.BaseVersion;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
@@ -625,6 +633,17 @@ public class PlatformMicrosoft : Platform
 
     #region Load
 
+    protected override uint[] DecryptMeta(Container container, byte[] meta)
+    {
+#if NETSTANDARD2_0
+        container.Microsoft!.MetaTail = meta.Skip(META_KNOWN).ToArray();
+#else
+        container.Microsoft!.MetaTail = meta[META_KNOWN..];
+#endif
+
+        return base.DecryptMeta(container, meta);
+    }
+
     protected override byte[] DecompressData(Container container, uint[] meta, byte[] data)
     {
         var length = meta.ContainsIndex(4) ? (int)(meta[4]) : data.Length;
@@ -706,7 +725,8 @@ public class PlatformMicrosoft : Platform
                     File.WriteAllBytes(Destination.Microsoft.BlobContainerFile.FullName, blobContainerBinary);
                 }
 
-                // VersionEnum must be updated to determine what needs to be transferred after setting the jsonObject in Destination.
+                // Properties requied to properly build the container below.
+                Destination.BaseVersion = Source.BaseVersion;
                 Destination.VersionEnum = Source.VersionEnum;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
@@ -1034,15 +1054,20 @@ public class PlatformMicrosoft : Platform
 
     protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
     {
-        // 0. SAVE VERSION      ( 4)
-        // 1. GAME MODE         ( 2)
-        // 2. SEASON            ( 2)
-        // 3. TOTAL PLAY TIME   ( 8)
-        // 4. DECOMPRESSED SIZE ( 4)
-        // 5. UNKNOWN           ( 4)
-        //                      (24)
+        // 0. SAVE VERSION      (  4)
+        // 1. GAME MODE         (  2)
+        // 2. SEASON            (  2)
+        // 3. TOTAL PLAY TIME   (  8)
+        // 4. DECOMPRESSED SIZE (  4)
+        // 5. UNKNOWN           (  4)
+        //                      ( 24)
 
-        var buffer = new byte[META_SIZE];
+        // 5. UNKNOWN           (260) // Waypoint
+        //                      (280)
+
+        // Use default size if tail is not set.
+        var bufferSize = container.Microsoft!.MetaTail is null ? (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE) : (META_KNOWN + container.Microsoft!.MetaTail!.Length);
+        var buffer = new byte[bufferSize];
 
         if (container.MetaIndex == 0)
         {
@@ -1052,7 +1077,7 @@ public class PlatformMicrosoft : Platform
             writer.Write(1); // 4
 
             // GAME MODE/SEASON and TOTAL PLAY TIME not used.
-            writer.Seek(0xF, SeekOrigin.Begin); // 16
+            writer.Seek(0x10, SeekOrigin.Begin); // 16
 
             writer.Write(decompressedSize); // 4
         }
@@ -1062,12 +1087,13 @@ public class PlatformMicrosoft : Platform
 
             writer.Write(container.BaseVersion); // 4
 
-            writer.Write((ushort)(container.GameModeEnum)); // 2
+            writer.Write((ushort)(container.GameModeEnum ?? 0)); // 2
             writer.Write((ushort)(container.SeasonEnum)); // 2
 
-            writer.Write(container.TotalPlayTime); // 8
+            writer.Write(container.TotalPlayTime); // 4
 
             writer.Write(decompressedSize); // 4
+            writer.Write(container.Microsoft!.MetaTail ?? Array.Empty<byte>()); // 4 or 260
         }
 
         return EncryptMeta(container, data, CompressMeta(container, data, buffer));

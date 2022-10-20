@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace libNOM.io.Extensions;
 
@@ -27,21 +29,21 @@ public static class IEnumerableExtensions
     /// <summary>
     /// Initializes a new instance of the <see cref="System.Guid"/> structure by using this bytes.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns></returns>
-    internal static Guid GetGuid(this IEnumerable<byte> input)
+    internal static Guid GetGuid(this IEnumerable<byte> self)
     {
-        return new Guid(input.ToArray());
+        return new Guid(self.ToArray());
     }
 
     /// <summary>
     /// Deserializes and deobfuscates the JSON to an object.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns>The deserialized object from the bytes.</returns>
-    internal static JObject? GetJson(this IEnumerable<byte> input)
+    internal static JObject? GetJson(this IEnumerable<byte> self)
     {
-        var json = input.GetString().TrimEnd('\0');
+        var json = self.GetString().TrimEnd('\0').EscapeDataString();
 
         if (JsonConvert.DeserializeObject(json) is not JObject jsonObject)
             return null;
@@ -52,22 +54,22 @@ public static class IEnumerableExtensions
     /// <summary>
     /// Decodes all the bytes in UTF-8 format into a string.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns>A string that contains the results of decoding the specified sequence of bytes.</returns>
-    internal static string GetString(this IEnumerable<byte> input)
+    internal static string GetString(this IEnumerable<byte> self)
     {
-        return Encoding.UTF8.GetString(input.ToArray());
+        return Encoding.UTF8.GetString(self.ToArray());
     }
 
     /// <summary>
     /// Creates an array of 4-byte unsigned integer from this bytes.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/5896716"/>
-    internal static uint[] GetUInt32(this IEnumerable<byte> input)
+    internal static uint[] GetUInt32(this IEnumerable<byte> self)
     {
-        var origin = input.ToArray();
+        var origin = self.ToArray();
 
         var result = new uint[origin.Length / sizeof(uint)];
         Buffer.BlockCopy(origin, 0, result, 0, origin.Length);
@@ -78,21 +80,21 @@ public static class IEnumerableExtensions
     /// <summary>
     /// Decodes all the bytes in little endian UTF-16 format into a string.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns>A string that contains the results of decoding the specified sequence of bytes.</returns>
-    internal static string GetUnicode(this IEnumerable<byte> input)
+    internal static string GetUnicode(this IEnumerable<byte> self)
     {
-        return Encoding.Unicode.GetString(input.ToArray());
+        return Encoding.Unicode.GetString(self.ToArray());
     }
 
     /// <summary>
     /// Gets whether this enumerable is null, empty, or contains only 0.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns></returns>
-    internal static bool IsNullOrEmpty(this IEnumerable<byte> input)
+    internal static bool IsNullOrEmpty(this IEnumerable<byte> self)
     {
-        return input is null || !input.Any() || input.All(b => b == 0);
+        return self is null || !self.Any() || self.All(b => b == 0);
     }
 
     #endregion
@@ -102,12 +104,12 @@ public static class IEnumerableExtensions
     /// <summary>
     /// Creates an array of bytes from this 4-byte unsigned integers.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/5896716"/>
-    internal static byte[] GetBytes(this IEnumerable<uint> input)
+    internal static byte[] GetBytes(this IEnumerable<uint> self)
     {
-        var origin = input.ToArray();
+        var origin = self.ToArray();
 
         var result = new byte[origin.Length * sizeof(uint)];
         Buffer.BlockCopy(origin, 0, result, 0, result.Length);
@@ -123,19 +125,20 @@ public static class IEnumerableExtensions
     /// Gets the most common string of a JToken enumerable.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/39599083"/>
-    internal static string? MostCommon(this IEnumerable<JToken> input)
+    internal static string? MostCommon(this IEnumerable<JToken> self)
     {
-        if(!input.Any())
+        if (!self.Any())
             return null;
 
-        var groups = input.Select(k => k.Value<string>()).Where(k => !string.IsNullOrWhiteSpace(k)).GroupBy(k => k);
+        var groups = self.Select(k => k.Value<string>()).Where(k => !string.IsNullOrWhiteSpace(k)).GroupBy(k => k);
+        if (!groups.Any())
+            return null;
+
         var max = groups.Max(g => g.Count());
-
         return groups.Where(g => g.Count() == max).Select(g => g.Key).FirstOrDefault();
-
     }
 
     #endregion

@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file. It uses the
 
 ### Added
 * OS dependent default paths for Steam
+* Support for game version **Waypoint 4.0**
+* Support for the Switch platform
 ### Changed
 * PlatformCollection itself is now iterable and therefore `Get()` was removed
 * Threshold is now the lowest ever used base version

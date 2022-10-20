@@ -62,7 +62,7 @@ public class PlatformCollection : IEnumerable<Platform>
 
         // Select a platform to convert the file with, based on the content.
         Platform platform;
-        if (headerString == Global.HEADER_SAVEWIZARD)
+        if (headerString == Global.HEADER_SAVEWIZARD || (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK && headerPlaintext.Contains("PS4|Final")))
         {
             platform = new PlatformPlaystation();
 
@@ -73,21 +73,31 @@ public class PlatformCollection : IEnumerable<Platform>
                 possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 11 or 31
             }
         }
-#if NETSTANDARD2_0
-        else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString.Substring(0, 7) == Global.HEADER_PLAINTEXT_OBFUSCATED || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
-#else
-        else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString[..7] == Global.HEADER_PLAINTEXT_OBFUSCATED || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
-#endif
+        else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString.Contains(Global.HEADER_PLAINTEXT_OBFUSCATED) || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
         {
-            platform = new PlatformSteam();
-
-            // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
-            if (PlatformSteam.DirectoryData.AnchorFileRegex[0].IsMatch(Path.GetFileName(path)))
+            if (headerPlaintext.Contains("NX1|Final"))
             {
-                var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c)));
+                platform = new PlatformSwitch();
 
-                metaIndex = string.IsNullOrEmpty(stringValue) ? Global.OFFSET_INDEX : (System.Convert.ToInt32(stringValue) + 1); // metaIndex = 3 is save2.hg
-                possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 31
+                // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
+                if (PlatformSwitch.DirectoryData.AnchorFileRegex[1].IsMatch(Path.GetFileName(path)))
+                {
+                    metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c))));
+                    possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 11 or 31
+                }
+            }
+            else
+            {
+                platform = new PlatformSteam();
+
+                // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
+                if (PlatformSteam.DirectoryData.AnchorFileRegex[0].IsMatch(Path.GetFileName(path)))
+                {
+                    var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c)));
+
+                    metaIndex = string.IsNullOrEmpty(stringValue) ? Global.OFFSET_INDEX : (System.Convert.ToInt32(stringValue) + 1); // metaIndex = 3 is save2.hg
+                    possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 31
+                }
             }
         }
         else

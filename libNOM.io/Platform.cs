@@ -9,6 +9,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace libNOM.io;
@@ -23,9 +25,10 @@ public abstract partial class Platform
 
     protected const int CACHE_EXPIRATION = 100;
     protected const VersionEnum LOWEST_SUPPORTED_VERSION = VersionEnum.BeyondWithVehicleCam;
-    protected const uint SAVE_FORMAT_100 = 0x7D0U; // 2000
-    protected const uint SAVE_FORMAT_110 = 0x7D1U; // 2001
-    protected const uint SAVE_FORMAT_360 = 0x7D2U; // 2002
+    protected const uint META_HEADER = 0xCA55E77E;
+    protected const uint SAVE_FORMAT_100 = 0x7D0; // 2000
+    protected const uint SAVE_FORMAT_110 = 0x7D1; // 2001
+    protected const uint SAVE_FORMAT_360 = 0x7D2; // 2002
     protected const int SAVE_STREAMING_CHUNK_HEADER_SIZE = 0x10; // 16
     protected const int SAVE_STREAMING_CHUNK_SIZE = 0x80000; // 524288
 
@@ -95,7 +98,7 @@ public abstract partial class Platform
         }
     }
 
-    public bool IsValid => PlatformDirectoryData.AnchorFileRegex.ContainsIndex(AnchorFileIndex); // { get; }
+    public virtual bool IsValid => PlatformDirectoryData.AnchorFileRegex.ContainsIndex(AnchorFileIndex); // { get; }
 
     public virtual bool IsWindowsPlatform { get; }
 
@@ -494,7 +497,7 @@ public abstract partial class Platform
     /// <returns></returns>
     public IEnumerable<Container> GetExistingContainers()
     {
-        return ContainerCollection.Where(c => c.Exists);
+        return ContainerCollection.Where(c => c.IsSave && c.Exists);
     }
 
     /// <summary>
@@ -503,7 +506,7 @@ public abstract partial class Platform
     /// <returns></returns>
     public IEnumerable<Container> GetLoadedContainer()
     {
-        return ContainerCollection.Where(c => c.IsLoaded);
+        return ContainerCollection.Where(c => c.IsSave && c.IsLoaded);
     }
 
     /// <summary>
@@ -513,7 +516,7 @@ public abstract partial class Platform
     /// <returns></returns>
     public IEnumerable<Container> GetSlotContainers(int slotIndex)
     {
-        return ContainerCollection.GetRange(slotIndex * COUNT_SAVES_PER_SLOT, COUNT_SAVES_PER_SLOT);
+        return ContainerCollection.Where(c => c.IsSave && c.SlotIndex == slotIndex);
     }
 
     /// <summary>
@@ -522,7 +525,7 @@ public abstract partial class Platform
     /// <returns></returns>
     public IEnumerable<Container> GetUnsyncedContainers()
     {
-        return ContainerCollection.Where(c => c.IsLoaded && !c.IsSynced);
+        return ContainerCollection.Where(c => c.IsSave && c.IsLoaded && !c.IsSynced);
     }
 
     /// <summary>
@@ -590,6 +593,9 @@ public abstract partial class Platform
                 // Faking relevant properties to force it to Write().
                 Destination.Exists = true;
                 Destination.IsSynced = false;
+
+                // Properties requied to properly build the container below.
+                Destination.BaseVersion = Source.BaseVersion;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
@@ -1333,7 +1339,8 @@ public abstract partial class Platform
 
             container.Version = Global.GetVersion(jsonObject);
             container.SeasonEnum = GetSeasonEnum(container); // works after Version is set
-            container.BaseVersion = Global.CalculateBaseVersion(container.Version, container.GameModeEnum, container.SeasonEnum); // works after Version and SeasonEnum are set
+            container.GameModeEnum = Global.GetGameModeEnum(container, jsonObject);
+            container.BaseVersion = Global.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and SeasonEnum and GameModeEnum are set
             container.VersionEnum = GetVersionEnum(container, jsonObject); // works after BaseVersion is set
             container.IsOld = container.VersionEnum < LOWEST_SUPPORTED_VERSION; // works after VersionEnum is set
         }
@@ -1349,7 +1356,8 @@ public abstract partial class Platform
 
         container.Version = Global.GetVersion(json);
         container.SeasonEnum = GetSeasonEnum(container); // works after Version is set
-        container.BaseVersion = Global.CalculateBaseVersion(container.Version, container.GameModeEnum, container.SeasonEnum); // works after Version and SeasonEnum are set
+        container.GameModeEnum = Global.GetGameModeEnum(container, json);
+        container.BaseVersion = Global.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and SeasonEnum and GameModeEnum are set
         container.VersionEnum = GetVersionEnum(container, json); // works after BaseVersion is set
         container.IsOld = container.VersionEnum < LOWEST_SUPPORTED_VERSION; // works after VersionEnum is set
     }
@@ -1362,12 +1370,12 @@ public abstract partial class Platform
     protected static SeasonEnum GetSeasonEnum(Container container)
     {
         var mode = Global.GetGameModeEnum(container);
-        if (mode < PresetGameModeEnum.Seasonal)
+        if (mode is null or < PresetGameModeEnum.Seasonal)
             return SeasonEnum.Pioneers;
 
         for (var i = Enum.GetValues(typeof(SeasonEnum)).Length; i > 1; i--)
         {
-            if (Global.CalculateBaseVersion(container.Version, mode, i) is >= Global.THRESHOLD and < Global.THRESHOLD_GAMEMODE)
+            if (Global.CalculateBaseVersion(container.Version, mode.Value, i) is >= Global.THRESHOLD and < Global.THRESHOLD_GAMEMODE)
                 return i.DenumerateTo<SeasonEnum>();
         }
 
@@ -1387,7 +1395,17 @@ public abstract partial class Platform
         GameVersion = CreativeVersion/BaseVersion (Obfuscated = Deobfuscated)
         ??? = ????/???? (??? = ?)
 
+        Waypoint
+        405 = 4653/4141
+
+        404 = 4653/4141
+        403 = 4652/4140
+        400 = 4652/4140
+
         Endurance
+        399 = 5163/4139
+        398 = 5163/4139
+        397 = 5163/4139
         396 = 5163/4139
         395 = 5163/4139
         394 = 5163/4139
@@ -1515,6 +1533,16 @@ public abstract partial class Platform
         209 = 5141/4117
         */
 
+        if (container.BaseVersion >= 4141) // 4.04
+        {
+            return VersionEnum.WaypointWithAgileStat;
+        }
+
+        if (container.BaseVersion >= 4140) // 4.00
+        {
+            return VersionEnum.Waypoint;
+        }
+
         if (container.BaseVersion >= 4139) // 3.94
         {
             return VersionEnum.Endurance;
@@ -1621,6 +1649,16 @@ public abstract partial class Platform
     /// <inheritdoc cref="GetVersionEnum(Container, JObject)"/>
     protected static VersionEnum GetVersionEnum(Container container, string json)
     {
+        if (container.BaseVersion >= 4141) // 4.04
+        {
+            return VersionEnum.WaypointWithAgileStat;
+        }
+
+        if (container.BaseVersion >= 4140) // 4.00
+        {
+            return VersionEnum.Waypoint;
+        }
+
         if (container.BaseVersion >= 4139) // 3.94
         {
             return VersionEnum.Endurance;
@@ -1943,7 +1981,9 @@ public abstract partial class Platform
                 // Faking relevant properties to force it to Write().
                 Destination.Exists = true;
                 Destination.IsSynced = false;
-                // VersionEnum must be updated to determine what needs to be transferred after setting the jsonObject in Destination.
+
+                // Properties requied to properly build the container below.
+                Destination.BaseVersion = Source.BaseVersion;
                 Destination.VersionEnum = Source.VersionEnum;
 
                 Destination.SetJsonObject(Source.GetJsonObject());

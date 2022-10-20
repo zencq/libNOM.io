@@ -54,8 +54,10 @@ into the selected directory. This must be in or one level below the selected one
     * File Patterns: **containers.index**
     * Notes: Reloading of modified saves while the game is running does not work.
 * [Nintendo Switch](https://www.nintendo.com/store/products/no-mans-sky-switch)
-    * Notes: No Man's Sky is coming to the Nintendo Switch on October 7th and can
-      hopefully be supported short after its release.
+    * File Patterns: **manifest\*.dat**
+    * Notes: To get your saves you need homebrew software on your Switch. [EdiZon](https://github.com/WerWolv/EdiZon)
+      and [JKSV](https://github.com/J-D-K/JKSV) are confirmed working. Results of other
+      tools may or may not work but the code is as generic as possible.
 * [Xbox One/Series X\|S](https://www.microsoft.com/p/no-mans-sky/bqvqtl3pch05)
     * Notes: Not directly supported but can easily achieved with cloud sync via
       the Microsoft Store. The synchronization is triggered short after you close

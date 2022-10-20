@@ -51,7 +51,6 @@ public class PlatformPlaystation : Platform
     private const uint MEMORYDAT_SIZE_CONTAINER = 0x300000U;
     private const uint MEMORYDAT_SIZE_TOTAL = 0x2000000U; // 32 MB
 
-    private const uint META_HEADER = 0xCA55E77EU;
     private int META_OFFSET => _useSaveWizard ? 0x40 : 0x0; // 64 : 0
     private int META_SIZE => _useSaveWizard ? 0x30 : 0x20; // 48 : 32
 
@@ -206,11 +205,14 @@ public class PlatformPlaystation : Platform
                         };
                     }
 
-                    Destination.SetJsonObject(Source.GetJsonObject());
-
                     Destination.Exists = true;
                     Destination.IsSynced = true;
                     Destination.LastWriteTime = Source.LastWriteTime;
+
+                    // Properties requied to properly build the container below.
+                    Destination.BaseVersion = Source.BaseVersion;
+
+                    Destination.SetJsonObject(Source.GetJsonObject());
 
                     BuildContainer(Destination);
                 }

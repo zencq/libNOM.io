@@ -44,4 +44,7 @@ public enum VersionEnum
     Outlaws = 385,
     Leviathan = 390,
     Endurance = 394,
+    Waypoint = 400,
+    [Description("Waypoint")]
+    WaypointWithAgileStat = 404,
 }

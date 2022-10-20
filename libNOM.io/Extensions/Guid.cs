@@ -6,10 +6,10 @@ internal static class GuidExtensions
     /// <summary>
     /// Returns a string representation of the value of this <see cref="Guid"/> instance, using the N format specifier.
     /// </summary>
-    /// <param name="source"></param>
+    /// <param name="self"></param>
     /// <returns>The value of this <see cref="Guid"/>, represented as a series of uppercase hexadecimal digits in the N format.</returns>
-    internal static string ToPath(this Guid source)
+    internal static string ToPath(this Guid self)
     {
-        return source.ToString("N").ToUpper();
+        return self.ToString("N").ToUpper();
     }
 }
