@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.16" />
     <PackageReference Include="LazyCache" Version="2.4.0" />
-    <PackageReference Include="libNOM.map" Version="0.8.2" />
+    <PackageReference Include="libNOM.map" Version="0.8.3" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

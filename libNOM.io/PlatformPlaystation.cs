@@ -821,10 +821,10 @@ public class PlatformPlaystation : Platform
             //  5. META INDEX           ( 4)
             //  6. TIMESTAMP            ( 4)
             //  7. DECOMPRESSED SIZE    ( 4)
-            //                          (32)
-            //  8. SAVEWIZARD OFFSET    ( 4)
-            //  9. 1                    ( 4)
-            // 10. UNKNOWN              ( 8)
+            //  8. EMPTY                (32)
+            // 16. SAVEWIZARD OFFSET    ( 4)
+            // 17. 1                    ( 4)
+            // 18. UNKNOWN              ( 8)
             //                          (48)
 
             var buffer = new byte[META_SIZE];

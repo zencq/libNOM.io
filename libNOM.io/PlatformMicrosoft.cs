@@ -1054,19 +1054,19 @@ public class PlatformMicrosoft : Platform
 
     protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
     {
-        // 0. SAVE VERSION      (  4)
-        // 1. GAME MODE         (  2)
-        // 2. SEASON            (  2)
-        // 3. TOTAL PLAY TIME   (  8)
-        // 4. DECOMPRESSED SIZE (  4)
-        // 5. UNKNOWN           (  4)
-        //                      ( 24)
+        //  0. SAVE VERSION      (  4)
+        //  1. GAME MODE         (  2)
+        //  1. SEASON            (  2)
+        //  2. TOTAL PLAY TIME   (  8)
+        //  3. DECOMPRESSED SIZE (  4)
+        //  4. UNKNOWN           (  4)
+        //                       ( 24)
 
-        // 5. UNKNOWN           (260) // Waypoint
-        //                      (280)
+        //  4. UNKNOWN           (260) // Waypoint
+        //                       (280)
 
         // Use default size if tail is not set.
-        var bufferSize = container.Microsoft!.MetaTail is null ? (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE) : (META_KNOWN + container.Microsoft!.MetaTail!.Length);
+        var bufferSize = container.Microsoft!.MetaTail is not null ? (META_KNOWN + container.Microsoft!.MetaTail!.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
         var buffer = new byte[bufferSize];
 
         if (container.MetaIndex == 0)

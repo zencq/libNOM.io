@@ -169,16 +169,16 @@ public partial class PlatformSwitch : Platform
         //  4. TIMESTAMP            (  4)
         //  5. SAVE VERSION         (  4)
         //  6. GAME MODE            (  2)
-        //  7. SEASON               (  2)
-        //  8. TOTAL PLAY TIME      (  4)
-        //  9. UNKNOWN              ( 68)
+        //  6. SEASON               (  2)
+        //  7. TOTAL PLAY TIME      (  4)
+        //  8. UNKNOWN              ( 68)
         //                          (100)
 
-        //  9. UNKNOWN              (324) // Waypoint
+        //  8. UNKNOWN              (324) // Waypoint
         //                          (356)
 
         // Use default size if tail is not set.
-        var bufferSize = container.Switch!.MetaTail is null ? (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE) : (META_KNOWN + container.Switch!.MetaTail!.Length);
+        var bufferSize = container.Switch!.MetaTail is not null ? (META_KNOWN + container.Switch!.MetaTail.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
         var buffer = new byte[bufferSize];
         var unixSeconds = (uint)(container.LastWriteTime.ToUniversalTime().ToUnixTimeSeconds());
 

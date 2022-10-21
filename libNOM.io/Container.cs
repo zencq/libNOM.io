@@ -195,6 +195,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public bool IsWaypointWithAgileStat => IsVersion(VersionEnum.WaypointWithAgileStat); // { get; }
 
+    public bool IsWaypointWithSuperchargedSlots => IsVersion(VersionEnum.WaypointWithSuperchargedSlots); // { get; }
+
     public string SaveName // { get; set; }
     {
         get => _jsonObject is not null ? _jsonObject.GetValue<string?>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty : string.Empty;

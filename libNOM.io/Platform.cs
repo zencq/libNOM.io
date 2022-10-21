@@ -1396,8 +1396,7 @@ public abstract partial class Platform
         ??? = ????/???? (??? = ?)
 
         Waypoint
-        405 = 4653/4141
-
+        405 = 4654/4142
         404 = 4653/4141
         403 = 4652/4140
         400 = 4652/4140
@@ -1533,20 +1532,19 @@ public abstract partial class Platform
         209 = 5141/4117
         */
 
-        if (container.BaseVersion >= 4141) // 4.04
+        if (container.BaseVersion >= 4142) // 4.05
         {
-            return VersionEnum.WaypointWithAgileStat;
+            return VersionEnum.WaypointWithSuperchargedSlots;
         }
+
+        if (container.BaseVersion >= 4141) // 4.04
+            return VersionEnum.WaypointWithAgileStat;
 
         if (container.BaseVersion >= 4140) // 4.00
-        {
             return VersionEnum.Waypoint;
-        }
 
         if (container.BaseVersion >= 4139) // 3.94
-        {
             return VersionEnum.Endurance;
-        }
 
         if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
@@ -1567,9 +1565,7 @@ public abstract partial class Platform
         }
 
         if (container.BaseVersion >= 4136) // 3.80
-        {
             return VersionEnum.Sentinel;
-        }
 
         if (container.BaseVersion >= 4135) // 3.60, 3.70
         {
@@ -1620,9 +1616,7 @@ public abstract partial class Platform
         }
 
         if (container.BaseVersion >= 4125) // 2.40
-        {
             return VersionEnum.ExoMech;
-        }
 
         if (container.BaseVersion >= 4124) // 2.26, 2.30
         {
@@ -1634,14 +1628,10 @@ public abstract partial class Platform
         }
 
         if (container.BaseVersion >= 4122) // 2.20
-        {
             return VersionEnum.Synthesis;
-        }
 
         if (container.BaseVersion >= 4119) // 2.11
-        {
             return VersionEnum.BeyondWithVehicleCam;
-        }
 
         return VersionEnum.Unknown;
     }
@@ -1649,20 +1639,19 @@ public abstract partial class Platform
     /// <inheritdoc cref="GetVersionEnum(Container, JObject)"/>
     protected static VersionEnum GetVersionEnum(Container container, string json)
     {
-        if (container.BaseVersion >= 4141) // 4.04
+        if (container.BaseVersion >= 4142) // 4.05
         {
-            return VersionEnum.WaypointWithAgileStat;
+            return VersionEnum.WaypointWithSuperchargedSlots;
         }
+
+        if (container.BaseVersion >= 4141) // 4.04
+            return VersionEnum.WaypointWithAgileStat;
 
         if (container.BaseVersion >= 4140) // 4.00
-        {
             return VersionEnum.Waypoint;
-        }
 
         if (container.BaseVersion >= 4139) // 3.94
-        {
             return VersionEnum.Endurance;
-        }
 
         if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
@@ -1683,9 +1672,7 @@ public abstract partial class Platform
         }
 
         if (container.BaseVersion >= 4136) // 3.80
-        {
             return VersionEnum.Sentinel;
-        }
 
         if (container.BaseVersion >= 4135) // 3.60, 3.70
         {
@@ -1736,9 +1723,7 @@ public abstract partial class Platform
         }
 
         if (container.BaseVersion >= 4125) // 2.40
-        {
             return VersionEnum.ExoMech;
-        }
 
         if (container.BaseVersion >= 4124) // 2.26, 2.30
         {
@@ -1750,14 +1735,10 @@ public abstract partial class Platform
         }
 
         if (container.BaseVersion >= 4122) // 2.20
-        {
             return VersionEnum.Synthesis;
-        }
 
         if (container.BaseVersion >= 4119) // 2.11
-        {
             return VersionEnum.BeyondWithVehicleCam;
-        }
 
         return VersionEnum.Unknown;
     }
