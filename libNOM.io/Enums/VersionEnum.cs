@@ -17,10 +17,10 @@ public enum VersionEnum
     Abyss = 170,
     Visions = 175,
     Beyond = 200,
-    [Description("Beyond")]
+    [Description(nameof(Beyond))]
     BeyondWithVehicleCam = 211,
     Synthesis = 220,
-    [Description("Synthesis")]
+    [Description(nameof(Synthesis))]
     SynthesisWithJetpack = 226,
     LivingShip = 230,
     ExoMech = 240,
@@ -32,21 +32,21 @@ public enum VersionEnum
     Expeditions = 330,
     Beachhead = 340,
     Prisms = 350,
-    [Description("Prisms")]
+    [Description(nameof(Prisms))]
     PrismsWithBytebeatAuthor = 351,
     Frontiers = 360,
     Emergence = 370,
     Sentinel = 380,
-    [Description("Sentinel")]
+    [Description(nameof(Sentinel))]
     SentinelWithWeaponResource = 381,
-    [Description("Sentinel")]
+    [Description(nameof(Sentinel))]
     SentinelWithVehicleAI = 384,
     Outlaws = 385,
     Leviathan = 390,
     Endurance = 394,
     Waypoint = 400,
-    [Description("Waypoint")]
+    [Description(nameof(Waypoint))]
     WaypointWithAgileStat = 404,
-    [Description("Waypoint")]
+    [Description(nameof(Waypoint))]
     WaypointWithSuperchargedSlots = 405,
 }

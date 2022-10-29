@@ -410,7 +410,8 @@ public partial class PlatformSteam : Platform
         if (!container.IsSave)
             return ReadMeta(container);
 
-        var bufferSize = container.Steam!.MetaTail is not null ? (META_KNOWN + container.Steam!.MetaTail.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
+        // META_KNOWN and Steam.MetaTail are using uint and therefore need to be multiplied by 4 to get the actual buffer size.
+        var bufferSize = container.Steam!.MetaTail is not null ? (META_KNOWN + container.Steam!.MetaTail.Length) * 4 : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
         var buffer = new byte[bufferSize];
 
         if (!container.IsFrontiers)
@@ -466,7 +467,7 @@ public partial class PlatformSteam : Platform
             if (container.Steam!.MetaTail is not null)
             {
                 writer.Seek(META_KNOWN, SeekOrigin.Begin);
-                foreach (var value in container.Steam!.MetaTail) // 280
+                foreach (var value in container.Steam!.MetaTail) // 24 or 280
                 {
                     writer.Write(value);
                 }

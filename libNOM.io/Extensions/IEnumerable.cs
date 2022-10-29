@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Diagnostics;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace libNOM.io.Extensions;
 
@@ -43,7 +41,7 @@ public static class IEnumerableExtensions
     /// <returns>The deserialized object from the bytes.</returns>
     internal static JObject? GetJson(this IEnumerable<byte> self)
     {
-        var json = self.GetString().TrimEnd('\0').EscapeDataString();
+        var json = self.GetString().TrimEnd('\0');
 
         if (JsonConvert.DeserializeObject(json) is not JObject jsonObject)
             return null;

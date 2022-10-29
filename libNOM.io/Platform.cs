@@ -9,8 +9,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace libNOM.io;
@@ -23,7 +21,7 @@ public abstract partial class Platform
 {
     #region Constant
 
-    protected const int CACHE_EXPIRATION = 100;
+    protected const int CACHE_EXPIRATION = 250; // milliseconds
     protected const VersionEnum LOWEST_SUPPORTED_VERSION = VersionEnum.BeyondWithVehicleCam;
     protected const uint META_HEADER = 0xCA55E77E;
     protected const uint SAVE_FORMAT_100 = 0x7D0; // 2000
