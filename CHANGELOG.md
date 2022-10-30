@@ -7,14 +7,21 @@ All notable changes to this project will be documented in this file. It uses the
 ## Unreleased
 
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.5.0 (2022-10-31)
+
+### Added
 * OS dependent default paths for Steam
 * Support for game version **Waypoint 4.0**
 * Support for the Switch platform
 ### Changed
 * PlatformCollection itself is now iterable and therefore `Get()` was removed
 * Threshold is now the lowest ever used base version
-### Deprecated
-### Removed
 ### Fixed
 * Explicitly do not use compression for account data
 * SaveWizard usage detection if savedata00.hg file (account data) is present
@@ -22,7 +29,6 @@ All notable changes to this project will be documented in this file. It uses the
 * Save Transfer for old saves
 * Getter for deobfuscated JSON string (mostly old SaveWizard memory.dat)
 * Unable to copy/transfer a save to an empty slot
-### Security
 
 ## 0.4.1 (2022-08-10)
 

@@ -133,10 +133,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public PresetGameModeEnum? GameModeEnum // { get; private set; }
     {
-        get
-        {
-            return _jsonObject is not null ? Global.GetGameModeEnum(this, _jsonObject) : _gameMode;
-        }
+        get => _jsonObject is not null ? Global.GetGameModeEnum(this, _jsonObject) : _gameMode;
         internal set
         {
             if (_jsonObject is not null)

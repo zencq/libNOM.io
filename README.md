@@ -30,8 +30,8 @@ Each platform has anchor file patterns to check whether it is worth to look furt
 into the selected directory. This must be in or one level below the selected one.
 
 * Apple
-    * Notes: No Man's Sky is coming to both Mac and iPad later this year and can
-      hopefully be supported short after its release.
+    * Notes: No Man's Sky is coming to both Mac and iPad and can hopefully be supported
+      short after its release.
 * [GOG.com](https://www.gog.com/game/no_mans_sky) (PC)
     * Location: **%AppData%\HelloGames\NMS\DefaultUser**
     * File Patterns: **save\*.hg**

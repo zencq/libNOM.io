@@ -239,8 +239,14 @@ public class PlatformMicrosoft : Platform
                     File.WriteAllBytes(Destination.Microsoft.BlobContainerFile.FullName, blobContainerBinary);
                 }
 
+                // Faking relevant properties to force it to Write().
+                Destination.Exists = true;
+                Destination.IsSynced = false;
+
                 // Properties requied to properly build the container below.
                 Destination.BaseVersion = Source.BaseVersion;
+                Destination.SeasonEnum = Source.SeasonEnum;
+                Destination.VersionEnum = Source.VersionEnum;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
@@ -1066,7 +1072,7 @@ public class PlatformMicrosoft : Platform
         //                       (280)
 
         // Use default size if tail is not set.
-        var bufferSize = container.Microsoft!.MetaTail is not null ? (META_KNOWN + container.Microsoft!.MetaTail!.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
+        var bufferSize = container.Microsoft?.MetaTail is not null ? (META_KNOWN + container.Microsoft!.MetaTail!.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
         var buffer = new byte[bufferSize];
 
         if (container.MetaIndex == 0)

@@ -170,7 +170,59 @@ public class PlatformPlaystation : Platform
     {
         if (_useSaveStreaming)
         {
-            base.Copy(containerOperationData, write);
+            // Copy of base.Copy() with addition for the PlaStation container.
+            foreach (var (Source, Destination) in containerOperationData.Select(d => (d.Source, d.Destination)))
+            {
+                if (!Source.Exists)
+                {
+                    Delete(Destination, write);
+                }
+                else if (Destination.Exists || (!Destination.Exists && CanCreate))
+                {
+                    if (Source.PlayStation is null)
+                        throw new InvalidOperationException("The source container has no PlayStation extra.");
+
+                    if (!Source.IsLoaded)
+                    {
+                        BuildContainer(Source);
+                    }
+                    if (!Source.IsCompatible)
+                    {
+                        throw new InvalidOperationException(Source.IncompatibilityTag);
+                    }
+
+                    // Due to this CanCreate can be true.
+                    if (!Destination.Exists)
+                    {
+                        Destination.PlayStation = new PlaystationContainer
+                        {
+                            Bytes = Source.PlayStation.Bytes,
+                            SizeCompressed = Source.PlayStation.SizeCompressed,
+                            SizeDecompressed = Source.PlayStation.SizeDecompressed,
+                        };
+                    }
+
+                    // Faking relevant properties to force it to Write().
+                    Destination.Exists = true;
+                    Destination.IsSynced = false;
+
+                    // Properties requied to properly build the container below.
+                    Destination.BaseVersion = Source.BaseVersion;
+                    Destination.SeasonEnum = Source.SeasonEnum;
+                    Destination.VersionEnum = Source.VersionEnum;
+
+                    Destination.SetJsonObject(Source.GetJsonObject());
+
+                    // This "if" is not really useful in this method but properly implemented nonetheless.
+                    if (write)
+                    {
+                        Write(Destination, writeTime: Source.LastWriteTime);
+                        BuildContainer(Destination);
+                    }
+                }
+                //else
+                //    continue;
+            }
         }
         else
         {
@@ -205,12 +257,15 @@ public class PlatformPlaystation : Platform
                         };
                     }
 
+                    // Faking relevant properties to force it to Write().
                     Destination.Exists = true;
                     Destination.IsSynced = true;
                     Destination.LastWriteTime = Source.LastWriteTime;
 
                     // Properties requied to properly build the container below.
                     Destination.BaseVersion = Source.BaseVersion;
+                    Destination.SeasonEnum = Source.SeasonEnum;
+                    Destination.VersionEnum = Source.VersionEnum;
 
                     Destination.SetJsonObject(Source.GetJsonObject());
 
@@ -222,9 +277,9 @@ public class PlatformPlaystation : Platform
             {
                 WriteMemoryDat();
             }
-
-            UpdatePlatformUserIdentification();
         }
+
+        UpdatePlatformUserIdentification();
     }
 
     #endregion
@@ -452,7 +507,15 @@ public class PlatformPlaystation : Platform
         {
             // No compression for account data.
             if (!container.IsSave)
+            {
+                // Create PlayStation container in case it will be copied.
+                container.PlayStation = new PlaystationContainer
+                {
+                    SizeCompressed = data.Length,
+                    SizeDecompressed = data.Length,
+                };
                 return data;
+            }
 
             var result = new List<byte>();
 
@@ -472,6 +535,12 @@ public class PlatformPlaystation : Platform
                 result.AddRange(target);
             }
 
+            // Create PlayStation container in case it will be copied.
+            container.PlayStation = new PlaystationContainer
+            {
+                SizeCompressed = data.Length,
+                SizeDecompressed = result.Count,
+            };
             return result.ToArray();
         }
         else
@@ -605,7 +674,7 @@ public class PlatformPlaystation : Platform
             if (!CanUpdate || !container.IsLoaded)
                 return;
 
-            if (!container.IsSynced)
+            // if (!container.IsSynced) // TODO: temporarily disabled
             {
                 container.Exists = true;
                 container.IsSynced = true;

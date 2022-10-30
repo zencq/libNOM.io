@@ -159,6 +159,66 @@ public partial class PlatformSteam : Platform
 
     // //
 
+    #region Copy
+
+    protected override void Copy(IEnumerable<ContainerOperationData> containerOperationData, bool write)
+    {
+        foreach (var (Source, Destination) in containerOperationData.Select(d => (d.Source, d.Destination)))
+        {
+            if (!Source.Exists)
+            {
+                Delete(Destination, write);
+            }
+            else if (Destination.Exists || (!Destination.Exists && CanCreate))
+            {
+                if (Source.Steam is null)
+                    throw new InvalidOperationException("The source container has no Steam extra.");
+
+                if (!Source.IsLoaded)
+                {
+                    BuildContainer(Source);
+                }
+                if (!Source.IsCompatible)
+                {
+                    throw new InvalidOperationException(Source.IncompatibilityTag);
+                }
+
+                // Due to this CanCreate can be true.
+                if (!Destination.Exists)
+                {
+                    Destination.Steam = new SteamContainer
+                    {
+                        MetaTail = Source.Steam.MetaTail,
+                    };
+                }
+
+                // Faking relevant properties to force it to Write().
+                Destination.Exists = true;
+                Destination.IsSynced = false;
+
+                // Properties requied to properly build the container below.
+                Destination.BaseVersion = Source.BaseVersion;
+                Destination.SeasonEnum = Source.SeasonEnum;
+                Destination.VersionEnum = Source.VersionEnum;
+
+                Destination.SetJsonObject(Source.GetJsonObject());
+
+                // This "if" is not really useful in this method but properly implemented nonetheless.
+                if (write)
+                {
+                    Write(Destination, writeTime: Source.LastWriteTime);
+                    BuildContainer(Destination);
+                }
+            }
+            //else
+            //    continue;
+        }
+
+        UpdatePlatformUserIdentification();
+    }
+
+    #endregion
+
     #region Read
 
     #region Create
@@ -411,7 +471,7 @@ public partial class PlatformSteam : Platform
             return ReadMeta(container);
 
         // META_KNOWN and Steam.MetaTail are using uint and therefore need to be multiplied by 4 to get the actual buffer size.
-        var bufferSize = container.Steam!.MetaTail is not null ? (META_KNOWN + container.Steam!.MetaTail.Length) * 4 : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
+        var bufferSize = container.Steam?.MetaTail is not null ? (META_KNOWN + container.Steam!.MetaTail.Length) * 4 : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
         var buffer = new byte[bufferSize];
 
         if (!container.IsFrontiers)

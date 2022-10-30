@@ -1,6 +1,4 @@
-﻿using LazyCache;
-using Microsoft.Extensions.Caching.Memory;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace libNOM.io;
 
@@ -80,6 +78,8 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
+    // //
+
     #region Constructor
 
     public PlatformSwitch() : base(null, null) { }
@@ -87,6 +87,72 @@ public partial class PlatformSwitch : Platform
     public PlatformSwitch(DirectoryInfo? directory) : base(directory, null) { }
 
     public PlatformSwitch(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
+
+    #endregion
+
+    // //
+
+    #region Copy
+
+    protected override void Copy(IEnumerable<ContainerOperationData> containerOperationData, bool write)
+    {
+        foreach (var (Source, Destination) in containerOperationData.Select(d => (d.Source, d.Destination)))
+        {
+            if (!Source.Exists)
+            {
+                Delete(Destination, write);
+            }
+            else if (Destination.Exists || (!Destination.Exists && CanCreate))
+            {
+                if (Source.Switch is null)
+                    throw new InvalidOperationException("The source container has no Switch extra.");
+
+                if (!Source.IsLoaded)
+                {
+                    BuildContainer(Source);
+                }
+                if (!Source.IsCompatible)
+                {
+                    throw new InvalidOperationException(Source.IncompatibilityTag);
+                }
+
+                // Due to this CanCreate can be true.
+                if (!Destination.Exists)
+                {
+                    Destination.Switch = new SwitchContainer
+                    {
+                        BaseVersion = Source.Switch.BaseVersion,
+                        GameMode = Source.Switch.GameMode,
+                        MetaIndex = Source.Switch.MetaIndex,
+                        MetaTail = Source.Switch.MetaTail,
+                        TotalPlayTime = Source.Switch.TotalPlayTime,
+                    };
+                }
+
+                // Faking relevant properties to force it to Write().
+                Destination.Exists = true;
+                Destination.IsSynced = false;
+
+                // Properties requied to properly build the container below.
+                Destination.BaseVersion = Source.BaseVersion;
+                Destination.SeasonEnum = Source.SeasonEnum;
+                Destination.VersionEnum = Source.VersionEnum;
+
+                Destination.SetJsonObject(Source.GetJsonObject());
+
+                // This "if" is not really useful in this method but properly implemented nonetheless.
+                if (write)
+                {
+                    Write(Destination, writeTime: Source.LastWriteTime);
+                    BuildContainer(Destination);
+                }
+            }
+            //else
+            //    continue;
+        }
+
+        UpdatePlatformUserIdentification();
+    }
 
     #endregion
 
@@ -160,6 +226,33 @@ public partial class PlatformSwitch : Platform
 
     #region Write
 
+    protected override byte[] CompressData(Container container, byte[] data)
+    {
+        if (!container.IsSave || !container.IsFrontiers)
+            return data;
+
+        var result = new List<byte>();
+
+        var offset = 0;
+        while (offset < data.Length)
+        {
+            var source = data.Skip(offset).Take(SAVE_STREAMING_CHUNK_SIZE).ToArray();
+            _ = LZ4_Encode(source, out byte[] target);
+
+            offset += SAVE_STREAMING_CHUNK_SIZE;
+
+            var chunkHeader = new uint[4];
+            chunkHeader[0] = Global.HEADER_SAVE_STREAMING_CHUNK;
+            chunkHeader[1] = (uint)(target.Length);
+            chunkHeader[2] = (uint)(source.Length);
+
+            result.AddRange(chunkHeader.GetBytes());
+            result.AddRange(target);
+        }
+
+        return result.ToArray();
+    }
+
     protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
     {
         //  0. META HEADER          (  4)
@@ -178,7 +271,7 @@ public partial class PlatformSwitch : Platform
         //                          (356)
 
         // Use default size if tail is not set.
-        var bufferSize = container.Switch!.MetaTail is not null ? (META_KNOWN + container.Switch!.MetaTail.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
+        var bufferSize = container.Switch?.MetaTail is not null ? (META_KNOWN + container.Switch!.MetaTail.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
         var buffer = new byte[bufferSize];
         var unixSeconds = (uint)(container.LastWriteTime.ToUniversalTime().ToUnixTimeSeconds());
 

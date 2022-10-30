@@ -569,47 +569,7 @@ public abstract partial class Platform
     /// <param name="containerOperationData"></param>
     /// <param name="write"></param>
     /// <exception cref="InvalidOperationException"/>
-    protected virtual void Copy(IEnumerable<ContainerOperationData> containerOperationData, bool write)
-    {
-        foreach (var (Source, Destination) in containerOperationData.Select(d => (d.Source, d.Destination)))
-        {
-            if (!Source.Exists)
-            {
-                Delete(Destination, write);
-            }
-            else if (Destination.Exists || (!Destination.Exists && CanCreate))
-            {
-                if (!Source.IsLoaded)
-                {
-                    BuildContainer(Source);
-                }
-                if (!Source.IsCompatible)
-                {
-                    throw new InvalidOperationException(Source.IncompatibilityTag);
-                }
-
-                // Faking relevant properties to force it to Write().
-                Destination.Exists = true;
-                Destination.IsSynced = false;
-
-                // Properties requied to properly build the container below.
-                Destination.BaseVersion = Source.BaseVersion;
-
-                Destination.SetJsonObject(Source.GetJsonObject());
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, writeTime: Source.LastWriteTime);
-                    BuildContainer(Destination);
-                }
-            }
-            //else
-            //    continue;
-        }
-
-        UpdatePlatformUserIdentification();
-    }
+    protected abstract void Copy(IEnumerable<ContainerOperationData> containerOperationData, bool write);
 
     #endregion
 
@@ -2268,7 +2228,7 @@ public abstract partial class Platform
 
         DisableWatcher();
 
-        if (!container.IsSynced)
+        // if (!container.IsSynced) // TODO: temporarily disabled
         {
             container.Exists = true;
             container.IsSynced = true;
