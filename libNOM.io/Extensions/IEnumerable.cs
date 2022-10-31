@@ -41,7 +41,7 @@ public static class IEnumerableExtensions
     /// <returns>The deserialized object from the bytes.</returns>
     internal static JObject? GetJson(this IEnumerable<byte> self)
     {
-        var json = self.GetString().TrimEnd('\0');
+        var json = self.GetString().TrimEnd('\0').EscapeDataString();
 
         if (JsonConvert.DeserializeObject(json) is not JObject jsonObject)
             return null;

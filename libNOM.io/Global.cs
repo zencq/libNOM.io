@@ -173,7 +173,7 @@ internal static class Global
         var itemShopAvailability = jsonObject.GetValue<string>("6f=.LyC.:fe.FB5.TYf", "PlayerStateData.DifficultyState.Settings.ItemShopAvailability.ItemShopAvailabilityDifficulty");
 
         // Inventory Stack Limits
-        var inventoryStackLimits = jsonObject.GetValue<string>("6f=.LyC.:fe.kZ5.?SS", "PlayerStateData.DifficultyState.Settings.InventoryStackLimits.InventoryStackLimitsDifficulty"); // always "High"
+        var inventoryStackLimits = jsonObject.GetValue<string>("6f=.LyC.:fe.kZ5.?SS", "PlayerStateData.DifficultyState.Settings.InventoryStackLimits.InventoryStackLimitsDifficulty");
 
         // Enemy Strength
         var damageGiven = jsonObject.GetValue<string>("6f=.LyC.:fe.PYQ.mum", "PlayerStateData.DifficultyState.Settings.DamageGiven.DamageGivenDifficulty");
@@ -236,7 +236,10 @@ internal static class Global
         if (IsGameModePreset(stringValues, boolValues, "None", "Slow", "Slow", "Normal", "Free", "Fast", "None", "None", "None", "None", "Free", "Free", "true", "Free", "High", "High", "Normal", "Off", "Off", "NeverAttack", "true", "false", "true", "Fast"))
             return PresetGameModeEnum.Creative;
 
+        // Twice as InventoryStackLimits can be "Normal" if it was converted from pre-Waypoint.
         if (IsGameModePreset(stringValues, boolValues, "All", "Fast", "Fast", "Low", "Full", "Normal", "High", "High", "DestroyItems", "High", "Expensive", "High", "false", "Normal", "Low", "High", "Normal", "Fast", "Fast", "FullEcosystem", "false", "true", "false", "Normal"))
+            return PresetGameModeEnum.Survival;
+        if (IsGameModePreset(stringValues, boolValues, "All", "Fast", "Fast", "Low", "Full", "Normal", "High", "High", "DestroyItems", "High", "Expensive", "High", "false", "Normal", "Low", "Normal", "Normal", "Fast", "Fast", "FullEcosystem", "false", "true", "false", "Normal"))
             return PresetGameModeEnum.Survival;
 
         if (IsGameModePreset(stringValues, boolValues, "HealthAndHazard", "Slow", "Slow", "High", "Low", "VeryFast", "Low", "None", "None", "Low", "Cheap", "Low", "false", "Cheap", "High", "High", "High", "Slow", "Slow", "AttackIfProvoked", "true", "true", "true", "Fast"))
@@ -357,10 +360,6 @@ internal static class Global
     private static bool IsGameModePreset(string json, params string[] setpoints)
     {
         // Survival Elements
-        var a = setpoints[0];
-        var b = $"\"tEx\":{{\"ZeS\":\"{setpoints[0]}\"";
-        var c = json.Contains($"\"tEx\":{{\"ZeS\":\"{setpoints[0]}\"");
-        var d = !c;
         if (!json.Contains($"\"tEx\":{{\"ZeS\":\"{setpoints[0]}\""))
             return false;
 
