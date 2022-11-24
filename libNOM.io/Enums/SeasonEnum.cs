@@ -18,5 +18,9 @@ public enum SeasonEnum
     Blighted = 10, // 6th
     Leviathan = 11, // 7th
     Polestar = 12, // 8th
+    ExobiologyRedux = 13,
+    BlightedRedux = 14,
+    LeviathanRedux = 15,
+    PolestarRedux = 16,
     Future,
 }
