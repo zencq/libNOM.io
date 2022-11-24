@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.5.1 (2022-11-24)
+
+### Added
+* Holiday 2022 Expeditions
+
 ## 0.5.0 (2022-10-31)
 
 ### Added
