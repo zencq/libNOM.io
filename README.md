@@ -1,6 +1,6 @@
 # libNOM.io
 
-![Maintained](https://img.shields.io/maintenance/yes/2022)
+![Maintained](https://img.shields.io/maintenance/yes/2023)
 [![.NET Standard 2.0 - 2.1 | 6.0](https://img.shields.io/badge/.NET-Standard%202.0%20--%202.1%20%7C%206.0-lightgrey)](https://dotnet.microsoft.com/en-us/)
 [![C# 10](https://img.shields.io/badge/C%23-10-lightgrey)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![Release](https://img.shields.io/github/v/release/zencq/libNOM.io?display_name=tag)](https://github.com/zencq/libNOM.io/releases/latest)

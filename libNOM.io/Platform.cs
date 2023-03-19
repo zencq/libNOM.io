@@ -1490,6 +1490,11 @@ public abstract partial class Platform
         209 = 5141/4117
         */
 
+        if (container.BaseVersion >= 4143) // 4.10
+        {
+            return VersionEnum.Fractal;
+        }
+
         if (container.BaseVersion >= 4142) // 4.05
         {
             return VersionEnum.WaypointWithSuperchargedSlots;
@@ -1597,6 +1602,11 @@ public abstract partial class Platform
     /// <inheritdoc cref="GetVersionEnum(Container, JObject)"/>
     protected static VersionEnum GetVersionEnum(Container container, string json)
     {
+        if (container.BaseVersion >= 4143) // 4.10
+        {
+            return VersionEnum.Fractal;
+        }
+
         if (container.BaseVersion >= 4142) // 4.05
         {
             return VersionEnum.WaypointWithSuperchargedSlots;

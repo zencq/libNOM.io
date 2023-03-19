@@ -13,6 +13,14 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.5.2 (2023-03-19)
+
+### Added
+* Support for game version **Fractal 4.10**
+
+### Fixed
+* OutOfMemoryException while reading Microsoft account files (4.10 only)
+
 ## 0.5.1 (2022-11-24)
 
 ### Added
@@ -22,7 +30,7 @@ All notable changes to this project will be documented in this file. It uses the
 
 ### Added
 * OS dependent default paths for Steam
-* Support for game version **Waypoint 4.0**
+* Support for game version **Waypoint 4.00**
 * Support for the Switch platform
 ### Changed
 * PlatformCollection itself is now iterable and therefore `Get()` was removed

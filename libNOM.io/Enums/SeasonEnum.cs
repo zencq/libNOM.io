@@ -22,5 +22,6 @@ public enum SeasonEnum
     BlightedRedux = 14,
     LeviathanRedux = 15,
     PolestarRedux = 16,
+    Utopia = 17,
     Future,
 }
