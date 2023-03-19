@@ -1,14 +1,16 @@
 name: libNOM.io
 
 on:
-  push
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+  create:
 
 jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
-    env:
-      libNOMmap: '0.8.3'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,17 +26,14 @@ jobs:
         with:
           dotnet-version: 6.0.x
           dotnet-quality: ga
-      # TODO: Remove when pushing libNOM.map to nuget.org
-      - name: Download libNOM.map
-        uses: Legion2/download-release-action@v2.1.0
+      - name: Cache
+        uses: actions/cache@v3
         with:
-          repository: zencq/libNOM.map
-          tag: ${{ env.libNOMmap }}
-          path: nupkg
-          file: libNOM.map.${{ env.libNOMmap }}.nupkg
-      # TODO: Update to 'dotnet restore' when pushing libNOM.map to nuget.org
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
       - name: Dependencies
-        run: dotnet restore -s ./nupkg -s https://api.nuget.org/v3/index.json
+        run: dotnet restore
       - name: Unit Test
         run: dotnet test libNOM.test --no-restore --configuration Debug --framework net6.0
       - name: Pack
@@ -42,7 +41,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: libNOM.io NuGet Package
+          name: libNOM.io NuGet
           path: libNOM.io/bin/Release/libNOM.io.*nupkg
           if-no-files-found: error
   release:
@@ -58,7 +57,7 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v3
         with:
-          name: libNOM.io NuGet Package
+          name: libNOM.io NuGet
       - name: Version
         run: echo "nupkg_version=$((((Get-Item -Path .\libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
         shell: pwsh
@@ -73,3 +72,5 @@ jobs:
         with:
           body_path: ${{ github.workspace }}/.github/changelogs/${{ github.ref_name }}.md
           files: libNOM.io.*nupkg
+      - name: Publish
+        run: dotnet nuget push ./libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}

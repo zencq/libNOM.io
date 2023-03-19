@@ -41,7 +41,9 @@ public static class IEnumerableExtensions
     /// <returns>The deserialized object from the bytes.</returns>
     internal static JObject? GetJson(this IEnumerable<byte> self)
     {
-        var json = self.GetString().TrimEnd('\0').EscapeDataString();
+        // Account has no proper decompressed size in the first Fractal update (4.10).
+        var count = self.ToList().FindLastIndex(b => b != 0) + 1;
+        var json = self.Take(count).GetString().EscapeDataString();
 
         if (JsonConvert.DeserializeObject(json) is not JObject jsonObject)
             return null;

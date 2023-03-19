@@ -49,4 +49,5 @@ public enum VersionEnum
     WaypointWithAgileStat = 404,
     [Description(nameof(Waypoint))]
     WaypointWithSuperchargedSlots = 405,
+    Fractal = 410,
 }
