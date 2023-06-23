@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Application -->
   <PropertyGroup>
@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="K4os.Compression.LZ4" Version="1.3.5" />
     <PackageReference Include="LazyCache" Version="2.4.0" />
-    <PackageReference Include="libNOM.map" Version="0.9.0" />
+    <PackageReference Include="libNOM.map" Version="0.9.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
