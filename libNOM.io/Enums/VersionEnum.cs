@@ -50,4 +50,7 @@ public enum VersionEnum
     [Description(nameof(Waypoint))]
     WaypointWithSuperchargedSlots = 405,
     Fractal = 410,
+    Interceptor = 420,
+    Mac = 425,
+    Singularity = 430,
 }

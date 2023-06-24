@@ -1490,15 +1490,26 @@ public abstract partial class Platform
         209 = 5141/4117
         */
 
-        if (container.BaseVersion >= 4143) // 4.10
+        if (container.BaseVersion >= 4144) // 4.20, 4.25, 4.30
         {
-            return VersionEnum.Fractal;
+            // Only used in actual Expedition saves.
+            //var greyIfCantStart = jsonObject.SelectTokens(usesMapping ? "PlayerStateData.SeasonData.Stages[*].Milestones[*].GreyIfCantStart" : "6f=.Rol.3Mw[*].kr6[*].:?x");
+            //if (greyIfCantStart.Any())
+            //    return VersionEnum.Singularity;
+
+            // This is actually VersionEnum.Mac but it made most of the preperation for Singularity Expedition and therefore we already use this here.
+            var seasonStartMusicOverride = jsonObject.SelectToken(Settings.Mapping ? "PlayerStateData.SeasonData.SeasonStartMusicOverride" : "6f=.Rol.XEk");
+            if (seasonStartMusicOverride is not null)
+                return VersionEnum.Singularity;
+
+            return VersionEnum.Interceptor;
         }
 
+        if (container.BaseVersion >= 4143) // 4.10
+            return VersionEnum.Fractal;
+
         if (container.BaseVersion >= 4142) // 4.05
-        {
             return VersionEnum.WaypointWithSuperchargedSlots;
-        }
 
         if (container.BaseVersion >= 4141) // 4.04
             return VersionEnum.WaypointWithAgileStat;
@@ -1602,15 +1613,26 @@ public abstract partial class Platform
     /// <inheritdoc cref="GetVersionEnum(Container, JObject)"/>
     protected static VersionEnum GetVersionEnum(Container container, string json)
     {
-        if (container.BaseVersion >= 4143) // 4.10
+        if (container.BaseVersion >= 4144) // 4.20, 4.25, 4.30
         {
-            return VersionEnum.Fractal;
+            // Only used in actual Expedition saves.
+            //var greyIfCantStart = json.Contains("\":?x\":"); // GreyIfCantStart
+            //if (greyIfCantStart)
+            //    return VersionEnum.Singularity;
+
+            // This is actually VersionEnum.Mac but it made most of the preperation for Singularity Expedition and therefore we already use this here.
+            var seasonStartMusicOverride = json.Contains("\"XEk\":"); // SeasonStartMusicOverride
+            if (seasonStartMusicOverride)
+                return VersionEnum.Singularity;
+
+            return VersionEnum.Interceptor;
         }
 
+        if (container.BaseVersion >= 4143) // 4.10
+            return VersionEnum.Fractal;
+
         if (container.BaseVersion >= 4142) // 4.05
-        {
             return VersionEnum.WaypointWithSuperchargedSlots;
-        }
 
         if (container.BaseVersion >= 4141) // 4.04
             return VersionEnum.WaypointWithAgileStat;

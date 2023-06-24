@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.5.3 (2023-06-24)
+
+### Added
+* Support for game versions up to **Singularity 4.30**
+
 ## 0.5.2 (2023-03-19)
 
 ### Added

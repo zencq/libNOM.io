@@ -23,5 +23,6 @@ public enum SeasonEnum
     LeviathanRedux = 15,
     PolestarRedux = 16,
     Utopia = 17,
+    Singularity = 18,
     Future,
 }

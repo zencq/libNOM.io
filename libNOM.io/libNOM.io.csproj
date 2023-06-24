@@ -12,12 +12,14 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <LangVersion>10.0</LangVersion>
     <Deterministic>True</Deterministic>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <!-- Package -->
   <PropertyGroup>
-    <Version>0.5.2</Version>
-    <Authors>zencq</Authors>
+    <Version>0.5.3</Version>
+    <Authors>cengelha</Authors>
     <Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/zencq/libNOM.io</RepositoryUrl>
@@ -30,6 +32,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
+    <PackageTags>NoMansSky;NMS;libNOM</PackageTags>
+    <Copyright>Copyright (c) Christian Engelhardt 2021</Copyright>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <!-- https://github.com/clairernovotny/DeterministicBuilds -->
@@ -41,7 +45,7 @@
   <ItemGroup>
     <PackageReference Include="K4os.Compression.LZ4" Version="1.3.5" />
     <PackageReference Include="LazyCache" Version="2.4.0" />
-    <PackageReference Include="libNOM.map" Version="0.9.0" />
+    <PackageReference Include="libNOM.map" Version="0.9.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

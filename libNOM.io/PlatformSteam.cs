@@ -35,6 +35,9 @@ internal record class PlatformDirectoryDataSteam : PlatformDirectoryData
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) // SteamDeck
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "Steam", "steamapps", "compatdata", "275850", "pfx", "drive_c", "users", "steamuser", "Application Data", "HelloGames", "NMS");
 
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "HelloGames", "NMS");
+
         return string.Empty; // same as if not defined at all
     }))();
 
