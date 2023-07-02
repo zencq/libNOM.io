@@ -7,21 +7,29 @@ All notable changes to this project will be documented in this file. It uses the
 ## Unreleased
 
 ### Added
+* Now targeting .NET 7 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
+* Now publishing to [NuGet Gallery](https://www.nuget.org/packages/libNOM.io)
+* A setting to choose between writing always or only if a container is unsynced
 ### Changed
+* Renamed the settings _LastWriteTime_ and _Mapping_
 ### Deprecated
 ### Removed
 ### Fixed
+* The _Mapping_ settings is now only used to determine input/output and not for modifying things internally
+* A number of different issues reported on [Discord](https://discord.gg/nomnom-762409407488720918) and the [NomNom repository](https://github.com/zencq/NomNom/issues)
 ### Security
 
 ## 0.5.3 (2023-06-24)
 
 ### Added
 * Support for game versions up to **Singularity 4.30**
+* Singularity Expedition
 
 ## 0.5.2 (2023-03-19)
 
 ### Added
 * Support for game version **Fractal 4.10**
+* Utopia Expedition
 
 ### Fixed
 * OutOfMemoryException while reading Microsoft account files (4.10 only)

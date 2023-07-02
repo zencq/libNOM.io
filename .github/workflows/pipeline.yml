@@ -14,17 +14,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Replace
-        uses: jacobtomlinson/gha-find-replace@v2
+      - name: Replace (io)
+        uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: "#{STEAM_API_KEY}#"
           replace: ${{ secrets.STEAM_API_KEY }}
           include: "libNOM.io/Properties/**"
           regex: false
+      - name: Replace (test)
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: "#{TESTSUITE_PASSWORD}#"
+          replace: ${{ secrets.TESTSUITE_PASSWORD }}
+          include: "libNOM.test/Properties/**"
+          regex: false
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
           dotnet-quality: ga
       - name: Cache
         uses: actions/cache@v3
@@ -35,7 +42,11 @@ jobs:
       - name: Dependencies
         run: dotnet restore
       - name: Unit Test
-        run: dotnet test libNOM.test --no-restore --configuration Debug --framework net6.0
+        run: |
+          dotnet test libNOM.test --no-restore --configuration Debug --framework netstandard2.0
+          dotnet test libNOM.test --no-restore --configuration Debug --framework netstandard2.1
+          dotnet test libNOM.test --no-restore --configuration Debug --framework net6.0
+          dotnet test libNOM.test --no-restore --configuration Debug --framework net7.0
       - name: Pack
         run: dotnet pack libNOM.io --no-restore --configuration Release
       - name: Upload
