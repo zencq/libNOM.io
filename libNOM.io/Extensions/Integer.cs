@@ -11,6 +11,6 @@ internal static class IntegerExtensions
     /// <returns></returns>
     internal static bool IsGameMode(this int self, PresetGameModeEnum mode)
     {
-        return self > (Global.THRESHOLD + (mode.Numerate() * Global.OFFSET_GAMEMODE));
+        return self > (Global.THRESHOLD + ((int)(mode) * Global.OFFSET_GAMEMODE));
     }
 }

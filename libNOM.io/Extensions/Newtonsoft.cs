@@ -5,20 +5,14 @@ using Newtonsoft.Json.Linq;
 namespace libNOM.io.Extensions;
 
 
-public static class NewtonsoftExtensions
+internal static class NewtonsoftExtensions
 {
-    /// <inheritdoc cref="GetBytes(JObject, bool, bool)"/>
-    public static byte[] GetBytes(this JObject self)
-    {
-        return GetBytes(self, true);
-    }
-
     /// <summary>
     /// Serializes and encodes the object into a sequence of bytes in UTF-8 format.
     /// </summary>
     /// <param name="self"></param>
-    /// <returns>A byte array containing the results of encoding and serializing the object.</returns>
-    public static byte[] GetBytes(this JObject self, bool obfuscate)
+    /// <returns></returns>
+    internal static byte[] GetBytes(this JObject self, bool obfuscate)
     {
         if (self is null)
             return Array.Empty<byte>();
@@ -33,7 +27,7 @@ public static class NewtonsoftExtensions
     /// <param name="indent">Whether the result will be indented.</param>
     /// <param name="obfuscate">Whether the result will be obfuscated.</param>
     /// <returns>A JSON string representation of the object.</returns>
-    public static string GetString(this JObject self, bool indent, bool obfuscate)
+    internal static string GetString(this JObject self, bool indent, bool obfuscate)
     {
         if (self is null)
             return string.Empty;
@@ -61,9 +55,18 @@ public static class NewtonsoftExtensions
         return json.Replace("/", "\\/");
     }
 
+    /// <summary>
+    /// Evaluates a JSONPath expression and converts its value to <typeparamref name="T"/>.
+    /// Depending on the obfuscation state of this, it uses either-or path but both need to be specified.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="self"></param>
+    /// <param name="pathObfuscated"></param>
+    /// <param name="pathDeobfuscated"></param>
+    /// <returns></returns>
     internal static T? GetValue<T>(this JObject self, string pathObfuscated, string pathDeobfuscated)
     {
-        var token = self.SelectToken(self.UseMapping() ? pathDeobfuscated : pathObfuscated);
+        var token = self.SelectToken(self.UsesMapping() ? pathDeobfuscated : pathObfuscated);
         if (token is null)
             return default;
 
@@ -71,12 +74,12 @@ public static class NewtonsoftExtensions
     }
 
     /// <summary>
-    /// Returns whether the specified object is deobfuscated. Needs to be the root object.
+    /// Returns whether the specified object is deobfuscated. Needs to be called on the root object.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="self"></param>
     /// <returns></returns>
-    internal static bool UseMapping(this JObject input)
+    internal static bool UsesMapping(this JObject self)
     {
-        return input.ContainsKey("Version");
+        return self.ContainsKey("Version");
     }
 }

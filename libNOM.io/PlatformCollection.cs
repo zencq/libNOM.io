@@ -1,5 +1,8 @@
-﻿using System.Collections;
+﻿using libNOM.io.Extensions;
+using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Security;
 
 namespace libNOM.io;
@@ -52,58 +55,58 @@ public class PlatformCollection : IEnumerable<Platform>
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return null;
 
-        var bytes = File.ReadAllBytes(path);
+        ReadOnlySpan<byte> bytes = File.ReadAllBytes(path);
         int metaIndex, possibleIndex = metaIndex = Global.OFFSET_INDEX;
 
         // Convert header to different formats.
-        var headerInteger = bytes.Take(4).GetUInt32().FirstOrDefault();
-        var headerPlaintext = string.Concat(bytes.Take(30).GetString().Where(c => !char.IsWhiteSpace(c)));
-        var headerString = bytes.Take(8).GetString();
+        //var headerInteger = bytes[..4].CastToUInt32();
+        //ReadOnlySpan<char> headerStringLong = bytes[..30].GetString().Where(c => !char.IsWhiteSpace(c)).ToString().ToReadOnlySpan();
+        //ReadOnlySpan<char> headerStringShort = bytes[..8].GetString();
 
-        // Select a platform to convert the file with, based on the content.
-        Platform platform;
-        if (headerString == Global.HEADER_SAVEWIZARD || (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK && headerPlaintext.Contains("PS4|Final")))
-        {
-            platform = new PlatformPlaystation();
+        //// Select a platform to convert the file with, based on the content.
+        //Platform platform;
+        //if (headerStringShort == Global.HEADER_SAVEWIZARD || (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK && headerStringLong.Contains("PS4|Final".ToReadOnlySpan(), StringComparison.Ordinal)))
+        //{
+        //    platform = new PlatformPlaystation();
 
-            // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
-            if (PlatformPlaystation.DirectoryData.AnchorFileRegex[0].IsMatch(Path.GetFileName(path)))
-            {
-                metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c))));
-                possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 11 or 31
-            }
-        }
-        else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerString.Contains(Global.HEADER_PLAINTEXT_OBFUSCATED) || headerPlaintext.Contains(Global.HEADER_PLAINTEXT))
-        {
-            if (headerPlaintext.Contains("NX1|Final"))
-            {
-                platform = new PlatformSwitch();
+        //    // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
+        //    if (PlatformPlaystation.DirectoryData.AnchorFileRegex[0].IsMatch(Path.GetFileName(path)))
+        //    {
+        //        metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c))));
+        //        possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 11 or 31
+        //    }
+        //}
+        //else if (headerInteger == Global.HEADER_SAVE_STREAMING_CHUNK || headerStringShort.Contains(Global.HEADER_PLAINTEXT_OBFUSCATED.ToReadOnlySpan(), StringComparison.Ordinal) || headerStringLong.Contains(Global.HEADER_PLAINTEXT.ToReadOnlySpan(), StringComparison.Ordinal))
+        //{
+        //    if (headerStringLong.Contains("NX1|Final".ToReadOnlySpan(), StringComparison.Ordinal))
+        //    {
+        //        platform = new PlatformSwitch();
 
-                // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
-                if (PlatformSwitch.DirectoryData.AnchorFileRegex[1].IsMatch(Path.GetFileName(path)))
-                {
-                    metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c))));
-                    possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 11 or 31
-                }
-            }
-            else
-            {
-                platform = new PlatformSteam();
+        //        // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
+        //        if (PlatformSwitch.DirectoryData.AnchorFileRegex[1].IsMatch(Path.GetFileName(path)))
+        //        {
+        //            metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c))));
+        //            possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 11 or 31
+        //        }
+        //    }
+        //    else
+        //    {
+        //        platform = new PlatformSteam();
 
-                // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
-                if (PlatformSteam.DirectoryData.AnchorFileRegex[0].IsMatch(Path.GetFileName(path)))
-                {
-                    var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c)));
+        //        // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
+        //        if (PlatformSteam.DirectoryData.AnchorFileRegex[0].IsMatch(Path.GetFileName(path)))
+        //        {
+        //            var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(c => char.IsDigit(c)));
 
-                    metaIndex = string.IsNullOrEmpty(stringValue) ? Global.OFFSET_INDEX : (System.Convert.ToInt32(stringValue) + 1); // metaIndex = 3 is save2.hg
-                    possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 31
-                }
-            }
-        }
-        else
-        {
-            platform = new PlatformMicrosoft();
-        }
+        //            metaIndex = string.IsNullOrEmpty(stringValue) ? Global.OFFSET_INDEX : (System.Convert.ToInt32(stringValue) + 1); // metaIndex = 3 is save2.hg
+        //            possibleIndex = Global.OFFSET_INDEX + platform.COUNT_SLOTS * platform.COUNT_SAVES_PER_SLOT - 1; // 31
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    platform = new PlatformMicrosoft();
+        //}
 
         var container = new Container(metaIndex > possibleIndex ? Global.OFFSET_INDEX : metaIndex)
         {
@@ -111,7 +114,7 @@ public class PlatformCollection : IEnumerable<Platform>
         };
 
         // Load container before returning it.
-        platform.Load(container);
+        //platform.Load(container);
         return container;
     }
 
@@ -166,24 +169,24 @@ public class PlatformCollection : IEnumerable<Platform>
             platforms.Add(platform);
         }
 
-        foreach (var platformEnum in platforms)
-        {
-            // As Steam is more popular only use GOG if it is the preferred platform.
-            Platform? platform = platformEnum switch
-            {
-                PlatformEnum.Gog => preferredPlatform == PlatformEnum.Gog ? new PlatformGog(directory!, platformSettings) : null,
-                PlatformEnum.Microsoft => new PlatformMicrosoft(directory!, platformSettings),
-                PlatformEnum.Playstation => new PlatformPlaystation(directory!, platformSettings),
-                PlatformEnum.Steam => new PlatformSteam(directory!, platformSettings),
-                PlatformEnum.Switch => new PlatformSwitch(directory!, platformSettings),
-                _ => default,
-            };
-            if (platform?.IsLoaded == true)
-            {
-                _collection.TryAdd(path, platform);
-                return platform;
-            }
-        }
+        //foreach (var platformEnum in platforms)
+        //{
+        //    // As Steam is more popular only use GOG if it is the preferred platform.
+        //    Platform? platform = platformEnum switch
+        //    {
+        //        PlatformEnum.Gog => preferredPlatform == PlatformEnum.Gog ? new PlatformGog(directory!, platformSettings) : null,
+        //        PlatformEnum.Microsoft => new PlatformMicrosoft(directory!, platformSettings),
+        //        PlatformEnum.Playstation => new PlatformPlaystation(directory!, platformSettings),
+        //        PlatformEnum.Steam => new PlatformSteam(directory!, platformSettings),
+        //        PlatformEnum.Switch => new PlatformSwitch(directory!, platformSettings),
+        //        _ => default,
+        //    };
+        //    if (platform?.IsLoaded == true)
+        //    {
+        //        _collection.TryAdd(path, platform);
+        //        return platform;
+        //    }
+        //}
 
         // Nothing found.
         return null;
@@ -210,7 +213,7 @@ public class PlatformCollection : IEnumerable<Platform>
         return !directory.Exists;
     }
 
-    #endregion
+#endregion
 
     #region Getter
 
@@ -270,20 +273,20 @@ public class PlatformCollection : IEnumerable<Platform>
     /// <returns></returns>
     private List<Task> TryAddDirectory<T>() where T : Platform
     {
-        var directories = Platform.GetDirectoriesInDefaultPath<T>();
+        //var directories = Platform.GetDirectoriesInDefaultPath<T>();
         var tasks = new List<Task>();
 
-        foreach (var directory in directories)
-        {
-            tasks.Add(Task.Run(() =>
-            {
-                var platform = (T)(Activator.CreateInstance(typeof(T), directory))!;
-                if (platform.IsValid)
-                {
-                    _collection.TryAdd(directory.FullName, platform);
-                }
-            }));
-        }
+        //foreach (var directory in directories)
+        //{
+        //    tasks.Add(Task.Run(() =>
+        //    {
+        //        var platform = (T)(Activator.CreateInstance(typeof(T), directory))!;
+        //        if (platform.IsValid)
+        //        {
+        //            _collection.TryAdd(directory.FullName, platform);
+        //        }
+        //    }));
+        //}
 
         return tasks;
     }

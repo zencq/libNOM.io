@@ -2,15 +2,22 @@
 
   <!-- Application -->
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
   </PropertyGroup>
+
+  <!-- Global Usings -->
+  <ItemGroup>
+    <Using Include="libNOM.io.Data" />
+    <Using Include="libNOM.io.Enums" />
+    <Using Include="libNOM.io.Extensions" />
+  </ItemGroup>
 
   <!-- Build -->
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>11.0</LangVersion>
     <Deterministic>True</Deterministic>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -18,7 +25,7 @@
 
   <!-- Package -->
   <PropertyGroup>
-    <Version>0.5.3</Version>
+    <Version>0.6.0</Version>
     <Authors>cengelha</Authors>
     <Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -43,15 +50,20 @@
 
   <!-- Dependencies -->
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.0" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.0" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.3.5" />
     <PackageReference Include="LazyCache" Version="2.4.0" />
-    <PackageReference Include="libNOM.map" Version="0.9.1" />
+    <PackageReference Include="libNOM.map" Version="0.9.1.2" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SpookilySharp" Version="1.2.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
   <!-- Resources -->

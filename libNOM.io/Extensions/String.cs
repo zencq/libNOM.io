@@ -1,10 +1,13 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace libNOM.io.Extensions;
 
 
 public static class StringExtensions
 {
+
+
     /// <summary>
     /// 
     /// </summary>
@@ -22,7 +25,7 @@ public static class StringExtensions
             {
                 builder.Append('t');
             }
-            else if(charValue == 0x0A)
+            else if (charValue == 0x0A)
             {
                 builder.Append('n');
             }
@@ -43,7 +46,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding the set of characters.</returns>
-    public static byte[] GetUnicodeBytes(this string self)
+    internal static byte[] GetUnicodeBytes(this string self)
     {
         return Encoding.Unicode.GetBytes(self);
     }
@@ -53,8 +56,27 @@ public static class StringExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding the set of characters.</returns>
-    public static byte[] GetUTF8Bytes(this string self)
+    internal static byte[] GetUTF8Bytes(this string self)
     {
         return Encoding.UTF8.GetBytes(self);
+    }
+
+    internal static bool IsAllDigits(this string self)
+    {
+        return self.All(char.IsDigit);
+    }
+
+    /// <summary>
+    /// Converts this string to a character <see cref="ReadOnlySpan{T}"/>.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns>A byte array containing the results of encoding the set of characters.</returns>
+    internal static ReadOnlySpan<char> ToReadOnlySpan(this string self)
+    {
+#if NETSTANDARD2_0
+        return self.ToCharArray();
+#else
+        return self;
+#endif
     }
 }

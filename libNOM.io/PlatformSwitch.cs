@@ -1,11 +1,12 @@
-﻿using System.Text.RegularExpressions;
+﻿using CommunityToolkit.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace libNOM.io;
 
 
 #region Container
 
-internal record class SwitchContainer
+internal record class PlatformExtraSwitch
 {
     internal uint BaseVersion;
 
@@ -20,18 +21,7 @@ internal record class SwitchContainer
 
 public partial class Container
 {
-    internal SwitchContainer? Switch { get; set; }
-}
-
-#endregion
-
-#region PlatformDirectoryData
-
-internal record class PlatformDirectoryDataSwitch : PlatformDirectoryData
-{
-    internal override string[] AnchorFileGlob { get; } = new[] { "manifest*.hg", "savedata*.hg" }; // uses the same as PlayStation for data file but we use this here to have a unique one
-
-    internal override Regex[] AnchorFileRegex { get; } = new Regex[] { new("manifest\\d{2}\\.hg", RegexOptions.Compiled), new("savedata\\d{2}\\.hg", RegexOptions.Compiled) };
+    internal PlatformExtraSwitch? Switch { get; set; }
 }
 
 #endregion
@@ -40,9 +30,40 @@ public partial class PlatformSwitch : Platform
 {
     #region Constant
 
-    protected const int META_KNOWN = 0x20; // 32
+    #region Platform Specific
+
+    private const uint META_HEADER = 0xCA55E77E;
+    private const int META_KNOWN = 0x20; // 32
     private const int META_SIZE = 0x64; // 100
     private const int META_SIZE_WAYPOINT = 0x164; // 256
+
+    #endregion
+
+    #region Directory Data
+
+    public static readonly string[] ANCHOR_FILE_GLOB = new[] { "manifest*.hg", "savedata*.hg" };
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0!, AnchorFileRegex1! };
+#else
+    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0(), AnchorFileRegex1() };
+#endif
+
+    #endregion
+
+    #region Generated Regex
+
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+    private static readonly Regex AnchorFileRegex0 = new("manifest\\d{2}\\.hg", RegexOptions.Compiled);
+    private static readonly Regex AnchorFileRegex1 = new("savedata\\d{2}\\.hg", RegexOptions.Compiled);
+#else
+    [GeneratedRegex("manifest\\d{2}\\.hg", RegexOptions.Compiled)]
+    private static partial Regex AnchorFileRegex0();
+
+    [GeneratedRegex("savedata\\d{2}\\.hg", RegexOptions.Compiled)]
+    private static partial Regex AnchorFileRegex1();
+#endif
+
+    #endregion
 
     #endregion
 
@@ -50,27 +71,35 @@ public partial class PlatformSwitch : Platform
 
     #region Flags
 
-    public override bool CanDelete { get; } = true;
-
     public override bool CanCreate { get; } = true;
 
     public override bool CanRead { get; } = true;
 
     public override bool CanUpdate { get; } = true;
 
+    public override bool CanDelete { get; } = true;
+
+    public override bool HasModding { get; } = false;
+
+    public override bool IsPersonalComputerPlatform { get; } = false;
+
     public override bool IsValid => AnchorFileIndex == 0; // { get; } // seconds index is only there to have the actual save data filename to get the MetaIndex in AnalyzeFile 
+
+    public override bool RestartToApply { get; } = false;
 
     #endregion
 
     #region Platform Indicator
 
-    internal static PlatformDirectoryData DirectoryData { get; } = new PlatformDirectoryDataSwitch();
+    protected override string[] PlatformAnchorFileGlob { get; } = ANCHOR_FILE_GLOB;
 
-    internal override PlatformDirectoryData PlatformDirectoryData { get; } = DirectoryData; // { get; }
+    protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
 
     protected override string PlatformArchitecture { get; } = "NX1|Final";
 
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Switch;
+
+    protected override string? PlatformProcess { get; } = null; // console platform has no PC process
 
     protected override string PlatformToken { get; } = "NS";
 
@@ -82,83 +111,21 @@ public partial class PlatformSwitch : Platform
 
     #region Constructor
 
-    public PlatformSwitch() : base(null, null) { }
+    public PlatformSwitch(string path) : base(path) { }
 
-    public PlatformSwitch(DirectoryInfo? directory) : base(directory, null) { }
+    public PlatformSwitch(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
 
-    public PlatformSwitch(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
+    public PlatformSwitch(DirectoryInfo directory) : base(directory) { }
+
+    public PlatformSwitch(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
     #endregion
 
     // //
 
-    #region Copy
+    // // Read / Write
 
-    protected override void Copy(IEnumerable<ContainerOperationData> containerOperationData, bool write)
-    {
-        foreach (var (Source, Destination) in containerOperationData.Select(d => (d.Source, d.Destination)))
-        {
-            if (!Source.Exists)
-            {
-                Delete(Destination, write);
-            }
-            else if (Destination.Exists || (!Destination.Exists && CanCreate))
-            {
-                if (Source.Switch is null)
-                    throw new InvalidOperationException("The source container has no Switch extra.");
-
-                if (!Source.IsLoaded)
-                {
-                    BuildContainer(Source);
-                }
-                if (!Source.IsCompatible)
-                {
-                    throw new InvalidOperationException(Source.IncompatibilityTag);
-                }
-
-                // Due to this CanCreate can be true.
-                if (!Destination.Exists)
-                {
-                    Destination.Switch = new SwitchContainer
-                    {
-                        BaseVersion = Source.Switch.BaseVersion,
-                        GameMode = Source.Switch.GameMode,
-                        MetaIndex = Source.Switch.MetaIndex,
-                        MetaTail = Source.Switch.MetaTail,
-                        TotalPlayTime = Source.Switch.TotalPlayTime,
-                    };
-                }
-
-                // Faking relevant properties to force it to Write().
-                Destination.Exists = true;
-                Destination.IsSynced = false;
-
-                // Properties requied to properly build the container below.
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.SeasonEnum = Source.SeasonEnum;
-                Destination.VersionEnum = Source.VersionEnum;
-
-                Destination.SetJsonObject(Source.GetJsonObject());
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, writeTime: Source.LastWriteTime);
-                    BuildContainer(Destination);
-                }
-            }
-            //else
-            //    continue;
-        }
-
-        UpdatePlatformUserIdentification();
-    }
-
-    #endregion
-
-    #region Read
-
-    #region Create
+    #region Generate
 
     protected override Container CreateContainer(int metaIndex, object? extra)
     {
@@ -177,6 +144,7 @@ public partial class PlatformSwitch : Platform
     {
         var metaInt = base.DecryptMeta(container, meta);
 
+        container.LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(metaInt[4]).ToLocalTime();
         container.Switch = new()
         {
             BaseVersion = metaInt[5],
@@ -199,28 +167,8 @@ public partial class PlatformSwitch : Platform
         if (!container.IsSave)
             return data;
 
-        var result = new List<byte>();
-
-        var offset = 0;
-        while (offset < data.Length)
-        {
-            var chunkHeader = data.Skip(offset).Take(SAVE_STREAMING_CHUNK_HEADER_SIZE).GetUInt32();
-            offset += SAVE_STREAMING_CHUNK_HEADER_SIZE;
-
-            var chunkCompressed = (int)(chunkHeader[1]);
-            var chunkDecompressed = (int)(chunkHeader[2]);
-
-            var source = data.Skip(offset).Take(chunkCompressed).ToArray();
-            offset += chunkCompressed;
-
-            _ = LZ4_Decode(source, out byte[] target, chunkDecompressed);
-            result.AddRange(target);
-        }
-
-        return result.ToArray();
+        return DecompressSaveStreamingData(data);
     }
-
-    #endregion
 
     #endregion
 
@@ -228,29 +176,10 @@ public partial class PlatformSwitch : Platform
 
     protected override byte[] CompressData(Container container, byte[] data)
     {
-        if (!container.IsSave || !container.IsFrontiers)
+        if (!container.IsSave)
             return data;
 
-        var result = new List<byte>();
-
-        var offset = 0;
-        while (offset < data.Length)
-        {
-            var source = data.Skip(offset).Take(SAVE_STREAMING_CHUNK_SIZE).ToArray();
-            _ = LZ4_Encode(source, out byte[] target);
-
-            offset += SAVE_STREAMING_CHUNK_SIZE;
-
-            var chunkHeader = new uint[4];
-            chunkHeader[0] = Global.HEADER_SAVE_STREAMING_CHUNK;
-            chunkHeader[1] = (uint)(target.Length);
-            chunkHeader[2] = (uint)(source.Length);
-
-            result.AddRange(chunkHeader.GetBytes());
-            result.AddRange(target);
-        }
-
-        return result.ToArray();
+        return CompressSaveStreamingData(data);
     }
 
     protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
@@ -270,41 +199,75 @@ public partial class PlatformSwitch : Platform
         //  8. UNKNOWN              (324) // Waypoint
         //                          (356)
 
-        // Use default size if tail is not set.
-        var bufferSize = container.Switch?.MetaTail is not null ? (META_KNOWN + container.Switch!.MetaTail.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
+        // META_KNOWN and Steam.MetaTail are using uint and therefore need to be multiplied by 4 to get the actual buffer size.
+        var bufferSize = container.Switch?.MetaTail is not null ? (META_KNOWN + container.Switch!.MetaTail.Length) * 4 : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
         var buffer = new byte[bufferSize];
         var unixSeconds = (uint)(container.LastWriteTime.ToUniversalTime().ToUnixTimeSeconds());
 
         using var writer = new BinaryWriter(new MemoryStream(buffer));
+        writer.Write(META_HEADER); // 4
+        writer.Write(Globals.Constant.SAVE_FORMAT_3); // 4
+        writer.Write(decompressedSize); // 4
 
-        if (container.MetaIndex == 0)
+        if (!container.IsSave)
         {
-            // Reuse most of the data from the SwitchContainer as it contains data from another regular save.
-            writer.Write(META_HEADER); // 4
-            writer.Write(SAVE_FORMAT_360); // 4
-            writer.Write(decompressedSize); // 4
+            // For account data rewrite most of the SwitchContainer as it contains data from another regular save.
             writer.Write(container.Switch!.MetaIndex); // 4
             writer.Write(unixSeconds); // 4
             writer.Write(container.Switch!.BaseVersion); // 4
             writer.Write(container.Switch!.GameMode); // 4
             writer.Write(container.Switch!.TotalPlayTime); // 4
-            writer.Write(container.Switch!.MetaTail ?? Array.Empty<byte>()); // 68 or 336
         }
         else
         {
-            writer.Write(META_HEADER); // 4
-            writer.Write(SAVE_FORMAT_360); // 4
-            writer.Write(decompressedSize); // 4
             writer.Write(container.MetaIndex); // 4
             writer.Write(unixSeconds); // 4
             writer.Write(container.BaseVersion); // 4
             writer.Write((ushort)(container.GameModeEnum ?? 0)); // 2
             writer.Write((ushort)(container.SeasonEnum)); // 2
-            writer.Write((int)(container.TotalPlayTime)); // 4
-            writer.Write(container.Switch!.MetaTail ?? Array.Empty<byte>()); // 68 or 336
+            writer.Write((uint)(container.TotalPlayTime)); // 4
         }
+        writer.Write(container.Switch!.MetaTail ?? Array.Empty<byte>()); // 68 or 336
 
         return EncryptMeta(container, data, CompressMeta(container, data, buffer));
+    }
+
+    #endregion
+
+    // // File Operation
+
+    #region Copy
+
+    protected override bool GuardPlatformExtra(Container source)
+    {
+        return source.Switch is null;
+    }
+
+    protected override void CopyPlatformExtra(Container destination, Container source)
+    {
+        destination.Switch = new PlatformExtraSwitch
+        {
+            BaseVersion = source.Switch!.BaseVersion,
+            GameMode = source.Switch!.GameMode,
+            MetaIndex = source.Switch!.MetaIndex,
+            MetaTail = source.Switch!.MetaTail,
+            TotalPlayTime = source.Switch!.TotalPlayTime,
+        };
+    }
+
+    #endregion
+
+    #region Transfer
+
+    protected override void CreatePlatformExtra(Container destination, Container source)
+    {
+        destination.Switch = new PlatformExtraSwitch
+        {
+            BaseVersion = (uint)(source.BaseVersion),
+            MetaIndex = (uint)(source.MetaIndex),
+            MetaTail = new byte[(source.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE) - META_KNOWN],
+            TotalPlayTime = (uint)(source.TotalPlayTime),
+        };
     }
 
     #endregion

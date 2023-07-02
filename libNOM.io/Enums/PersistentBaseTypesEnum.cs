@@ -8,12 +8,12 @@
 internal enum PersistentBaseTypesEnum
 {
     HomePlanetBase,
-    FreighterBase, 
+    FreighterBase,
     ExternalPlanetBase,
-    CivilianFreighterBase, 
-    FriendsPlanetBase, 
-    FriendsFreighterBase, 
-    SpaceBase, 
-    GeneratedPlanetBase, 
+    CivilianFreighterBase,
+    FriendsPlanetBase,
+    FriendsFreighterBase,
+    SpaceBase,
+    GeneratedPlanetBase,
     GeneratedPlanetBaseEdits,
 }

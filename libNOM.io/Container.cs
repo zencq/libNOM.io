@@ -202,12 +202,12 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public string SaveName // { get; set; }
     {
-        get => _jsonObject is not null ? _jsonObject.GetValue<string?>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty : string.Empty;
+        get => IsWaypoint ? _jsonObject?.GetValue<string?>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty : string.Empty;
         set
         {
             if (_jsonObject is not null)
             {
-                if (_jsonObject.UseMapping())
+                if (_jsonObject.UsesMapping())
                 {
                     _jsonObject["PlayerStateData"]![nameof(SaveName)] = value;
                 }
@@ -221,12 +221,12 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public string SaveSummary // { get; set; }
     {
-        get => _jsonObject is not null ? _jsonObject.GetValue<string?>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty : string.Empty;
+        get => IsWaypoint ? _jsonObject?.GetValue<string?>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty : string.Empty;
         set
         {
             if (_jsonObject is not null)
             {
-                if (_jsonObject.UseMapping())
+                if (_jsonObject.UsesMapping())
                 {
                     _jsonObject["PlayerStateData"]![nameof(SaveSummary)] = value;
                 }
@@ -249,7 +249,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         {
             if (_jsonObject is not null)
             {
-                if (_jsonObject.UseMapping())
+                if (_jsonObject.UsesMapping())
                 {
                     _jsonObject["PlayerStateData"]![nameof(TotalPlayTime)] = value;
                 }
@@ -273,7 +273,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         {
             if (_jsonObject is not null)
             {
-                if (_jsonObject.UseMapping())
+                if (_jsonObject.UsesMapping())
                 {
                     _jsonObject[nameof(Version)] = value;
                 }
@@ -311,7 +311,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         if (_jsonObject is null)
             return;
 
-        var mapping = _jsonObject.UseMapping();
+        var mapping = _jsonObject.UsesMapping();
         var mission = _jsonObject.SelectToken(mapping ? $"PlayerStateData.MissionProgress[?(@.Mission == '{MISSION_CREATIVE}')]" : $"6f=.dwb[?(@.p0c == '{MISSION_CREATIVE}')]");
 
         // Remove MISSION_CREATIVE if new mode is not Creative.
@@ -503,7 +503,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         IsBackup = false;
         IsOld = false;
         IsSynced = true;
-        SeasonEnum = SeasonEnum.Pioneers;
+        SeasonEnum = SeasonEnum.None;
         VersionEnum = VersionEnum.Unknown;
         UserIdentification = null;
         UnknownKeys.Clear();

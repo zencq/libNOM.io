@@ -105,31 +105,33 @@ public static class Convert
     /// <exception cref="InvalidDataException"></exception>
     public static void ToSaveFile(string input, string? output, PlatformEnum outputPlatform)
     {
-        Platform? platform = outputPlatform switch
-        {
-            PlatformEnum.Gog => new PlatformGog(),
-            PlatformEnum.Microsoft => new PlatformMicrosoft(),
-            PlatformEnum.Playstation => new PlatformPlaystation(),
-            PlatformEnum.Steam => new PlatformSteam(),
-            PlatformEnum.Switch => new PlatformSwitch(),
-            _ => null,
-        };
-        if (platform is null)
-            throw new InvalidDataException("The specified output platform is not supported.");
+        //Platform? platform = outputPlatform switch
+        //{
+        //    PlatformEnum.Gog => new PlatformGog(),
+        //    PlatformEnum.Microsoft => new PlatformMicrosoft(),
+        //    PlatformEnum.Playstation => new PlatformPlaystation(),
+        //    PlatformEnum.Steam => new PlatformSteam(),
+        //    PlatformEnum.Switch => new PlatformSwitch(),
+        //    _ => null,
+        //};
+        //if (platform is null)
+        //    throw new InvalidDataException("The specified output platform is not supported.");
 
-        // Method contains all relevant checks so just throw an exception if container is null.
-        var container = GetContainer(input);
-        if (container is null)
-            throw new InvalidDataException("Unable to read input file.");
+        //// Method contains all relevant checks so just throw an exception if container is null.
+        //var container = GetContainer(input);
+        //if (container is null)
+        //    throw new InvalidDataException("Unable to read input file.");
 
-        var name = $"{container.DataFile!.Name}.{outputPlatform}.{DateTime.Now.ToString(Global.FILE_TIMESTAMP_FORMAT)}";
-        output = string.IsNullOrWhiteSpace(output) ? container.DataFile.Directory!.FullName : output;
+        //var name = $"{container.DataFile!.Name}.{outputPlatform}.{DateTime.Now.ToString(Global.FILE_TIMESTAMP_FORMAT)}";
+        //output = string.IsNullOrWhiteSpace(output) ? container.DataFile.Directory!.FullName : output;
 
-        // Set new files the converted content will be written to.
-        container.DataFile = new FileInfo(Path.Combine(output, $"{name}.data"));
-        container.MetaFile = new FileInfo(Path.Combine(output, $"{name}.meta"));
+        //// Set new files the converted content will be written to.
+        //container.DataFile = new FileInfo(Path.Combine(output, $"{name}.data"));
+        //container.MetaFile = new FileInfo(Path.Combine(output, $"{name}.meta"));
 
-        platform.JustWrite(container);
+        //platform.JustWrite(container);
+
+        //container.RefreshFileInfo();
     }
 
     /// <summary>
@@ -147,13 +149,16 @@ public static class Convert
         {
             container = PlatformCollection.AnalyzeFile(input);
         }
-        catch { }
+        catch 
+        {
+            // Nothing to do.
+        }
         if (container is null)
         {
-            container = new Container(-1) { DataFile = new(input) };
-            container.SetJsonObject(Platform.ReadToByte(input).GetJson());
-            if (!container.IsLoaded)
-                return null;
+            //container = new Container(-1) { DataFile = new(input) };
+            //container.SetJsonObject(Platform.ReadToByte(input).GetJson());
+            //if (!container.IsLoaded)
+            //    return null;
         }
         return container;
     }

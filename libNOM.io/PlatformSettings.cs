@@ -18,19 +18,9 @@ public record class PlatformSettings
     public string Download { get; set; } = "download";
 
     /// <summary>
-    /// Whether to set the current timestamp to the file while writing.
-    /// </summary>
-    public bool LastWriteTime { get; set; } = true;
-
-    /// <summary>
     /// How to load and keep save information and data.
     /// </summary>
     public LoadingStrategyEnum LoadingStrategy { get; set; } = LoadingStrategyEnum.Empty;
-
-    /// <summary>
-    /// Whether to deobfuscated and obfuscated the save data.
-    /// </summary>
-    public bool Mapping { get; set; } = true;
 
     /// <summary>
     /// Maximum number of backups to keep.
@@ -38,9 +28,24 @@ public record class PlatformSettings
     public int MaxBackupCount { get; set; } = 3;
 
     /// <summary>
+    /// Whether to set the current timestamp to the file while writing.
+    /// </summary>
+    public bool SetLastWriteTime { get; set; } = true;
+
+    /// <summary>
+    /// Whether to deobfuscated and obfuscated the save data.
+    /// </summary>
+    public bool UseMapping { get; set; } = true;
+
+    /// <summary>
     /// Whether to enable a FileSystemWatcher to detect changes in the background.
     /// </summary>
     public bool Watcher { get; set; } = true;
+
+    /// <summary>
+    /// Whether to write a <see cref="Container"/> always or only if unsynced.
+    /// </summary>
+    public bool WriteAlways { get; set; } = true;
 #else
     /// <summary>
     /// Where to store backups.
@@ -53,19 +58,9 @@ public record class PlatformSettings
     public string Download { get; init; } = "download";
 
     /// <summary>
-    /// Whether to set the LastWriteTime while writing.
-    /// </summary>
-    public bool LastWriteTime { get; init; } = true;
-
-    /// <summary>
     /// How to load and keep save information and data.
     /// </summary>
     public LoadingStrategyEnum LoadingStrategy { get; init; } = LoadingStrategyEnum.Empty;
-
-    /// <summary>
-    /// Whether to deobfuscated and obfuscated the save data.
-    /// </summary>
-    public bool Mapping { get; init; } = true;
 
     /// <summary>
     /// Maximum number of backups to keep.
@@ -73,8 +68,23 @@ public record class PlatformSettings
     public int MaxBackupCount { get; init; } = 3;
 
     /// <summary>
+    /// Whether to set the LastWriteTime while writing.
+    /// </summary>
+    public bool SetLastWriteTime { get; init; } = true;
+
+    /// <summary>
+    /// Whether to deobfuscated and obfuscated the save data.
+    /// </summary>
+    public bool UseMapping { get; init; } = true;
+
+    /// <summary>
     /// Whether to enable a FileSystemWatcher to detect changes in the background.
     /// </summary>
     public bool Watcher { get; init; } = true;
+
+    /// <summary>
+    /// Whether to write a <see cref="Container"/> always or only if unsynced.
+    /// </summary>
+    public bool WriteAlways { get; init; } = true;
 #endif
 }

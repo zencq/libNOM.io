@@ -4,17 +4,19 @@ using Newtonsoft.Json.Linq;
 namespace libNOM.io;
 
 
-#region PlatformDirectoryDataSteam
-
-internal record class PlatformDirectoryDataGog : PlatformDirectoryDataSteam
-{
-    internal override string DirectoryPathPattern { get; } = "DefaultUser";
-}
-
-#endregion
-
 public class PlatformGog : PlatformSteam
 {
+    #region Constant
+
+    #region Directory Data
+
+    public new const string ACCOUNT_PATTERN = "DefaultUser";
+    public static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
+
+    #endregion
+
+    #endregion
+
     #region Field
 
     private string? _userId;
@@ -26,19 +28,11 @@ public class PlatformGog : PlatformSteam
 
     #region Platform Indicator
 
-    internal static new PlatformDirectoryData DirectoryData { get; } = new PlatformDirectoryDataGog();
-
-    internal override PlatformDirectoryData PlatformDirectoryData { get; } = DirectoryData;
-
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Gog;
 
+    protected override string? PlatformProcess { get; } = null;
+
     protected override string PlatformToken { get; } = "GX";
-
-    #endregion
-
-    #region Process (System)
-
-    protected override string? ProcessPath { get; } = default;
 
     #endregion
 
@@ -48,11 +42,13 @@ public class PlatformGog : PlatformSteam
 
     #region Constructor
 
-    public PlatformGog() : base(null, null) { }
+    public PlatformGog(string path) : base(path) { }
 
-    public PlatformGog(DirectoryInfo? directory) : base(directory, null) { }
+    public PlatformGog(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
 
-    public PlatformGog(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
+    public PlatformGog(DirectoryInfo directory) : base(directory) { }
+
+    public PlatformGog(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
@@ -74,9 +70,9 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    // //
+    // // User Identification
 
-    #region UserIdentification
+    #region User Identification
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
@@ -101,11 +97,13 @@ public class PlatformGog : PlatformSteam
         if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
-        var path = Settings.Mapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
+        var usesMapping = jsonObject.UsesMapping();
+
+        var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
         var expressions = new[]
         {
-            Settings.Mapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-            Settings.Mapping ? $"@.Owner.UID == '{_userId}'" : $"@.3?K.K7E == '{_userId}'", // only with specified value
+            usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
+            usesMapping ? $"@.Owner.UID == '{_userId}'" : $"@.3?K.K7E == '{_userId}'", // only with specified value
         };
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
@@ -116,10 +114,12 @@ public class PlatformGog : PlatformSteam
         if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
-        var path = Settings.Mapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
+        var usesMapping = jsonObject.UsesMapping();
+
+        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
         var expressions = new[]
         {
-            Settings.Mapping ? $"@.OWS.UID == '{_userId}'" : $"@.ksu.K7E == '{_userId}'", // only with specified value
+            usesMapping ? $"@.OWS.UID == '{_userId}'" : $"@.ksu.K7E == '{_userId}'", // only with specified value
         };
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
@@ -130,10 +130,12 @@ public class PlatformGog : PlatformSteam
         if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
-        var path = Settings.Mapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
+        var usesMapping = jsonObject.UsesMapping();
+
+        var path = usesMapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
         var expressions = new[]
         {
-            Settings.Mapping ? $"@.Owner.UID == '{_userId}'" : $"@.3?K.K7E == '{_userId}'", // only with specified value
+            usesMapping ? $"@.Owner.UID == '{_userId}'" : $"@.3?K.K7E == '{_userId}'", // only with specified value
         };
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
