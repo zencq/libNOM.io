@@ -4,7 +4,7 @@
 /// <summary>
 /// Specifies states used in the containers.index of the <see cref="PlatformMicrosoft"/>.
 /// </summary>
-internal enum MicrosoftBlobStateEnum
+internal enum MicrosoftBlobSyncStateEnum
 {
     Unknown_Zero = 0,
     Synced = 1,

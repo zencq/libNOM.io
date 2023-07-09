@@ -4,7 +4,7 @@
 internal static class Constant
 {
     internal const int CACHE_EXPIRATION = 250; // milliseconds
-    internal const string FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmss";
+    internal const string FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmssfff";
     internal const VersionEnum LOWEST_SUPPORTED_VERSION = VersionEnum.BeyondWithVehicleCam;
 
     internal const int GAMEMODE_INT_NORMAL = (int)(PresetGameModeEnum.Normal); // 1
@@ -14,6 +14,13 @@ internal static class Constant
     internal const string HEADER_PLAINTEXT_OBFUSCATED = "{\"F2P\":";
     internal const uint HEADER_SAVE_STREAMING_CHUNK = 0xFEEDA1E5; // 4276986341
     internal const string HEADER_SAVEWIZARD = "NOMANSKY";
+
+    internal const string INCOMPATIBILITY_001 = "I001_Empty";
+    internal const string INCOMPATIBILITY_002 = "I002_Deserialization_Exception";
+    internal const string INCOMPATIBILITY_003 = "I003_Deserialization_Null";
+    internal const string INCOMPATIBILITY_004 = "I004_Microsoft_Deleted";
+    internal const string INCOMPATIBILITY_005 = "I005_Microsoft_Missing_Blob";
+    internal const string INCOMPATIBILITY_006 = "I006_Non_Existent ";
 
     internal const int OFFSET_GAMEMODE = 512;
     internal const int OFFSET_INDEX = 2;

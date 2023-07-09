@@ -33,7 +33,7 @@ public record class PlatformSettings
     public bool SetLastWriteTime { get; set; } = true;
 
     /// <summary>
-    /// Whether to deobfuscated and obfuscated the save data.
+    /// Whether to deobfuscated and obfuscated the save data while parsing.
     /// </summary>
     public bool UseMapping { get; set; } = true;
 

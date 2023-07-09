@@ -221,12 +221,12 @@ public partial class PlatformPlaystation : Platform
         catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
         {
             container.IncompatibilityException = ex;
-            container.IncompatibilityTag = "F002_Deserialization_Exception";
+            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_002;
             return null;
         }
         if (jsonObject is null)
         {
-            container.IncompatibilityTag = "F002_Deserialization_Null";
+            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_003;
             return null;
         }
 
@@ -263,11 +263,17 @@ public partial class PlatformPlaystation : Platform
         if (container.Exists)
         {
             var data = LoadData(container, meta);
-            if (!data.IsNullOrEmpty())
+            if (data.IsNullOrEmpty())
+            {
+                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
+            }
+            else
+            {
                 return data;
+            }
         }
 
-        container.IncompatibilityTag = "F001_Empty";
+        container.IncompatibilityTag ??= Globals.Constant.INCOMPATIBILITY_006;
         return Array.Empty<byte>();
     }
 

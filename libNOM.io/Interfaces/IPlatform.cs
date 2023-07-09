@@ -146,6 +146,22 @@ public interface IPlatform
 
     #endregion
 
+    #region Path
+
+    /// <summary>
+    /// Gets the absolute path to the backup directory.
+    /// </summary>
+    /// <returns></returns>
+    public string GetBackupPath();
+
+    /// <summary>
+    /// Gets absolute path to the download directory.
+    /// </summary>
+    /// <returns></returns>
+    public string GetDownloadPath();
+
+    #endregion
+
     /// <summary>
     /// Returns the maximum number of possible save slots.
     /// </summary>

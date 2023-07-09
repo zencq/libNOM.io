@@ -27,7 +27,7 @@ internal record class PlatformExtraMicrosoft
 
     internal string SyncHex = string.Empty;
 
-    internal MicrosoftBlobStateEnum State;
+    internal MicrosoftBlobSyncStateEnum State;
 
     internal ulong TotalSize;
 }
@@ -223,24 +223,22 @@ public partial class PlatformMicrosoft : Platform
 
         var bag = new ConcurrentBag<Container>();
 
-        var tasks = Enumerable.Range(0, Globals.Constant.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((containerIndex) =>
+        var tasks = Enumerable.Range(0, Globals.Constant.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
         {
             return Task.Run(() =>
             {
-                if (containerIndex == 0)
+                if (metaIndex == 0)
                 {
                     _ = microsoft.TryGetValue(0, out var extra);
                     AccountContainer = CreateContainer(0, extra);
                     BuildContainerFull(AccountContainer);
                 }
-                else if (containerIndex == 1)
+                else if (metaIndex == 1)
                 {
                     _settingsContainer = microsoft[1];
                 }
                 else
                 {
-                    var metaIndex = containerIndex;
-
                     _ = microsoft.TryGetValue(metaIndex, out var extra);
                     var container = CreateContainer(metaIndex, extra);
                     if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
@@ -316,7 +314,7 @@ public partial class PlatformMicrosoft : Platform
         // Skip containers.index state enum.
         readerIndex.BaseStream.Seek(0x4, SeekOrigin.Current);
 
-        // Skip account identifier and unknown data (0x8) end the end of the header.
+        // Skip account identifier and unknown data (0x8) at the end of the header.
         readerIndex.BaseStream.Seek(readerIndex.ReadInt32() * 2 + 0x8, SeekOrigin.Current);
 
         for (var i = 0; i < containerCount; i++)
@@ -330,7 +328,7 @@ public partial class PlatformMicrosoft : Platform
 
             container.SyncHex = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
             container.Extension = readerIndex.ReadByte();
-            container.State = (MicrosoftBlobStateEnum)(readerIndex.ReadInt32());
+            container.State = (MicrosoftBlobSyncStateEnum)(readerIndex.ReadInt32());
             container.BlobDirectoryGuid = readerIndex.ReadBytes(0x10).GetGuid();
             container.BlobDirectory = new DirectoryInfo(Path.Combine(Location!.FullName, container.BlobDirectoryGuid.ToPath()));
             container.LastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
@@ -339,12 +337,8 @@ public partial class PlatformMicrosoft : Platform
 
             container.TotalSize = readerIndex.ReadUInt64();
 
-            // Stop if directory specified in the entry does not exist.
-            if (!container.BlobDirectory.Exists)
-                continue;
-
             // Ignore if already marked as deleted.
-            if (container.State != MicrosoftBlobStateEnum.Deleted)
+            if (container.BlobDirectory.Exists && container.State != MicrosoftBlobSyncStateEnum.Deleted)
             {
                 var blobContainerPath = GetBlobContainerPath(container);
                 var fileInfos = new HashSet<FileInfo>();
@@ -408,7 +402,7 @@ public partial class PlatformMicrosoft : Platform
 
                 // Mark as deleted if there is no existing data file.
                 if (container.BlobDataFile?.Exists != true)
-                    container.State = MicrosoftBlobStateEnum.Deleted;
+                    container.State = MicrosoftBlobSyncStateEnum.Deleted;
             }
 
             // Store collected data for further processing.
@@ -451,6 +445,37 @@ public partial class PlatformMicrosoft : Platform
     #endregion
 
     #region Load
+
+    protected override byte[] LoadContainer(Container container)
+    {
+        // Any incompatibility will be set again while loading.
+        container.ClearIncompatibility();
+
+        if (container.Exists)
+        {
+            var meta = LoadMeta(container);
+            var data = LoadData(container, meta);
+            if (data.IsNullOrEmpty())
+            {
+                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
+            }
+            else
+            {
+                return data;
+            }
+        }
+        else if (container.Microsoft is not null && container.Microsoft.State == MicrosoftBlobSyncStateEnum.Deleted)
+        {
+            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_004;
+        }
+        else if (container.Microsoft is not null && !container.Microsoft.BlobDirectory.Exists)
+        {
+            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_005;
+        }
+
+        container.IncompatibilityTag ??= Globals.Constant.INCOMPATIBILITY_006;
+        return Array.Empty<byte>();
+    }
 
     protected override uint[] DecryptMeta(Container container, byte[] meta)
     {
@@ -637,8 +662,8 @@ public partial class PlatformMicrosoft : Platform
         container.Microsoft!.BlobMetaFile = container.MetaFile = GetBlobFileInfo(container.Microsoft!, metaGuid);
         container.Microsoft!.Extension = (byte)(container.Microsoft!.Extension == byte.MaxValue ? 1 : container.Microsoft!.Extension + 1);
 
-        if (container.Microsoft!.State == MicrosoftBlobStateEnum.Synced)
-            container.Microsoft!.State = MicrosoftBlobStateEnum.Modified;
+        if (container.Microsoft!.State == MicrosoftBlobSyncStateEnum.Synced)
+            container.Microsoft!.State = MicrosoftBlobSyncStateEnum.Modified;
 
         return buffer;
     }
@@ -663,7 +688,7 @@ public partial class PlatformMicrosoft : Platform
         var hasAccountData = AccountContainer is not null;
         var hasSettings = _settingsContainer is not null;
 
-        var collection = SaveContainerCollection.Where(i => i.Microsoft?.State > MicrosoftBlobStateEnum.Unknown_Zero);
+        var collection = SaveContainerCollection.Where(i => i.Microsoft?.State > MicrosoftBlobSyncStateEnum.Unknown_Zero);
         var count = (long)(collection.Count() + (hasAccountData ? 1 : 0) + (hasSettings ? 1 : 0));
 
         // Longest name (e.g. Slot10Manual) has a total length of 0x8C and therefore 0x90 is more than enough.
@@ -672,7 +697,7 @@ public partial class PlatformMicrosoft : Platform
 
         var accountIdentifier = string.Empty;
         var gameIdentifier = string.Empty;
-        var state = MicrosoftIndexStateEnum.Unknown_Zero;
+        var state = MicrosoftIndexSyncStateEnum.Unknown_Zero;
 
         using (var reader = new BinaryReader(File.Open(_containersIndexFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
         {
@@ -682,7 +707,7 @@ public partial class PlatformMicrosoft : Platform
 
             // Skip timestamp.
             reader.BaseStream.Seek(0x8, SeekOrigin.Current);
-            state = (MicrosoftIndexStateEnum)(reader.ReadInt32());
+            state = (MicrosoftIndexSyncStateEnum)(reader.ReadInt32());
 
             accountIdentifier = reader.ReadBytes(reader.ReadInt32() * 2).GetUnicode();
         }
@@ -697,7 +722,7 @@ public partial class PlatformMicrosoft : Platform
 
             writer.Write(_lastModifiedTime.ToUniversalTime().ToFileTime());
 
-            writer.Write((int)(state == MicrosoftIndexStateEnum.Synced ? MicrosoftIndexStateEnum.Modified : state));
+            writer.Write((int)(state == MicrosoftIndexSyncStateEnum.Synced ? MicrosoftIndexSyncStateEnum.Modified : state));
 
             writer.Write(accountIdentifier.Length);
             writer.Write(accountIdentifier.GetUnicodeBytes());
@@ -895,7 +920,7 @@ public partial class PlatformMicrosoft : Platform
             Extension = 0,
             LastModifiedTime = source.Microsoft!.LastModifiedTime,
             MetaTail = source.Microsoft!.MetaTail,
-            State = MicrosoftBlobStateEnum.Created,
+            State = MicrosoftBlobSyncStateEnum.Created,
         };
     }
 
@@ -915,7 +940,7 @@ public partial class PlatformMicrosoft : Platform
             if (!container.Exists || container.Microsoft is null)
                 continue;
 
-            container.Microsoft.State = MicrosoftBlobStateEnum.Deleted;
+            container.Microsoft.State = MicrosoftBlobSyncStateEnum.Deleted;
 
             if (write)
             {
@@ -1002,7 +1027,7 @@ public partial class PlatformMicrosoft : Platform
             Extension = 0,
             LastModifiedTime = source.LastWriteTime,
             MetaTail = new byte[(source.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE) - META_KNOWN],
-            State = MicrosoftBlobStateEnum.Created,
+            State = MicrosoftBlobSyncStateEnum.Created,
         };
     }
 

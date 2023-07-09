@@ -185,6 +185,20 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    #region Path
+
+    public string GetBackupPath()
+    {
+        return Path.GetFullPath(Settings.Backup);
+    }
+
+    public string GetDownloadPath()
+    {
+        return Path.GetFullPath(Settings.Download);
+    }
+
+    #endregion
+
     #region Setter
 
     /// <summary>
@@ -363,18 +377,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         var bag = new ConcurrentBag<Container>();
 
-        var tasks = Enumerable.Range(0, Globals.Constant.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((containerIndex) =>
+        var tasks = Enumerable.Range(0, Globals.Constant.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
         {
             return Task.Run(() =>
             {
-                if (containerIndex == 0)
+                if (metaIndex == 0)
                 {
                     AccountContainer = CreateContainer(0);
                     BuildContainerFull(AccountContainer);
                 }
-                else if (containerIndex > 1) // skip index 1
+                else if (metaIndex > 1) // skip index 1
                 {
-                    var container = CreateContainer(containerIndex);
+                    var container = CreateContainer(metaIndex);
                     if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
                     {
                         BuildContainerHollow(container);
@@ -447,12 +461,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
         {
             container.IncompatibilityException = ex;
-            container.IncompatibilityTag = "F002_Deserialization_Exception";
+            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_002;
             return null;
         }
         if (jsonObject is null)
         {
-            container.IncompatibilityTag = "F002_Deserialization_Null";
+            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_003;
             return null;
         }
 
@@ -518,11 +532,17 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             var meta = LoadMeta(container);
             var data = LoadData(container, meta);
-            if (!data.IsNullOrEmpty())
+            if (data.IsNullOrEmpty())
+            {
+                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
+            }
+            else
+            {
                 return data;
+            }
         }
 
-        container.IncompatibilityTag = "F001_Empty";
+        container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_006;
         return Array.Empty<byte>();
     }
 
@@ -769,7 +789,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             var binary = LoadData(container, LoadMeta(container, meta), data);
             if (binary.IsNullOrEmpty())
             {
-                container.IncompatibilityTag = "F001_Empty";
+                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
                 return;
             }
 
@@ -790,11 +810,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         if (Settings.LoadingStrategy == LoadingStrategyEnum.Current && container.IsSave)
         {
-            var loadedContainers = SaveContainerCollection.Where(i => i.IsLoaded && (i.IsSynced || i.IsBackup) && !i.Equals(container));
+            var loadedContainers = GetLoadedContainers().Where(i => !i.Equals(container));
             foreach (var loadedContainer in loadedContainers)
             {
                 // Unloads data by removing the reference to the JSON object.
-                container.SetJsonObject(null);
+                loadedContainer.SetJsonObject(null);
             }
         }
 
@@ -1360,7 +1380,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected static string CreateBaseIdentifier(JObject jsonObject)
     {
-        var usesMapping = jsonObject.ContainsKey("GalacticAddress"); // variant of UsesMappping() 
+        var usesMapping = jsonObject.ContainsKey("GalacticAddress"); // variant of UsesMappping()
 
         // Indirect cast from double to int.
         var address = jsonObject[usesMapping ? "GalacticAddress" : "oZw"];
@@ -1539,7 +1559,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         string lid;
         string usn;
         string ptk;
-        if (jsonObject.ContainsKey("UID")) // variant of UsesMappping() 
+        if (jsonObject.ContainsKey("UID")) // variant of UsesMappping()
         {
             uid = "UID";
             lid = "LID";
