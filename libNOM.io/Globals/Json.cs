@@ -299,7 +299,7 @@ public static partial class Json
         if (!json.Contains(fuelUse, StringComparison.OrdinalIgnoreCase))
             return false;
         ReadOnlySpan<char> launchFuelCost = $"\"A9D\":{{\"iqY\":\"{setpoints[11]}\"".ToReadOnlySpan();
-        if (!json.Contains(launchFuelCost, StringComparison.OrdinalIgnoreCase)) 
+        if (!json.Contains(launchFuelCost, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Crafting
@@ -454,7 +454,7 @@ public static partial class Json
         return stringValues[19] == setpoints[23]; // reputationGain // if true all previous values where true as well and therefore it matches the preset
     }
 
-#endregion
+    #endregion
 
     #region SeasonEnum
 
@@ -499,14 +499,14 @@ public static partial class Json
     public static long GetTotalPlayTime(string json)
     {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexTotalPlayTimeObfuscated,json, out var resultObfuscated))
+        if (GetRegex(RegexTotalPlayTimeObfuscated, json, out var resultObfuscated))
 #else
         if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out var resultObfuscated))
 #endif
             return resultObfuscated;
 
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexTotalPlayTimePlaintext,json, out var resultPlaintext))
+        if (GetRegex(RegexTotalPlayTimePlaintext, json, out var resultPlaintext))
 #else
         if (GetRegex(RegexTotalPlayTimePlaintext(), json, out var resultPlaintext))
 #endif
@@ -537,14 +537,14 @@ public static partial class Json
     public static int GetVersion(string json)
     {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexVersionObfuscated,json, out var resultObfuscated))
+        if (GetRegex(RegexVersionObfuscated, json, out var resultObfuscated))
 #else
         if (GetRegex(RegexVersionObfuscated(), json, out var resultObfuscated))
 #endif
             return (int)(resultObfuscated);
 
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexVersionPlaintext,json, out var resultPlaintext))
+        if (GetRegex(RegexVersionPlaintext, json, out var resultPlaintext))
 #else
         if (GetRegex(RegexVersionPlaintext(), json, out var resultPlaintext))
 #endif

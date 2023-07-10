@@ -176,7 +176,7 @@ public partial class PlatformSteam : Platform
                 MetaFile = new FileInfo(Path.Combine(Location.FullName, "mf_accountdata.hg")),
             };
 
-        var steamIndex = metaIndex == Global.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
+        var steamIndex = metaIndex == Globals.Constant.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
         return new Container(metaIndex)
         {
             DataFile = new FileInfo(Path.Combine(Location.FullName, $"save{steamIndex}.hg")),
@@ -319,7 +319,7 @@ public partial class PlatformSteam : Platform
             offset += Globals.Constant.SAVE_STREAMING_CHUNK_SIZE;
 
             var chunkHeader = new uint[4];
-            chunkHeader[0] = Global.HEADER_SAVE_STREAMING_CHUNK;
+            chunkHeader[0] = Globals.Constant.HEADER_SAVE_STREAMING_CHUNK;
             chunkHeader[1] = (uint)(target.Length);
             chunkHeader[2] = (uint)(source.Length);
 

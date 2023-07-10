@@ -722,7 +722,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         container.GameModeEnum = Globals.Json.GetGameModeEnum(container, json);
         container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and SeasonEnum and GameModeEnum are set
         container.VersionEnum = Globals.Json.GetVersionEnum(container, json); // works after BaseVersion is set
-        container.IsOld = container.VersionEnum < Globals.Constant.LOWEST_SUPPORTED_VERSION; // works after VersionEnum is set
     }
 
     /// <summary>
@@ -746,7 +745,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             container.GameModeEnum = Globals.Json.GetGameModeEnum(container, jsonObject);
             container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and SeasonEnum and GameModeEnum are set
             container.VersionEnum = Globals.Json.GetVersionEnum(container, jsonObject); // works after BaseVersion is set
-            container.IsOld = container.VersionEnum < Globals.Constant.LOWEST_SUPPORTED_VERSION; // works after VersionEnum is set
         }
 
         container.SetJsonObject(jsonObject);
@@ -941,7 +939,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 _ = Globals.LZ4.Encode(source, out byte[] target);
                 var chunkHeader = new uint[]
                 {
-                    Global.HEADER_SAVE_STREAMING_CHUNK,
+                    Globals.Constant.HEADER_SAVE_STREAMING_CHUNK,
                     (uint)(target.Length),
                     (uint)(source.Length),
                     0,

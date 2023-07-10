@@ -15,12 +15,18 @@ internal static class Constant
     internal const uint HEADER_SAVE_STREAMING_CHUNK = 0xFEEDA1E5; // 4276986341
     internal const string HEADER_SAVEWIZARD = "NOMANSKY";
 
-    internal const string INCOMPATIBILITY_001 = "I001_Empty";
-    internal const string INCOMPATIBILITY_002 = "I002_Deserialization_Exception";
-    internal const string INCOMPATIBILITY_003 = "I003_Deserialization_Null";
-    internal const string INCOMPATIBILITY_004 = "I004_Microsoft_Deleted";
-    internal const string INCOMPATIBILITY_005 = "I005_Microsoft_Missing_Blob";
-    internal const string INCOMPATIBILITY_006 = "I006_Non_Existent ";
+    // G = Global
+    // M = Microsoft
+    // O = GoG
+    // P = PlayStation
+    // S = Steam
+    // W = Switch
+    internal const string INCOMPATIBILITY_001 = "001G_Empty";
+    internal const string INCOMPATIBILITY_002 = "002G_Deserialization_Exception";
+    internal const string INCOMPATIBILITY_003 = "003G_Deserialization_Null";
+    internal const string INCOMPATIBILITY_004 = "004M_Microsoft_Deleted";
+    internal const string INCOMPATIBILITY_005 = "005M_Microsoft_Missing_Blob";
+    internal const string INCOMPATIBILITY_006 = "006G_Non_Existent ";
 
     internal const int OFFSET_GAMEMODE = 512;
     internal const int OFFSET_INDEX = 2;

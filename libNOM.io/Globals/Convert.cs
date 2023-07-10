@@ -72,7 +72,7 @@ public static class Convert
             throw new InvalidOperationException("The specified container does not contain valid data.");
 
         output = string.IsNullOrWhiteSpace(output) ? container.DataFile!.Directory!.FullName : output;
-        var path = Path.Combine(output, $"{container.DataFile!.Name}.{DateTime.Now.ToString(Global.FILE_TIMESTAMP_FORMAT)}.json");
+        var path = Path.Combine(output, $"{container.DataFile!.Name}.{DateTime.Now.ToString(Globals.Constant.FILE_TIMESTAMP_FORMAT)}.json");
 
         File.WriteAllText(path, result);
     }

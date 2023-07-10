@@ -411,7 +411,7 @@ public partial class PlatformMicrosoft : Platform
                 var isManual = System.Convert.ToInt32(saveIdentifier.EndsWith("Manual"));
                 var slot = System.Convert.ToInt32(string.Concat(saveIdentifier.Where(char.IsDigit)));
 
-                var metaIndex = Global.OFFSET_INDEX + ((slot - 1) * 2) + isManual;
+                var metaIndex = Globals.Constant.OFFSET_INDEX + ((slot - 1) * 2) + isManual;
 
                 result.Add(metaIndex, container);
             }
@@ -1063,7 +1063,7 @@ public partial class PlatformMicrosoft : Platform
 
         for (var containerIndex = 0; containerIndex < COUNT_SAVES_TOTAL; containerIndex++)
         {
-            var metaIndex = Global.OFFSET_INDEX + containerIndex;
+            var metaIndex = Globals.Constant.OFFSET_INDEX + containerIndex;
 
             var contains = microsoft.TryGetValue(metaIndex, out var extra);
             if (contains)

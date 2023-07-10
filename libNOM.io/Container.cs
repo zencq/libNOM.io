@@ -1,5 +1,4 @@
 ﻿using libNOM.io.Delegates;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 
@@ -73,12 +72,12 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether it is older than the lowest supported version.
     /// </summary>
-    public bool IsOld { get; set; }
+    public bool IsOld => VersionEnum < Globals.Constant.LOWEST_SUPPORTED_VERSION; // { get; }
 
     /// <summary>
     /// Whether it is an actual save and not something else like account data.
     /// </summary>
-    public bool IsSave => MetaIndex >= Global.OFFSET_INDEX; // { get; }
+    public bool IsSave => MetaIndex >= Globals.Constant.OFFSET_INDEX; // { get; }
 
     /// <summary>
     /// Whether it is identical to the data on the drive.
@@ -133,12 +132,12 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public PresetGameModeEnum? GameModeEnum // { get; private set; }
     {
-        get => _jsonObject is not null ? Global.GetGameModeEnum(this, _jsonObject) : _gameMode;
+        get => _jsonObject is not null ? Globals.Json.GetGameModeEnum(this, _jsonObject) : _gameMode;
         internal set
         {
             if (_jsonObject is not null)
             {
-                Version = Global.CalculateVersion(BaseVersion, value, SeasonEnum);
+                Version = Globals.Calculate.CalculateVersion(BaseVersion, value, SeasonEnum);
             }
             _gameMode = value;
         }
@@ -202,40 +201,14 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public string SaveName // { get; set; }
     {
-        get => IsWaypoint ? _jsonObject?.GetValue<string?>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty : string.Empty;
-        set
-        {
-            if (_jsonObject is not null)
-            {
-                if (_jsonObject.UsesMapping())
-                {
-                    _jsonObject["PlayerStateData"]![nameof(SaveName)] = value;
-                }
-                else
-                {
-                    _jsonObject["6f="]!["Pk4"] = value;
-                }
-            }
-        }
+        get => GetJsonValue<string>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty;
+        set => SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
     }
 
     public string SaveSummary // { get; set; }
     {
-        get => IsWaypoint ? _jsonObject?.GetValue<string?>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty : string.Empty;
-        set
-        {
-            if (_jsonObject is not null)
-            {
-                if (_jsonObject.UsesMapping())
-                {
-                    _jsonObject["PlayerStateData"]![nameof(SaveSummary)] = value;
-                }
-                else
-                {
-                    _jsonObject["6f="]!["n:R"] = value;
-                }
-            }
-        }
+        get => GetJsonValue<string>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty;
+        set => SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
     }
 
     public SaveTypeEnum SaveTypeEnum { get; }
@@ -244,20 +217,10 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public long TotalPlayTime // { get; set; }
     {
-        get => _jsonObject is not null ? Global.GetTotalPlayTime(_jsonObject) : _totalPlayTime;
+        get => _jsonObject is not null ? Globals.Json.GetTotalPlayTime(_jsonObject) : _totalPlayTime;
         set
         {
-            if (_jsonObject is not null)
-            {
-                if (_jsonObject.UsesMapping())
-                {
-                    _jsonObject["PlayerStateData"]![nameof(TotalPlayTime)] = value;
-                }
-                else
-                {
-                    _jsonObject["6f="]!["Lg8"] = value;
-                }
-            }
+            SetJsonValue(value, "6f=.Lg8", "PlayerStateData.TotalPlayTime");
             _totalPlayTime = value;
         }
     }
@@ -266,22 +229,14 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     // internal //
 
+    //internal bool UsesMapping => _jsonObject?.ContainsKey(nameof(Version)) == true; // { get; }
+
     internal int Version // { get; set; }
     {
-        get => _jsonObject is not null ? Global.GetVersion(_jsonObject) : _version;
+        get => _jsonObject is not null ? Globals.Json.GetVersion(_jsonObject) : _version;
         set
         {
-            if (_jsonObject is not null)
-            {
-                if (_jsonObject.UsesMapping())
-                {
-                    _jsonObject[nameof(Version)] = value;
-                }
-                else
-                {
-                    _jsonObject["F2P"] = value;
-                }
-            }
+            SetJsonValue(value, "F2P", nameof(Version));
             _version = value;
         }
     }
@@ -297,6 +252,38 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         return _jsonObject;
     }
 
+    public JToken? GetJsonToken(params string[] paths)
+    {
+        foreach (var path in paths)
+        {
+            var jToken = _jsonObject?.SelectToken(path);
+            if (jToken is not null)
+                return jToken;
+        }
+        return null;
+    }
+
+    public IEnumerable<JToken> GetJsonTokens(params string[] paths)
+    {
+        foreach (var path in paths)
+        {
+            var jTokens = _jsonObject?.SelectTokens(path);
+            if (jTokens is not null)
+                return jTokens;
+        }
+        return Array.Empty<JToken>();
+    }
+
+    public T? GetJsonValue<T>(params string[] paths)
+    {
+        if (_jsonObject is not null)
+            return _jsonObject.GetValue<T>(paths);
+
+        return default;
+    }
+
+    // private //
+
     private bool IsVersion(VersionEnum versionEnum)
     {
         return VersionEnum >= versionEnum;
@@ -306,20 +293,19 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region Setter
 
-    public void SetGameMode(PresetGameModeEnum gameMode)
+    public void SetGameMode(PresetGameModeEnum mode)
     {
         if (_jsonObject is null)
             return;
 
-        var mapping = _jsonObject.UsesMapping();
-        var mission = _jsonObject.SelectToken(mapping ? $"PlayerStateData.MissionProgress[?(@.Mission == '{MISSION_CREATIVE}')]" : $"6f=.dwb[?(@.p0c == '{MISSION_CREATIVE}')]");
+        var mission = GetJsonToken($"6f=.dwb[?(@.p0c == '{MISSION_CREATIVE}')]", $"PlayerStateData.MissionProgress[?(@.Mission == '{MISSION_CREATIVE}')]");
 
         // Remove MISSION_CREATIVE if new mode is not Creative.
-        if (gameMode != PresetGameModeEnum.Creative)
+        if (mode != PresetGameModeEnum.Creative)
         {
             mission?.Remove();
         }
-        // Add MISSION_CREATIVE if new mode is Creative but mission not existing.
+        // Add MISSION_CREATIVE if new mode is Creative but mission does not exist.
         else if (mission is null)
         {
 #if NETSTANDARD2_0_OR_GREATER
@@ -328,37 +314,82 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
             var participantTypes = Enum.GetNames<ParticipantTypeEnum>();
 #endif
 
-            var jsonAnonymous = new
+            // Will be obfuscated when written.
+            mission = new JObject
             {
-                Mission = "^CREATIVE",
-                Progress = 1,
-                Seed = 0,
-                Data = 0,
-                Participants = new object[participantTypes.Length],
+                { "Mission", MISSION_CREATIVE },
+                { "Progress", 1 },
+                { "Seed", 0 },
+                { "Data", 0 },
+                { "Participants", new JArray() },
             };
             for (var i = 0; i < participantTypes.Length; i++)
             {
-                jsonAnonymous.Participants[i] = new
+                (mission["Participants"] as JArray)!.Add(new JObject
                 {
-                    UA = 0,
-                    BuildingSeed = new object[] { true, "0x0" },
-                    BuildingLocation = new[] { 0, 0, 0 },
-                    ParticipantType = new { ParticipantType = participantTypes[i] },
-                };
+                    { "UA", 0 },
+                    { "BuildingSeed", new JArray { true, "0x0" } },
+                    { "BuildingLocation", new JArray { 0, 0, 0 } },
+                    { "ParticipantType", new JObject
+                        {
+                            { "ParticipantType", participantTypes[i] },
+                        }
+                    },
+                });
             }
-
-            var jsonReturn = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(jsonAnonymous));
-
-            (_jsonObject.SelectToken(mapping ? $"PlayerStateData.MissionProgress" : $"6f=.dwb") as JArray)?.Add(jsonReturn);
+            (GetJsonToken($"6f=.dwb", $"PlayerStateData.MissionProgress") as JArray)?.Add(mission);
         }
 
         // Set value.
-        GameModeEnum = gameMode;
+        GameModeEnum = mode;
     }
 
     public void SetJsonObject(JObject? value)
     {
+        if (_jsonObject?.Equals(value) != true)
+            IsSynced = false;
+
         _jsonObject = value;
+    }
+
+    public void SetJsonValue(JToken value, params string[] paths)
+    {
+        if (_jsonObject is null)
+            return;
+
+        foreach (var path in paths)
+        {
+            JToken? token;
+            if (path.IsAllDigits())
+            {
+                var indices = path.ToCharArray();
+                token = _jsonObject;
+
+                for (var i = 0; i < indices.Length - 1; i++)
+                {
+                    token = token!.Type switch
+                    {
+                        JTokenType.Object => token.Children().ElementAtOrDefault(indices[i]), // default = null
+                        JTokenType.Array => (token as JArray)?.ContainsIndex(indices[i]) == true ? token[indices[i]] : null,
+                        _ => null,
+                        //_ => throw new IndexOutOfRangeException($"Index {indices[i]} at position {i} is not available ({token.Path})"),
+                    };
+                    if (token is null)
+                        break;
+                }
+            }
+            else
+            {
+                token = _jsonObject?.SelectToken(path);
+            }
+
+            if (token is not null)
+            {
+                token.Replace(value);
+                IsSynced = false;
+                break;
+            }
+        }
     }
 
     public void SetWatcherChange(WatcherChangeTypes changeType)
@@ -385,7 +416,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public Container(int metaIndex)
     {
-        CollectionIndex = metaIndex - Global.OFFSET_INDEX;
+        CollectionIndex = metaIndex - Globals.Constant.OFFSET_INDEX;
         MetaIndex = metaIndex;
 
         SaveTypeEnum = (SaveTypeEnum)(CollectionIndex % 2);
@@ -494,23 +525,26 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     internal void Reset()
     {
         _exists = null;
+        _gameMode = null;
         _jsonObject = null;
         _lastWriteTime = null;
+        _totalPlayTime = 0;
         _version = -1;
 
         BackupCollection.Clear();
-        BaseVersion = default;
-        IsBackup = false;
-        IsOld = false;
-        IsSynced = true;
-        SeasonEnum = SeasonEnum.None;
-        VersionEnum = VersionEnum.Unknown;
         UserIdentification = null;
         UnknownKeys.Clear();
 
         ClearIncompatibility();
+
+        IsSynced = true;
+
         RefreshFileInfo();
         ResolveWatcherChange();
+
+        BaseVersion = 0;
+        SeasonEnum = SeasonEnum.None;
+        VersionEnum = VersionEnum.Unknown;
     }
 
     /// <summary>
