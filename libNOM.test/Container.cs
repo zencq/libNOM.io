@@ -53,9 +53,17 @@ public class ContainerTest : CommonTestInitializeCleanup
         var platform = new PlatformSteam(path, settings);
         var container = platform.GetSaveContainer(16)!;
 
+        var name0 = container.SaveName;
+
         platform.Load(container);
+        var name1 = container.SaveName;
+
+        container.SaveName = "SaveName Test";
+        var name2 = container.SaveName;
 
         // Assert
-        Assert.AreEqual("Custom Normal", container.SaveName);
+        Assert.AreEqual("Custom Normal", name0); // field
+        Assert.AreEqual("Custom Normal", name1); // property
+        Assert.AreEqual("SaveName Test", name2); // changed
     }
 }

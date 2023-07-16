@@ -167,26 +167,25 @@ public static class IEnumerableExtensions
 
     #endregion
 
-    #region typeof(JToken)
+    #region typeof(string)
 
     /// <summary>
-    /// Gets the most common string of a JToken enumerable.
+    /// Gets the most common string of an enumerable.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <param name="self"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/39599083"/>
-    internal static string? MostCommon(this IEnumerable<JToken> self)
+    internal static string? MostCommon(this IEnumerable<string> self)
     {
         if (!self.Any())
             return null;
 
-        var groups = self.Select(k => k.Value<string>()).Where(k => !string.IsNullOrWhiteSpace(k)).GroupBy(k => k);
+        var groups = self.GroupBy(i => i);
         if (!groups.Any())
             return null;
 
-        var max = groups.Max(g => g.Count());
-        return groups.Where(g => g.Count() == max).Select(g => g.Key).FirstOrDefault();
+        var max = groups.Max(i => i.Count());
+        return groups.Where(i => i.Count() == max).Select(j => j.Key).FirstOrDefault();
     }
 
     #endregion

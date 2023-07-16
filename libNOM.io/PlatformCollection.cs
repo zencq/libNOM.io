@@ -56,7 +56,7 @@ public class PlatformCollection : IEnumerable<Platform>
             return null;
 
         ReadOnlySpan<byte> bytes = File.ReadAllBytes(path);
-        int metaIndex, possibleIndex = metaIndex = Globals.Constant.OFFSET_INDEX;
+        int metaIndex, possibleIndex = metaIndex = Globals.Constants.OFFSET_INDEX;
 
         // Convert header to different formats.
         //var headerInteger = bytes[..4].CastToUInt32();
@@ -108,7 +108,7 @@ public class PlatformCollection : IEnumerable<Platform>
         //    platform = new PlatformMicrosoft();
         //}
 
-        var container = new Container(metaIndex > possibleIndex ? Globals.Constant.OFFSET_INDEX : metaIndex)
+        var container = new Container(metaIndex > possibleIndex ? Globals.Constants.OFFSET_INDEX : metaIndex)
         {
             DataFile = new FileInfo(path),
         };

@@ -1,4 +1,5 @@
-﻿using libNOM.io.Delegates;
+﻿using CommunityToolkit.Diagnostics;
+using libNOM.io.Delegates;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 
@@ -22,6 +23,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     private PresetGameModeEnum? _gameMode;
     private JObject? _jsonObject;
     private DateTimeOffset? _lastWriteTime;
+    private string _saveName = string.Empty;
+    private string _saveSummary = string.Empty;
     private long _totalPlayTime;
     private int _version = -1;
 
@@ -72,12 +75,12 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether it is older than the lowest supported version.
     /// </summary>
-    public bool IsOld => VersionEnum < Globals.Constant.LOWEST_SUPPORTED_VERSION; // { get; }
+    public bool IsOld => VersionEnum < Globals.Constants.LOWEST_SUPPORTED_VERSION; // { get; }
 
     /// <summary>
     /// Whether it is an actual save and not something else like account data.
     /// </summary>
-    public bool IsSave => MetaIndex >= Globals.Constant.OFFSET_INDEX; // { get; }
+    public bool IsSave => MetaIndex >= Globals.Constants.OFFSET_INDEX; // { get; }
 
     /// <summary>
     /// Whether it is identical to the data on the drive.
@@ -201,14 +204,22 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public string SaveName // { get; set; }
     {
-        get => GetJsonValue<string>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty;
-        set => SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
+        get => _jsonObject is not null ? Globals.Json.GetSaveName(_jsonObject) : _saveName;
+        set
+        {
+            SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
+            _saveName = value;
+        }
     }
 
     public string SaveSummary // { get; set; }
     {
-        get => GetJsonValue<string>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty;
-        set => SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
+        get => _jsonObject is not null ? Globals.Json.GetSaveSummary(_jsonObject) : _saveSummary;
+        set
+        {
+            SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
+            _saveSummary = value;
+        }
     }
 
     public SaveTypeEnum SaveTypeEnum { get; }
@@ -236,7 +247,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         get => _jsonObject is not null ? Globals.Json.GetVersion(_jsonObject) : _version;
         set
         {
-            SetJsonValue(value, "F2P", nameof(Version));
+            SetJsonValue(value, "F2P", "Version");
             _version = value;
         }
     }
@@ -354,6 +365,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public void SetJsonValue(JToken value, params string[] paths)
     {
+        Guard.HasSizeGreaterThan(paths, 0);
+
         if (_jsonObject is null)
             return;
 
@@ -416,7 +429,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public Container(int metaIndex)
     {
-        CollectionIndex = metaIndex - Globals.Constant.OFFSET_INDEX;
+        CollectionIndex = metaIndex - Globals.Constants.OFFSET_INDEX;
         MetaIndex = metaIndex;
 
         SaveTypeEnum = (SaveTypeEnum)(CollectionIndex % 2);
@@ -515,8 +528,14 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         DataFile?.Refresh();
         MetaFile?.Refresh();
 
-        // Reset to use latest data from property.
-        _lastWriteTime = null;
+        /// <see cref="Microsoft"/> is defined in <see cref="PlatformMicrosoft.cs"/> 
+        if (Microsoft is not null)
+        {
+            Microsoft.BlobContainerFile.Refresh();
+            Microsoft.BlobDirectory.Refresh();
+            Microsoft.BlobDataFile.Refresh();
+            Microsoft.BlobMetaFile.Refresh();
+        }
     }
 
     /// <summary>

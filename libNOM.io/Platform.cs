@@ -11,10 +11,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
-using CommunityToolkit.HighPerformance.Helpers;
-using System.IO;
-using CommunityToolkit.HighPerformance;
-using System.Collections.Generic;
 
 namespace libNOM.io;
 
@@ -73,7 +69,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public bool Exists => Location?.Exists == true; // { get; }
 
-    public bool HasAccountData => AccountContainer?.Exists == true; // { get; }
+    public bool HasAccountData => AccountContainer?.Exists == true && AccountContainer?.IsCompatible == true; // { get; }
 
     public abstract bool HasModding { get; }
 
@@ -283,7 +279,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         // Watcher
         _options.RegisterPostEvictionCallback(OnCacheEviction);
-        _options.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(Globals.Constant.CACHE_EXPIRATION), ExpirationMode.ImmediateEviction);
+        _options.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(Globals.Constants.CACHE_EXPIRATION), ExpirationMode.ImmediateEviction);
 
         _watcher.Changed += OnWatcherEvent;
         _watcher.Created += OnWatcherEvent;
@@ -377,7 +373,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         var bag = new ConcurrentBag<Container>();
 
-        var tasks = Enumerable.Range(0, Globals.Constant.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
+        var tasks = Enumerable.Range(0, Globals.Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
         {
             return Task.Run(() =>
             {
@@ -461,12 +457,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
         {
             container.IncompatibilityException = ex;
-            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_002;
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_002;
             return null;
         }
         if (jsonObject is null)
         {
-            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_003;
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_003;
             return null;
         }
 
@@ -503,7 +499,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 {
                     DataFile = new(file),
                     IsBackup = true,
-                    LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Globals.Constant.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
+                    LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Globals.Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
                     VersionEnum = (VersionEnum)(System.Convert.ToInt32(parts[4])),
                 });
             }
@@ -534,7 +530,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             var data = LoadData(container, meta);
             if (data.IsNullOrEmpty())
             {
-                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
+                container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_001;
             }
             else
             {
@@ -542,7 +538,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             }
         }
 
-        container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_006;
+        container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_006;
         return Array.Empty<byte>();
     }
 
@@ -673,11 +669,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         while (offset < data.Length)
         {
 #if NETSTANDARD2_0
-            var chunkHeader = data.Skip(offset).Take(Globals.Constant.SAVE_STREAMING_HEADER_SIZE).GetUInt32();
+            var chunkHeader = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_HEADER_SIZE).GetUInt32();
 #else
-            var chunkHeader = data[offset..(offset + Globals.Constant.SAVE_STREAMING_HEADER_SIZE)].GetUInt32();
+            var chunkHeader = data[offset..(offset + Globals.Constants.SAVE_STREAMING_HEADER_SIZE)].GetUInt32();
 #endif
-            offset += Globals.Constant.SAVE_STREAMING_HEADER_SIZE;
+            offset += Globals.Constants.SAVE_STREAMING_HEADER_SIZE;
 
             var sizeCompressed = (int)(chunkHeader[1]);
             var sizeDecompressed = (int)(chunkHeader[2]);
@@ -714,13 +710,15 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <inheritdoc cref="ProcessContainerData(Container, JObject)"/>
     private static void ProcessContainerData(Container container, string json)
     {
-        container.IsSynced = true;
+        container.SaveName = Globals.Json.GetSaveName(json);
+        container.SaveSummary = Globals.Json.GetSaveSummary(json);
         container.TotalPlayTime = Globals.Json.GetTotalPlayTime(json);
-
         container.Version = Globals.Json.GetVersion(json);
+
+        container.GameModeEnum = Globals.Json.GetGameModeEnum(container, json); // works after Version is set
         container.SeasonEnum = Globals.Json.GetSeasonEnum(container); // works after Version is set
-        container.GameModeEnum = Globals.Json.GetGameModeEnum(container, json);
-        container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and SeasonEnum and GameModeEnum are set
+
+        container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and GameModeEnum and SeasonEnum are set
         container.VersionEnum = Globals.Json.GetVersionEnum(container, json); // works after BaseVersion is set
     }
 
@@ -731,23 +729,26 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="jsonObject"></param>
     private void ProcessContainerData(Container container, JObject jsonObject)
     {
-        // If we get here, the container is in sync (again).
-        container.IsSynced = true;
-
         // No need to do these things for account data.
         if (container.IsSave)
         {
+            container.SaveName = Globals.Json.GetSaveName(jsonObject);
+            container.SaveSummary = Globals.Json.GetSaveSummary(jsonObject);
             container.TotalPlayTime = Globals.Json.GetTotalPlayTime(jsonObject);
             container.UserIdentification = GetUserIdentification(jsonObject);
-
             container.Version = Globals.Json.GetVersion(jsonObject);
+
+            container.GameModeEnum = Globals.Json.GetGameModeEnum(container, jsonObject); // works after Version is set
             container.SeasonEnum = Globals.Json.GetSeasonEnum(container); // works after Version is set
-            container.GameModeEnum = Globals.Json.GetGameModeEnum(container, jsonObject);
-            container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and SeasonEnum and GameModeEnum are set
+
+            container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and GameModeEnum and SeasonEnum are set
             container.VersionEnum = Globals.Json.GetVersionEnum(container, jsonObject); // works after BaseVersion is set
         }
 
         container.SetJsonObject(jsonObject);
+
+        // If we are in here, the container is in sync (again).
+        container.IsSynced = true;
     }
 
     #endregion
@@ -787,7 +788,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             var binary = LoadData(container, LoadMeta(container, meta), data);
             if (binary.IsNullOrEmpty())
             {
-                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
+                container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_001;
                 return;
             }
 
@@ -932,14 +933,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             tasks.Add(Task.Run(() =>
             {
 #if NETSTANDARD2_0
-                var source = data.Skip(offset).Take(Globals.Constant.SAVE_STREAMING_CHUNK_SIZE).ToArray();
+                var source = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_CHUNK_SIZE).ToArray();
 #else
-                var source = data[offset..(offset + Globals.Constant.SAVE_STREAMING_CHUNK_SIZE)];
+                var source = data[offset..(offset + Globals.Constants.SAVE_STREAMING_CHUNK_SIZE)];
 #endif
                 _ = Globals.LZ4.Encode(source, out byte[] target);
                 var chunkHeader = new uint[]
                 {
-                    Globals.Constant.HEADER_SAVE_STREAMING_CHUNK,
+                    Globals.Constants.HEADER_SAVE_STREAMING_CHUNK,
                     (uint)(target.Length),
                     (uint)(source.Length),
                     0,
@@ -948,7 +949,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 concurrent[offset] = chunkHeader.GetBytes().Concat(target).ToArray();
             }));
 
-            offset += Globals.Constant.SAVE_STREAMING_CHUNK_SIZE;
+            offset += Globals.Constants.SAVE_STREAMING_CHUNK_SIZE;
         }
 
         Task.WaitAll(tasks.ToArray());
@@ -1040,7 +1041,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         Guard.IsTrue(container.DataFile.Exists);
 
         var createdAt = DateTime.Now;
-        var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Globals.Constant.FILE_TIMESTAMP_FORMAT)}.{container.VersionEnum.Numerate()}.zip".ToLowerInvariant();
+        var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Globals.Constants.FILE_TIMESTAMP_FORMAT)}.{container.VersionEnum.Numerate()}.zip".ToLowerInvariant();
         var path = Path.Combine(Settings.Backup, name);
 
         Directory.CreateDirectory(Settings.Backup);
@@ -1761,10 +1762,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return string.Empty;
 
         var byBase = GetUserIdentificationByBase(jsonObject, key);
-        var byDiscovery = GetUserIdentificationByDiscovery(jsonObject, key);
         var bySettlement = GetUserIdentificationBySettlement(jsonObject, key);
 
-        return byBase.Concat(byDiscovery).Concat(bySettlement).MostCommon() ?? string.Empty;
+        var result = byBase.Concat(bySettlement).MostCommon();
+        if (result is not null)
+            return result;
+
+        var byDiscovery = GetUserIdentificationByDiscovery(jsonObject, key);
+        return byDiscovery.MostCommon() ?? string.Empty;
     }
 
     /// <summary>
@@ -1774,7 +1779,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="key"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
-    protected virtual IEnumerable<JToken> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected virtual IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
         var usesMapping = jsonObject.UsesMapping();
 
@@ -1795,7 +1800,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<JToken> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected virtual IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
         var usesMapping = jsonObject.UsesMapping();
 
@@ -1815,7 +1820,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<JToken> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected virtual IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
         var usesMapping = jsonObject.UsesMapping();
 
@@ -1836,15 +1841,15 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="path"></param>
     /// <param name="expressions"></param>
     /// <returns></returns>
-    protected static IEnumerable<JToken> GetUserIdentificationIntersection(JObject jsonObject, string path, params string[] expressions)
+    protected static IEnumerable<string> GetUserIdentificationIntersection(JObject jsonObject, string path, params string[] expressions)
     {
         if (expressions.Length == 0)
-            return Array.Empty<JToken>();
+            return Array.Empty<string>();
 
-        IEnumerable<JToken> result = null!;
+        IEnumerable<string> result = null!;
         foreach (var expression in expressions)
         {
-            var query = jsonObject.SelectTokens(string.Format(path, expression));
+            var query = (IEnumerable<string>)(jsonObject.SelectTokens(string.Format(path, expression)).Select(i => i.Value<string>()).Where(j => !string.IsNullOrWhiteSpace(j)));
             result = result is null ? query : result.Intersect(query);
         }
         return result;
@@ -1868,6 +1873,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected string? GetUserIdentificationPropertyValue(string propertyName)
     {
+        var a = propertyName switch
+        {
+            nameof(UserIdentificationData.LID) => SaveContainerCollection.Select(i => i.UserIdentification?.LID),
+            nameof(UserIdentificationData.UID) => SaveContainerCollection.Select(i => i.UserIdentification?.UID),
+            nameof(UserIdentificationData.USN) => SaveContainerCollection.Select(i => i.UserIdentification?.USN),
+            _ => Array.Empty<string?>(),
+        };
+        var b = (IEnumerable<string>)a.Where(identification => !string.IsNullOrWhiteSpace(identification));
+
+        var c = b.FirstOrDefault();
+        var d = b.MostCommon();
+
         return (propertyName switch
         {
             nameof(UserIdentificationData.LID) => SaveContainerCollection.Select(i => i.UserIdentification?.LID),

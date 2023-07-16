@@ -92,7 +92,7 @@ public class PlatformGog : PlatformSteam
         return result;
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
         if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
@@ -109,7 +109,7 @@ public class PlatformGog : PlatformSteam
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
         if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
@@ -125,7 +125,7 @@ public class PlatformGog : PlatformSteam
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
         if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);

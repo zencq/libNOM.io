@@ -4,16 +4,32 @@ using System.Text.RegularExpressions;
 namespace libNOM.io.Globals;
 
 
-public static partial class Json
+internal static partial class Json
 {
     #region Regex
 
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
+    private static readonly Regex RegexSaveNameObfuscated = new("\\\"Pk4\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, TimeSpan.FromMilliseconds(1000));
+    private static readonly Regex RegexSaveNamePlaintext = new("\\\"SaveName\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, TimeSpan.FromMilliseconds(1000));
+    private static readonly Regex RegexSaveSummaryObfuscated = new("\\\"n:R\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, TimeSpan.FromMilliseconds(1000));
+    private static readonly Regex RegexSaveSummaryPlaintext = new("\\\"SaveSummary\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, TimeSpan.FromMilliseconds(1000));
     private static readonly Regex RegexTotalPlayTimeObfuscated = new("\\\"Lg8\\\":(\\d+),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(1000));
     private static readonly Regex RegexTotalPlayTimePlaintext = new("\\\"TotalPlayTime\\\":(\\d+),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(1000));
     private static readonly Regex RegexVersionObfuscated = new("\\\"F2P\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
     private static readonly Regex RegexVersionPlaintext = new("\\\"Version\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
 #else
+    [GeneratedRegex("\\\"Pk4\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, 1000)]
+    private static partial Regex RegexSaveNameObfuscated();
+
+    [GeneratedRegex("\\\"SaveName\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, 1000)]
+    private static partial Regex RegexSaveNamePlaintext();
+
+    [GeneratedRegex("\\\"n:R\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, 1000)]
+    private static partial Regex RegexSaveSummaryObfuscated();
+
+    [GeneratedRegex("\\\"SaveSummary\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, 1000)]
+    private static partial Regex RegexSaveSummaryPlaintext();
+
     [GeneratedRegex("\\\"Lg8\\\":(\\d+),", RegexOptions.Compiled, 1000)]
     private static partial Regex RegexTotalPlayTimeObfuscated();
 
@@ -47,13 +63,33 @@ public static partial class Json
         return match.Success;
     }
 
+    private static bool GetRegex(Regex regex, string input, out string result)
+    {
+        result = string.Empty;
+        Match match;
+        try
+        {
+            match = regex.Match(input);
+        }
+        catch (Exception ex) when (ex is RegexMatchTimeoutException)
+        {
+            return false;
+        }
+
+        if (match.Success)
+        {
+            result = match.Groups[1].Value;
+        }
+        return match.Success;
+    }
+
     #endregion
 
     // //
 
     #region GameModeEnum
 
-    internal static PresetGameModeEnum? GetGameModeEnum(Container container)
+    private static PresetGameModeEnum? GetGameModeEnum(Container container)
     {
         if (container.Version.IsGameMode(PresetGameModeEnum.Seasonal))
             return PresetGameModeEnum.Seasonal;
@@ -87,7 +123,7 @@ public static partial class Json
         var result = GetGameModeEnum(container);
 
         // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
-        if (result == PresetGameModeEnum.Normal && container.Version >= Globals.Constant.THRESHOLD_WAYPOINT_GAMEMODE)
+        if (result == PresetGameModeEnum.Normal && container.Version >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
         {
             // DifficultyState is stored again in SeasonData and therefore cut off here at an appropriate length.
             // Without save name and summary DifficultyState ends at around 800 characters.
@@ -122,7 +158,7 @@ public static partial class Json
         var result = GetGameModeEnum(container);
 
         // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
-        if (result == PresetGameModeEnum.Normal && container.Version >= Globals.Constant.THRESHOLD_WAYPOINT_GAMEMODE)
+        if (result == PresetGameModeEnum.Normal && container.Version >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
         {
             // Survival Elements
             var activeSurvivalBars = jsonObject.GetValue<string>("6f=.LyC.:fe.tEx.ZeS", "PlayerStateData.DifficultyState.Settings.ActiveSurvivalBars.ActiveSurvivalBarsDifficulty");
@@ -241,6 +277,7 @@ public static partial class Json
 
     private static bool IsGameModePreset(ReadOnlySpan<char> json, params string[] setpoints)
     {
+        // TODO
         // SettingsLocked
         // AllSlotsUnlocked
         // TutorialEnabled
@@ -465,7 +502,7 @@ public static partial class Json
     /// <returns></returns>
     internal static SeasonEnum GetSeasonEnum(Container container)
     {
-        var mode = Globals.Json.GetGameModeEnum(container);
+        var mode = GetGameModeEnum(container);
         if (mode is null or < PresetGameModeEnum.Seasonal)
             return SeasonEnum.None;
 
@@ -478,13 +515,67 @@ public static partial class Json
             if (i >= futureSeason)
                 return SeasonEnum.Future;
 
-            if (baseVersion is >= Globals.Constant.THRESHOLD_VANILLA and < Globals.Constant.THRESHOLD_VANILLA_GAMEMODE)
+            if (baseVersion is >= Globals.Constants.THRESHOLD_VANILLA and < Globals.Constants.THRESHOLD_VANILLA_GAMEMODE)
                 return (SeasonEnum)(i);
 
             i++;
         }
 
         return SeasonEnum.None;
+    }
+
+    #endregion
+
+    #region Save Name
+
+    internal static string GetSaveName(string json)
+    {
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+        if (GetRegex(RegexSaveNameObfuscated, json, out string resultObfuscated))
+            return resultObfuscated;
+
+        if (GetRegex(RegexSaveNamePlaintext, json, out string resultPlaintext))
+            return resultPlaintext;
+#else
+        if (GetRegex(RegexSaveNameObfuscated(), json, out string resultObfuscated))
+            return resultObfuscated;
+
+        if (GetRegex(RegexSaveNamePlaintext(), json, out string resultPlaintext))
+            return resultPlaintext;
+#endif
+        return string.Empty;
+    }
+
+    internal static string GetSaveName(JObject jsonObject)
+    {
+        return jsonObject.GetValue<string>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty;
+    }
+
+    #endregion
+
+    #region Save Summary
+
+    internal static string GetSaveSummary(string json)
+    {
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+        if (GetRegex(RegexSaveSummaryObfuscated, json, out string resultObfuscated))
+            return resultObfuscated;
+
+        if (GetRegex(RegexSaveSummaryPlaintext, json, out string resultPlaintext))
+            return resultPlaintext;
+#else
+        if (GetRegex(RegexSaveSummaryObfuscated(), json, out string resultObfuscated))
+            return resultObfuscated;
+
+        if (GetRegex(RegexSaveSummaryPlaintext(), json, out string resultPlaintext))
+            return resultPlaintext;
+#endif
+        return string.Empty;
+    }
+
+    internal static string GetSaveSummary(JObject jsonObject)
+    {
+        return jsonObject.GetValue<string>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty;
     }
 
     #endregion
@@ -499,19 +590,18 @@ public static partial class Json
     public static long GetTotalPlayTime(string json)
     {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexTotalPlayTimeObfuscated, json, out var resultObfuscated))
-#else
-        if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out var resultObfuscated))
-#endif
+        if (GetRegex(RegexTotalPlayTimeObfuscated, json, out long resultObfuscated))
             return resultObfuscated;
 
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexTotalPlayTimePlaintext, json, out var resultPlaintext))
-#else
-        if (GetRegex(RegexTotalPlayTimePlaintext(), json, out var resultPlaintext))
-#endif
+        if (GetRegex(RegexTotalPlayTimePlaintext, json, out long resultPlaintext))
             return resultPlaintext;
+#else
+        if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out long resultObfuscated))
+            return resultObfuscated;
 
+        if (GetRegex(RegexTotalPlayTimePlaintext(), json, out long resultPlaintext))
+            return resultPlaintext;
+#endif
         return -1;
     }
 
@@ -534,22 +624,21 @@ public static partial class Json
     /// </summary>
     /// <param name="json"></param>
     /// <returns></returns>
-    public static int GetVersion(string json)
+    internal static int GetVersion(string json)
     {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexVersionObfuscated, json, out var resultObfuscated))
-#else
-        if (GetRegex(RegexVersionObfuscated(), json, out var resultObfuscated))
-#endif
+        if (GetRegex(RegexVersionObfuscated, json, out long resultObfuscated))
             return (int)(resultObfuscated);
 
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexVersionPlaintext, json, out var resultPlaintext))
-#else
-        if (GetRegex(RegexVersionPlaintext(), json, out var resultPlaintext))
-#endif
+        if (GetRegex(RegexVersionPlaintext, json, out long resultPlaintext))
             return (int)(resultPlaintext);
+#else
+        if (GetRegex(RegexVersionObfuscated(), json, out long resultObfuscated))
+            return (int)(resultObfuscated);
 
+        if (GetRegex(RegexVersionPlaintext(), json, out long resultPlaintext))
+            return (int)(resultPlaintext);
+#endif
         return -1;
     }
 
@@ -581,6 +670,8 @@ public static partial class Json
         ??? = ????/???? (??? = ?)
 
         Singularity
+        437 = ????/???? (??? = ?)
+        436 = ????/???? (??? = ?)
         434 = 4657/4145
         433 = 4657/4145
         430 = 4657/4145 (:?x = GreyIfCantStart)

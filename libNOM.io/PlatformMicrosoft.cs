@@ -223,23 +223,23 @@ public partial class PlatformMicrosoft : Platform
 
         var bag = new ConcurrentBag<Container>();
 
-        var tasks = Enumerable.Range(0, Globals.Constant.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
+        var tasks = Enumerable.Range(0, Globals.Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
         {
             return Task.Run(() =>
             {
+                _ = microsoft.TryGetValue(metaIndex, out var extra);
                 if (metaIndex == 0)
                 {
-                    _ = microsoft.TryGetValue(0, out var extra);
-                    AccountContainer = CreateContainer(0, extra);
+                    AccountContainer = CreateContainer(metaIndex, extra);
                     BuildContainerFull(AccountContainer);
                 }
                 else if (metaIndex == 1)
                 {
-                    _settingsContainer = microsoft[1];
+                    if (extra is not null)
+                        _settingsContainer = microsoft[metaIndex];
                 }
                 else
                 {
-                    _ = microsoft.TryGetValue(metaIndex, out var extra);
                     var container = CreateContainer(metaIndex, extra);
                     if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
                     {
@@ -381,7 +381,6 @@ public partial class PlatformMicrosoft : Platform
                         if (blobIdentifier == "data")
                         {
                             container.BlobDataFile = blobFile;
-                            container.LastModifiedTime = new[] { container.LastModifiedTime, container.BlobDataFile.CreationTime }.Max();
                             continue;
                         }
 
@@ -411,7 +410,7 @@ public partial class PlatformMicrosoft : Platform
                 var isManual = System.Convert.ToInt32(saveIdentifier.EndsWith("Manual"));
                 var slot = System.Convert.ToInt32(string.Concat(saveIdentifier.Where(char.IsDigit)));
 
-                var metaIndex = Globals.Constant.OFFSET_INDEX + ((slot - 1) * 2) + isManual;
+                var metaIndex = Globals.Constants.OFFSET_INDEX + ((slot - 1) * 2) + isManual;
 
                 result.Add(metaIndex, container);
             }
@@ -457,7 +456,7 @@ public partial class PlatformMicrosoft : Platform
             var data = LoadData(container, meta);
             if (data.IsNullOrEmpty())
             {
-                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
+                container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_001;
             }
             else
             {
@@ -466,14 +465,14 @@ public partial class PlatformMicrosoft : Platform
         }
         else if (container.Microsoft is not null && container.Microsoft.State == MicrosoftBlobSyncStateEnum.Deleted)
         {
-            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_004;
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_004;
         }
         else if (container.Microsoft is not null && !container.Microsoft.BlobDirectory.Exists)
         {
-            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_005;
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_005;
         }
 
-        container.IncompatibilityTag ??= Globals.Constant.INCOMPATIBILITY_006;
+        container.IncompatibilityTag ??= Globals.Constants.INCOMPATIBILITY_006;
         return Array.Empty<byte>();
     }
 
@@ -543,7 +542,7 @@ public partial class PlatformMicrosoft : Platform
             {
                 _lastModifiedTime = writeTime;
 
-                var ticks = writeTime.Ticks % (long)(Math.Pow(10, 4)) * -1; // get last for digits negative
+                var ticks = writeTime.Ticks % (long)(Math.Pow(10, 4)) * -1; // get last four digits negative
                 container.Microsoft!.LastModifiedTime = container.LastWriteTime = writeTime.AddTicks(ticks); // set container time without the ticks
 
                 if (container.DataFile is not null)
@@ -685,11 +684,10 @@ public partial class PlatformMicrosoft : Platform
     /// </summary>
     private void WriteContainersIndex()
     {
-        var hasAccountData = AccountContainer is not null;
         var hasSettings = _settingsContainer is not null;
 
-        var collection = SaveContainerCollection.Where(i => i.Microsoft?.State > MicrosoftBlobSyncStateEnum.Unknown_Zero);
-        var count = (long)(collection.Count() + (hasAccountData ? 1 : 0) + (hasSettings ? 1 : 0));
+        var collection = SaveContainerCollection.Where(i => i.Microsoft is not null);
+        var count = (long)(collection.Count() + (HasAccountData ? 1 : 0) + (hasSettings ? 1 : 0));
 
         // Longest name (e.g. Slot10Manual) has a total length of 0x8C and therefore 0x90 is more than enough.
         // Leftover will be cut off by using only data up to the current writer position.
@@ -729,7 +727,7 @@ public partial class PlatformMicrosoft : Platform
 
             writer.Write(CONTAINERSINDEX_UNKNOWN_CONST);
 
-            if (hasAccountData)
+            if (HasAccountData)
             {
                 for (var i = 0; i < 2; i++)
                 {
@@ -803,7 +801,7 @@ public partial class PlatformMicrosoft : Platform
                 // Make sure to get the latest data.
                 container.RefreshFileInfo();
 
-                writer.Write((container.DataFile?.Length ?? 0) + (container.MetaFile?.Length ?? 0));
+                writer.Write((container.DataFile?.Exists == true ? container.DataFile!.Length : 0) + (container.MetaFile?.Exists == true ? container.MetaFile!.Length : 0));
             }
 
             buffer = buffer.Take((int)(writer.BaseStream.Position)).ToArray();
@@ -948,7 +946,6 @@ public partial class PlatformMicrosoft : Platform
                 {
                     Directory.Delete(container.Microsoft.BlobDirectory.FullName, true);
                 }
-                container.RefreshFileInfo();
             }
 
             container.Reset();
@@ -1063,7 +1060,7 @@ public partial class PlatformMicrosoft : Platform
 
         for (var containerIndex = 0; containerIndex < COUNT_SAVES_TOTAL; containerIndex++)
         {
-            var metaIndex = Globals.Constant.OFFSET_INDEX + containerIndex;
+            var metaIndex = Globals.Constants.OFFSET_INDEX + containerIndex;
 
             var contains = microsoft.TryGetValue(metaIndex, out var extra);
             if (contains)
@@ -1117,7 +1114,7 @@ public partial class PlatformMicrosoft : Platform
         return result;
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
         if (_accountId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
@@ -1134,7 +1131,7 @@ public partial class PlatformMicrosoft : Platform
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
         if (_accountId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
@@ -1150,7 +1147,7 @@ public partial class PlatformMicrosoft : Platform
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
         if (_accountId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);

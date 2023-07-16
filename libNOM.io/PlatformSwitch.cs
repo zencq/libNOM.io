@@ -206,7 +206,7 @@ public partial class PlatformSwitch : Platform
 
         using var writer = new BinaryWriter(new MemoryStream(buffer));
         writer.Write(META_HEADER); // 4
-        writer.Write(Globals.Constant.SAVE_FORMAT_3); // 4
+        writer.Write(Globals.Constants.SAVE_FORMAT_3); // 4
         writer.Write(decompressedSize); // 4
 
         if (!container.IsSave)

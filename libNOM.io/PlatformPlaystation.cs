@@ -221,12 +221,12 @@ public partial class PlatformPlaystation : Platform
         catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
         {
             container.IncompatibilityException = ex;
-            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_002;
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_002;
             return null;
         }
         if (jsonObject is null)
         {
-            container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_003;
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_003;
             return null;
         }
 
@@ -265,7 +265,7 @@ public partial class PlatformPlaystation : Platform
             var data = LoadData(container, meta);
             if (data.IsNullOrEmpty())
             {
-                container.IncompatibilityTag = Globals.Constant.INCOMPATIBILITY_001;
+                container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_001;
             }
             else
             {
@@ -273,7 +273,7 @@ public partial class PlatformPlaystation : Platform
             }
         }
 
-        container.IncompatibilityTag ??= Globals.Constant.INCOMPATIBILITY_006;
+        container.IncompatibilityTag ??= Globals.Constants.INCOMPATIBILITY_006;
         return Array.Empty<byte>();
     }
 
@@ -502,7 +502,7 @@ public partial class PlatformPlaystation : Platform
 
                 writer.Seek(META_OFFSET + 0x4, SeekOrigin.Begin);
 
-                writer.Write(Globals.Constant.SAVE_FORMAT_3);
+                writer.Write(Globals.Constants.SAVE_FORMAT_3);
 
                 writer.Seek(0x5C, SeekOrigin.Begin);
 
@@ -543,7 +543,7 @@ public partial class PlatformPlaystation : Platform
                 using var writer = new BinaryWriter(new MemoryStream(buffer));
 
                 writer.Write(META_HEADER);
-                writer.Write(Globals.Constant.SAVE_FORMAT_2);
+                writer.Write(Globals.Constants.SAVE_FORMAT_2);
                 writer.Write(container.Playstation!.SizeCompressed);
                 writer.Write(legacyOffset);
                 writer.Write(legacyLength);
@@ -571,7 +571,7 @@ public partial class PlatformPlaystation : Platform
                 using var writer = new BinaryWriter(new MemoryStream(buffer));
 
                 writer.Write(META_HEADER);
-                writer.Write(Globals.Constant.SAVE_FORMAT_2);
+                writer.Write(Globals.Constants.SAVE_FORMAT_2);
 
                 writer.BaseStream.Seek(0xC, SeekOrigin.Current);
                 writer.Write(uint.MaxValue);

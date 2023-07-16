@@ -176,7 +176,7 @@ public partial class PlatformSteam : Platform
                 MetaFile = new FileInfo(Path.Combine(Location.FullName, "mf_accountdata.hg")),
             };
 
-        var steamIndex = metaIndex == Globals.Constant.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
+        var steamIndex = metaIndex == Globals.Constants.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
         return new Container(metaIndex)
         {
             DataFile = new FileInfo(Path.Combine(Location.FullName, $"save{steamIndex}.hg")),
@@ -270,11 +270,11 @@ public partial class PlatformSteam : Platform
     {
 #if NETSTANDARD2_0
         // No compression for account data and before Frontiers.
-        if (!container.IsSave || data.Take(4).GetUInt32().FirstOrDefault() != Globals.Constant.HEADER_SAVE_STREAMING_CHUNK)
+        if (!container.IsSave || data.Take(4).GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
             return data;
 #else
         // No compression for account data and before Frontiers.
-        if (!container.IsSave || data[..4].GetUInt32().FirstOrDefault() != Globals.Constant.HEADER_SAVE_STREAMING_CHUNK)
+        if (!container.IsSave || data[..4].GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
             return data;
 #endif
 
@@ -283,8 +283,8 @@ public partial class PlatformSteam : Platform
         var offset = 0;
         while (offset < data.Length)
         {
-            var chunkHeader = data.Skip(offset).Take(Globals.Constant.SAVE_STREAMING_HEADER_SIZE).GetUInt32();
-            offset += Globals.Constant.SAVE_STREAMING_HEADER_SIZE;
+            var chunkHeader = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_HEADER_SIZE).GetUInt32();
+            offset += Globals.Constants.SAVE_STREAMING_HEADER_SIZE;
 
             var chunkCompressed = (int)(chunkHeader[1]);
             var chunkDecompressed = (int)(chunkHeader[2]);
@@ -313,13 +313,13 @@ public partial class PlatformSteam : Platform
         var offset = 0;
         while (offset < data.Length)
         {
-            var source = data.Skip(offset).Take(Globals.Constant.SAVE_STREAMING_CHUNK_SIZE).ToArray();
+            var source = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_CHUNK_SIZE).ToArray();
             _ = Globals.LZ4.Encode(source, out byte[] target);
 
-            offset += Globals.Constant.SAVE_STREAMING_CHUNK_SIZE;
+            offset += Globals.Constants.SAVE_STREAMING_CHUNK_SIZE;
 
             var chunkHeader = new uint[4];
-            chunkHeader[0] = Globals.Constant.HEADER_SAVE_STREAMING_CHUNK;
+            chunkHeader[0] = Globals.Constants.HEADER_SAVE_STREAMING_CHUNK;
             chunkHeader[1] = (uint)(target.Length);
             chunkHeader[2] = (uint)(source.Length);
 
@@ -373,7 +373,7 @@ public partial class PlatformSteam : Platform
             spookyHash.Update(data);
             spookyHash.Final(out ulong hash1, out ulong hash2);
 
-            writer.Write(Globals.Constant.SAVE_FORMAT_2); // 4
+            writer.Write(Globals.Constants.SAVE_FORMAT_2); // 4
 
             writer.Write(hash1); // 8
             writer.Write(hash2); // 8
@@ -382,7 +382,7 @@ public partial class PlatformSteam : Platform
         }
         else
         {
-            writer.Write(Globals.Constant.SAVE_FORMAT_3); // 4
+            writer.Write(Globals.Constants.SAVE_FORMAT_3); // 4
 
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current);
@@ -500,7 +500,7 @@ public partial class PlatformSteam : Platform
         return result;
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
         if (_steamId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
@@ -517,7 +517,7 @@ public partial class PlatformSteam : Platform
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
         if (_steamId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
@@ -533,7 +533,7 @@ public partial class PlatformSteam : Platform
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
-    protected override IEnumerable<JToken> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
         if (_steamId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
