@@ -600,16 +600,70 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     public void Delete()
     {
         // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
         // Act
+        var platform = new PlatformMicrosoft(path, settings);
+
+        var container0 = platform.GetSaveContainer(0)!; // 1Auto
+        var container1 = platform.GetSaveContainer(1)!; // 1Manual
+
+        platform.Delete(container0);
+        platform.Delete(container1);
+
         // Assert
+        Assert.IsFalse(container0.Exists);
+        Assert.IsNull(container0.DataFile);
+        Assert.AreEqual(container0.IncompatibilityTag, libNOM.io.Globals.Constants.INCOMPATIBILITY_004);
+
+        Assert.IsFalse(container1.Exists);
+        Assert.IsNull(container1.DataFile);
+        Assert.AreEqual(container1.IncompatibilityTag, libNOM.io.Globals.Constants.INCOMPATIBILITY_004);
     }
 
     [TestMethod]
     public void Move()
     {
         // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
         // Act
+        var platform = new PlatformMicrosoft(path, settings);
+
+        var container0 = platform.GetSaveContainer(0)!; // 1Auto
+        var container1 = platform.GetSaveContainer(1)!; // 1Manual
+        var container4 = platform.GetSaveContainer(4)!; // 3Auto
+        var container9 = platform.GetSaveContainer(9)!; // 5Manual
+
+        // 1 is corrupted, therefore 0 gets deleted and then 1 is also deleted after copying.
+        platform.Move(container1, container0);
+
+        var gameModeEnum4 = container4.GameModeEnum;
+        var seasonEnum4 = container4.SeasonEnum;
+        var baseVersion4 = container4.BaseVersion;
+        var versionEnum4 = container4.VersionEnum;
+        platform.Move(container4, container9);
+
         // Assert
+        Assert.IsFalse(container0.Exists);
+        Assert.IsFalse(container1.Exists);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container0.IncompatibilityTag);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container1.IncompatibilityTag);
+
+        Assert.IsFalse(container4.Exists);
+        Assert.IsTrue(container9.Exists);
+        Assert.AreEqual(gameModeEnum4, container9.GameModeEnum);
+        Assert.AreEqual(seasonEnum4, container9.SeasonEnum);
+        Assert.AreEqual(baseVersion4, container9.BaseVersion);
+        Assert.AreEqual(versionEnum4, container9.VersionEnum);
     }
 
     [TestMethod]

@@ -101,8 +101,14 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public DateTimeOffset LastWriteTime // { get; set; }
     {
-        get => _lastWriteTime ?? DataFile?.LastWriteTime ?? DateTimeOffset.MinValue;
-        set => _lastWriteTime = value;
+        get => _lastWriteTime ?? (Exists ? DataFile?.LastWriteTime : null) ?? DateTimeOffset.MinValue;
+        set
+        {
+            _lastWriteTime = value;
+
+            // Below are calls to set the value in platform extra. Each one is defined in the file for the named platform.
+            SetLastWriteTimeMicrosoft(value);
+        }
     }
 
     public FileInfo? MetaFile { get; set; }
@@ -528,14 +534,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         DataFile?.Refresh();
         MetaFile?.Refresh();
 
-        /// <see cref="Microsoft"/> is defined in <see cref="PlatformMicrosoft.cs"/> 
-        if (Microsoft is not null)
-        {
-            Microsoft.BlobContainerFile.Refresh();
-            Microsoft.BlobDirectory.Refresh();
-            Microsoft.BlobDataFile.Refresh();
-            Microsoft.BlobMetaFile.Refresh();
-        }
+        // Below are calls to refresh platform extra. Each one is defined in the file for the named platform.
+        RefreshFileInfoMicrosoft();
     }
 
     /// <summary>

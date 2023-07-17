@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace libNOM.io;
 
 
-#region Container
+#region Extra
 
 internal record class PlatformExtraMicrosoft
 {
@@ -21,7 +21,7 @@ internal record class PlatformExtraMicrosoft
 
     internal byte Extension;
 
-    internal DateTimeOffset LastModifiedTime;
+    internal DateTimeOffset LastWriteTime;
 
     internal byte[]? MetaTail;
 
@@ -35,6 +35,25 @@ internal record class PlatformExtraMicrosoft
 public partial class Container
 {
     internal PlatformExtraMicrosoft? Microsoft { get; set; }
+
+    internal void SetLastWriteTimeMicrosoft(DateTimeOffset value)
+    {
+        if (Microsoft is not null)
+        {
+            Microsoft.LastWriteTime = value;
+        }
+    }
+
+    internal void RefreshFileInfoMicrosoft()
+    {
+        if (Microsoft is not null)
+        {
+            Microsoft.BlobContainerFile?.Refresh();
+            Microsoft.BlobDirectory?.Refresh();
+            Microsoft.BlobDataFile?.Refresh();
+            Microsoft.BlobMetaFile?.Refresh();
+        }
+    }
 }
 
 #endregion
@@ -94,7 +113,7 @@ public partial class PlatformMicrosoft : Platform
 
     private string? _accountId;
     private FileInfo? _containersIndexFile;
-    private DateTimeOffset _lastModifiedTime;
+    private DateTimeOffset _lastWriteTime;
     private PlatformExtraMicrosoft? _settingsContainer;
 
     #endregion
@@ -150,7 +169,7 @@ public partial class PlatformMicrosoft : Platform
 
         // TODO check if works
         // Get last modified container via timestamp.
-        var lastModifiedTicks = _lastModifiedTime.Ticks - _lastModifiedTime.Ticks % (long)(Math.Pow(10, 4));
+        var lastModifiedTicks = _lastWriteTime.Ticks - _lastWriteTime.Ticks % (long)(Math.Pow(10, 4));
         return SaveContainerCollection.Where(c => c.Exists && c.LastWriteTime.Ticks == lastModifiedTicks);
     }
 
@@ -309,7 +328,7 @@ public partial class PlatformMicrosoft : Platform
         readerIndex.BaseStream.Seek(readerIndex.ReadInt32() * 2, SeekOrigin.Current);
 
         // Store timestamp.
-        _lastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
+        _lastWriteTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
 
         // Skip containers.index state enum.
         readerIndex.BaseStream.Seek(0x4, SeekOrigin.Current);
@@ -331,7 +350,7 @@ public partial class PlatformMicrosoft : Platform
             container.State = (MicrosoftBlobSyncStateEnum)(readerIndex.ReadInt32());
             container.BlobDirectoryGuid = readerIndex.ReadBytes(0x10).GetGuid();
             container.BlobDirectory = new DirectoryInfo(Path.Combine(Location!.FullName, container.BlobDirectoryGuid.ToPath()));
-            container.LastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
+            container.LastWriteTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
 
             readerIndex.BaseStream.Seek(0x8, SeekOrigin.Current); // unknown data
 
@@ -435,7 +454,7 @@ public partial class PlatformMicrosoft : Platform
         return new Container(metaIndex)
         {
             DataFile = microsoft.BlobDataFile,
-            LastWriteTime = microsoft.LastModifiedTime,
+            LastWriteTime = microsoft.LastWriteTime,
             MetaFile = microsoft.BlobMetaFile,
             Microsoft = microsoft,
         };
@@ -540,10 +559,10 @@ public partial class PlatformMicrosoft : Platform
 
             if (Settings.SetLastWriteTime)
             {
-                _lastModifiedTime = writeTime;
+                _lastWriteTime = writeTime;
 
                 var ticks = writeTime.Ticks % (long)(Math.Pow(10, 4)) * -1; // get last four digits negative
-                container.Microsoft!.LastModifiedTime = container.LastWriteTime = writeTime.AddTicks(ticks); // set container time without the ticks
+                container.LastWriteTime = writeTime.AddTicks(ticks); // set container time without the ticks
 
                 if (container.DataFile is not null)
                 {
@@ -718,7 +737,7 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(gameIdentifier.Length);
             writer.Write(gameIdentifier.GetUnicodeBytes());
 
-            writer.Write(_lastModifiedTime.ToUniversalTime().ToFileTime());
+            writer.Write(_lastWriteTime.ToUniversalTime().ToFileTime());
 
             writer.Write((int)(state == MicrosoftIndexSyncStateEnum.Synced ? MicrosoftIndexSyncStateEnum.Modified : state));
 
@@ -770,7 +789,7 @@ public partial class PlatformMicrosoft : Platform
 
                 writer.Write(_settingsContainer!.BlobDirectoryGuid.ToByteArray());
 
-                writer.Write(_settingsContainer!.LastModifiedTime.ToUniversalTime().ToFileTime());
+                writer.Write(_settingsContainer!.LastWriteTime.ToUniversalTime().ToFileTime());
 
                 writer.Write(0L);
 
@@ -794,7 +813,7 @@ public partial class PlatformMicrosoft : Platform
 
                 writer.Write(container.Microsoft!.BlobDirectoryGuid.ToByteArray());
 
-                writer.Write(container.LastWriteTime.ToUniversalTime().ToFileTime());
+                writer.Write(container.Microsoft!.LastWriteTime.ToUniversalTime().ToFileTime());
 
                 writer.Write(0L);
 
@@ -916,7 +935,7 @@ public partial class PlatformMicrosoft : Platform
         {
             BlobDirectoryGuid = Guid.NewGuid(),
             Extension = 0,
-            LastModifiedTime = source.Microsoft!.LastModifiedTime,
+            LastWriteTime = source.Microsoft!.LastWriteTime,
             MetaTail = source.Microsoft!.MetaTail,
             State = MicrosoftBlobSyncStateEnum.Created,
         };
@@ -935,9 +954,10 @@ public partial class PlatformMicrosoft : Platform
 
         foreach (var container in containers)
         {
-            if (!container.Exists || container.Microsoft is null)
+            if (container.Microsoft is null)
                 continue;
 
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_004;
             container.Microsoft.State = MicrosoftBlobSyncStateEnum.Deleted;
 
             if (write)
@@ -948,10 +968,16 @@ public partial class PlatformMicrosoft : Platform
                 }
             }
 
+            if (Settings.SetLastWriteTime)
+            {
+                _lastWriteTime = DateTimeOffset.Now.LocalDateTime;
+
+                var ticks = _lastWriteTime.Ticks % (long)(Math.Pow(10, 4)) * -1; // get last four digits negative
+                container.LastWriteTime = _lastWriteTime.AddTicks(ticks); // set container time without the ticks
+            }
+
             container.Reset();
         }
-
-        _lastModifiedTime = DateTimeOffset.Now.LocalDateTime;
 
         // Refresh to get the new offsets.
         if (write)
@@ -1022,7 +1048,7 @@ public partial class PlatformMicrosoft : Platform
         {
             BlobDirectoryGuid = Guid.NewGuid(),
             Extension = 0,
-            LastModifiedTime = source.LastWriteTime,
+            LastWriteTime = source.LastWriteTime,
             MetaTail = new byte[(source.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE) - META_KNOWN],
             State = MicrosoftBlobSyncStateEnum.Created,
         };
@@ -1047,7 +1073,7 @@ public partial class PlatformMicrosoft : Platform
         {
             var extra = AccountContainer!.Microsoft = microsoft[0];
 
-            AccountContainer!.LastWriteTime = extra.LastModifiedTime;
+            AccountContainer!.LastWriteTime = extra.LastWriteTime;
             AccountContainer!.DataFile = extra.BlobDataFile;
             AccountContainer!.MetaFile = extra.BlobMetaFile;
         }
@@ -1072,7 +1098,7 @@ public partial class PlatformMicrosoft : Platform
                 SaveContainerCollection[containerIndex].Microsoft = extra!;
 
                 SaveContainerCollection[containerIndex].DataFile = extra!.BlobDataFile;
-                SaveContainerCollection[containerIndex].LastWriteTime = extra!.LastModifiedTime;
+                SaveContainerCollection[containerIndex].LastWriteTime = extra!.LastWriteTime;
                 SaveContainerCollection[containerIndex].MetaFile = extra!.BlobMetaFile;
 
                 // Rebuild new container to set its properties.
