@@ -743,6 +743,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and GameModeEnum and SeasonEnum are set
             container.VersionEnum = Globals.Json.GetVersionEnum(container, jsonObject); // works after BaseVersion is set
+
+            UpdateUserIdentification();
         }
 
         container.SetJsonObject(jsonObject);
@@ -817,7 +819,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             }
         }
 
-        Reload(container);
+        BuildContainerFull(container);
     }
 
     public void Rebuild(Container container, JObject jsonObject)
@@ -825,13 +827,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         Guard.IsNotNull(jsonObject);
 
         ProcessContainerData(container, jsonObject);
-        UpdateUserIdentification();
     }
 
     public void Reload(Container container)
     {
-        BuildContainerFull(container);
-        UpdateUserIdentification();
+        if (container.IsLoaded)
+        {
+            BuildContainerFull(container);
+        }
+        else
+        {
+            BuildContainerHollow(container);
+        }
     }
 
     #endregion
@@ -1091,7 +1098,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (!backup.IsCompatible)
             ThrowHelper.ThrowInvalidOperationException(backup.IncompatibilityException?.Message ?? backup.IncompatibilityTag ?? $"{backup} is incompatible.");
 
-        var container = GetSaveContainer(backup.MetaIndex);
+        var container = GetSaveContainer(backup.CollectionIndex);
         if (container is null)
             ThrowHelper.ThrowInvalidOperationException($"{backup} is not in the collection.");
 
@@ -1702,6 +1709,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public void OnWatcherDecision(Container container, bool execute)
     {
+        Guard.IsNotNull(container);
+
         if (execute)
         {
             Reload(container);
@@ -1860,6 +1869,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     protected void UpdateUserIdentification()
     {
+        // TODO check calls
         PlatformUserIdentification.LID = GetUserIdentificationPropertyValue(nameof(UserIdentificationData.LID));
         PlatformUserIdentification.PTK = PlatformToken;
         PlatformUserIdentification.UID = GetUserIdentificationPropertyValue(nameof(UserIdentificationData.UID));
@@ -1873,6 +1883,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected string? GetUserIdentificationPropertyValue(string propertyName)
     {
+        // TODO cleanup
         var a = propertyName switch
         {
             nameof(UserIdentificationData.LID) => SaveContainerCollection.Select(i => i.UserIdentification?.LID),

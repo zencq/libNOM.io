@@ -117,7 +117,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region FileSystemWatcher
 
-    public WatcherChangeTypes WatcherChangeType { get; private set; }
+    public WatcherChangeTypes? WatcherChangeType { get; private set; }
 
     public bool HasWatcherChange { get; private set; }
 
@@ -213,7 +213,9 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         get => _jsonObject is not null ? Globals.Json.GetSaveName(_jsonObject) : _saveName;
         set
         {
-            SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
+            /// Workaround for <see cref="LoadingStrategyEnum.Hollow"/> and ultimately <see cref="Platform.ProcessContainerData(Container, string)"/>.
+            if (_jsonObject is not null)
+                SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
             _saveName = value;
         }
     }
@@ -223,7 +225,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         get => _jsonObject is not null ? Globals.Json.GetSaveSummary(_jsonObject) : _saveSummary;
         set
         {
-            SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
+            if (_jsonObject is not null)
+                SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
             _saveSummary = value;
         }
     }
@@ -237,7 +240,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         get => _jsonObject is not null ? Globals.Json.GetTotalPlayTime(_jsonObject) : _totalPlayTime;
         set
         {
-            SetJsonValue(value, "6f=.Lg8", "PlayerStateData.TotalPlayTime");
+            if (_jsonObject is not null)
+                SetJsonValue(value, "6f=.Lg8", "PlayerStateData.TotalPlayTime");
             _totalPlayTime = value;
         }
     }
@@ -253,7 +257,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         get => _jsonObject is not null ? Globals.Json.GetVersion(_jsonObject) : _version;
         set
         {
-            SetJsonValue(value, "F2P", "Version");
+            if (_jsonObject is not null)
+                SetJsonValue(value, "F2P", "Version");
             _version = value;
         }
     }
@@ -291,6 +296,11 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         return Array.Empty<JToken>();
     }
 
+    public T? GetJsonValue<T>(ReadOnlySpan<int> indices)
+    {
+        return GetJsonTokenWithValue(indices).Value<T>();
+    }
+
     public T? GetJsonValue<T>(params string[] paths)
     {
         if (_jsonObject is not null)
@@ -300,6 +310,38 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     }
 
     // private //
+
+    private JToken GetJsonTokenWithValue(ReadOnlySpan<int> indices)
+    {
+        Guard.HasSizeGreaterThan(indices, 0, nameof(indices));
+
+        if (_jsonObject is null)
+            ThrowHelper.ThrowInvalidOperationException("Container is not loaded");
+
+        JToken? jToken = _jsonObject;
+
+        for (var i = 0; i < indices.Length; i++)
+        {
+            var index = indices[i];
+            var jPath = jToken.Path;
+
+            if (jToken is JArray jArray)
+            {
+                jToken = jArray.ContainsIndex(index) ? jToken[index] : null;
+            }
+            else if (jToken is JObject jObject)
+            {
+                jToken = jObject.Children().ElementAtOrDefault(index);
+            }
+
+            if (jToken is JProperty jProperty)
+                jToken = jProperty.Value;
+
+            if (jToken is null)
+                ThrowHelper.ThrowInvalidOperationException($"Index {indices[i]} at position {i} is not available ({jPath})");
+        }
+        return jToken;
+    }
 
     private bool IsVersion(VersionEnum versionEnum)
     {
@@ -313,7 +355,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     public void SetGameMode(PresetGameModeEnum mode)
     {
         if (_jsonObject is null)
-            return;
+            ThrowHelper.ThrowInvalidOperationException("Container is not loaded");
 
         var mission = GetJsonToken($"6f=.dwb[?(@.p0c == '{MISSION_CREATIVE}')]", $"PlayerStateData.MissionProgress[?(@.Mission == '{MISSION_CREATIVE}')]");
 
@@ -369,39 +411,22 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         _jsonObject = value;
     }
 
+    public void SetJsonValue(JToken value, ReadOnlySpan<int> indices)
+    {
+        GetJsonTokenWithValue(indices).Replace(value);
+        IsSynced = false;
+    }
+
     public void SetJsonValue(JToken value, params string[] paths)
     {
-        Guard.HasSizeGreaterThan(paths, 0);
+        Guard.HasSizeGreaterThan(paths, 0, nameof(paths));
 
         if (_jsonObject is null)
-            return;
+            ThrowHelper.ThrowInvalidOperationException("Container is not loaded");
 
         foreach (var path in paths)
         {
-            JToken? token;
-            if (path.IsAllDigits())
-            {
-                var indices = path.ToCharArray();
-                token = _jsonObject;
-
-                for (var i = 0; i < indices.Length - 1; i++)
-                {
-                    token = token!.Type switch
-                    {
-                        JTokenType.Object => token.Children().ElementAtOrDefault(indices[i]), // default = null
-                        JTokenType.Array => (token as JArray)?.ContainsIndex(indices[i]) == true ? token[indices[i]] : null,
-                        _ => null,
-                        //_ => throw new IndexOutOfRangeException($"Index {indices[i]} at position {i} is not available ({token.Path})"),
-                    };
-                    if (token is null)
-                        break;
-                }
-            }
-            else
-            {
-                token = _jsonObject?.SelectToken(path);
-            }
-
+            JToken? token = _jsonObject.SelectToken(path);
             if (token is not null)
             {
                 token.Replace(value);
@@ -572,5 +597,6 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     internal void ResolveWatcherChange()
     {
         HasWatcherChange = false;
+        WatcherChangeType = null;
     }
 }

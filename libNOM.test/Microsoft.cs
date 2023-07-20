@@ -1,4 +1,5 @@
-﻿using libNOM.io;
+﻿using CommunityToolkit.Diagnostics;
+using libNOM.io;
 using libNOM.io.Enums;
 using libNOM.io.Globals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,10 +11,6 @@ namespace libNOM.test;
 [DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
 public class MicrosoftTest : CommonTestInitializeCleanup
 {
-    private const int TICK_DIVISOR = 10000;
-    private const string UNITS_JSON_PATH = "PlayerStateData.Units";
-    private const int UNITS_NEW_AMOUNT = 29070100;
-
     [TestMethod]
     public void Read_0009000000C73498()
     {
@@ -376,10 +373,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
         var userIdentification = ReadUserIdentification(path);
+        var writeCallback = false;
 
         // Act
         var platform1 = new PlatformMicrosoft(path, settings);
         var container1 = platform1.GetSaveContainer(0)!;
+        container1.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
 
         platform1.Load(container1);
         var units10 = container1.GetJsonValue<int>(UNITS_JSON_PATH);
@@ -403,6 +405,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.AreEqual(UNITS_NEW_AMOUNT, units11);
         Assert.AreEqual(638126763444620000, timestamp10.UtcTicks); // 2023-02-22 15:25:44 +00:00
         Assert.AreEqual(now_ticks, timestamp11.UtcTicks / TICK_DIVISOR);
+        Assert.IsTrue(writeCallback);
 
         Assert.IsTrue(platform2.HasAccountData);
         Assert.AreEqual(10, platform2.GetExistingContainers().Count());
@@ -426,10 +429,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             SetLastWriteTime = false,
         };
         var userIdentification = ReadUserIdentification(path);
+        var writeCallback = false;
 
         // Act
         var platform1 = new PlatformMicrosoft(path, settings);
         var container1 = platform1.GetSaveContainer(0)!;
+        container1.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
 
         platform1.Load(container1);
         var units10 = container1.GetJsonValue<int>(UNITS_JSON_PATH);
@@ -453,6 +461,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.AreEqual(UNITS_NEW_AMOUNT, units11);
         Assert.AreEqual(638126763444620000, timestamp10.UtcTicks); // 2023-02-22 15:25:44 +00:00
         Assert.AreEqual(638126763444620000, timestamp11.UtcTicks);
+        Assert.IsTrue(writeCallback);
 
         Assert.IsTrue(platform2.HasAccountData);
         Assert.AreEqual(10, platform2.GetExistingContainers().Count());
@@ -476,10 +485,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             WriteAlways = true,
         };
         var userIdentification = ReadUserIdentification(path);
+        var writeCallback = false;
 
         // Act
         var platform1 = new PlatformMicrosoft(path, settings);
         var container1 = platform1.GetSaveContainer(0)!;
+        container1.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
 
         platform1.Load(container1);
         container1.DataFile!.Refresh();
@@ -497,6 +511,8 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var timestamp20 = container2.DataFile!.LastWriteTime.ToUniversalTime().Ticks / TICK_DIVISOR;
 
         // Assert
+        Assert.IsTrue(writeCallback);
+
         Assert.IsTrue(platform2.HasAccountData);
         Assert.AreEqual(10, platform2.GetExistingContainers().Count());
         Assert.AreEqual(userIdentification[0], platform2.PlatformUserIdentification.LID);
@@ -522,10 +538,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             WriteAlways = false,
         };
         var userIdentification = ReadUserIdentification(path);
+        var writeCallback = false;
 
         // Act
         var platform1 = new PlatformMicrosoft(path, settings);
         var container1 = platform1.GetSaveContainer(0)!;
+        container1.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
 
         platform1.Load(container1);
         container1.DataFile!.Refresh();
@@ -543,8 +564,8 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var timestamp20 = container2.DataFile!.LastWriteTime.ToUniversalTime().Ticks;
 
         // Assert
-
         Assert.AreEqual(timestamp10, timestamp11);
+        Assert.IsTrue(writeCallback);
 
         Assert.IsTrue(platform2.HasAccountData);
         Assert.AreEqual(10, platform2.GetExistingContainers().Count());
@@ -712,11 +733,68 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     [TestMethod]
     public void FileSystemWatcher()
     {
-        // Arrange
-        // Act
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var path_containers_index = Path.Combine(path, "containers.index");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+            Watcher = true,
+        };
 
-        // ... Read/Write/React
+        // Act
+        var bytes = File.ReadAllBytes(path_containers_index);
+        var platform = new PlatformMicrosoft(path, settings);
+
+        var container = platform.GetSaveContainer(0)!;
+        platform.Load(container);
+
+        File.WriteAllBytes(path_containers_index, bytes);
+        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
+        var watchers1 = platform.GetWatcherContainers();
+        var count1 = watchers1.Count();
+        var synced1 = container.IsSynced;
+
+        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        var synced2 = container.IsSynced;
+
+        File.WriteAllBytes(path_containers_index, bytes);
+        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
+        var watchers2 = platform.GetWatcherContainers();
+        var count2 = watchers2.Count();
+        var synced3 = container.IsSynced;
+
+        var watcherContainer2 = watchers2.FirstOrDefault();
+        Guard.IsNotNull(watcherContainer2);
+        platform.OnWatcherDecision(watcherContainer2, false);
+        var synced4 = container.IsSynced;
+
+        File.WriteAllBytes(path_containers_index, bytes);
+        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
+        var watchers3 = platform.GetWatcherContainers();
+        var count3 = watchers3.Count();
+        var synced5 = container.IsSynced;
+
+        var watcherContainer3 = watchers3.FirstOrDefault();
+        Guard.IsNotNull(watcherContainer3);
+        platform.OnWatcherDecision(watcherContainer3, true);
+        var synced6 = container.IsSynced;
 
         // Assert
+        Assert.AreEqual(0, count1);
+        Assert.IsTrue(synced1);
+
+        Assert.IsFalse(synced2);
+
+        Assert.AreEqual(1, count2);
+        Assert.IsFalse(synced3);
+
+        Assert.AreEqual(container, watcherContainer2);
+        Assert.IsFalse(synced4);
+
+        Assert.AreEqual(1, count3);
+        Assert.IsFalse(synced5);
+
+        Assert.AreEqual(container, watcherContainer3);
+        Assert.IsTrue(synced6);
     }
 }

@@ -167,10 +167,12 @@ public partial class PlatformMicrosoft : Platform
 
         RefreshContainerCollection();
 
-        // TODO check if works
-        // Get last modified container via timestamp.
-        var lastModifiedTicks = _lastWriteTime.Ticks - _lastWriteTime.Ticks % (long)(Math.Pow(10, 4));
-        return SaveContainerCollection.Where(c => c.Exists && c.LastWriteTime.Ticks == lastModifiedTicks);
+        // Get last written container via timestamp.
+        var lastWriteTicks = _lastWriteTime.Ticks - _lastWriteTime.Ticks % (long)(Math.Pow(10, 4));
+        var containersLastWrite = SaveContainerCollection.Where(c => c.Exists && c.LastWriteTime.Ticks == lastWriteTicks);
+
+        // In case last written via timestamp returns nothing, fall back to all existing.
+        return containersLastWrite.Any() ? containersLastWrite : GetExistingContainers();
     }
 
     #endregion
@@ -193,7 +195,6 @@ public partial class PlatformMicrosoft : Platform
     }
 
     private string GetTemporaryBlobFile(string fileToWrite, Container container) => GetTemporaryAccountFile($"{container.Microsoft!.BlobDirectory.Name}_{fileToWrite}");
-
 
     #endregion
 

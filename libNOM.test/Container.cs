@@ -13,6 +13,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     public void Backup()
     {
         // Arrange
+        var backupCreatedCallback = false;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
@@ -22,6 +23,10 @@ public class ContainerTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
         var container = platform.GetSaveContainer(0)!;
+        container.BackupCreatedCallback += (backup) =>
+        {
+            backupCreatedCallback = true;
+        };
 
         var backups0 = container.BackupCollection.Count;
 
@@ -32,11 +37,95 @@ public class ContainerTest : CommonTestInitializeCleanup
         var backups2 = container.BackupCollection.Count;
 
         // Assert
+        Assert.IsTrue(backupCreatedCallback);
+
         Assert.AreEqual(0, backups0);
         Assert.AreEqual(1, backups1);
         Assert.AreEqual(2, backups2);
 
         Assert.AreEqual(2, new PlatformSteam(path, settings).GetSaveContainer(0)!.BackupCollection.Count);
+    }
+
+    [TestMethod]
+    public void Restore()
+    {
+        // Arrange
+        var backupRestoredCallback = false;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0)!;
+        container.BackupRestoredCallback += () =>
+        {
+            backupRestoredCallback = true;
+        };
+
+        platform.Backup(container);
+        var backup = container.BackupCollection.First();
+        platform.Restore(backup);
+
+        // Assert
+        Assert.AreEqual(1, container.BackupCollection.Count);
+
+        Assert.IsFalse(container.IsSynced);
+        Assert.IsTrue(backupRestoredCallback);
+    }
+
+    [TestMethod]
+    public void JsonValue_Digits()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Current,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0)!;
+
+        platform.Load(container);
+        var units1 = container.GetJsonValue<int>(UNITS_INDICES);
+
+        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_INDICES);
+        var units2 = container.GetJsonValue<int>(UNITS_INDICES);
+
+        // Assert
+        Assert.IsFalse(container.IsSynced);
+        Assert.AreEqual(-1221111157, units1); // 3073856139
+        Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
+    }
+
+    [TestMethod]
+    public void JsonValue_Path()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Current,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0)!;
+
+        platform.Load(container);
+        var units1 = container.GetJsonValue<int>(UNITS_JSON_PATH);
+
+        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        var units2 = container.GetJsonValue<int>(UNITS_JSON_PATH);
+
+        // Assert
+        Assert.IsFalse(container.IsSynced);
+        Assert.AreEqual(-1221111157, units1); // 3073856139
+        Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
     }
 
     [TestMethod]
