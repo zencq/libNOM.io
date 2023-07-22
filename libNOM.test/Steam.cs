@@ -35,6 +35,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4125, container0.BaseVersion);
@@ -42,6 +43,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4125, container1.BaseVersion);
@@ -49,6 +51,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container2 = platform.GetSaveContainer(2)!; // 2Auto
         Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container2.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container2.SeasonEnum);
         Assert.AreEqual(4126, container2.BaseVersion);
@@ -56,6 +59,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container3 = platform.GetSaveContainer(3)!; // 2Manual
         Assert.IsTrue(container3.Exists);
+        Assert.IsFalse(container3.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container3.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container3.SeasonEnum);
         Assert.AreEqual(4126, container3.BaseVersion);
@@ -63,6 +67,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
         Assert.IsTrue(container4.Exists);
+        Assert.IsFalse(container4.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container4.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container4.SeasonEnum);
         Assert.AreEqual(4126, container4.BaseVersion);
@@ -70,6 +75,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container5 = platform.GetSaveContainer(5)!; // 3Manual
         Assert.IsTrue(container5.Exists);
+        Assert.IsFalse(container5.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container5.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container5.SeasonEnum);
         Assert.AreEqual(4126, container5.BaseVersion);
@@ -77,6 +83,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container6 = platform.GetSaveContainer(6)!; // 4Auto
         Assert.IsTrue(container6.Exists);
+        Assert.IsFalse(container6.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container6.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container6.SeasonEnum);
         Assert.AreEqual(4125, container6.BaseVersion);
@@ -84,6 +91,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container7 = platform.GetSaveContainer(7)!; // 4Manual
         Assert.IsTrue(container7.Exists);
+        Assert.IsFalse(container7.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container7.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container7.SeasonEnum);
         Assert.AreEqual(4125, container7.BaseVersion);
@@ -91,6 +99,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container8 = platform.GetSaveContainer(8)!; // 5Auto
         Assert.IsTrue(container8.Exists);
+        Assert.IsFalse(container8.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container8.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container8.SeasonEnum);
         Assert.AreEqual(4125, container8.BaseVersion);
@@ -98,6 +107,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container9 = platform.GetSaveContainer(9)!; // 5Manual
         Assert.IsTrue(container9.Exists);
+        Assert.IsFalse(container9.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container9.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container9.SeasonEnum);
         Assert.AreEqual(4125, container9.BaseVersion);
@@ -128,6 +138,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4135, container0.BaseVersion);
@@ -135,6 +146,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4135, container1.BaseVersion);
@@ -142,6 +154,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container2 = platform.GetSaveContainer(2)!; // 2Auto
         Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Creative, container2.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container2.SeasonEnum);
         Assert.AreEqual(4127, container2.BaseVersion);
@@ -149,6 +162,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container3 = platform.GetSaveContainer(3)!; // 2Manual
         Assert.IsTrue(container3.Exists);
+        Assert.IsFalse(container3.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Creative, container3.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container3.SeasonEnum);
         Assert.AreEqual(4127, container3.BaseVersion);
@@ -156,6 +170,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
         Assert.IsTrue(container4.Exists);
+        Assert.IsFalse(container4.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, container4.GameModeEnum);
         Assert.AreEqual(SeasonEnum.Pioneers, container4.SeasonEnum);
         Assert.AreEqual(4129, container4.BaseVersion);
@@ -189,6 +204,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4135, container0.BaseVersion);
@@ -196,6 +212,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4135, container1.BaseVersion);
@@ -203,6 +220,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container2 = platform.GetSaveContainer(2)!; // 2Auto
         Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Creative, container2.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container2.SeasonEnum);
         Assert.AreEqual(4127, container2.BaseVersion);
@@ -210,6 +228,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container3 = platform.GetSaveContainer(3)!; // 2Manual
         Assert.IsTrue(container3.Exists);
+        Assert.IsFalse(container3.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Creative, container3.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container3.SeasonEnum);
         Assert.AreEqual(4127, container3.BaseVersion);
@@ -217,6 +236,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
         Assert.IsTrue(container4.Exists);
+        Assert.IsFalse(container4.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, container4.GameModeEnum);
         Assert.AreEqual(SeasonEnum.Pioneers, container4.SeasonEnum);
         Assert.AreEqual(4129, container4.BaseVersion);

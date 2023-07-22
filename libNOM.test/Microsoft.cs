@@ -35,6 +35,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container2 = platform.GetSaveContainer(2)!; // 2Auto
         Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container2.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container2.SeasonEnum);
         Assert.AreEqual(4135, container2.BaseVersion);
@@ -42,6 +43,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container3 = platform.GetSaveContainer(3)!; // 2Manual
         Assert.IsTrue(container3.Exists);
+        Assert.IsFalse(container3.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container3.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container3.SeasonEnum);
         Assert.AreEqual(4135, container3.BaseVersion);
@@ -72,6 +74,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4138, container0.BaseVersion);
@@ -79,6 +82,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4138, container1.BaseVersion);
@@ -86,6 +90,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container2 = platform.GetSaveContainer(2)!; // 2Auto
         Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, container2.GameModeEnum);
         Assert.AreEqual(SeasonEnum.Exobiology, container2.SeasonEnum);
         Assert.AreEqual(4137, container2.BaseVersion);
@@ -93,6 +98,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container3 = platform.GetSaveContainer(3)!; // 2Manual
         Assert.IsTrue(container3.Exists);
+        Assert.IsFalse(container3.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, container3.GameModeEnum);
         Assert.AreEqual(SeasonEnum.Exobiology, container3.SeasonEnum);
         Assert.AreEqual(4137, container3.BaseVersion);
@@ -100,6 +106,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
         Assert.IsTrue(container4.Exists);
+        Assert.IsFalse(container4.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, container4.GameModeEnum);
         Assert.AreEqual(SeasonEnum.Blighted, container4.SeasonEnum);
         Assert.AreEqual(4138, container4.BaseVersion);
@@ -107,6 +114,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container5 = platform.GetSaveContainer(5)!; // 3Manual
         Assert.IsTrue(container5.Exists);
+        Assert.IsFalse(container5.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, container5.GameModeEnum);
         Assert.AreEqual(SeasonEnum.Blighted, container5.SeasonEnum);
         Assert.AreEqual(4138, container5.BaseVersion);
@@ -137,6 +145,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Unspecified, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4143, container0.BaseVersion);
@@ -144,6 +153,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Unspecified, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4143, container1.BaseVersion);
@@ -151,6 +161,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container2 = platform.GetSaveContainer(2)!; // 2Auto
         Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Survival, container2.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container2.SeasonEnum);
         Assert.AreEqual(4142, container2.BaseVersion);
@@ -158,6 +169,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container3 = platform.GetSaveContainer(3)!; // 2Manual
         Assert.IsTrue(container3.Exists);
+        Assert.IsFalse(container3.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Survival, container3.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container3.SeasonEnum);
         Assert.AreEqual(4142, container3.BaseVersion);
@@ -165,6 +177,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
         Assert.IsTrue(container4.Exists);
+        Assert.IsFalse(container4.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Permadeath, container4.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container4.SeasonEnum);
         Assert.AreEqual(4142, container4.BaseVersion);
@@ -172,6 +185,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container5 = platform.GetSaveContainer(5)!; // 3Manual
         Assert.IsTrue(container5.Exists);
+        Assert.IsFalse(container5.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Permadeath, container5.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container5.SeasonEnum);
         Assert.AreEqual(4142, container5.BaseVersion);
@@ -179,6 +193,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container6 = platform.GetSaveContainer(6)!; // 4Auto
         Assert.IsTrue(container6.Exists);
+        Assert.IsFalse(container6.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Unspecified, container6.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container6.SeasonEnum);
         Assert.AreEqual(4143, container6.BaseVersion);
@@ -186,6 +201,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container7 = platform.GetSaveContainer(7)!; // 4Manual
         Assert.IsTrue(container7.Exists);
+        Assert.IsFalse(container7.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Unspecified, container7.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container7.SeasonEnum);
         Assert.AreEqual(4143, container7.BaseVersion);
@@ -193,6 +209,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container8 = platform.GetSaveContainer(8)!; // 5Auto
         Assert.IsTrue(container8.Exists);
+        Assert.IsFalse(container8.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, container8.GameModeEnum);
         Assert.AreEqual(SeasonEnum.Utopia, container8.SeasonEnum);
         Assert.AreEqual(4143, container8.BaseVersion);
@@ -200,6 +217,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container9 = platform.GetSaveContainer(9)!; // 5Manual
         Assert.IsTrue(container9.Exists);
+        Assert.IsFalse(container9.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container9.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container9.SeasonEnum);
         Assert.AreEqual(4143, container9.BaseVersion);
@@ -230,6 +248,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4134, container0.BaseVersion);
@@ -237,10 +256,12 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsFalse(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(Constants.INCOMPATIBILITY_005, container1.IncompatibilityTag);
 
         var container2 = platform.GetSaveContainer(2)!; // 2Auto
         Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Permadeath, container2.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container2.SeasonEnum);
         Assert.AreEqual(4127, container2.BaseVersion);
@@ -248,6 +269,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
         Assert.IsTrue(container4.Exists);
+        Assert.IsFalse(container4.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Survival, container4.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container4.SeasonEnum);
         Assert.AreEqual(4133, container4.BaseVersion);
@@ -278,10 +300,12 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsFalse(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container0.IncompatibilityTag);
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4135, container1.BaseVersion);
@@ -312,6 +336,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4138, container0.BaseVersion);
@@ -319,6 +344,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4138, container1.BaseVersion);
@@ -352,6 +378,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container0.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
         Assert.AreEqual(4138, container0.BaseVersion);
@@ -359,6 +386,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
         Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
         Assert.AreEqual(PresetGameModeEnum.Normal, container1.GameModeEnum);
         Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
         Assert.AreEqual(4138, container1.BaseVersion);
