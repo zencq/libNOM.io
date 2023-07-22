@@ -19,6 +19,7 @@ public class GogTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
         };
         var userIdentification = ReadUserIdentification(path);
 

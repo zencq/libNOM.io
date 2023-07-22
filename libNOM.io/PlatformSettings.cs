@@ -33,6 +33,11 @@ public record class PlatformSettings
     public bool SetLastWriteTime { get; set; } = true;
 
     /// <summary>
+    /// Whether to use external sources to enhance the user identification process.
+    /// </summary>
+    public bool UseExternalSourcesForUserIdentification { get; set; } = true;
+
+    /// <summary>
     /// Whether to deobfuscated and obfuscated the save data while parsing.
     /// </summary>
     public bool UseMapping { get; set; } = true;
@@ -71,6 +76,12 @@ public record class PlatformSettings
     /// Whether to set the LastWriteTime while writing.
     /// </summary>
     public bool SetLastWriteTime { get; init; } = true;
+
+    /// <summary>
+    /// Whether to use external sources to enhance the user identification process.
+    /// Currently used for: GOG.com
+    /// </summary>
+    public bool UseExternalSourcesForUserIdentification { get; init; } = true;
 
     /// <summary>
     /// Whether to deobfuscated and obfuscated the save data.

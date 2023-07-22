@@ -674,7 +674,7 @@ internal static partial class Json
         436 = ????/???? (??? = ?)
         434 = 4657/4145
         433 = 4657/4145
-        430 = 4657/4145 (:?x = GreyIfCantStart)
+        430 = 4657/4145 (:?x = GreyIfCantStart) // only in PresetGameModeEnum.Seasonal saves
 
         Mac
         426 = 4657/4145

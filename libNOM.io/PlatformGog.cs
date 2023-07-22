@@ -76,16 +76,17 @@ public class PlatformGog : PlatformSteam
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        if (key is "UID" && _userId is not null)
+        if (key is "UID" && Settings.UseExternalSourcesForUserIdentification && _userId is not null)
             return _userId;
 
-        if (key is "USN" && _username is not null)
+        if (key is "USN" && Settings.UseExternalSourcesForUserIdentification && _username is not null)
             return _username;
 
         var result = base.GetUserIdentification(jsonObject, key);
         if (!string.IsNullOrEmpty(result))
             return result;
 
+        // Fallback as it was the default for a long time and could not be changed.
         if (key is "USN")
             return "Explorer";
 
@@ -94,7 +95,7 @@ public class PlatformGog : PlatformSteam
 
     protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
-        if (_userId is null)
+        if (!Settings.UseExternalSourcesForUserIdentification || _userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
         var usesMapping = jsonObject.UsesMapping();
@@ -111,7 +112,7 @@ public class PlatformGog : PlatformSteam
 
     protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
-        if (_userId is null)
+        if (!Settings.UseExternalSourcesForUserIdentification || _userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
         var usesMapping = jsonObject.UsesMapping();
@@ -127,7 +128,7 @@ public class PlatformGog : PlatformSteam
 
     protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
-        if (_userId is null)
+        if (!Settings.UseExternalSourcesForUserIdentification || _userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
         var usesMapping = jsonObject.UsesMapping();

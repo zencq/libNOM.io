@@ -10,6 +10,8 @@ namespace libNOM.io.Enums;
 public enum PlatformEnum
 {
     Unknown,
+    [Description("Apple App Store")]
+    Apple,
     Steam,
     Microsoft,
     [Description("GOG.com")]
