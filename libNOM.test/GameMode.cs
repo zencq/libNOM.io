@@ -10,7 +10,55 @@ namespace libNOM.test;
 public class GameModeTest : CommonTestInitializeCleanup
 {
     [TestMethod]
-    public void CustomHollow()
+    public void T01_VanillaHollow()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
+        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
+        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
+        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
+
+        // Assert
+        Assert.AreEqual(PresetGameModeEnum.Normal, normal.GameModeEnum);
+        Assert.AreEqual(PresetGameModeEnum.Creative, creative.GameModeEnum);
+        Assert.AreEqual(PresetGameModeEnum.Survival, survival.GameModeEnum);
+        Assert.AreEqual(PresetGameModeEnum.Permadeath, permadeath.GameModeEnum);
+    }
+
+    [TestMethod]
+    public void T02_VanillaFull()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
+        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
+        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
+        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
+
+        // Assert
+        Assert.AreEqual(PresetGameModeEnum.Normal, normal.GameModeEnum);
+        Assert.AreEqual(PresetGameModeEnum.Creative, creative.GameModeEnum);
+        Assert.AreEqual(PresetGameModeEnum.Survival, survival.GameModeEnum);
+        Assert.AreEqual(PresetGameModeEnum.Permadeath, permadeath.GameModeEnum);
+    }
+
+    [TestMethod]
+    public void T03_CustomHollow()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
@@ -38,7 +86,7 @@ public class GameModeTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void CustomFull()
+    public void T04_CustomFull()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
@@ -63,53 +111,5 @@ public class GameModeTest : CommonTestInitializeCleanup
         Assert.AreEqual(PresetGameModeEnum.Ambient, ambient.GameModeEnum);
         Assert.AreEqual(PresetGameModeEnum.Permadeath, permadeath.GameModeEnum);
         Assert.AreEqual(PresetGameModeEnum.Seasonal, seasonal.GameModeEnum);
-    }
-
-    [TestMethod]
-    public void VanillaHollow()
-    {
-        // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
-
-        // Act
-        var platform = new PlatformSteam(path, settings);
-        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-
-        // Assert
-        Assert.AreEqual(PresetGameModeEnum.Normal, normal.GameModeEnum);
-        Assert.AreEqual(PresetGameModeEnum.Creative, creative.GameModeEnum);
-        Assert.AreEqual(PresetGameModeEnum.Survival, survival.GameModeEnum);
-        Assert.AreEqual(PresetGameModeEnum.Permadeath, permadeath.GameModeEnum);
-    }
-
-    [TestMethod]
-    public void VanillaFull()
-    {
-        // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
-
-        // Act
-        var platform = new PlatformSteam(path, settings);
-        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-
-        // Assert
-        Assert.AreEqual(PresetGameModeEnum.Normal, normal.GameModeEnum);
-        Assert.AreEqual(PresetGameModeEnum.Creative, creative.GameModeEnum);
-        Assert.AreEqual(PresetGameModeEnum.Survival, survival.GameModeEnum);
-        Assert.AreEqual(PresetGameModeEnum.Permadeath, permadeath.GameModeEnum);
     }
 }

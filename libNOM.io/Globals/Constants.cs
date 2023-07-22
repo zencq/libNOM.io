@@ -17,7 +17,7 @@ public static class Constants
     internal const uint HEADER_SAVE_STREAMING_CHUNK = 0xFEEDA1E5; // 4276986341
     internal const string HEADER_SAVEWIZARD = "NOMANSKY";
 
-    // G = Global
+    // G = General
     // M = Microsoft
     // O = GoG
     // P = PlayStation

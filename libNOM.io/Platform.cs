@@ -865,18 +865,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (Settings.SetLastWriteTime)
         {
             container.LastWriteTime = writeTime;
+        }
 
-            if (container.DataFile is not null)
-            {
-                File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
-                File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
-            }
-
-            if (container.MetaFile is not null)
-            {
-                File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
-                File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
-            }
+        // To ensure the timestamp will be the same the next time, the file times are always set to the currently saved one.
+        if (container.DataFile is not null)
+        {
+            File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
+            File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
+        }
+        if (container.MetaFile is not null)
+        {
+            File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
+            File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
         }
 
         EnableWatcher();
@@ -1035,7 +1035,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         File.WriteAllBytes(container.MetaFile!.FullName, meta);
     }
 
-    #endregion
+#endregion
 
     // // File Operation
 
@@ -1213,7 +1213,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     {
                         // Nothing to do.
                     }
-                    container.DataFile.Refresh();
                 }
 
                 if (container.MetaFile?.Exists == true)
@@ -1226,11 +1225,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     {
                         // Nothing to do.
                     }
-                    container.MetaFile.Refresh();
                 }
             }
 
             container.Reset();
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_006;
         }
 
         EnableWatcher();

@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace libNOM.io;
 
 
-#region Container
+#region Extra
 
 internal record class PlatformExtraSteam
 {
@@ -161,7 +161,7 @@ public partial class PlatformSteam : Platform
         base.InitializeComponent(directory, platformSettings);
     }
 
-#endregion
+    #endregion
 
     // // Read / Write
 
@@ -170,18 +170,29 @@ public partial class PlatformSteam : Platform
     protected override Container CreateContainer(int metaIndex, object? extra)
     {
         if (metaIndex == 0)
+        {
+            var dataFile = new FileInfo(Path.Combine(Location.FullName, "accountdata.hg"));
             return new Container(metaIndex)
             {
-                DataFile = new FileInfo(Path.Combine(Location.FullName, "accountdata.hg")),
+                DataFile = dataFile,
+                LastWriteTime = dataFile.LastWriteTime,
                 MetaFile = new FileInfo(Path.Combine(Location.FullName, "mf_accountdata.hg")),
+                /// Steam = ... // will be set in <see cref="DecryptMeta"/>
             };
-
-        var steamIndex = metaIndex == Globals.Constants.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
-        return new Container(metaIndex)
+        }
+        else
         {
-            DataFile = new FileInfo(Path.Combine(Location.FullName, $"save{steamIndex}.hg")),
-            MetaFile = new FileInfo(Path.Combine(Location.FullName, $"mf_save{steamIndex}.hg")),
-        };
+            var steamIndex = metaIndex == Globals.Constants.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
+
+            var dataFile = new FileInfo(Path.Combine(Location.FullName, $"save{steamIndex}.hg"));
+            return new Container(metaIndex)
+            {
+                DataFile = dataFile,
+                LastWriteTime = dataFile.LastWriteTime,
+                MetaFile = new FileInfo(Path.Combine(Location.FullName, $"mf_save{steamIndex}.hg")),
+                /// Steam = ... // will be set in <see cref="DecryptMeta"/>
+            };
+        }
     }
 
     #endregion
@@ -299,7 +310,7 @@ public partial class PlatformSteam : Platform
         return result.ToArray();
     }
 
-#endregion
+    #endregion
 
     #region Write
 

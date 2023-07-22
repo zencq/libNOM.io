@@ -12,7 +12,7 @@ namespace libNOM.test;
 public class MicrosoftTest : CommonTestInitializeCleanup
 {
     [TestMethod]
-    public void Read_0009000000C73498()
+    public void T01_Read_0009000000C73498()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
@@ -49,7 +49,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Read_000901F4E735CFAC()
+    public void T02_Read_000901F4E735CFAC()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
@@ -114,7 +114,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Read_000901F8A36808E0()
+    public void T03_Read_000901F8A36808E0()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
@@ -207,7 +207,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Read_000901FB44140B02()
+    public void T04_Read_000901FB44140B02()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
@@ -255,7 +255,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Read_000901FE2C5492FC()
+    public void T05_Read_000901FE2C5492FC()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FE2C5492FC_29070100B936489ABCE8B9AF3980429C");
@@ -289,7 +289,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Read_000901FFCAB85905()
+    public void T06_Read_000901FFCAB85905()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FFCAB85905_29070100B936489ABCE8B9AF3980429C");
@@ -325,8 +325,11 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.AreEqual(VersionEnum.Outlaws, container1.VersionEnum);
     }
 
+    /// <summary>
+    /// Same as <see cref="T06_Read_000901FFCAB85905"/>.
+    /// </summary>
     [TestMethod]
-    public void Read_NoAccountInDirectory()
+    public void T07_Read_NoAccountInDirectory()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "something");
@@ -363,7 +366,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Write_Default()
+    public void T10_Write_Default()
     {
         var now = DateTimeOffset.UtcNow;
         var now_ticks = now.UtcTicks / TICK_DIVISOR;
@@ -419,7 +422,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Write_SetLastWriteTime_False()
+    public void T11_Write_SetLastWriteTime_False()
     {
         var now = DateTimeOffset.UtcNow;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
@@ -475,13 +478,12 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Write_WriteAlways_True()
+    public void T12_Write_WriteAlways_True()
     {
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
-            SetLastWriteTime = false, // otherwise would set SetLastWriteTime anyway and test would not be possible
             WriteAlways = true,
         };
         var userIdentification = ReadUserIdentification(path);
@@ -497,18 +499,18 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         platform1.Load(container1);
         container1.DataFile!.Refresh();
-        var timestamp10 = container1.DataFile!.LastWriteTime.ToUniversalTime().Ticks / TICK_DIVISOR;
+        var length10 = container1.DataFile!.Length;
 
         platform1.Write(container1);
         container1.DataFile!.Refresh();
-        var timestamp11 = container1.DataFile!.LastWriteTime.ToUniversalTime().Ticks / TICK_DIVISOR;
+        var length11 = container1.DataFile!.Length;
 
         var platform2 = new PlatformMicrosoft(path, settings);
         var container2 = platform2.GetSaveContainer(0)!;
 
         platform2.Load(container2);
         container2.DataFile!.Refresh();
-        var timestamp20 = container2.DataFile!.LastWriteTime.ToUniversalTime().Ticks / TICK_DIVISOR;
+        var length20 = container1.DataFile!.Length;
 
         // Assert
         Assert.IsTrue(writeCallback);
@@ -520,21 +522,20 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
         Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
 
-        Assert.AreNotEqual(timestamp10, timestamp11);
-        Assert.AreNotEqual(timestamp10, timestamp20);
+        Assert.AreNotEqual(length10, length11);
+        Assert.AreNotEqual(length10, length20);
 
-        Assert.AreEqual(timestamp11, timestamp20);
+        Assert.AreEqual(length11, length20);
     }
 
     [TestMethod]
-    public void Write_WriteAlways_False()
+    public void T13_Write_WriteAlways_False()
     {
         var now = DateTimeOffset.UtcNow;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
-            SetLastWriteTime = false, // otherwise would set SetLastWriteTime anyway and test would not be possible
             WriteAlways = false,
         };
         var userIdentification = ReadUserIdentification(path);
@@ -550,21 +551,21 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         platform1.Load(container1);
         container1.DataFile!.Refresh();
-        var timestamp10 = container1.DataFile!.LastWriteTime.ToUniversalTime().Ticks;
+        var length10 = container1.DataFile!.Length;
 
         platform1.Write(container1, now);
         container1.DataFile!.Refresh();
-        var timestamp11 = container1.DataFile!.LastWriteTime.ToUniversalTime().Ticks;
+        var length11 = container1.DataFile!.Length;
 
         var platform2 = new PlatformMicrosoft(path, settings);
         var container2 = platform2.GetSaveContainer(0)!;
 
         platform2.Load(container2);
         container2.DataFile!.Refresh();
-        var timestamp20 = container2.DataFile!.LastWriteTime.ToUniversalTime().Ticks;
+        var length20 = container1.DataFile!.Length;
 
         // Assert
-        Assert.AreEqual(timestamp10, timestamp11);
+        Assert.AreEqual(length10, length11);
         Assert.IsTrue(writeCallback);
 
         Assert.IsTrue(platform2.HasAccountData);
@@ -574,164 +575,11 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
         Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
 
-        Assert.AreEqual(timestamp10, timestamp20);
+        Assert.AreEqual(length10, length20);
     }
 
     [TestMethod]
-    public void Copy()
-    {
-        // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
-
-        // Act
-        var platform = new PlatformMicrosoft(path, settings);
-
-        var container0 = platform.GetSaveContainer(0)!; // 1Auto
-        var container1 = platform.GetSaveContainer(1)!; // 1Manual
-        var container2 = platform.GetSaveContainer(2)!; // 2Auto
-        var container4 = platform.GetSaveContainer(4)!; // 3Auto
-        var container8 = platform.GetSaveContainer(8)!; // 5Auto
-        var container9 = platform.GetSaveContainer(9)!; // 5Manual
-
-        platform.Copy(container4, container1); // 3Auto -> 1Manual
-        platform.Copy(container2, container8); // 2Auto -> 5Auto
-        platform.Copy(container9, container0); // 5Manual -> 1Auto
-
-        // Assert
-        Assert.IsTrue(container1.Exists);
-        Assert.AreEqual(container4.GameModeEnum, container1.GameModeEnum);
-        Assert.AreEqual(container4.SeasonEnum, container1.SeasonEnum);
-        Assert.AreEqual(container4.BaseVersion, container1.BaseVersion);
-        Assert.AreEqual(container4.VersionEnum, container1.VersionEnum);
-
-        Assert.IsTrue(container8.Exists);
-        Assert.AreEqual(container2.GameModeEnum, container8.GameModeEnum);
-        Assert.AreEqual(container2.SeasonEnum, container8.SeasonEnum);
-        Assert.AreEqual(container2.BaseVersion, container8.BaseVersion);
-        Assert.AreEqual(container2.VersionEnum, container8.VersionEnum);
-
-        Assert.IsFalse(container0.Exists);
-    }
-
-    [TestMethod]
-    public void Delete()
-    {
-        // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
-
-        // Act
-        var platform = new PlatformMicrosoft(path, settings);
-
-        var container0 = platform.GetSaveContainer(0)!; // 1Auto
-        var container1 = platform.GetSaveContainer(1)!; // 1Manual
-
-        platform.Delete(container0);
-        platform.Delete(container1);
-
-        // Assert
-        Assert.IsFalse(container0.Exists);
-        Assert.IsNull(container0.DataFile);
-        Assert.AreEqual(container0.IncompatibilityTag, libNOM.io.Globals.Constants.INCOMPATIBILITY_004);
-
-        Assert.IsFalse(container1.Exists);
-        Assert.IsNull(container1.DataFile);
-        Assert.AreEqual(container1.IncompatibilityTag, libNOM.io.Globals.Constants.INCOMPATIBILITY_004);
-    }
-
-    [TestMethod]
-    public void Move()
-    {
-        // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
-
-        // Act
-        var platform = new PlatformMicrosoft(path, settings);
-
-        var container0 = platform.GetSaveContainer(0)!; // 1Auto
-        var container1 = platform.GetSaveContainer(1)!; // 1Manual
-        var container4 = platform.GetSaveContainer(4)!; // 3Auto
-        var container9 = platform.GetSaveContainer(9)!; // 5Manual
-
-        // 1 is corrupted, therefore 0 gets deleted and then 1 is also deleted after copying.
-        platform.Move(container1, container0);
-
-        var gameModeEnum4 = container4.GameModeEnum;
-        var seasonEnum4 = container4.SeasonEnum;
-        var baseVersion4 = container4.BaseVersion;
-        var versionEnum4 = container4.VersionEnum;
-        platform.Move(container4, container9);
-
-        // Assert
-        Assert.IsFalse(container0.Exists);
-        Assert.IsFalse(container1.Exists);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container0.IncompatibilityTag);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container1.IncompatibilityTag);
-
-        Assert.IsFalse(container4.Exists);
-        Assert.IsTrue(container9.Exists);
-        Assert.AreEqual(gameModeEnum4, container9.GameModeEnum);
-        Assert.AreEqual(seasonEnum4, container9.SeasonEnum);
-        Assert.AreEqual(baseVersion4, container9.BaseVersion);
-        Assert.AreEqual(versionEnum4, container9.VersionEnum);
-    }
-
-    [TestMethod]
-    public void TransferToGog()
-    {
-        // Arrange
-        // Act
-
-        // ... Read User/Read User/Transfer/Compare
-
-        // Assert
-    }
-
-    [TestMethod]
-    public void TransferToMicrosoft()
-    {
-        // Arrange
-        // Act
-        // Assert
-    }
-
-    [TestMethod]
-    public void TransferToPlaystation()
-    {
-        // Arrange
-        // Act
-        // Assert
-    }
-
-    [TestMethod]
-    public void TransferToSteam()
-    {
-        // Arrange
-        // Act
-        // Assert
-    }
-
-    [TestMethod]
-    public void TransferToSwitch()
-    {
-        // Arrange
-        // Act
-        // Assert
-    }
-
-    [TestMethod]
-    public void FileSystemWatcher()
+    public void T20_FileSystemWatcher()
     {
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
         var path_containers_index = Path.Combine(path, "containers.index");
@@ -796,5 +644,158 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         Assert.AreEqual(container, watcherContainer3);
         Assert.IsTrue(synced6);
+    }
+
+    [TestMethod]
+    public void T30_Copy()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = new PlatformMicrosoft(path, settings);
+
+        var container0 = platform.GetSaveContainer(0)!; // 1Auto
+        var container1 = platform.GetSaveContainer(1)!; // 1Manual
+        var container2 = platform.GetSaveContainer(2)!; // 2Auto
+        var container4 = platform.GetSaveContainer(4)!; // 3Auto
+        var container8 = platform.GetSaveContainer(8)!; // 5Auto
+        var container9 = platform.GetSaveContainer(9)!; // 5Manual
+
+        platform.Copy(container4, container1); // 3Auto -> 1Manual (overwrite)
+        platform.Copy(container2, container8); // 2Auto -> 5Auto (create)
+        platform.Copy(container9, container0); // 5Manual -> 1Auto (delete)
+
+        // Assert
+        Assert.IsTrue(container1.Exists);
+        Assert.AreEqual(container4.GameModeEnum, container1.GameModeEnum);
+        Assert.AreEqual(container4.SeasonEnum, container1.SeasonEnum);
+        Assert.AreEqual(container4.BaseVersion, container1.BaseVersion);
+        Assert.AreEqual(container4.VersionEnum, container1.VersionEnum);
+
+        Assert.IsTrue(container8.Exists);
+        Assert.AreEqual(container2.GameModeEnum, container8.GameModeEnum);
+        Assert.AreEqual(container2.SeasonEnum, container8.SeasonEnum);
+        Assert.AreEqual(container2.BaseVersion, container8.BaseVersion);
+        Assert.AreEqual(container2.VersionEnum, container8.VersionEnum);
+
+        Assert.IsFalse(container0.Exists);
+    }
+
+    [TestMethod]
+    public void T31_Delete()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = new PlatformMicrosoft(path, settings);
+
+        var container0 = platform.GetSaveContainer(0)!; // 1Auto
+        var container1 = platform.GetSaveContainer(1)!; // 1Manual
+
+        platform.Delete(container0);
+        platform.Delete(container1);
+
+        // Assert
+        Assert.IsFalse(container0.Exists);
+        Assert.IsNull(container0.DataFile);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container0.IncompatibilityTag);
+
+        Assert.IsFalse(container1.Exists);
+        Assert.IsNull(container1.DataFile);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container1.IncompatibilityTag);
+    }
+
+    [TestMethod]
+    public void T32_Move()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = new PlatformMicrosoft(path, settings);
+
+        var container0 = platform.GetSaveContainer(0)!; // 1Auto
+        var container1 = platform.GetSaveContainer(1)!; // 1Manual
+        var container4 = platform.GetSaveContainer(4)!; // 3Auto
+        var container9 = platform.GetSaveContainer(9)!; // 5Manual
+
+        // 1 is corrupted, therefore 0 gets deleted and then 1 is also deleted after copying.
+        platform.Move(container1, container0); // delete
+
+        var gameModeEnum4 = container4.GameModeEnum;
+        var seasonEnum4 = container4.SeasonEnum;
+        var baseVersion4 = container4.BaseVersion;
+        var versionEnum4 = container4.VersionEnum;
+        platform.Move(container4, container9); // move
+
+        // Assert
+        Assert.IsFalse(container0.Exists);
+        Assert.IsFalse(container1.Exists);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container0.IncompatibilityTag);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container1.IncompatibilityTag);
+
+        Assert.IsFalse(container4.Exists);
+        Assert.IsTrue(container9.Exists);
+        Assert.AreEqual(gameModeEnum4, container9.GameModeEnum);
+        Assert.AreEqual(seasonEnum4, container9.SeasonEnum);
+        Assert.AreEqual(baseVersion4, container9.BaseVersion);
+        Assert.AreEqual(versionEnum4, container9.VersionEnum);
+    }
+
+    [TestMethod]
+    public void TransferToGog()
+    {
+        // Arrange
+        // Act
+
+        // ... Read User/Read User/Transfer/Compare
+
+        // Assert
+    }
+
+    [TestMethod]
+    public void TransferToMicrosoft()
+    {
+        // Arrange
+        // Act
+        // Assert
+    }
+
+    [TestMethod]
+    public void TransferToPlaystation()
+    {
+        // Arrange
+        // Act
+        // Assert
+    }
+
+    [TestMethod]
+    public void TransferToSteam()
+    {
+        // Arrange
+        // Act
+        // Assert
+    }
+
+    [TestMethod]
+    public void TransferToSwitch()
+    {
+        // Arrange
+        // Act
+        // Assert
     }
 }

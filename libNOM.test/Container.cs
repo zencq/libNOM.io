@@ -10,7 +10,7 @@ namespace libNOM.test;
 public class ContainerTest : CommonTestInitializeCleanup
 {
     [TestMethod]
-    public void Backup()
+    public void T01_Backup()
     {
         // Arrange
         var backupCreatedCallback = false;
@@ -47,7 +47,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void Restore()
+    public void T02_Restore()
     {
         // Arrange
         var backupRestoredCallback = false;
@@ -77,33 +77,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void JsonValue_Digits()
-    {
-        // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Current,
-        };
-
-        // Act
-        var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
-
-        platform.Load(container);
-        var units1 = container.GetJsonValue<int>(UNITS_INDICES);
-
-        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_INDICES);
-        var units2 = container.GetJsonValue<int>(UNITS_INDICES);
-
-        // Assert
-        Assert.IsFalse(container.IsSynced);
-        Assert.AreEqual(-1221111157, units1); // 3073856139
-        Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
-    }
-
-    [TestMethod]
-    public void JsonValue_Path()
+    public void T03_JsonValue_Path()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -129,7 +103,33 @@ public class ContainerTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void SaveName()
+    public void T04_JsonValue_Digits()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Current,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0)!;
+
+        platform.Load(container);
+        var units1 = container.GetJsonValue<int>(UNITS_INDICES);
+
+        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_INDICES);
+        var units2 = container.GetJsonValue<int>(UNITS_INDICES);
+
+        // Assert
+        Assert.IsFalse(container.IsSynced);
+        Assert.AreEqual(-1221111157, units1); // 3073856139
+        Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
+    }
+
+    [TestMethod]
+    public void T05_SaveName()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");

@@ -958,14 +958,18 @@ public partial class PlatformMicrosoft : Platform
             if (container.Microsoft is null)
                 continue;
 
-            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_004;
-            container.Microsoft.State = MicrosoftBlobSyncStateEnum.Deleted;
-
             if (write)
             {
                 if (container.Microsoft.BlobDirectory.Exists)
                 {
-                    Directory.Delete(container.Microsoft.BlobDirectory.FullName, true);
+                    try
+                    {
+                        Directory.Delete(container.Microsoft.BlobDirectory.FullName, true);
+                    }
+                    catch (Exception ex) when (ex is DirectoryNotFoundException or IOException or PathTooLongException or UnauthorizedAccessException)
+                    {
+                        // Nothing to do.
+                    }
                 }
             }
 
@@ -978,6 +982,8 @@ public partial class PlatformMicrosoft : Platform
             }
 
             container.Reset();
+            container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_004;
+            container.Microsoft.State = MicrosoftBlobSyncStateEnum.Deleted;
         }
 
         // Refresh to get the new offsets.
