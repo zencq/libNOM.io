@@ -8,7 +8,6 @@ namespace libNOM.test;
 public class CommonTestInitializeCleanup
 {
     protected const int FILESYSTEMWATCHER_SLEEP = 2000;
-    protected const int TICK_DIVISOR = 10000;
     protected static readonly int[] UNITS_INDICES = new[] { 2, 48 };
     protected const string UNITS_JSON_PATH = "PlayerStateData.Units";
     protected const int UNITS_NEW_AMOUNT = 29070100;

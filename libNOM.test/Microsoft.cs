@@ -11,6 +11,8 @@ namespace libNOM.test;
 [DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
 public class MicrosoftTest : CommonTestInitializeCleanup
 {
+    protected const int TICK_DIVISOR = 10000;
+
     [TestMethod]
     public void T01_Read_0009000000C73498()
     {

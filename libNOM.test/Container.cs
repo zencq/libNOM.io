@@ -1,6 +1,7 @@
 ﻿using libNOM.io;
 using libNOM.io.Enums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 
 namespace libNOM.test;
 
@@ -9,6 +10,12 @@ namespace libNOM.test;
 [DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
 public class ContainerTest : CommonTestInitializeCleanup
 {
+    protected static readonly int[] GALACTICADDRESS_INDICES = new[] { 2, 0, 1 };
+    protected const string GALACTICADDRESS_JSON_PATH = "PlayerStateData.UniverseAddress.GalacticAddress";
+
+    protected static readonly int[] VALIDSLOTINDICES_INDICES = new[] { 2, 3, 1 };
+    protected const string VALIDSLOTINDICES_JSON_PATH = "PlayerStateData.Inventory.ValidSlotIndices";
+
     [TestMethod]
     public void T01_Backup()
     {
@@ -77,7 +84,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T03_JsonValue_Path()
+    public void T10_JsonValue_Path()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -103,7 +110,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T04_JsonValue_Digits()
+    public void T11_JsonValue_Digits()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -129,7 +136,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T05_SaveName()
+    public void T20_SaveName()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
@@ -154,5 +161,82 @@ public class ContainerTest : CommonTestInitializeCleanup
         Assert.AreEqual("Custom Normal", name0); // field
         Assert.AreEqual("Custom Normal", name1); // property
         Assert.AreEqual("SaveName Test", name2); // changed
+    }
+
+    [TestMethod]
+    public void T30_SetJObject()
+    {
+        // Arrange
+        var galacticAddress = new JObject
+        {
+            { "VoxelX", 1234 },
+            { "VoxelY", 234 },
+            { "VoxelZ", 34 },
+            { "SolarSystemIndex", 4 },
+            { "PlanetIndex", 4 },
+        };
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Current,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0)!;
+
+        platform.Load(container);
+        var galacticAddress_A1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSON_PATH)!);
+        var galacticAddress_A2 = container.GetJsonValue<JObject>(GALACTICADDRESS_INDICES)!;
+
+        container.SetJsonValue(galacticAddress, GALACTICADDRESS_JSON_PATH);
+        var galacticAddress_B1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSON_PATH)!);
+        var galacticAddress_B2 = container.GetJsonValue<JObject>(GALACTICADDRESS_INDICES)!;
+
+        // Assert
+        Assert.AreEqual(galacticAddress_A1, galacticAddress_A2);
+        Assert.AreEqual(1445, galacticAddress_A1["VoxelX"]);
+        Assert.AreEqual(0, galacticAddress_A1["VoxelY"]);
+        Assert.AreEqual(-905, galacticAddress_A1["VoxelZ"]);
+        Assert.AreEqual(345, galacticAddress_A1["SolarSystemIndex"]);
+        Assert.AreEqual(0, galacticAddress_A1["PlanetIndex"]);
+
+        Assert.AreEqual(galacticAddress_B1, galacticAddress_B2);
+        Assert.AreEqual(galacticAddress["VoxelX"], galacticAddress_B1["VoxelX"]);
+        Assert.AreEqual(galacticAddress["VoxelY"], galacticAddress_B1["VoxelY"]);
+        Assert.AreEqual(galacticAddress["VoxelZ"], galacticAddress_B1["VoxelZ"]);
+        Assert.AreEqual(galacticAddress["SolarSystemIndex"], galacticAddress_B1["SolarSystemIndex"]);
+        Assert.AreEqual(galacticAddress["PlanetIndex"], galacticAddress_B1["PlanetIndex"]);
+    }
+
+    [TestMethod]
+    public void T31_SetJArray()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Current,
+        };
+        var validSlotIndices = new JArray { new JObject { { "X", 0 }, { "Y", 0 } } };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0)!;
+
+        platform.Load(container);
+        var validSlotIndices_A1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSON_PATH)!);
+        var validSlotIndices_A2 = container.GetJsonValue<JArray>(VALIDSLOTINDICES_INDICES)!;
+
+        container.SetJsonValue(validSlotIndices, VALIDSLOTINDICES_JSON_PATH);
+        var validSlotIndices_B1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSON_PATH)!);
+        var validSlotIndices_B2 = container.GetJsonValue<JArray>(VALIDSLOTINDICES_INDICES)!;
+
+        // Assert
+        Assert.AreEqual(validSlotIndices_A1, validSlotIndices_A2);
+        Assert.AreEqual(29, validSlotIndices_A1.Count);
+
+        Assert.AreEqual(validSlotIndices_B1, validSlotIndices_B2);
+        Assert.AreEqual(1, validSlotIndices_B1.Count);
     }
 }

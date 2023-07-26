@@ -298,10 +298,7 @@ public partial class PlatformSteam : Platform
     public override void Write(Container container, DateTimeOffset writeTime)
     {
         // Update Platform marker in save depending on the current operating system without changing the sync state.
-        var synced = container.IsSynced;
-        container.SetJsonValue(PlatformArchitecture, "8>q", "Platform");
-        container.IsSynced = synced;
-
+        container.GetJsonObject()?.SetValue(PlatformArchitecture, "8>q", "Platform");
         base.Write(container, writeTime);
     }
 

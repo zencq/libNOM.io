@@ -75,6 +75,26 @@ internal static class NewtonsoftExtensions
     }
 
     /// <summary>
+    /// Evaluates a JSONPath expression and converts its value to <typeparamref name="T"/>.
+    /// Multiple paths can be passed to cover different obfuscation states.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns>Whether setting the value was successfull.</returns>
+    internal static bool SetValue(this JObject self, JToken value, params string[] paths)
+    {
+        foreach (var path in paths)
+        {
+            JToken? token = self.SelectToken(path);
+            if (token is not null)
+            {
+                token.Replace(value);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Returns whether the specified object is deobfuscated. Needs to be called on the root object.
     /// </summary>
     /// <param name="self"></param>

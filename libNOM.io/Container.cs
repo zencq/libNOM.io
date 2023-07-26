@@ -424,16 +424,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         if (_jsonObject is null)
             ThrowHelper.ThrowInvalidOperationException("Container is not loaded");
 
-        foreach (var path in paths)
-        {
-            JToken? token = _jsonObject.SelectToken(path);
-            if (token is not null)
-            {
-                token.Replace(value);
-                IsSynced = false;
-                break;
-            }
-        }
+        // If setting the value was successfull mark as unsynced.
+        IsSynced = !_jsonObject.SetValue(value, paths);
     }
 
     public void SetWatcherChange(WatcherChangeTypes changeType)
