@@ -107,7 +107,21 @@ public partial class PlatformSteam : Platform
 
     protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
 
-    protected override string PlatformArchitecture { get; } = "Win|Final";
+    protected override string? PlatformArchitecture
+    {
+        get
+        {
+            // On SteamDeck (with Proton) the Windows architecture is also used.
+            // TODO: Verify
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                return "Win|Final";
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
+                return "Mac|Final";
+
+            return null; // same as if not defined at all
+        }
+    }
 
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Steam;
 
@@ -118,11 +132,11 @@ public partial class PlatformSteam : Platform
             // On SteamDeck (with Proton) the Windows executable is also used.
             // TODO: Verify
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return "steamapps\\common\\No Man's Sky\\Binaries\\NMS.exe";
+                return @"steamapps\common\No Man's Sky\Binaries\NMS.exe";
 
             // TODO: Get executable
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
-                return "???";
+                return @"steamapps/common/No Man's Sky/No Man's Sky.app/Contents/MacOS/No Man's Sky";
 
             return null; // same as if not defined at all
         }
@@ -154,7 +168,7 @@ public partial class PlatformSteam : Platform
         if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory.Name.Substring(11).IsAllDigits())
             _steamId = directory.Name.Substring(3); // remove "st_"
 #else
-        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory.Name[11..].IsAllDigits()) 
+        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory.Name[11..].IsAllDigits())
             _steamId = directory.Name[3..]; // remove "st_"
 #endif
 
@@ -277,68 +291,18 @@ public partial class PlatformSteam : Platform
         return (value << bits) | (value >> (32 - bits));
     }
 
-    protected override byte[] DecompressData(Container container, uint[] meta, byte[] data)
-    {
-#if NETSTANDARD2_0
-        // No compression for account data and before Frontiers.
-        if (!container.IsSave || data.Take(4).GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
-            return data;
-#else
-        // No compression for account data and before Frontiers.
-        if (!container.IsSave || data[..4].GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
-            return data;
-#endif
-
-        var result = new List<byte>();
-
-        var offset = 0;
-        while (offset < data.Length)
-        {
-            var chunkHeader = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_HEADER_SIZE).GetUInt32();
-            offset += Globals.Constants.SAVE_STREAMING_HEADER_SIZE;
-
-            var chunkCompressed = (int)(chunkHeader[1]);
-            var chunkDecompressed = (int)(chunkHeader[2]);
-
-            var source = data.Skip(offset).Take(chunkCompressed).ToArray();
-            offset += chunkCompressed;
-
-            _ = Globals.LZ4.Decode(source, out byte[] target, chunkDecompressed);
-            result.AddRange(target);
-        }
-
-        return result.ToArray();
-    }
-
     #endregion
 
     #region Write
 
-    protected override byte[] CompressData(Container container, byte[] data)
+    public override void Write(Container container, DateTimeOffset writeTime)
     {
-        if (!container.IsSave || !container.IsFrontiers)
-            return data;
+        // Update Platform marker in save depending on the current operating system without changing the sync state.
+        var synced = container.IsSynced;
+        container.SetJsonValue(PlatformArchitecture, "8>q", "Platform");
+        container.IsSynced = synced;
 
-        var result = new List<byte>();
-
-        var offset = 0;
-        while (offset < data.Length)
-        {
-            var source = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_CHUNK_SIZE).ToArray();
-            _ = Globals.LZ4.Encode(source, out byte[] target);
-
-            offset += Globals.Constants.SAVE_STREAMING_CHUNK_SIZE;
-
-            var chunkHeader = new uint[4];
-            chunkHeader[0] = Globals.Constants.HEADER_SAVE_STREAMING_CHUNK;
-            chunkHeader[1] = (uint)(target.Length);
-            chunkHeader[2] = (uint)(source.Length);
-
-            result.AddRange(chunkHeader.GetBytes());
-            result.AddRange(target);
-        }
-
-        return result.ToArray();
+        base.Write(container, writeTime);
     }
 
     protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)

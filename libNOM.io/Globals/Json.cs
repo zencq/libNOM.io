@@ -670,8 +670,9 @@ internal static partial class Json
         ??? = ????/???? (??? = ?)
 
         Singularity
-        437 = ????/???? (??? = ?)
-        436 = ????/???? (??? = ?)
+        438 = 4657/4145
+        437 = 4657/4145
+        436 = 4657/4145
         434 = 4657/4145
         433 = 4657/4145
         430 = 4657/4145 (:?x = GreyIfCantStart) // only in PresetGameModeEnum.Seasonal saves

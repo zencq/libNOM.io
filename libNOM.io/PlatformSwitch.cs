@@ -1,10 +1,9 @@
-﻿using CommunityToolkit.Diagnostics;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace libNOM.io;
 
 
-#region Container
+#region Extra
 
 internal record class PlatformExtraSwitch
 {
@@ -95,13 +94,26 @@ public partial class PlatformSwitch : Platform
 
     protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
 
-    protected override string PlatformArchitecture { get; } = "NX1|Final";
+    protected override string? PlatformArchitecture { get; } = "NX1|Final";
 
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Switch;
 
     protected override string? PlatformProcess { get; } = null; // console platform has no PC process
 
     protected override string PlatformToken { get; } = "NS";
+
+    #endregion
+
+    #endregion
+
+    #region Getter
+
+    #region Container
+
+    protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
+    {
+        return SaveContainerCollection.Where(c => c.MetaFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
+    }
 
     #endregion
 
@@ -132,7 +144,9 @@ public partial class PlatformSwitch : Platform
         return new Container(metaIndex)
         {
             DataFile = new FileInfo(Path.Combine(Location!.FullName, $"savedata{metaIndex:D2}.hg")),
+            /// LastWriteTime = ... // will be set in <see cref="DecryptMeta"/>
             MetaFile = new FileInfo(Path.Combine(Location!.FullName, $"manifest{metaIndex:D2}.hg")),
+            /// Switch = ... // will be set in <see cref="DecryptMeta"/>
         };
     }
 
@@ -161,26 +175,9 @@ public partial class PlatformSwitch : Platform
         return metaInt;
     }
 
-    protected override byte[] DecompressData(Container container, uint[] meta, byte[] data)
-    {
-        // No compression for account data.
-        if (!container.IsSave)
-            return data;
-
-        return DecompressSaveStreamingData(data);
-    }
-
     #endregion
 
     #region Write
-
-    protected override byte[] CompressData(Container container, byte[] data)
-    {
-        if (!container.IsSave)
-            return data;
-
-        return CompressSaveStreamingData(data);
-    }
 
     protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
     {

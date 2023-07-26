@@ -86,7 +86,10 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             try
             {
-                var process = Process.GetProcessesByName("NMS").FirstOrDefault(p => p.MainModule?.FileName?.EndsWith(PlatformProcess, StringComparison.Ordinal) == true);
+                // First we get the file name of the process as name as it is different on Windows and macOS.
+                var processName = Path.GetFileNameWithoutExtension(PlatformProcess);
+                // Then we still need to check the MainModule to get the correct process as Steam (Windows) and Microsoft have the same name.
+                var process = Process.GetProcessesByName(processName).FirstOrDefault(i => i.MainModule?.FileName?.EndsWith(PlatformProcess, StringComparison.Ordinal) == true);
                 return process is not null && !process.HasExited;
             }
             // Throws Win32Exception if the implementing programm only targets x86 as the game is a x64 process.
@@ -109,7 +112,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     protected abstract Regex[] PlatformAnchorFileRegex { get; }
 
-    protected abstract string PlatformArchitecture { get; }
+    protected abstract string? PlatformArchitecture { get; }
 
     public abstract PlatformEnum PlatformEnum { get; }
 
@@ -652,20 +655,19 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual byte[] DecompressData(Container container, uint[] meta, byte[] data)
     {
-        return data;
-    }
-
-    /// <summary>
-    /// Decompresses a data file in the newer save streaming format.
-    /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    protected static byte[] DecompressSaveStreamingData(byte[] data)
-    {
+#if NETSTANDARD2_0
+        // No compression for account data and before Frontiers.
+        if (!container.IsSave || data.Take(4).GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
+            return data;
+#else
+        // No compression for account data and before Frontiers.
+        if (!container.IsSave || data[..4].GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
+            return data;
+#endif
         var concurrent = new ConcurrentDictionary<int, byte[]>();
-        var tasks = new List<Task>();
-
+        var headers = new List<(int Offset, int SizeCompressed, int SizeDecompressed)>();
         var offset = 0;
+
         while (offset < data.Length)
         {
 #if NETSTANDARD2_0
@@ -673,31 +675,26 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 #else
             var chunkHeader = data[offset..(offset + Globals.Constants.SAVE_STREAMING_HEADER_SIZE)].GetUInt32();
 #endif
-            offset += Globals.Constants.SAVE_STREAMING_HEADER_SIZE;
-
             var sizeCompressed = (int)(chunkHeader[1]);
-            var sizeDecompressed = (int)(chunkHeader[2]);
 
-            tasks.Add(Task.Run(() =>
-            {
-#if NETSTANDARD2_0
-                var source = data.Skip(offset).Take(sizeCompressed).ToArray();
-                _ = Globals.LZ4.Decode(source, out byte[] target, sizeDecompressed);
-#else
-                _ = Globals.LZ4.Decode(data[offset..(offset + sizeCompressed)], out byte[] target, sizeDecompressed);
-#endif
-                concurrent[offset] = target;
-            }));
-
+            offset += Globals.Constants.SAVE_STREAMING_HEADER_SIZE;
+            headers.Add((offset, sizeCompressed, (int)(chunkHeader[2])));
             offset += sizeCompressed;
         }
-        Task.WaitAll(tasks.ToArray());
+        Parallel.ForEach(headers, (header) =>
+        {
+#if NETSTANDARD2_0
+            var source = data.Skip(header.Offset).Take(header.SizeCompressed).ToArray();
+            _ = Globals.LZ4.Decode(source, out byte[] target, header.SizeDecompressed);
+#else
+            _ = Globals.LZ4.Decode(data[header.Offset..(header.Offset + header.SizeCompressed)], out byte[] target, header.SizeDecompressed);
+#endif
+            concurrent[header.Offset] = target;
+        });
 
-        IEnumerable<byte>? result = Array.Empty<byte>();
+        IEnumerable<byte> result = Array.Empty<byte>();
 
-        // TODO check order
-        //foreach (var decompressedData in concurrent.OrderBy(i => i.Key).Select(i => i.Value))
-        foreach (var decompressedData in concurrent.Values)
+        foreach (var decompressedData in concurrent.OrderBy(i => i.Key).Select(j => j.Value))
             result = result.Concat(decompressedData);
 
         return result.ToArray();
@@ -854,17 +851,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         DisableWatcher();
 
+        // In case LastWriteTime is written inside meta set it before writing.
+        if (Settings.SetLastWriteTime)
+        {
+            container.LastWriteTime = writeTime;
+        }
+
         if (Settings.WriteAlways || !container.IsSynced)
         {
             container.Exists = true;
             container.IsSynced = true;
 
             JustWrite(container);
-        }
-
-        if (Settings.SetLastWriteTime)
-        {
-            container.LastWriteTime = writeTime;
         }
 
         // To ensure the timestamp will be the same the next time, the file times are always set to the currently saved one.
@@ -921,51 +919,40 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual byte[] CompressData(Container container, byte[] data)
     {
-        return data;
-    }
+        if (!container.IsSave || !container.IsFrontiers)
+            return data;
 
-    /// <summary>
-    /// Compresses a data file in the newer save streaming format.
-    /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    protected static byte[] CompressSaveStreamingData(byte[] data)
-    {
         var concurrent = new ConcurrentDictionary<int, byte[]>();
-        var tasks = new List<Task>();
+        var offsets = new List<int>();
+        var position = 0;
 
-        var offset = 0;
-        while (offset < data.Length)
+        while (position < data.Length)
         {
-            tasks.Add(Task.Run(() =>
-            {
-#if NETSTANDARD2_0
-                var source = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_CHUNK_SIZE).ToArray();
-#else
-                var source = data[offset..(offset + Globals.Constants.SAVE_STREAMING_CHUNK_SIZE)];
-#endif
-                _ = Globals.LZ4.Encode(source, out byte[] target);
-                var chunkHeader = new uint[]
-                {
-                    Globals.Constants.HEADER_SAVE_STREAMING_CHUNK,
-                    (uint)(target.Length),
-                    (uint)(source.Length),
-                    0,
-                };
-
-                concurrent[offset] = chunkHeader.GetBytes().Concat(target).ToArray();
-            }));
-
-            offset += Globals.Constants.SAVE_STREAMING_CHUNK_SIZE;
+            offsets.Add(position);
+            position += Globals.Constants.SAVE_STREAMING_CHUNK_SIZE;
         }
-
-        Task.WaitAll(tasks.ToArray());
+        Parallel.ForEach(offsets, (offset) =>
+        {
+#if NETSTANDARD2_0
+            var source = data.Skip(offset).Take(Globals.Constants.SAVE_STREAMING_CHUNK_SIZE).ToArray();
+#else
+            var end = offset + Math.Min(Globals.Constants.SAVE_STREAMING_CHUNK_SIZE, data.Length - offset);
+            var source = data[offset..end];
+#endif
+            _ = Globals.LZ4.Encode(source, out byte[] target);
+            var chunkHeader = new uint[]
+            {
+                Globals.Constants.HEADER_SAVE_STREAMING_CHUNK,
+                (uint)(target.Length),
+                (uint)(source.Length),
+                0,
+            };
+            concurrent[offset] = chunkHeader.GetBytes().Concat(target).ToArray();
+        });
 
         IEnumerable<byte>? result = Array.Empty<byte>();
 
-        // TODO check order
-        //foreach (var compressedData in concurrent.OrderBy(i => i.Key).Select(i => i.Value))
-        foreach (var compressedData in concurrent.Values)
+        foreach (var compressedData in concurrent.OrderBy(i => i.Key).Select(j => j.Value))
             result = result.Concat(compressedData);
 
         return result.ToArray();
@@ -1035,7 +1022,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         File.WriteAllBytes(container.MetaFile!.FullName, meta);
     }
 
-#endregion
+    #endregion
 
     // // File Operation
 

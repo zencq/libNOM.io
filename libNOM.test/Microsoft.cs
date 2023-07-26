@@ -758,8 +758,17 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
+        var container2 = platform.GetSaveContainer(2)!; // 2Auto
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
+        var container5 = platform.GetSaveContainer(5)!; // 3Manual
         var container9 = platform.GetSaveContainer(9)!; // 5Manual
+
+        var gameModeEnum2 = container2.GameModeEnum;
+        var seasonEnum2 = container2.SeasonEnum;
+        var baseVersion2 = container2.BaseVersion;
+        var versionEnum2 = container2.VersionEnum;
+        platform.Copy(container4, container5);
+        platform.Move(container2, container5); // overwrite
 
         // 1 is corrupted, therefore 0 gets deleted and then 1 is also deleted after copying.
         platform.Move(container1, container0); // delete
@@ -771,6 +780,13 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         platform.Move(container4, container9); // move
 
         // Assert
+        Assert.IsFalse(container2.Exists);
+        Assert.IsTrue(container5.Exists);
+        Assert.AreEqual(gameModeEnum2, container5.GameModeEnum);
+        Assert.AreEqual(seasonEnum2, container5.SeasonEnum);
+        Assert.AreEqual(baseVersion2, container5.BaseVersion);
+        Assert.AreEqual(versionEnum2, container5.VersionEnum);
+
         Assert.IsFalse(container0.Exists);
         Assert.IsFalse(container1.Exists);
         Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container0.IncompatibilityTag);

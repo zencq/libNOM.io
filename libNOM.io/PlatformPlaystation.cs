@@ -114,7 +114,7 @@ public partial class PlatformPlaystation : Platform
 
     protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
 
-    protected override string PlatformArchitecture { get; } = "PS4|Final";
+    protected override string? PlatformArchitecture { get; } = "PS4|Final";
 
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Playstation;
 

@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 using libNOM.io;
 using libNOM.io.Enums;
-using libNOM.io.Globals;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace libNOM.test;
@@ -12,7 +11,110 @@ namespace libNOM.test;
 public class SteamTest : CommonTestInitializeCleanup
 {
     [TestMethod]
-    public void T01_Read_76561198043217184()
+    public void T01_Read_76561198042453834()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+
+        // Assert
+        Assert.IsTrue(platform.HasAccountData);
+        Assert.AreEqual(10, platform.GetExistingContainers().Count());
+        Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
+        Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
+        Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
+        Assert.AreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK);
+
+        var container0 = platform.GetSaveContainer(0)!; // 1Auto
+        Assert.IsTrue(container0.Exists);
+        Assert.IsFalse(container0.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Unspecified, container0.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container0.SeasonEnum);
+        Assert.AreEqual(4145, container0.BaseVersion);
+        Assert.AreEqual(VersionEnum.Singularity, container0.VersionEnum);
+
+        var container1 = platform.GetSaveContainer(1)!; // 1Manual
+        Assert.IsTrue(container1.Exists);
+        Assert.IsFalse(container1.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Unspecified, container1.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container1.SeasonEnum);
+        Assert.AreEqual(4145, container1.BaseVersion);
+        Assert.AreEqual(VersionEnum.Singularity, container1.VersionEnum);
+
+        var container2 = platform.GetSaveContainer(2)!; // 2Auto
+        Assert.IsTrue(container2.Exists);
+        Assert.IsFalse(container2.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Unspecified, container2.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container2.SeasonEnum);
+        Assert.AreEqual(4142, container2.BaseVersion);
+        Assert.AreEqual(VersionEnum.WaypointWithSuperchargedSlots, container2.VersionEnum);
+
+        var container3 = platform.GetSaveContainer(3)!; // 2Manual
+        Assert.IsTrue(container3.Exists);
+        Assert.IsFalse(container3.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Unspecified, container3.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container3.SeasonEnum);
+        Assert.AreEqual(4143, container3.BaseVersion);
+        Assert.AreEqual(VersionEnum.Fractal, container3.VersionEnum);
+
+        var container6 = platform.GetSaveContainer(6)!; // 4Auto
+        Assert.IsTrue(container6.Exists);
+        Assert.IsFalse(container6.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Permadeath, container6.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container6.SeasonEnum);
+        Assert.AreEqual(4142, container6.BaseVersion);
+        Assert.AreEqual(VersionEnum.WaypointWithSuperchargedSlots, container6.VersionEnum);
+
+        var container7 = platform.GetSaveContainer(7)!; // 4Manual
+        Assert.IsTrue(container7.Exists);
+        Assert.IsFalse(container7.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Permadeath, container7.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container7.SeasonEnum);
+        Assert.AreEqual(4142, container7.BaseVersion);
+        Assert.AreEqual(VersionEnum.WaypointWithSuperchargedSlots, container7.VersionEnum);
+
+        var container10 = platform.GetSaveContainer(10)!; // 6Auto
+        Assert.IsTrue(container10.Exists);
+        Assert.IsFalse(container10.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Normal, container10.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container10.SeasonEnum);
+        Assert.AreEqual(4142, container10.BaseVersion);
+        Assert.AreEqual(VersionEnum.WaypointWithSuperchargedSlots, container10.VersionEnum);
+
+        var container11 = platform.GetSaveContainer(11)!; // 6Manual
+        Assert.IsTrue(container11.Exists);
+        Assert.IsFalse(container11.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Normal, container11.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container11.SeasonEnum);
+        Assert.AreEqual(4142, container11.BaseVersion);
+        Assert.AreEqual(VersionEnum.WaypointWithSuperchargedSlots, container11.VersionEnum);
+
+        var container22 = platform.GetSaveContainer(22)!; // 12Auto
+        Assert.IsTrue(container22.Exists);
+        Assert.IsFalse(container22.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Creative, container22.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container22.SeasonEnum);
+        Assert.AreEqual(4142, container22.BaseVersion);
+        Assert.AreEqual(VersionEnum.WaypointWithSuperchargedSlots, container22.VersionEnum);
+
+        var container23 = platform.GetSaveContainer(23)!; // 12Manual
+        Assert.IsTrue(container23.Exists);
+        Assert.IsFalse(container23.IsOld);
+        Assert.AreEqual(PresetGameModeEnum.Creative, container23.GameModeEnum);
+        Assert.AreEqual(SeasonEnum.None, container23.SeasonEnum);
+        Assert.AreEqual(4142, container23.BaseVersion);
+        Assert.AreEqual(VersionEnum.WaypointWithSuperchargedSlots, container23.VersionEnum);
+    }
+
+    [TestMethod]
+    public void T02_Read_76561198043217184()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
@@ -115,7 +217,7 @@ public class SteamTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T02_Read_76561198371877533()
+    public void T03_Read_76561198371877533()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -178,10 +280,10 @@ public class SteamTest : CommonTestInitializeCleanup
     }
 
     /// <summary>
-    /// Same as <see cref="T02_Read_76561198371877533"/>.
+    /// Same as <see cref="T03_Read_76561198371877533"/>.
     /// </summary>
     [TestMethod]
-    public void T03_Read_NoAccountInDirectory()
+    public void T04_Read_NoAccountInDirectory()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "something");
@@ -247,7 +349,6 @@ public class SteamTest : CommonTestInitializeCleanup
     public void T10_Write_Default_2001()
     {
         var now = DateTimeOffset.UtcNow;
-        var now_ticks = now.UtcTicks / TICK_DIVISOR;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
         var settings = new PlatformSettings
         {
@@ -285,7 +386,7 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.AreEqual(-123571, units10); // 4294843725
         Assert.AreEqual(UNITS_NEW_AMOUNT, units11);
         Assert.AreEqual(637376113621684301, timestamp10.UtcTicks); // 2020-10-06 20:02:42 +00:00
-        Assert.AreEqual(now_ticks, timestamp11.UtcTicks / TICK_DIVISOR);
+        Assert.AreEqual(now.UtcTicks, timestamp11.UtcTicks);
         Assert.IsTrue(writeCallback);
 
         Assert.IsFalse(platform2.HasAccountData);
@@ -296,14 +397,13 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
 
         Assert.AreEqual(UNITS_NEW_AMOUNT, units20);
-        Assert.AreEqual(now_ticks, timestamp20.UtcTicks / TICK_DIVISOR);
+        Assert.AreEqual(now.UtcTicks, timestamp20.UtcTicks);
     }
 
     [TestMethod]
     public void T11_Write_Default_2002()
     {
         var now = DateTimeOffset.UtcNow;
-        var now_ticks = now.UtcTicks / TICK_DIVISOR;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
@@ -341,7 +441,7 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.AreEqual(-1221111157, units10); // 3073856139
         Assert.AreEqual(UNITS_NEW_AMOUNT, units11);
         Assert.AreEqual(637663905840000000, timestamp10.UtcTicks); // 2021-09-04 22:16:24 +00:00
-        Assert.AreEqual(now_ticks, timestamp11.UtcTicks / TICK_DIVISOR);
+        Assert.AreEqual(now.UtcTicks, timestamp11.UtcTicks);
         Assert.IsTrue(writeCallback);
 
         Assert.IsTrue(platform2.HasAccountData);
@@ -352,7 +452,7 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
 
         Assert.AreEqual(UNITS_NEW_AMOUNT, units20);
-        Assert.AreEqual(now_ticks, timestamp20.UtcTicks / TICK_DIVISOR);
+        Assert.AreEqual(now.UtcTicks, timestamp20.UtcTicks);
     }
 
     [TestMethod]
@@ -516,7 +616,7 @@ public class SteamTest : CommonTestInitializeCleanup
     public void T20_FileSystemWatcher()
     {
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var path_save = Path.Combine(path, "save.hg");
+        var pathSave = Path.Combine(path, "save.hg");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -524,13 +624,13 @@ public class SteamTest : CommonTestInitializeCleanup
         };
 
         // Act
-        var bytes = File.ReadAllBytes(path_save);
+        var bytes = File.ReadAllBytes(pathSave);
         var platform = new PlatformSteam(path, settings);
 
         var container = platform.GetSaveContainer(0)!;
         platform.Load(container);
 
-        File.WriteAllBytes(path_save, bytes);
+        File.WriteAllBytes(pathSave, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers1 = platform.GetWatcherContainers();
         var count1 = watchers1.Count();
@@ -539,7 +639,7 @@ public class SteamTest : CommonTestInitializeCleanup
         container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
         var synced2 = container.IsSynced;
 
-        File.WriteAllBytes(path_save, bytes);
+        File.WriteAllBytes(pathSave, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers2 = platform.GetWatcherContainers();
         var count2 = watchers2.Count();
@@ -550,7 +650,7 @@ public class SteamTest : CommonTestInitializeCleanup
         platform.OnWatcherDecision(watcherContainer2, false);
         var synced4 = container.IsSynced;
 
-        File.WriteAllBytes(path_save, bytes);
+        File.WriteAllBytes(pathSave, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers3 = platform.GetWatcherContainers();
         var count3 = watchers3.Count();
@@ -662,11 +762,15 @@ public class SteamTest : CommonTestInitializeCleanup
 
         var container0 = platform.GetSaveContainer(0)!; // 1Auto
         var container1 = platform.GetSaveContainer(1)!; // 1Manual
+        var container2 = platform.GetSaveContainer(2)!; // 2Auto
         var container4 = platform.GetSaveContainer(4)!; // 3Auto
+        var container8 = platform.GetSaveContainer(8)!; // 5Auto
         var container9 = platform.GetSaveContainer(9)!; // 5Manual
 
         var totalPlayTime1 = container1.TotalPlayTime;
         platform.Move(container1, container0); // overwrite in same slot
+
+        platform.Move(container8, container2); // delete
 
         var gameModeEnum4 = container4.GameModeEnum;
         var seasonEnum4 = container4.SeasonEnum;
@@ -678,6 +782,11 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.IsTrue(container0.Exists);
         Assert.IsFalse(container1.Exists);
         Assert.AreEqual(totalPlayTime1, container0.TotalPlayTime);
+
+        Assert.IsFalse(container2.Exists);
+        Assert.IsFalse(container8.Exists);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container2.IncompatibilityTag);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container8.IncompatibilityTag);
 
         Assert.IsFalse(container4.Exists);
         Assert.IsTrue(container9.Exists);

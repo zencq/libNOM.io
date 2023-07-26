@@ -30,7 +30,7 @@ public class PlatformGog : PlatformSteam
 
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Gog;
 
-    protected override string? PlatformProcess { get; } = null;
+    protected override string? PlatformProcess { get; } = @"GOG Galaxy\No Man's Sky\Binaries\NMS.exe";
 
     protected override string PlatformToken { get; } = "GX";
 

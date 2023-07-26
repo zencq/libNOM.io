@@ -144,11 +144,12 @@ public partial class PlatformMicrosoft : Platform
 
     protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
 
-    protected override string PlatformArchitecture { get; } = "XB1|Final";
+    protected override string? PlatformArchitecture { get; } = "XB1|Final";
 
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Microsoft;
 
-    protected override string? PlatformProcess { get; } = "bs190hzg1sesy\\Binaries\\NMS.exe";
+    // Looks like "C:\\Program Files\\WindowsApps\\HelloGames.NoMansSky_4.38.0.0_x64__bs190hzg1sesy\\Binaries\\NMS.exe"
+    protected override string? PlatformProcess { get; } = @"bs190hzg1sesy\Binaries\NMS.exe";
 
     protected override string PlatformToken { get; } = "XB";
 
