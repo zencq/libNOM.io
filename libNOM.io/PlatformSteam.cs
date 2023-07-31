@@ -13,6 +13,8 @@ namespace libNOM.io;
 
 internal record class PlatformExtraSteam
 {
+    internal int MetaSize;
+
     internal uint[] MetaTail = null!;
 }
 
@@ -134,7 +136,6 @@ public partial class PlatformSteam : Platform
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 return @"steamapps\common\No Man's Sky\Binaries\NMS.exe";
 
-            // TODO: Get executable
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
                 return @"steamapps/common/No Man's Sky/No Man's Sky.app/Contents/MacOS/No Man's Sky";
 
@@ -215,78 +216,74 @@ public partial class PlatformSteam : Platform
 
     protected override uint[] DecryptMeta(Container container, byte[] meta)
     {
-        // TODO known method below does not work for account data even though goatfungus seems to be the same...
-        if (!container.IsSave || meta.Length is not META_SIZE and not META_SIZE_WAYPOINT)
-            return Array.Empty<uint>();
-
         uint hash = 0;
-        var iterations = meta.Length == META_SIZE_WAYPOINT ? 6 : 8;
-        var keys = GetKeys(container);
-        var values = meta.GetUInt32();
+        int iterations = meta.Length == META_SIZE ? 8 : 6;
+        uint[] key = GetKey(container);
+        uint[] value = meta.GetUInt32();
 
-        var lastIndex = values.Length - 1;
+        int lastIndex = value.Length - 1;
 
         for (int i = 0; i < iterations; i++)
         {
+            // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
             hash += 0x9E3779B9;
-            hash &= 0xFFFFFFFF;
         }
         for (int i = 0; i < iterations; i++)
         {
-            var keysIndex = (int)(hash >> 2 & 3);
-            var valuesIndex = lastIndex;
-            var value = values[0];
+            uint current = value[0];
+            int keyIndex = (int)(hash >> 2 & 3);
+            int valueIndex = lastIndex;
 
-            for (int j = lastIndex; j > 0; j--, valuesIndex--)
+            for (int j = lastIndex; j > 0; j--, valueIndex--)
             {
-                var j1 = (value >> 3) ^ ((values[valuesIndex - 1] & 0xFFFFFFF) << 4);
-                var j2 = ((value * 4) & 0xFFFFFFFF) ^ (values[valuesIndex - 1] >> 5);
-                var j3 = (values[valuesIndex - 1] ^ keys[(j & 3) ^ keysIndex]);
-                var j4 = (value ^ hash);
-                values[valuesIndex] = (values[valuesIndex] - ((j1 + j2) ^ (j3 + j4))) & 0xFFFFFFFF;
-                value = values[valuesIndex];
+                uint j1 = (current >> 3) ^ (value[valueIndex - 1] << 4);
+                uint j2 = (current * 4) ^ (value[valueIndex - 1] >> 5);
+                uint j3 = (value[valueIndex - 1] ^ key[(j & 3) ^ keyIndex]);
+                uint j4 = (current ^ hash);
+                value[valueIndex] -= (j1 + j2) ^ (j3 + j4);
+                current = value[valueIndex];
             }
 
-            valuesIndex = lastIndex;
+            valueIndex = lastIndex;
 
-            var i1 = (value >> 3) ^ ((values[valuesIndex] & 0xFFFFFFF) << 4);
-            var i2 = ((value * 4) & 0xFFFFFFFF) ^ (values[valuesIndex] >> 5);
-            var i3 = (values[valuesIndex] ^ keys[keysIndex]);
-            var i4 = (value ^ hash);
-            values[0] = (values[0] - ((i1 + i2) ^ (i3 + i4))) & 0xFFFFFFFF;
+            uint i1 = (current >> 3) ^ (value[valueIndex] << 4);
+            uint i2 = (current * 4) ^ (value[valueIndex] >> 5);
+            uint i3 = (value[valueIndex] ^ key[keyIndex]);
+            uint i4 = (current ^ hash);
+            value[0] -= (i1 + i2) ^ (i3 + i4);
 
             hash += 0x61C88647;
         }
 
         container.Steam = new()
         {
+            MetaSize = meta.Length,
 #if NETSTANDARD2_0
-            MetaTail = values.Skip(META_KNOWN).ToArray()
+            MetaTail = value.Skip(META_KNOWN).ToArray()
 #else
-            MetaTail = values[META_KNOWN..],
+            MetaTail = value[META_KNOWN..],
 #endif
         };
 
-        return values;
+        return value;
     }
 
     /// <summary>
-    /// Gets the necessary keys for the meta file encryption.
+    /// Gets the necessary key for the meta file encryption.
     /// </summary>
     /// <param name="container"></param>
     /// <returns></returns>
-    protected static uint[] GetKeys(Container container)
+    private static uint[] GetKey(Container container)
     {
-        var bytes = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG");
-        var index = (uint)(container.MetaIndex) ^ 0x1422CB8C;
+        uint index = (uint)(container.MetaIndex == 0 ? 1 : container.MetaIndex) ^ 0x1422CB8C;
+        uint[] key = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").GetUInt32();
 
-        var unsignedArray = bytes.GetUInt32();
-        unsignedArray[0] = ((RotateLeft(index, 13) * 5) + 0xE6546B64) & 0xFFFFFFFF;
+        key[0] = (RotateLeft(index, 13) * 5) + 0xE6546B64;
 
-        return unsignedArray;
+        return key;
     }
 
-    protected static uint RotateLeft(uint value, int bits)
+    private static uint RotateLeft(uint value, int bits)
     {
         return (value << bits) | (value >> (32 - bits));
     }
@@ -306,56 +303,30 @@ public partial class PlatformSteam : Platform
     {
         //  0. META HEADER          (  4)
         //  1. META FORMAT          (  4)
-        //  2. SPOOKY HASH          ( 16)
-        //  6. SHA256 HASH          ( 32)
-        // 14. DECOMPRESSED SIZE    (  4)
-        // 15. COMPRESSED SIZE      (  4)
-        // 16. PROFILE HASH         (  4)
-        // 17. SAVE VERSION         (  4)
-        // 18. GAME MODE            (  2)
-        // 18. SEASON               (  2)
-        // 19. TOTAL PLAY TIME      (  4)
-        // 20. UNKNOWN              ( 24) // Foundation
+        //  2. SPOOKY HASH          ( 16) // SAVE_FORMAT_2
+        //  6. SHA256 HASH          ( 32) // SAVE_FORMAT_2
+        // 14. DECOMPRESSED SIZE    (  4) // SAVE_FORMAT_3
+        // 15. COMPRESSED SIZE      (  4) // SAVE_FORMAT_1
+        // 16. PROFILE HASH         (  4) // SAVE_FORMAT_1
+        // 17. SAVE VERSION         (  4) // SAVE_FORMAT_3
+        // 18. GAME MODE            (  2) // SAVE_FORMAT_3
+        // 18. SEASON               (  2) // SAVE_FORMAT_3
+        // 19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
+        // 20. UNKNOWN              ( 24) // SAVE_FORMAT_2
         //                          (104)
 
-        // 20. UNKNOWN              (280) // Waypoint
+        // 20. UNKNOWN              (280) // SAVE_FORMAT_3
         //                          (360)
 
-        // TODO known method below does not work for account data even though goatfungus seems to be the same...
-        if (!container.IsSave)
-            return ReadMeta(container);
+        var buffer = new byte[container.Steam!.MetaSize];
 
-        // META_KNOWN and Steam.MetaTail are using uint and therefore need to be multiplied by 4 to get the actual buffer size.
-        var bufferSize = container.Steam?.MetaTail is not null ? (META_KNOWN + container.Steam!.MetaTail.Length) * 4 : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
-        var buffer = new byte[bufferSize];
-
+        // Editing account data is possible since Frontiers and therefore has always the new format.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
         writer.Write(META_HEADER); // 4
+        writer.Write((container.IsAccount || container.IsFrontiers ) ? Globals.Constants.SAVE_FORMAT_3 : Globals.Constants.SAVE_FORMAT_2); // 4
 
-        if (!container.IsFrontiers)
+        if (container.IsSave && container.IsFrontiers) // SAVE_FORMAT_3
         {
-#if NETSTANDARD2_0_OR_GREATER
-            var sha256 = SHA256.Create().ComputeHash(data);
-#else
-            var sha256 = SHA256.HashData(data);
-#endif
-
-            var spookyHash = new SpookyHash(0x155AF93AC304200, 0x8AC7230489E7FFFF);
-            spookyHash.Update(sha256);
-            spookyHash.Update(data);
-            spookyHash.Final(out ulong hash1, out ulong hash2);
-
-            writer.Write(Globals.Constants.SAVE_FORMAT_2); // 4
-
-            writer.Write(hash1); // 8
-            writer.Write(hash2); // 8
-
-            writer.Write(sha256); // 256 / 8 = 32
-        }
-        else
-        {
-            writer.Write(Globals.Constants.SAVE_FORMAT_3); // 4
-
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current);
 
@@ -365,15 +336,32 @@ public partial class PlatformSteam : Platform
             writer.Seek(0x8, SeekOrigin.Current);
 
             writer.Write(container.BaseVersion); // 4
-            writer.Write((ushort)(container.GameModeEnum ?? 0)); // 2
+            writer.Write((ushort)((container.GameModeEnum ?? 0) == 0 ? PresetGameModeEnum.Normal : container.GameModeEnum!)); // 2
             writer.Write((ushort)(container.SeasonEnum)); // 2
             writer.Write(container.TotalPlayTime); // 4
+        }
+        else // SAVE_FORMAT_2
+        {
+#if NETSTANDARD2_0_OR_GREATER
+            var sha256 = SHA256.Create().ComputeHash(data);
+#else
+            var sha256 = SHA256.HashData(data);
+#endif
+            var spookyHash = new SpookyHash(0x155AF93AC304200, 0x8AC7230489E7FFFF);
+            spookyHash.Update(sha256);
+            spookyHash.Update(data);
+            spookyHash.Final(out ulong hash1, out ulong hash2);
+
+            writer.Write(hash1); // 8
+            writer.Write(hash2); // 8
+
+            writer.Write(sha256); // 256 / 8 = 32
         }
 
         // Seek to position of last known byte and append the tail.
         if (container.Steam!.MetaTail is not null)
         {
-            writer.Seek(META_KNOWN, SeekOrigin.Begin);
+            writer.Seek(META_KNOWN * sizeof(uint), SeekOrigin.Begin);
 
             foreach (var value in container.Steam!.MetaTail) // 24 or 280
                 writer.Write(value);
@@ -384,40 +372,40 @@ public partial class PlatformSteam : Platform
 
     protected override byte[] EncryptMeta(Container container, byte[] data, byte[] meta)
     {
+        uint current = 0;
         uint hash = 0;
-        var iterations = container.IsWaypoint ? 6 : 8;
-        var keys = GetKeys(container);
-        var values = meta.GetUInt32();
+        int iterations = container.Steam!.MetaSize == META_SIZE ? 8 : 6;
+        uint[] key = GetKey(container);
+        uint[] value = meta.GetUInt32();
 
-        var lastIndex = values.Length - 1;
-        uint value = 0;
+        int lastIndex = value.Length - 1;
 
         for (int i = 0; i < iterations; i++)
         {
             hash += 0x9E3779B9;
 
-            var keysIndex = (int)((hash >> 2) & 3);
-            var valuesIndex = 0;
+            int keyIndex = (int)((hash >> 2) & 3);
+            int valueIndex = 0;
 
-            for (int j = 0; j < lastIndex; j++, valuesIndex++)
+            for (int j = 0; j < lastIndex; j++, valueIndex++)
             {
-                var j1 = (values[valuesIndex + 1] >> 3) ^ ((value & 0xFFFFFFF) << 4);
-                var j2 = ((values[valuesIndex + 1] * 4) & 0xFFFFFFF) ^ (value >> 5);
-                var j3 = (value ^ keys[(j & 3) ^ keysIndex]);
-                var j4 = (values[valuesIndex + 1] ^ hash);
-                values[valuesIndex] = (values[valuesIndex] + ((j1 + j2) ^ (j3 + j4))) & 0xFFFFFFF;
-                value = values[valuesIndex];
+                uint j1 = (value[valueIndex + 1] >> 3) ^ (current << 4);
+                uint j2 = (value[valueIndex + 1] * 4) ^ (current >> 5);
+                uint j3 = (current ^ key[(j & 3) ^ keyIndex]);
+                uint j4 = (value[valueIndex + 1] ^ hash);
+                value[valueIndex] += (j1 + j2) ^ (j3 + j4);
+                current = value[valueIndex];
             }
 
-            var i1 = (values[0] >> 3) ^ ((value & 0xFFFFFFF) << 4);
-            var i2 = ((values[0] * 4) & 0xFFFFFFF) ^ (value >> 5);
-            var i3 = (value ^ keys[keysIndex ^ 1]);
-            var i4 = (values[0] ^ hash);
-            values[lastIndex] = (values[lastIndex] + ((i1 + i2) ^ (i3 + i4))) & 0xFFFFFFF;
-            value = values[lastIndex];
+            uint i1 = (value[0] >> 3) ^ (current << 4);
+            uint i2 = (value[0] * 4) ^ (current >> 5);
+            uint i3 = (current ^ key[keyIndex ^ 1]);
+            uint i4 = (value[0] ^ hash);
+            value[lastIndex] += (i1 + i2) ^ (i3 + i4);
+            current = value[lastIndex];
         }
 
-        return values.GetBytes();
+        return value.GetBytes();
     }
 
     #endregion
@@ -435,6 +423,7 @@ public partial class PlatformSteam : Platform
     {
         destination.Steam = new PlatformExtraSteam
         {
+            MetaSize = source.Steam!.MetaSize,
             MetaTail = source.Steam!.MetaTail,
         };
     }

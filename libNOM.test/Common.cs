@@ -7,18 +7,63 @@ namespace libNOM.test;
 [TestClass]
 public class CommonTestInitializeCleanup
 {
+    #region Constant
+
+    protected const uint SAVE_FORMAT_2 = 0x7D1; // 2001
+    protected const uint SAVE_FORMAT_3 = 0x7D2; // 2002
+
     protected const int FILESYSTEMWATCHER_SLEEP = 2000;
+    protected static readonly int[] MUSICVOLUME_INDICES = new[] { 1, 7 };
+    protected const string MUSICVOLUME_JSON_PATH = "UserSettingsData.MusicVolume";
+    protected const int MUSICVOLUME_NEW_AMOUNT = 100;
     protected static readonly int[] UNITS_INDICES = new[] { 2, 48 };
     protected const string UNITS_JSON_PATH = "PlayerStateData.Units";
     protected const int UNITS_NEW_AMOUNT = 29070100;
 
-    public static ReadOnlySpan<string> ReadUserIdentification(string path)
+    #endregion
+
+    #region Assert
+
+    protected static void AssertAllAreEqual(uint expected, params uint[] actual)
     {
-        return File.ReadAllLines(Path.Combine(path, "UserIdentification.txt"));
+        foreach (var value in actual)
+            Assert.AreEqual(expected, value);
     }
 
+    protected static void AssertAllNotZero(params uint[] actual)
+    {
+        foreach (var value in actual)
+            if (value == 0)
+                throw new AssertFailedException();
+    }
+
+    protected static void AssertAllNotZero(params uint[][] actual)
+    {
+        foreach (var value in actual)
+            if (value.Any(i => i == 0))
+                throw new AssertFailedException();
+    }
+
+    protected static void AssertAllZero(params uint[] actual)
+    {
+        foreach (var value in actual)
+            if (value != 0)
+                throw new AssertFailedException();
+    }
+
+    protected static void AssertAllZero(params uint[][] actual)
+    {
+        foreach (var value in actual)
+            if (value.Any(i => i != 0))
+                throw new AssertFailedException();
+    }
+
+    #endregion
+
+    #region Helper
+
     /// <see href="https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-copy-directories#example"/>
-    public static void Copy(string source, string destination)
+    private static void Copy(string source, string destination)
     {
         var sourceDirectory = new DirectoryInfo(source);
 
@@ -37,6 +82,22 @@ public class CommonTestInitializeCleanup
         foreach (var directory in cacheDirectories)
             Copy(directory.FullName, Path.Combine(destination, directory.Name));
     }
+
+    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
+    protected static uint[] GetUInt32(byte[] bytes)
+    {
+        var result = new uint[bytes.Length / sizeof(uint)];
+        Buffer.BlockCopy(bytes, 0, result, 0, bytes.Length);
+
+        return result;
+    }
+
+    protected static ReadOnlySpan<string> ReadUserIdentification(string path)
+    {
+        return File.ReadAllLines(Path.Combine(path, "UserIdentification.txt"));
+    }
+
+    #endregion
 
     [TestInitialize]
     public void ExtractArchive()

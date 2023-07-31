@@ -53,6 +53,11 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     #region Flags
 
     /// <summary>
+    /// Whether there are account data and not a regular save.
+    /// </summary>
+    public bool IsAccount => MetaIndex == 0; // { get; }
+
+    /// <summary>
     /// Whether this is from a backup file.
     /// </summary>
     public bool IsBackup { get; internal set; }
@@ -458,7 +463,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         SaveTypeEnum = (SaveTypeEnum)(CollectionIndex % 2);
         SlotIndex = CollectionIndex / 2; // integer division
 
-        Identifier = MetaIndex == 0 ? "AccountData" : MetaIndex == 1 ? "Settings" : $"Slot{SlotIndex + 1}{SaveTypeEnum}";
+        Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveTypeEnum}";
     }
 
     #endregion

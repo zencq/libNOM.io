@@ -69,7 +69,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public bool Exists => Location?.Exists == true; // { get; }
 
-    public bool HasAccountData => AccountContainer?.Exists == true && AccountContainer?.IsCompatible == true; // { get; }
+    public virtual bool HasAccountData => AccountContainer?.Exists == true && AccountContainer?.IsCompatible == true; // { get; }
 
     public abstract bool HasModding { get; }
 

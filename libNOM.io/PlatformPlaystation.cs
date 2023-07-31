@@ -100,6 +100,8 @@ public partial class PlatformPlaystation : Platform
 
     public override bool CanDelete { get; } = true;
 
+    public override bool HasAccountData => _usesSaveStreaming && base.HasAccountData; // { get; }
+
     public override bool HasModding { get; } = false;
 
     public override bool IsPersonalComputerPlatform { get; } = false;
