@@ -149,6 +149,15 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
+    #region Getter
+
+    private int GetMetaSize(Container container)
+    {
+        return container.Steam?.MetaSize is int size && size is META_SIZE or META_SIZE_WAYPOINT ? size : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
+    }
+
+    #endregion
+
     // //
 
     #region Constructor
@@ -258,6 +267,7 @@ public partial class PlatformSteam : Platform
         container.Steam = new()
         {
             MetaSize = meta.Length,
+
 #if NETSTANDARD2_0
             MetaTail = value.Skip(META_KNOWN).ToArray()
 #else
@@ -318,12 +328,12 @@ public partial class PlatformSteam : Platform
         // 20. UNKNOWN              (280) // SAVE_FORMAT_3
         //                          (360)
 
-        var buffer = new byte[container.Steam!.MetaSize];
+        var buffer = new byte[GetMetaSize(container)];
 
         // Editing account data is possible since Frontiers and therefore has always the new format.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
         writer.Write(META_HEADER); // 4
-        writer.Write((container.IsAccount || container.IsFrontiers ) ? Globals.Constants.SAVE_FORMAT_3 : Globals.Constants.SAVE_FORMAT_2); // 4
+        writer.Write((container.IsAccount || container.IsFrontiers) ? Globals.Constants.SAVE_FORMAT_3 : Globals.Constants.SAVE_FORMAT_2); // 4
 
         if (container.IsSave && container.IsFrontiers) // SAVE_FORMAT_3
         {
@@ -374,7 +384,7 @@ public partial class PlatformSteam : Platform
     {
         uint current = 0;
         uint hash = 0;
-        int iterations = container.Steam!.MetaSize == META_SIZE ? 8 : 6;
+        int iterations = GetMetaSize(container) == META_SIZE ? 8 : 6;
         uint[] key = GetKey(container);
         uint[] value = meta.GetUInt32();
 

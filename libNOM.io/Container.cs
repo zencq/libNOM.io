@@ -25,7 +25,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     private DateTimeOffset? _lastWriteTime;
     private string _saveName = string.Empty;
     private string _saveSummary = string.Empty;
-    private long _totalPlayTime;
+    private uint _totalPlayTime;
     private int _version = -1;
 
     #endregion
@@ -80,7 +80,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether it is older than the lowest supported version.
     /// </summary>
-    public bool IsOld => VersionEnum < Globals.Constants.LOWEST_SUPPORTED_VERSION; // { get; }
+    public bool IsOld => Exists && IsSave && VersionEnum < Globals.Constants.LOWEST_SUPPORTED_VERSION; // { get; }
 
     /// <summary>
     /// Whether it is an actual save and not something else like account data.
@@ -240,7 +240,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public SeasonEnum SeasonEnum { get; internal set; } = SeasonEnum.Pioneers;
 
-    public long TotalPlayTime // { get; set; }
+    public uint TotalPlayTime // { get; set; }
     {
         get => _jsonObject is not null ? Globals.Json.GetTotalPlayTime(_jsonObject) : _totalPlayTime;
         set

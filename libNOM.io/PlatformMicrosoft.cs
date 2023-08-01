@@ -23,6 +23,8 @@ internal record class PlatformExtraMicrosoft
 
     internal DateTimeOffset LastWriteTime;
 
+    internal int MetaSize;
+
     internal byte[]? MetaTail;
 
     internal string SyncHex = string.Empty;
@@ -188,6 +190,11 @@ public partial class PlatformMicrosoft : Platform
     private static FileInfo GetBlobFileInfo(PlatformExtraMicrosoft microsoft, Guid guid)
     {
         return new(Path.Combine(microsoft.BlobDirectory.FullName, guid.ToPath()));
+    }
+
+    private int GetMetaSize(Container container)
+    {
+        return container.Microsoft?.MetaSize is int size && size is META_SIZE or META_SIZE_WAYPOINT ? size : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
     }
 
     private string GetTemporaryAccountFile(string fileToWrite)
@@ -617,12 +624,11 @@ public partial class PlatformMicrosoft : Platform
         //                       (280)
 
         // Use default size if tail is not set.
-        var bufferSize = container.Microsoft?.MetaTail is not null ? (META_KNOWN + container.Microsoft!.MetaTail!.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
-        var buffer = new byte[bufferSize];
+        var buffer = new byte[GetMetaSize(container)];
 
         using var writer = new BinaryWriter(new MemoryStream(buffer));
 
-        if (container.MetaIndex == 0)
+        if (container.IsAccount)
         {
             // Always 1.
             writer.Write(1); // 4
@@ -636,10 +642,10 @@ public partial class PlatformMicrosoft : Platform
         {
             writer.Write(container.BaseVersion); // 4
 
-            writer.Write((ushort)(container.GameModeEnum ?? 0)); // 2
+            writer.Write((ushort)((container.GameModeEnum ?? 0) == 0 ? PresetGameModeEnum.Normal : container.GameModeEnum!)); // 2
             writer.Write((ushort)(container.SeasonEnum)); // 2
 
-            writer.Write(container.TotalPlayTime); // 4
+            writer.Write((long)(container.TotalPlayTime)); // 8
 
             writer.Write(decompressedSize); // 4
             writer.Write(container.Microsoft?.MetaTail ?? Array.Empty<byte>()); // 4 or 260
@@ -938,6 +944,7 @@ public partial class PlatformMicrosoft : Platform
             BlobDirectoryGuid = Guid.NewGuid(),
             Extension = 0,
             LastWriteTime = source.Microsoft!.LastWriteTime,
+            MetaSize = source.Microsoft!.MetaSize,
             MetaTail = source.Microsoft!.MetaTail,
             State = MicrosoftBlobSyncStateEnum.Created,
         };

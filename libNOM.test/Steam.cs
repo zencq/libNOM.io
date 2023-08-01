@@ -100,8 +100,8 @@ public class SteamTest : CommonTestInitializeCleanup
                 AssertAllNotZero(metaA.Skip(6).Take(8).ToArray(), metaB.Skip(6).Take(8).ToArray());
                 AssertAllZero(metaA.Skip(14).ToArray(), metaB.Skip(14).ToArray());
 #else
-                AssertAllNotZero(metaA[2..5], metaB[2..5]);
-                AssertAllNotZero(metaA[6..13], metaB[6..13]);
+                AssertAllNotZero(metaA[2..6], metaB[2..6]);
+                AssertAllNotZero(metaA[6..14], metaB[6..14]);
                 AssertAllZero(metaA[14..], metaB[14..]);
 #endif
             }
@@ -116,7 +116,7 @@ public class SteamTest : CommonTestInitializeCleanup
 #else
                 AssertAllZero(metaA[2..14], metaB[2..14]);
                 AssertAllNotZero(metaA[14], metaB[14]);
-                AssertAllZero(metaA[15..16], metaB[15..16]);
+                AssertAllZero(metaA[15..17], metaB[15..17]);
 #endif
             }
             else
@@ -133,8 +133,8 @@ public class SteamTest : CommonTestInitializeCleanup
                 AssertAllNotZero(metaA.Skip(6).Take(8).ToArray(), metaB.Skip(6).Take(8).ToArray());
                 AssertAllZero(metaA.Skip(14).ToArray(), metaB.Skip(14).ToArray());
 #else
-                AssertAllNotZero(metaA[2..5], metaB[2..5]);
-                AssertAllNotZero(metaA[6..13], metaB[6..13]);
+                AssertAllNotZero(metaA[2..6], metaB[2..6]);
+                AssertAllNotZero(metaA[6..14], metaB[6..14]);
                 AssertAllZero(metaA[14..], metaB[14..]);
 #endif
             }
@@ -147,7 +147,7 @@ public class SteamTest : CommonTestInitializeCleanup
 #else
                 AssertAllZero(metaA[2..14], metaB[2..14]);
                 AssertAllNotZero(metaA[14], metaB[14]);
-                AssertAllZero(metaA[15..16], metaB[15..16]);
+                AssertAllZero(metaA[15..17], metaB[15..17]);
 #endif
             }
         }
@@ -505,7 +505,7 @@ public class SteamTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T13_Write_Default_0x7D2_Account_Frontiers()
+    public void T13_Write_Default_0x7D2_Frontiers_Account()
     {
         var now = DateTimeOffset.UtcNow;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -556,7 +556,7 @@ public class SteamTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T14_Write_Default_0x7D2_Account_Waypoint()
+    public void T14_Write_Default_0x7D2_Waypoint_Account()
     {
         var now = DateTimeOffset.UtcNow;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");

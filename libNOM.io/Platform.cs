@@ -541,7 +541,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             }
         }
 
-        container.IncompatibilityTag = Globals.Constants.INCOMPATIBILITY_006;
+        container.IncompatibilityTag ??= Globals.Constants.INCOMPATIBILITY_006;
         return Array.Empty<byte>();
     }
 
@@ -560,6 +560,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected uint[] LoadMeta(Container container, byte[] read)
     {
+        if (read.IsNullOrEmpty())
+            return Array.Empty<uint>();
+
         // 2. Decrypt
         // 3. Decompress
         return DecompressMeta(container, DecryptMeta(container, read));

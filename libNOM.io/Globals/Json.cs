@@ -43,9 +43,9 @@ internal static partial class Json
     private static partial Regex RegexVersionPlaintext();
 #endif
 
-    private static bool GetRegex(Regex regex, string input, out long result)
+    private static bool GetRegex(Regex regex, string input, out uint result)
     {
-        result = -1;
+        result = 0;
         Match match;
         try
         {
@@ -58,7 +58,7 @@ internal static partial class Json
 
         if (match.Success)
         {
-            result = System.Convert.ToInt64(match.Groups[1].Value);
+            result = System.Convert.ToUInt32(match.Groups[1].Value);
         }
         return match.Success;
     }
@@ -587,22 +587,22 @@ internal static partial class Json
     /// </summary>
     /// <param name="json"></param>
     /// <returns></returns>
-    public static long GetTotalPlayTime(string json)
+    public static uint GetTotalPlayTime(string json)
     {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexTotalPlayTimeObfuscated, json, out long resultObfuscated))
+        if (GetRegex(RegexTotalPlayTimeObfuscated, json, out uint resultObfuscated))
             return resultObfuscated;
 
-        if (GetRegex(RegexTotalPlayTimePlaintext, json, out long resultPlaintext))
+        if (GetRegex(RegexTotalPlayTimePlaintext, json, out uint resultPlaintext))
             return resultPlaintext;
 #else
-        if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out long resultObfuscated))
+        if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out uint resultObfuscated))
             return resultObfuscated;
 
-        if (GetRegex(RegexTotalPlayTimePlaintext(), json, out long resultPlaintext))
+        if (GetRegex(RegexTotalPlayTimePlaintext(), json, out uint resultPlaintext))
             return resultPlaintext;
 #endif
-        return -1;
+        return 0;
     }
 
     /// <summary>
@@ -610,9 +610,9 @@ internal static partial class Json
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
-    internal static long GetTotalPlayTime(JObject jsonObject)
+    internal static uint GetTotalPlayTime(JObject jsonObject)
     {
-        return jsonObject.GetValue<long?>("6f=.Lg8", "PlayerStateData.TotalPlayTime") ?? 0;
+        return jsonObject.GetValue<uint?>("6f=.Lg8", "PlayerStateData.TotalPlayTime") ?? 0;
     }
 
     #endregion
@@ -627,16 +627,16 @@ internal static partial class Json
     internal static int GetVersion(string json)
     {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexVersionObfuscated, json, out long resultObfuscated))
+        if (GetRegex(RegexVersionObfuscated, json, out uint resultObfuscated))
             return (int)(resultObfuscated);
 
-        if (GetRegex(RegexVersionPlaintext, json, out long resultPlaintext))
+        if (GetRegex(RegexVersionPlaintext, json, out uint resultPlaintext))
             return (int)(resultPlaintext);
 #else
-        if (GetRegex(RegexVersionObfuscated(), json, out long resultObfuscated))
+        if (GetRegex(RegexVersionObfuscated(), json, out uint resultObfuscated))
             return (int)(resultObfuscated);
 
-        if (GetRegex(RegexVersionPlaintext(), json, out long resultPlaintext))
+        if (GetRegex(RegexVersionPlaintext(), json, out uint resultPlaintext))
             return (int)(resultPlaintext);
 #endif
         return -1;
