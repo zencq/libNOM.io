@@ -9,22 +9,6 @@ using System.Text.RegularExpressions;
 namespace libNOM.io;
 
 
-#region Extra
-
-internal record class PlatformExtraSteam
-{
-    internal int MetaSize;
-
-    internal uint[] MetaTail = null!;
-}
-
-public partial class Container
-{
-    internal PlatformExtraSteam? Steam { get; set; }
-}
-
-#endregion
-
 public partial class PlatformSteam : Platform
 {
     #region Constant
@@ -32,9 +16,9 @@ public partial class PlatformSteam : Platform
     #region Platform Specific
 
     protected const uint META_HEADER = 0xEEEEEEBE; // 4008636094
-    protected const int META_KNOWN = 0x14; // 20
-    protected const int META_SIZE = 0x68; // 104
-    protected const int META_SIZE_WAYPOINT = 0x168; // 360
+    protected const int META_LENGTH_KNOWN = 0x50; // 80 byte // usage: 1 uint, 2 byte
+    protected override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104 byte
+    protected override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360 byte
 
     #endregion
 
@@ -114,7 +98,6 @@ public partial class PlatformSteam : Platform
         get
         {
             // On SteamDeck (with Proton) the Windows architecture is also used.
-            // TODO: Verify
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 return "Win|Final";
 
@@ -132,7 +115,6 @@ public partial class PlatformSteam : Platform
         get
         {
             // On SteamDeck (with Proton) the Windows executable is also used.
-            // TODO: Verify
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 return @"steamapps\common\No Man's Sky\Binaries\NMS.exe";
 
@@ -146,15 +128,6 @@ public partial class PlatformSteam : Platform
     protected override string PlatformToken { get; } = "ST";
 
     #endregion
-
-    #endregion
-
-    #region Getter
-
-    private int GetMetaSize(Container container)
-    {
-        return container.Steam?.MetaSize is int size && size is META_SIZE or META_SIZE_WAYPOINT ? size : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
-    }
 
     #endregion
 
@@ -191,32 +164,25 @@ public partial class PlatformSteam : Platform
 
     #region Generate
 
-    protected override Container CreateContainer(int metaIndex, object? extra)
+    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
-        if (metaIndex == 0)
-        {
-            var dataFile = new FileInfo(Path.Combine(Location.FullName, "accountdata.hg"));
-            return new Container(metaIndex)
-            {
-                DataFile = dataFile,
-                LastWriteTime = dataFile.LastWriteTime,
-                MetaFile = new FileInfo(Path.Combine(Location.FullName, "mf_accountdata.hg")),
-                /// Steam = ... // will be set in <see cref="DecryptMeta"/>
-            };
-        }
-        else
-        {
-            var steamIndex = metaIndex == Globals.Constants.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
+        var steamIndex = metaIndex == Constants.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
+        var name = metaIndex == 0 ? "accountdata.hg" : $"save{steamIndex}.hg";
+        var data = new FileInfo(Path.Combine(Location.FullName, name));
+        var manifest = new FileInfo(Path.Combine(Location.FullName, $"mf_{name}"));
 
-            var dataFile = new FileInfo(Path.Combine(Location.FullName, $"save{steamIndex}.hg"));
-            return new Container(metaIndex)
+        return new Container(metaIndex)
+        {
+            DataFile = data,
+            Extra = new()
             {
-                DataFile = dataFile,
-                LastWriteTime = dataFile.LastWriteTime,
-                MetaFile = new FileInfo(Path.Combine(Location.FullName, $"mf_save{steamIndex}.hg")),
-                /// Steam = ... // will be set in <see cref="DecryptMeta"/>
-            };
-        }
+                /// Additional values will be set in <see cref="DecryptMeta"/>.
+                LastWriteTime = data.LastWriteTime,
+                Size = manifest.Exists ? (uint)(manifest.Length) : 0,
+                SizeDisk = data.Exists ? (uint)(data.Length) : 0,
+            },
+            MetaFile = manifest,
+        };
     }
 
     #endregion
@@ -226,9 +192,9 @@ public partial class PlatformSteam : Platform
     protected override uint[] DecryptMeta(Container container, byte[] meta)
     {
         uint hash = 0;
-        int iterations = meta.Length == META_SIZE ? 8 : 6;
+        int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
         uint[] key = GetKey(container);
-        uint[] value = meta.GetUInt32();
+        uint[] value = base.DecryptMeta(container, meta);
 
         int lastIndex = value.Length - 1;
 
@@ -264,16 +230,26 @@ public partial class PlatformSteam : Platform
             hash += 0x61C88647;
         }
 
-        container.Steam = new()
+        // Do not write wrong data.
+        if (value[0] == META_HEADER)
         {
-            MetaSize = meta.Length,
-
+            var mode = BitConverter.GetBytes(value[18]);
+            container.Extra = container.Extra with
+            {
 #if NETSTANDARD2_0
-            MetaTail = value.Skip(META_KNOWN).ToArray()
+                Bytes = value.Skip(META_LENGTH_KNOWN / sizeof(uint)).GetBytes(),
 #else
-            MetaTail = value[META_KNOWN..],
+                Bytes = value[(META_LENGTH_KNOWN / sizeof(uint))..].GetBytes(),
 #endif
-        };
+
+                SizeDecompressed = value[14],
+                BaseVersion = (int)(value[17]),
+                GameMode = BitConverter.ToInt16(mode, 0),
+                Season = BitConverter.ToInt16(mode, 2),
+                TotalPlayTime = value[19],
+            };
+            container.SaveVersion = Calculate.CalculateVersion(container.Extra.BaseVersion, container.Extra.GameMode, container.Extra.Season);
+        }
 
         return value;
     }
@@ -309,7 +285,7 @@ public partial class PlatformSteam : Platform
         base.Write(container, writeTime);
     }
 
-    protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
+    protected override byte[] CreateMeta(Container container, byte[] data)
     {
         //  0. META HEADER          (  4)
         //  1. META FORMAT          (  4)
@@ -340,15 +316,15 @@ public partial class PlatformSteam : Platform
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current);
 
-            writer.Write(decompressedSize); // 4
+            writer.Write(container.Extra.SizeDecompressed); // 4
 
             // COMPRESSED SIZE and PROFILE HASH not used.
             writer.Seek(0x8, SeekOrigin.Current);
 
-            writer.Write(container.BaseVersion); // 4
-            writer.Write((ushort)((container.GameModeEnum ?? 0) == 0 ? PresetGameModeEnum.Normal : container.GameModeEnum!)); // 2
-            writer.Write((ushort)(container.SeasonEnum)); // 2
-            writer.Write(container.TotalPlayTime); // 4
+            writer.Write(container.Extra.BaseVersion); // 4
+            writer.Write(container.IsWaypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
+            writer.Write(container.Extra.Season); // 2
+            writer.Write(container.Extra.TotalPlayTime); // 4
         }
         else // SAVE_FORMAT_2
         {
@@ -369,13 +345,8 @@ public partial class PlatformSteam : Platform
         }
 
         // Seek to position of last known byte and append the tail.
-        if (container.Steam!.MetaTail is not null)
-        {
-            writer.Seek(META_KNOWN * sizeof(uint), SeekOrigin.Begin);
-
-            foreach (var value in container.Steam!.MetaTail) // 24 or 280
-                writer.Write(value);
-        }
+        writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+        writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 24 or 280
 
         return EncryptMeta(container, data, CompressMeta(container, data, buffer));
     }
@@ -384,7 +355,7 @@ public partial class PlatformSteam : Platform
     {
         uint current = 0;
         uint hash = 0;
-        int iterations = GetMetaSize(container) == META_SIZE ? 8 : 6;
+        int iterations = GetMetaSize(container) == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
         uint[] key = GetKey(container);
         uint[] value = meta.GetUInt32();
 
@@ -422,31 +393,21 @@ public partial class PlatformSteam : Platform
 
     // // File Operation
 
-    #region Copy
-
-    protected override bool GuardPlatformExtra(Container source)
-    {
-        return source.Steam is null;
-    }
-
-    protected override void CopyPlatformExtra(Container destination, Container source)
-    {
-        destination.Steam = new PlatformExtraSteam
-        {
-            MetaSize = source.Steam!.MetaSize,
-            MetaTail = source.Steam!.MetaTail,
-        };
-    }
-
-    #endregion
-
     #region Transfer
 
     protected override void CreatePlatformExtra(Container destination, Container source)
     {
-        destination.Steam = new PlatformExtraSteam
+        destination.Extra = new()
         {
-            MetaTail = new uint[(source.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE) - META_KNOWN],
+            Bytes = new byte[(source.IsWaypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
+            Size = source.Extra.Size,
+            SizeDecompressed = source.Extra.SizeDecompressed,
+            SizeDisk = source.DataFile?.Exists == true ? (uint)(source.DataFile!.Length) : 0,
+            LastWriteTime = source.Extra.LastWriteTime ?? DateTimeOffset.Now,
+            BaseVersion = source.Extra.BaseVersion,
+            GameMode = source.Extra.GameMode,
+            Season = source.Extra.Season,
+            TotalPlayTime = source.Extra.TotalPlayTime,
         };
     }
 

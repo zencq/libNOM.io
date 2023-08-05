@@ -20,13 +20,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     #region Field
 
     private bool? _exists;
-    private PresetGameModeEnum? _gameMode;
     private JObject? _jsonObject;
-    private DateTimeOffset? _lastWriteTime;
-    private string _saveName = string.Empty;
-    private string _saveSummary = string.Empty;
-    private uint _totalPlayTime;
-    private int _version = -1;
+    private int _saveVersion;
 
     #endregion
 
@@ -36,6 +31,8 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     /// List of related backups.
     /// </summary>
     public ObservableCollection<Container> BackupCollection { get; } = new();
+
+    internal PlatformExtra Extra { get; set; }
 
     public string Identifier { get; }
 
@@ -80,12 +77,12 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether it is older than the lowest supported version.
     /// </summary>
-    public bool IsOld => Exists && IsSave && VersionEnum < Globals.Constants.LOWEST_SUPPORTED_VERSION; // { get; }
+    public bool IsOld => Exists && IsSave && GameVersionEnum < Constants.LOWEST_SUPPORTED_VERSION; // { get; }
 
     /// <summary>
     /// Whether it is an actual save and not something else like account data.
     /// </summary>
-    public bool IsSave => MetaIndex >= Globals.Constants.OFFSET_INDEX; // { get; }
+    public bool IsSave => MetaIndex >= Constants.OFFSET_INDEX; // { get; }
 
     /// <summary>
     /// Whether it is identical to the data on the drive.
@@ -96,7 +93,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region FileInfo
 
-    public FileInfo? DataFile { get; set; }
+    public FileInfo? DataFile { get; internal set; }
 
     public bool Exists // { get; set; }
     {
@@ -104,19 +101,13 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         internal set => _exists = value;
     }
 
-    public DateTimeOffset LastWriteTime // { get; set; }
+    public DateTimeOffset? LastWriteTime // { get; set; }
     {
-        get => _lastWriteTime ?? (Exists ? DataFile?.LastWriteTime : null) ?? DateTimeOffset.MinValue;
-        set
-        {
-            _lastWriteTime = value;
-
-            // Below are calls to set the value in platform extra. Each one is defined in the file for the named platform.
-            SetLastWriteTimeMicrosoft(value);
-        }
+        get => Extra.LastWriteTime ?? (Exists ? DataFile?.LastWriteTime : null);
+        set => Extra.LastWriteTime = value;
     }
 
-    public FileInfo? MetaFile { get; set; }
+    public FileInfo? MetaFile { get; internal set; }
 
     #endregion
 
@@ -142,129 +133,147 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     // public //
 
-    public int BaseVersion { get; internal set; }
-
-    public PresetGameModeEnum? GameModeEnum // { get; private set; }
+    public int BaseVersion
     {
-        get => _jsonObject is not null ? Globals.Json.GetGameModeEnum(this, _jsonObject) : _gameMode;
+        get => Extra.BaseVersion;
+        internal set => Extra.BaseVersion = value;
+    }
+
+    public PresetGameModeEnum GameModeEnum // { get; internal set; }
+    {
+        get => Json.GetGameModeEnum(this, _jsonObject) ?? (PresetGameModeEnum)(Extra.GameMode);
         internal set
         {
-            if (_jsonObject is not null)
+            if (BaseVersion.IsBaseVersion())
             {
-                Version = Globals.Calculate.CalculateVersion(BaseVersion, value, SeasonEnum);
+                SaveVersion = Calculate.CalculateVersion(BaseVersion, value, SeasonEnum);
             }
-            _gameMode = value;
+            Extra.GameMode = (short)(value);
         }
     }
 
-    public bool IsBeyondWithVehicleCam => IsVersion(VersionEnum.BeyondWithVehicleCam); // { get; }
+    public GameVersionEnum GameVersionEnum { get; internal set; } = GameVersionEnum.Unknown;
 
-    public bool IsSynthesis => IsVersion(VersionEnum.Synthesis); // { get; }
+    public bool IsBeyondWithVehicleCam => IsVersion(GameVersionEnum.BeyondWithVehicleCam); // { get; }
 
-    public bool IsSynthesisWithJetpack => IsVersion(VersionEnum.SynthesisWithJetpack); // { get; }
+    public bool IsSynthesis => IsVersion(GameVersionEnum.Synthesis); // { get; }
 
-    public bool IsLivingShip => IsVersion(VersionEnum.LivingShip); // { get; }
+    public bool IsSynthesisWithJetpack => IsVersion(GameVersionEnum.SynthesisWithJetpack); // { get; }
 
-    public bool IsExoMech => IsVersion(VersionEnum.ExoMech); // { get; }
+    public bool IsLivingShip => IsVersion(GameVersionEnum.LivingShip); // { get; }
 
-    public bool IsCrossplay => IsVersion(VersionEnum.Crossplay); // { get; }
+    public bool IsExoMech => IsVersion(GameVersionEnum.ExoMech); // { get; }
 
-    public bool IsDesolation => IsVersion(VersionEnum.Desolation); // { get; }
+    public bool IsCrossplay => IsVersion(GameVersionEnum.Crossplay); // { get; }
 
-    public bool IsOrigins => IsVersion(VersionEnum.Origins); // { get; }
+    public bool IsDesolation => IsVersion(GameVersionEnum.Desolation); // { get; }
 
-    public bool IsNextGeneration => IsVersion(VersionEnum.NextGeneration); // { get; }
+    public bool IsOrigins => IsVersion(GameVersionEnum.Origins); // { get; }
 
-    public bool IsCompanions => IsVersion(VersionEnum.Companions); // { get; }
+    public bool IsNextGeneration => IsVersion(GameVersionEnum.NextGeneration); // { get; }
 
-    public bool IsExpeditions => IsVersion(VersionEnum.Expeditions); // { get; }
+    public bool IsCompanions => IsVersion(GameVersionEnum.Companions); // { get; }
 
-    public bool IsBeachhead => IsVersion(VersionEnum.Beachhead); // { get; }
+    public bool IsExpeditions => IsVersion(GameVersionEnum.Expeditions); // { get; }
 
-    public bool IsPrisms => IsVersion(VersionEnum.Prisms); // { get; }
+    public bool IsBeachhead => IsVersion(GameVersionEnum.Beachhead); // { get; }
 
-    public bool IsPrismsWithBytebeatAuthor => IsVersion(VersionEnum.PrismsWithBytebeatAuthor); // { get; }
+    public bool IsPrisms => IsVersion(GameVersionEnum.Prisms); // { get; }
 
-    public bool IsFrontiers => IsVersion(VersionEnum.Frontiers); // { get; }
+    public bool IsPrismsWithBytebeatAuthor => IsVersion(GameVersionEnum.PrismsWithBytebeatAuthor); // { get; }
 
-    public bool IsEmergence => IsVersion(VersionEnum.Emergence); // { get; }
+    public bool IsFrontiers => IsVersion(GameVersionEnum.Frontiers); // { get; }
 
-    public bool IsSentinel => IsVersion(VersionEnum.Sentinel); // { get; }
+    public bool IsEmergence => IsVersion(GameVersionEnum.Emergence); // { get; }
 
-    public bool IsSentinelWithWeaponResource => IsVersion(VersionEnum.SentinelWithWeaponResource); // { get; }
+    public bool IsSentinel => IsVersion(GameVersionEnum.Sentinel); // { get; }
 
-    public bool IsSentinelWithVehicleAI => IsVersion(VersionEnum.SentinelWithVehicleAI); // { get; }
+    public bool IsSentinelWithWeaponResource => IsVersion(GameVersionEnum.SentinelWithWeaponResource); // { get; }
 
-    public bool IsOutlaws => IsVersion(VersionEnum.Outlaws); // { get; }
+    public bool IsSentinelWithVehicleAI => IsVersion(GameVersionEnum.SentinelWithVehicleAI); // { get; }
 
-    public bool IsLeviathan => IsVersion(VersionEnum.Leviathan); // { get; }
+    public bool IsOutlaws => IsVersion(GameVersionEnum.Outlaws); // { get; }
 
-    public bool IsEndurance => IsVersion(VersionEnum.Endurance); // { get; }
+    public bool IsLeviathan => IsVersion(GameVersionEnum.Leviathan); // { get; }
 
-    public bool IsWaypoint => IsVersion(VersionEnum.Waypoint); // { get; }
+    public bool IsEndurance => IsVersion(GameVersionEnum.Endurance); // { get; }
 
-    public bool IsWaypointWithAgileStat => IsVersion(VersionEnum.WaypointWithAgileStat); // { get; }
+    public bool IsWaypoint => IsVersion(GameVersionEnum.Waypoint); // { get; }
 
-    public bool IsWaypointWithSuperchargedSlots => IsVersion(VersionEnum.WaypointWithSuperchargedSlots); // { get; }
+    public bool IsWaypointWithAgileStat => IsVersion(GameVersionEnum.WaypointWithAgileStat); // { get; }
 
-    public bool IsFractal => IsVersion(VersionEnum.Fractal); // { get; }
+    public bool IsWaypointWithSuperchargedSlots => IsVersion(GameVersionEnum.WaypointWithSuperchargedSlots); // { get; }
 
-    public bool IsInterceptor => IsVersion(VersionEnum.Interceptor); // { get; }
+    public bool IsFractal => IsVersion(GameVersionEnum.Fractal); // { get; }
 
-    public bool IsSingularity => IsVersion(VersionEnum.Singularity); // { get; }
+    public bool IsInterceptor => IsVersion(GameVersionEnum.Interceptor); // { get; }
+
+    public bool IsSingularity => IsVersion(GameVersionEnum.Singularity); // { get; }
 
     public string SaveName // { get; set; }
     {
-        get => _jsonObject is not null ? Globals.Json.GetSaveName(_jsonObject) : _saveName;
+        get => _jsonObject is not null ? Globals.Json.GetSaveName(_jsonObject) : Extra.SaveName;
         set
         {
-            /// Workaround for <see cref="LoadingStrategyEnum.Hollow"/> and ultimately <see cref="Platform.ProcessContainerData(Container, string)"/>.
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
-            _saveName = value;
+
+            Extra.SaveName = value;
         }
     }
 
     public string SaveSummary // { get; set; }
     {
-        get => _jsonObject is not null ? Globals.Json.GetSaveSummary(_jsonObject) : _saveSummary;
+        get => _jsonObject is not null ? Json.GetSaveSummary(_jsonObject) : Extra.SaveSummary;
         set
         {
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
-            _saveSummary = value;
+
+            Extra.SaveSummary = value;
         }
     }
 
     public SaveTypeEnum SaveTypeEnum { get; }
 
-    public SeasonEnum SeasonEnum { get; internal set; } = SeasonEnum.Pioneers;
+    public SeasonEnum SeasonEnum // { get; internal set; }
+    {
+        get => (SeasonEnum)(Extra.Season);
+        internal set
+        {
+            if (BaseVersion.IsBaseVersion() && GameModeEnum == PresetGameModeEnum.Seasonal)
+            {
+                SaveVersion = Calculate.CalculateVersion(BaseVersion, GameModeEnum, value);
+            }
+            Extra.Season = (short)(value);
+        }
+    }
 
     public uint TotalPlayTime // { get; set; }
     {
-        get => _jsonObject is not null ? Globals.Json.GetTotalPlayTime(_jsonObject) : _totalPlayTime;
+        get => _jsonObject is not null ? Json.GetTotalPlayTime(_jsonObject) : Extra.TotalPlayTime;
         set
         {
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.Lg8", "PlayerStateData.TotalPlayTime");
-            _totalPlayTime = value;
+
+            Extra.TotalPlayTime = value;
         }
     }
-
-    public VersionEnum VersionEnum { get; internal set; } = VersionEnum.Unknown;
 
     // internal //
 
     //internal bool UsesMapping => _jsonObject?.ContainsKey(nameof(Version)) == true; // { get; }
 
-    internal int Version // { get; set; }
+    internal int SaveVersion // { get; set; }
     {
-        get => _jsonObject is not null ? Globals.Json.GetVersion(_jsonObject) : _version;
+        get => _jsonObject is not null ? Globals.Json.GetVersion(_jsonObject) : _saveVersion;
         set
         {
             if (_jsonObject is not null)
                 SetJsonValue(value, "F2P", "Version");
-            _version = value;
+
+            _saveVersion = value;
         }
     }
 
@@ -346,11 +355,6 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
                 ThrowHelper.ThrowInvalidOperationException($"Index {indices[i]} at position {i} is not available ({jPath})");
         }
         return jToken;
-    }
-
-    private bool IsVersion(VersionEnum versionEnum)
-    {
-        return VersionEnum >= versionEnum;
     }
 
     #endregion
@@ -455,7 +459,9 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region Constructor
 
-    public Container(int metaIndex)
+    public Container(int metaIndex) : this(metaIndex, new()) { }
+
+    internal Container(int metaIndex, PlatformExtra extra)
     {
         CollectionIndex = metaIndex - Globals.Constants.OFFSET_INDEX;
         MetaIndex = metaIndex;
@@ -463,6 +469,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         SaveTypeEnum = (SaveTypeEnum)(CollectionIndex % 2);
         SlotIndex = CollectionIndex / 2; // integer division
 
+        Extra = extra;
         Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveTypeEnum}";
     }
 
@@ -549,6 +556,16 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="versionEnum"></param>
+    /// <returns></returns>
+    public bool IsVersion(GameVersionEnum versionEnum)
+    {
+        return GameVersionEnum >= versionEnum;
+    }
+
+    /// <summary>
     /// Refreshes file info for data and meta.
     /// </summary>
     internal void RefreshFileInfo()
@@ -556,8 +573,10 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
         DataFile?.Refresh();
         MetaFile?.Refresh();
 
-        // Below are calls to refresh platform extra. Each one is defined in the file for the named platform.
-        RefreshFileInfoMicrosoft();
+        Extra.MicrosoftBlobContainerFile?.Refresh();
+        Extra.MicrosoftBlobDirectory?.Refresh();
+        Extra.MicrosoftBlobDataFile?.Refresh();
+        Extra.MicrosoftBlobMetaFile?.Refresh();
     }
 
     /// <summary>
@@ -566,11 +585,11 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     internal void Reset()
     {
         _exists = null;
-        _gameMode = null;
+        //_gameMode = null;
         _jsonObject = null;
-        _lastWriteTime = null;
-        _totalPlayTime = 0;
-        _version = -1;
+        //_lastWriteTime = null;
+        //_totalPlayTime = 0;
+        _saveVersion = 0;
 
         BackupCollection.Clear();
         UserIdentification = null;
@@ -585,7 +604,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
         BaseVersion = 0;
         SeasonEnum = SeasonEnum.None;
-        VersionEnum = VersionEnum.Unknown;
+        GameVersionEnum = GameVersionEnum.Unknown;
     }
 
     /// <summary>

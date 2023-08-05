@@ -6,11 +6,12 @@ public static class Constants
 {
     internal const int CACHE_EXPIRATION = 250; // milliseconds
     internal const string FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmssfff";
-    internal const VersionEnum LOWEST_SUPPORTED_VERSION = VersionEnum.BeyondWithVehicleCam;
+    internal const GameVersionEnum LOWEST_SUPPORTED_VERSION = GameVersionEnum.BeyondWithVehicleCam;
 
     internal const int GAMEMODE_INT_UNSPECIFIED = (int)(PresetGameModeEnum.Unspecified); // 0
     internal const int GAMEMODE_INT_NORMAL = (int)(PresetGameModeEnum.Normal); // 1
     internal const int GAMEMODE_INT_PERMADEATH = (int)(PresetGameModeEnum.Permadeath); // 5
+    internal const int GAMEMODE_INT_SEASONAL = (int)(PresetGameModeEnum.Seasonal); // 6
 
     internal const string HEADER_PLAINTEXT = "{\"Version\":";
     internal const string HEADER_PLAINTEXT_OBFUSCATED = "{\"F2P\":";

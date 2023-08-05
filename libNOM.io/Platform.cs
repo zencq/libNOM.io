@@ -22,10 +22,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 {
     #region Constant
 
-    internal virtual int COUNT_SAVES_PER_SLOT => 2; // { get; }
     internal virtual int COUNT_SLOTS => 15; // { get; }
-
+    internal virtual int COUNT_SAVES_PER_SLOT => 2; // { get; }
     internal int COUNT_SAVES_TOTAL => COUNT_SLOTS * COUNT_SAVES_PER_SLOT; // { get; }
+
+    protected abstract int META_LENGTH_TOTAL_VANILLA { get; }
+    protected abstract int META_LENGTH_TOTAL_WAYPOINT { get; }
 
     #endregion
 
@@ -41,7 +43,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Container
 
-    protected Container? AccountContainer { get; set; }
+    protected Container AccountContainer { get; set; }
 
     protected List<Container> SaveContainerCollection { get; } = new();
 
@@ -69,7 +71,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public bool Exists => Location?.Exists == true; // { get; }
 
-    public virtual bool HasAccountData => AccountContainer?.Exists == true && AccountContainer?.IsCompatible == true; // { get; }
+    public virtual bool HasAccountData => AccountContainer.Exists && AccountContainer.IsCompatible; // { get; }
 
     public abstract bool HasModding { get; }
 
@@ -181,6 +183,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     #endregion
 
     public int GetMaximumSlots() => COUNT_SLOTS;
+
+    protected int GetMetaSize(Container container)
+    {
+        var size = (int)(container.Extra.Size);
+        return (size == META_LENGTH_TOTAL_WAYPOINT || size == META_LENGTH_TOTAL_VANILLA) ? size : (container.IsWaypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA);
+    }
 
     #endregion
 
@@ -382,7 +390,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             {
                 if (metaIndex == 0)
                 {
-                    AccountContainer = CreateContainer(0);
+                    AccountContainer = CreateContainer(metaIndex);
                     BuildContainerFull(AccountContainer);
                 }
                 else if (metaIndex > 1) // skip index 1
@@ -406,8 +414,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         return bag;
     }
 
-    /// <inheritdoc cref="CreateContainer(int, object?)"/>
-    protected Container CreateContainer(int metaIndex)
+    /// <inheritdoc cref="CreateContainer(int, PlatformExtra?)"/>
+    internal Container CreateContainer(int metaIndex)
     {
         return CreateContainer(metaIndex, null);
     }
@@ -418,7 +426,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="metaIndex"></param>
     /// <param name="extra">An optional object with additional data if necessary.</param>
     /// <returns></returns>
-    protected abstract Container CreateContainer(int metaIndex, object? extra);
+    private protected abstract Container CreateContainer(int metaIndex, PlatformExtra? extra);
 
     /// <summary>
     /// Builds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
@@ -503,7 +511,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     DataFile = new(file),
                     IsBackup = true,
                     LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Globals.Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
-                    VersionEnum = (VersionEnum)(System.Convert.ToInt32(parts[4])),
+                    GameVersionEnum = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
                 });
             }
             catch (FormatException)
@@ -710,16 +718,19 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <inheritdoc cref="ProcessContainerData(Container, JObject)"/>
     private static void ProcessContainerData(Container container, string json)
     {
-        container.SaveName = Globals.Json.GetSaveName(json);
-        container.SaveSummary = Globals.Json.GetSaveSummary(json);
-        container.TotalPlayTime = Globals.Json.GetTotalPlayTime(json);
-        container.Version = Globals.Json.GetVersion(json);
+        // Values relevant for AccountData first.
+        container.SaveVersion = container.SaveVersion == 0 ? Json.GetVersion(json) : container.SaveVersion;
 
-        container.GameModeEnum = Globals.Json.GetGameModeEnum(container, json); // works after Version is set
-        container.SeasonEnum = Globals.Json.GetSeasonEnum(container); // works after Version is set
-
-        container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and GameModeEnum and SeasonEnum are set
-        container.VersionEnum = Globals.Json.GetVersionEnum(container, json); // works after BaseVersion is set
+        container.SaveName = string.IsNullOrEmpty(container.SaveName) ? Json.GetSaveName(json) : container.SaveName;
+        container.SaveSummary = string.IsNullOrEmpty(container.SaveSummary) ? Json.GetSaveSummary(json) : container.SaveSummary;
+        container.TotalPlayTime = container.TotalPlayTime == 0 ? Json.GetTotalPlayTime(json) : container.TotalPlayTime;
+        // Works after Version is set.
+        container.GameModeEnum = container.GameModeEnum == PresetGameModeEnum.Unspecified ? Json.GetGameModeEnum(container, json) ?? PresetGameModeEnum.Unspecified : container.GameModeEnum;
+        container.SeasonEnum = container.SeasonEnum == SeasonEnum.None ? Json.GetSeasonEnum(container) : container.SeasonEnum;
+        // Works after Version and GameModeEnum and SeasonEnum are set.
+        container.BaseVersion = container.BaseVersion == 0 ? Calculate.CalculateBaseVersion(container.SaveVersion, container.GameModeEnum, container.SeasonEnum) : container.BaseVersion;
+        // Works after BaseVersion is set.
+        container.GameVersionEnum = Json.GetGameVersionEnum(container, json);
     }
 
     /// <summary>
@@ -729,21 +740,24 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="jsonObject"></param>
     private void ProcessContainerData(Container container, JObject jsonObject)
     {
-        // No need to do these things for account data.
+        // Values relevant for AccountData first.
+        container.SaveVersion = container.SaveVersion == 0 ? Json.GetVersion(jsonObject) : container.SaveVersion;
+
+        // No need to do these things for AccountData.
         if (container.IsSave)
         {
-            container.SaveName = Globals.Json.GetSaveName(jsonObject);
-            container.SaveSummary = Globals.Json.GetSaveSummary(jsonObject);
-            container.TotalPlayTime = Globals.Json.GetTotalPlayTime(jsonObject);
+            container.SaveName = string.IsNullOrEmpty(container.SaveName) ? Json.GetSaveName(jsonObject) : container.SaveName;
+            container.SaveSummary = string.IsNullOrEmpty(container.SaveSummary) ? Json.GetSaveSummary(jsonObject) : container.SaveSummary;
+            container.TotalPlayTime = container.TotalPlayTime == 0 ? Json.GetTotalPlayTime(jsonObject) : container.TotalPlayTime;
+            // Works after Version is set.
+            container.GameModeEnum = container.GameModeEnum == PresetGameModeEnum.Unspecified ? Json.GetGameModeEnum(container, jsonObject) ?? PresetGameModeEnum.Unspecified : container.GameModeEnum;
+            container.SeasonEnum = container.SeasonEnum == SeasonEnum.None ? Json.GetSeasonEnum(container) : container.SeasonEnum;
+            // Works after Version and GameModeEnum and SeasonEnum are set.
+            container.BaseVersion = container.BaseVersion == 0 ? Calculate.CalculateBaseVersion(container.SaveVersion, container.GameModeEnum, container.SeasonEnum) : container.BaseVersion;
+            // Works after BaseVersion is set.
+            container.GameVersionEnum = Json.GetGameVersionEnum(container, jsonObject);
+
             container.UserIdentification = GetUserIdentification(jsonObject);
-            container.Version = Globals.Json.GetVersion(jsonObject);
-
-            container.GameModeEnum = Globals.Json.GetGameModeEnum(container, jsonObject); // works after Version is set
-            container.SeasonEnum = Globals.Json.GetSeasonEnum(container); // works after Version is set
-
-            container.BaseVersion = Globals.Calculate.CalculateBaseVersion(container.Version, container.GameModeEnum!.Value, container.SeasonEnum); // works after Version and GameModeEnum and SeasonEnum are set
-            container.VersionEnum = Globals.Json.GetVersionEnum(container, jsonObject); // works after BaseVersion is set
-
             UpdateUserIdentification();
         }
 
@@ -869,15 +883,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         }
 
         // To ensure the timestamp will be the same the next time, the file times are always set to the currently saved one.
+        if (container.LastWriteTime is not null)
+        {
         if (container.DataFile is not null)
         {
-            File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
-            File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime.LocalDateTime);
+                File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
+                File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
         }
         if (container.MetaFile is not null)
         {
-            File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
-            File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime.LocalDateTime);
+                File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
+                File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
+        }
         }
 
         EnableWatcher();
@@ -893,8 +910,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     internal void JustWrite(Container container)
     {
-        var (data, decompressedSize) = CreateData(container);
-        var meta = CreateMeta(container, data, decompressedSize);
+        var data = CreateData(container);
+        var meta = CreateMeta(container, data);
 
         WriteMeta(container, meta);
         WriteData(container, data);
@@ -905,12 +922,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <returns></returns>
-    protected virtual (byte[], int) CreateData(Container container)
+    protected virtual byte[] CreateData(Container container)
     {
         var plain = container.GetJsonObject()!.GetBytes(Settings.UseMapping);
         var encrypted = EncryptData(container, CompressData(container, plain));
 
-        return (encrypted, plain.Length);
+        container.Extra = container.Extra with
+        {
+            SizeDecompressed = (uint)(plain.Length),
+            SizeDisk = (uint)(encrypted.Length),
+        };
+
+        return encrypted;
     }
 
 
@@ -989,7 +1012,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="data"></param>
     /// <param name="decompressedSize"></param>
     /// <returns></returns>
-    protected abstract byte[] CreateMeta(Container container, byte[] data, int decompressedSize);
+    protected abstract byte[] CreateMeta(Container container, byte[] data);
 
     /// <summary>
     /// Compresses the meta file content.
@@ -1038,7 +1061,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         Guard.IsTrue(container.DataFile.Exists);
 
         var createdAt = DateTime.Now;
-        var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Globals.Constants.FILE_TIMESTAMP_FORMAT)}.{container.VersionEnum.Numerate()}.zip".ToLowerInvariant();
+        var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Globals.Constants.FILE_TIMESTAMP_FORMAT)}.{container.GameVersionEnum.Numerate()}.zip".ToLowerInvariant();
         var path = Path.Combine(Settings.Backup, name);
 
         Directory.CreateDirectory(Settings.Backup);
@@ -1057,7 +1080,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             DataFile = new(path),
             IsBackup = true,
             LastWriteTime = createdAt,
-            VersionEnum = container.VersionEnum,
+            GameVersionEnum = container.GameVersionEnum,
         };
         container.BackupCollection.Add(backup);
 
@@ -1118,9 +1141,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             }
             else if (Destination.Exists || (!Destination.Exists && CanCreate))
             {
-                if (GuardPlatformExtra(Source))
-                    throw new InvalidOperationException("Cannot copy as the source container has no platform extra.");
-
                 if (!Source.IsLoaded)
                     BuildContainerFull(Source);
 
@@ -1138,16 +1158,21 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 Destination.IsSynced = false;
 
                 // Properties requied to properly build the container below.
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.VersionEnum = Source.VersionEnum;
+                Destination.SaveVersion = Source.SaveVersion;
+                Destination.SaveName = Source.SaveName;
+                Destination.SaveSummary = Source.SaveSummary;
+                Destination.TotalPlayTime = Source.TotalPlayTime;
+                Destination.GameModeEnum = Source.GameModeEnum;
                 Destination.SeasonEnum = Source.SeasonEnum;
+                Destination.BaseVersion = Source.BaseVersion;
+                Destination.GameVersionEnum = Source.GameVersionEnum;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
                 if (write)
                 {
-                    Write(Destination, writeTime: Source.LastWriteTime);
+                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
                     BuildContainerFull(Destination);
                 }
             }
@@ -1159,19 +1184,28 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Ensures that the platform extra of the source container is set.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <returns></returns>
-    protected abstract bool GuardPlatformExtra(Container source);
-
-    /// <summary>
     /// Creates a new platform extra based on the source container.
     /// </summary>
     /// <param name="destination"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    protected abstract void CopyPlatformExtra(Container destination, Container source);
+    protected virtual void CopyPlatformExtra(Container destination, Container source)
+    {
+        destination.Extra = new()
+        {
+            Bytes = source.Extra.Bytes,
+            Size = source.Extra.Size,
+            SizeDecompressed = source.Extra.SizeDecompressed,
+            SizeDisk = source.Extra.SizeDisk,
+            LastWriteTime = source.Extra.LastWriteTime,
+            BaseVersion = source.Extra.BaseVersion,
+            GameMode = source.Extra.GameMode,
+            Season = source.Extra.Season,
+            TotalPlayTime = source.Extra.TotalPlayTime,
+            SaveName = source.Extra.SaveName,
+            SaveSummary = source.Extra.SaveSummary,
+        };
+    }
 
     #endregion
 
@@ -1279,12 +1313,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
                     // Write Source to Destination.
                     Destination.SetJsonObject(Source.GetJsonObject());
-                    Write(Destination, Source.LastWriteTime);
+                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
                     BuildContainerFull(Destination);
 
                     // Write Destination to Source.
                     Source.SetJsonObject(jsonObject);
-                    Write(Source, writeTime);
+                    Write(Source, writeTime ?? DateTimeOffset.Now);
                     BuildContainerFull(Source);
                 }
                 // Source exists only. Move to Destination.
@@ -1435,16 +1469,21 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 Destination.IsSynced = false;
 
                 // Properties requied to properly build the container below.
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.VersionEnum = Source.VersionEnum;
+                Destination.SaveVersion = Source.SaveVersion;
+                Destination.SaveName = Source.SaveName;
+                Destination.SaveSummary = Source.SaveSummary;
+                Destination.TotalPlayTime = Source.TotalPlayTime;
+                Destination.GameModeEnum = Source.GameModeEnum;
                 Destination.SeasonEnum = Source.SeasonEnum;
+                Destination.BaseVersion = Source.BaseVersion;
+                Destination.GameVersionEnum = Source.GameVersionEnum;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 TransferOwnership(Destination, sourceTransferData);
 
                 if (write)
                 {
-                    Write(Destination, Source.LastWriteTime);
+                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
                     BuildContainerFull(Destination);
                 }
             }
@@ -1454,7 +1493,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Creates an empty platform extra.
+    /// Creates an empty platform extra for the transfer target.
     /// </summary>
     /// <param name="destination"></param>
     /// <param name="source"></param>
@@ -1872,26 +1911,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected string? GetUserIdentificationPropertyValue(string propertyName)
     {
-        // TODO cleanup
-        var a = propertyName switch
-        {
-            nameof(UserIdentificationData.LID) => SaveContainerCollection.Select(i => i.UserIdentification?.LID),
-            nameof(UserIdentificationData.UID) => SaveContainerCollection.Select(i => i.UserIdentification?.UID),
-            nameof(UserIdentificationData.USN) => SaveContainerCollection.Select(i => i.UserIdentification?.USN),
-            _ => Array.Empty<string?>(),
-        };
-        var b = (IEnumerable<string>)a.Where(identification => !string.IsNullOrWhiteSpace(identification));
-
-        var c = b.FirstOrDefault();
-        var d = b.MostCommon();
-
         return (propertyName switch
         {
             nameof(UserIdentificationData.LID) => SaveContainerCollection.Select(i => i.UserIdentification?.LID),
             nameof(UserIdentificationData.UID) => SaveContainerCollection.Select(i => i.UserIdentification?.UID),
             nameof(UserIdentificationData.USN) => SaveContainerCollection.Select(i => i.UserIdentification?.USN),
             _ => Array.Empty<string?>(),
-        }).Where(identification => !string.IsNullOrWhiteSpace(identification)).FirstOrDefault();
+        }).Where(j => !string.IsNullOrWhiteSpace(j)).MostCommon();
     }
 
     #endregion

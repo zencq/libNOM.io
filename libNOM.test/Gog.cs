@@ -16,15 +16,15 @@ public class GogTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, VersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (0, true, true, PresetGameModeEnum.Normal, SeasonEnum.None, 4098, VersionEnum.Unknown), // 1Auto
-            (1, true, true, PresetGameModeEnum.Normal, SeasonEnum.None, 4098, VersionEnum.Unknown), // 1Manual
-            (2, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, VersionEnum.Emergence), // 2Auto
-            (3, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, VersionEnum.Emergence), // 2Manual
-            (4, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, VersionEnum.Emergence), // 3Auto
-            (5, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, VersionEnum.Emergence), // 3Manual
-            (6, true, false, PresetGameModeEnum.Creative, SeasonEnum.None, 4135, VersionEnum.Emergence), // 4Auto
+            (0, true, true, PresetGameModeEnum.Normal, SeasonEnum.None, 4098, GameVersionEnum.Unknown), // 1Auto
+            (1, true, true, PresetGameModeEnum.Normal, SeasonEnum.None, 4098, GameVersionEnum.Unknown), // 1Manual
+            (2, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Manual
+            (4, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 3Auto
+            (5, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 3Manual
+            (6, true, false, PresetGameModeEnum.Creative, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 4Auto
         };
         var settings = new PlatformSettings
         {
@@ -52,7 +52,7 @@ public class GogTest : CommonTestInitializeCleanup
             Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
             Assert.AreEqual(results[i].Season, container.SeasonEnum);
             Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.VersionEnum);
+            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
         }
     }
 

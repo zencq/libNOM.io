@@ -91,22 +91,22 @@ internal static partial class Json
 
     private static PresetGameModeEnum? GetGameModeEnum(Container container)
     {
-        if (container.Version.IsGameMode(PresetGameModeEnum.Seasonal))
+        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Seasonal))
             return PresetGameModeEnum.Seasonal;
 
-        if (container.Version.IsGameMode(PresetGameModeEnum.Permadeath))
+        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Permadeath))
             return PresetGameModeEnum.Permadeath;
 
-        if (container.Version.IsGameMode(PresetGameModeEnum.Ambient))
+        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Ambient))
             return PresetGameModeEnum.Ambient;
 
-        if (container.Version.IsGameMode(PresetGameModeEnum.Survival))
+        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Survival))
             return PresetGameModeEnum.Survival;
 
-        if (container.Version.IsGameMode(PresetGameModeEnum.Creative))
+        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Creative))
             return PresetGameModeEnum.Creative;
 
-        if (container.Version.IsGameMode(PresetGameModeEnum.Normal))
+        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Normal))
             return PresetGameModeEnum.Normal;
 
         return null;
@@ -118,15 +118,18 @@ internal static partial class Json
     /// <param name="container"></param>
     /// <param name="json"></param>
     /// <returns></returns>
-    internal static PresetGameModeEnum? GetGameModeEnum(Container container, string json)
+    internal static PresetGameModeEnum? GetGameModeEnum(Container container, string? json)
     {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
         var result = GetGameModeEnum(container);
 
         // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
-        if (result == PresetGameModeEnum.Normal && container.Version >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
+        if (result == PresetGameModeEnum.Normal && container.SaveVersion >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
         {
             // DifficultyState is stored again in SeasonData and therefore cut off here at an appropriate length.
-            // Without save name and summary DifficultyState ends at around 800 characters.
+            // Without save name and summary, DifficultyState ends at around 800 characters.
             var jsonSubstring = json.AsSpan(0, 2000);
 
             if (IsGameModePreset(jsonSubstring, "All", "Normal", "Normal", "Normal", "Full", "Normal", "Normal", "Low", "ItemGrave", "Normal", "Normal", "Normal", "false", "Normal", "Normal", "High", "Normal", "Normal", "Normal", "FullEcosystem", "false", "true", "false", "Normal"))
@@ -153,12 +156,15 @@ internal static partial class Json
     /// <param name="container"></param>
     /// <param name="json"></param>
     /// <returns></returns>
-    internal static PresetGameModeEnum? GetGameModeEnum(Container container, JObject jsonObject)
+    internal static PresetGameModeEnum? GetGameModeEnum(Container container, JObject? jsonObject)
     {
+        if (jsonObject is null)
+            return null;
+
         var result = GetGameModeEnum(container);
 
         // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
-        if (result == PresetGameModeEnum.Normal && container.Version >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
+        if (result == PresetGameModeEnum.Normal && container.SaveVersion >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
         {
             // Survival Elements
             var activeSurvivalBars = jsonObject.GetValue<string>("6f=.LyC.:fe.tEx.ZeS", "PlayerStateData.DifficultyState.Settings.ActiveSurvivalBars.ActiveSurvivalBarsDifficulty");
@@ -506,11 +512,11 @@ internal static partial class Json
         if (mode is null or < PresetGameModeEnum.Seasonal)
             return SeasonEnum.None;
 
-        var futureSeason = (int)(SeasonEnum.Future);
-        var i = (int)(SeasonEnum.Pioneers);
+        var futureSeason = (short)(SeasonEnum.Future);
+        var i = (short)(SeasonEnum.Pioneers);
 
         // Latest stop if negative base version but should usually be stopped before with future season.
-        while (Globals.Calculate.CalculateBaseVersion(container.Version, mode.Value, i) is int baseVersion && baseVersion > 0)
+        while (Globals.Calculate.CalculateBaseVersion(container.SaveVersion, mode.Value, i) is int baseVersion && baseVersion > 0)
         {
             if (i >= futureSeason)
                 return SeasonEnum.Future;
@@ -639,7 +645,7 @@ internal static partial class Json
         if (GetRegex(RegexVersionPlaintext(), json, out uint resultPlaintext))
             return (int)(resultPlaintext);
 #endif
-        return -1;
+        return 0;
     }
 
     /// <summary>
@@ -649,12 +655,12 @@ internal static partial class Json
     /// <returns></returns>
     internal static int GetVersion(JObject jsonObject)
     {
-        return jsonObject.GetValue<int?>("F2P", "Version") ?? -1;
+        return jsonObject.GetValue<int?>("F2P", "Version") ?? 0;
     }
 
     #endregion
 
-    #region VersionEnum
+    #region GameVersionEnum
 
     /// <summary>
     /// Gets the game version for the specified container.
@@ -662,7 +668,7 @@ internal static partial class Json
     /// <param name="container"></param>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
-    internal static VersionEnum GetVersionEnum(Container container, JObject jsonObject)
+    internal static GameVersionEnum GetGameVersionEnum(Container container, JObject jsonObject)
     {
         /** SaveVersion and new Keys to determine the GameVersion.
 
@@ -850,118 +856,118 @@ internal static partial class Json
             // This is actually VersionEnum.Mac but it made most of the preperation for Singularity Expedition and therefore we already use this here.
             var seasonStartMusicOverride = jsonObject.SelectToken(usesMapping ? "PlayerStateData.SeasonData.SeasonStartMusicOverride" : "6f=.Rol.XEk");
             if (seasonStartMusicOverride is not null)
-                return VersionEnum.Singularity;
+                return GameVersionEnum.Singularity;
 
-            return VersionEnum.Interceptor;
+            return GameVersionEnum.Interceptor;
         }
 
         if (container.BaseVersion >= 4143) // 4.10
-            return VersionEnum.Fractal;
+            return GameVersionEnum.Fractal;
 
         if (container.BaseVersion >= 4142) // 4.05
-            return VersionEnum.WaypointWithSuperchargedSlots;
+            return GameVersionEnum.WaypointWithSuperchargedSlots;
 
         if (container.BaseVersion >= 4141) // 4.04
-            return VersionEnum.WaypointWithAgileStat;
+            return GameVersionEnum.WaypointWithAgileStat;
 
         if (container.BaseVersion >= 4140) // 4.00
-            return VersionEnum.Waypoint;
+            return GameVersionEnum.Waypoint;
 
         if (container.BaseVersion >= 4139) // 3.94
-            return VersionEnum.Endurance;
+            return GameVersionEnum.Endurance;
 
         if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
             var nextLoadSpawnsWithFreshStart = jsonObject.SelectToken(usesMapping ? "PlayerStateData.NextLoadSpawnsWithFreshStart" : "6f=.Sd6");
             if (nextLoadSpawnsWithFreshStart is not null)
-                return VersionEnum.Leviathan;
+                return GameVersionEnum.Leviathan;
 
-            return VersionEnum.Outlaws;
+            return GameVersionEnum.Outlaws;
         }
 
         if (container.BaseVersion >= 4137) // 3.81, 3.84
         {
             var vehicleAIControlEnabled = jsonObject.SelectToken(usesMapping ? "PlayerStateData.VehicleAIControlEnabled" : "6f=.Agx");
             if (vehicleAIControlEnabled is not null)
-                return VersionEnum.SentinelWithVehicleAI;
+                return GameVersionEnum.SentinelWithVehicleAI;
 
-            return VersionEnum.SentinelWithWeaponResource;
+            return GameVersionEnum.SentinelWithWeaponResource;
         }
 
         if (container.BaseVersion >= 4136) // 3.80
-            return VersionEnum.Sentinel;
+            return GameVersionEnum.Sentinel;
 
         if (container.BaseVersion >= 4135) // 3.60, 3.70
         {
             var sandwormOverrides = jsonObject.SelectTokens(usesMapping ? "PlayerStateData.SeasonData.SandwormOverrides" : "6f=.Rol.qs?");
             if (sandwormOverrides.Any())
-                return VersionEnum.Emergence;
+                return GameVersionEnum.Emergence;
 
-            return VersionEnum.Frontiers;
+            return GameVersionEnum.Frontiers;
         }
 
         if (container.BaseVersion >= 4129) // 3.30, 3.40, 3.50, 3.51
         {
             var authorOnlineID = jsonObject.SelectTokens(usesMapping ? "PlayerStateData.ByteBeatLibrary.MySongs..AuthorOnlineID" : "6f=.8iI.ON4..m7b");
             if (authorOnlineID.Any())
-                return VersionEnum.PrismsWithBytebeatAuthor;
+                return GameVersionEnum.PrismsWithBytebeatAuthor;
 
             var byteBeatLibrary = jsonObject.SelectToken(usesMapping ? "PlayerStateData.ByteBeatLibrary" : "6f=.8iI");
             if (byteBeatLibrary is not null)
-                return VersionEnum.Prisms;
+                return GameVersionEnum.Prisms;
 
             var mainMissionTitle = jsonObject.SelectToken(usesMapping ? "PlayerStateData.SeasonData.MainMissionTitle" : "6f=.Rol.Whh");
             if (mainMissionTitle is not null)
-                return VersionEnum.Beachhead;
+                return GameVersionEnum.Beachhead;
 
-            return VersionEnum.Expeditions;
+            return GameVersionEnum.Expeditions;
         }
 
         if (container.BaseVersion >= 4127) // 3.10, 3.20
         {
             var pets = jsonObject.SelectToken(usesMapping ? "PlayerStateData.Pets" : "6f=.;4P");
             if (pets is not null)
-                return VersionEnum.Companions;
+                return GameVersionEnum.Companions;
 
-            return VersionEnum.NextGeneration;
+            return GameVersionEnum.NextGeneration;
         }
 
         if (container.BaseVersion >= 4126) // 2.50, 2.60, 3.00
         {
             var previousUniverseAddress = jsonObject.SelectToken(usesMapping ? "PlayerStateData.PreviousUniverseAddress" : "6f=.ux@");
             if (previousUniverseAddress is not null)
-                return VersionEnum.Origins;
+                return GameVersionEnum.Origins;
 
             var abandonedFreighterPositionInSystem = jsonObject.SelectToken(usesMapping ? "SpawnStateData.AbandonedFreighterPositionInSystem" : "6f=.Ovv");
             if (abandonedFreighterPositionInSystem is not null)
-                return VersionEnum.Desolation;
+                return GameVersionEnum.Desolation;
 
-            return VersionEnum.Crossplay;
+            return GameVersionEnum.Crossplay;
         }
 
         if (container.BaseVersion >= 4125) // 2.40
-            return VersionEnum.ExoMech;
+            return GameVersionEnum.ExoMech;
 
         if (container.BaseVersion >= 4124) // 2.26, 2.30
         {
             var currentPos = jsonObject.SelectTokens(usesMapping ? "PlayerStateData..CurrentPos" : "6f=..Xf4");
             if (currentPos.Any())
-                return VersionEnum.LivingShip;
+                return GameVersionEnum.LivingShip;
 
-            return VersionEnum.SynthesisWithJetpack;
+            return GameVersionEnum.SynthesisWithJetpack;
         }
 
         if (container.BaseVersion >= 4122) // 2.20
-            return VersionEnum.Synthesis;
+            return GameVersionEnum.Synthesis;
 
         if (container.BaseVersion >= 4119) // 2.11
-            return VersionEnum.BeyondWithVehicleCam;
+            return GameVersionEnum.BeyondWithVehicleCam;
 
-        return VersionEnum.Unknown;
+        return GameVersionEnum.Unknown;
     }
 
-    /// <inheritdoc cref="GetVersionEnum(Container, JObject)"/>
-    internal static VersionEnum GetVersionEnum(Container container, string json)
+    /// <inheritdoc cref="GetGameVersionEnum(Container, JObject)"/>
+    internal static GameVersionEnum GetGameVersionEnum(Container container, string json)
     {
         if (container.BaseVersion >= 4144) // 4.20, 4.25, 4.30
         {
@@ -973,114 +979,114 @@ internal static partial class Json
             // This is actually VersionEnum.Mac but it made most of the preperation for Singularity Expedition and therefore we already use this here.
             var seasonStartMusicOverride = json.Contains("\"XEk\":"); // SeasonStartMusicOverride
             if (seasonStartMusicOverride)
-                return VersionEnum.Singularity;
+                return GameVersionEnum.Singularity;
 
-            return VersionEnum.Interceptor;
+            return GameVersionEnum.Interceptor;
         }
 
         if (container.BaseVersion >= 4143) // 4.10
-            return VersionEnum.Fractal;
+            return GameVersionEnum.Fractal;
 
         if (container.BaseVersion >= 4142) // 4.05
-            return VersionEnum.WaypointWithSuperchargedSlots;
+            return GameVersionEnum.WaypointWithSuperchargedSlots;
 
         if (container.BaseVersion >= 4141) // 4.04
-            return VersionEnum.WaypointWithAgileStat;
+            return GameVersionEnum.WaypointWithAgileStat;
 
         if (container.BaseVersion >= 4140) // 4.00
-            return VersionEnum.Waypoint;
+            return GameVersionEnum.Waypoint;
 
         if (container.BaseVersion >= 4139) // 3.94
-            return VersionEnum.Endurance;
+            return GameVersionEnum.Endurance;
 
         if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
             var nextLoadSpawnsWithFreshStart = json.Contains("\"Sd6\":"); // NextLoadSpawnsWithFreshStart
             if (nextLoadSpawnsWithFreshStart)
-                return VersionEnum.Leviathan;
+                return GameVersionEnum.Leviathan;
 
-            return VersionEnum.Outlaws;
+            return GameVersionEnum.Outlaws;
         }
 
         if (container.BaseVersion >= 4137) // 3.81, 3.84
         {
             var vehicleAIControlEnabled = json.Contains("\"Agx\":"); // VehicleAIControlEnabled
             if (vehicleAIControlEnabled)
-                return VersionEnum.SentinelWithVehicleAI;
+                return GameVersionEnum.SentinelWithVehicleAI;
 
-            return VersionEnum.SentinelWithWeaponResource;
+            return GameVersionEnum.SentinelWithWeaponResource;
         }
 
         if (container.BaseVersion >= 4136) // 3.80
-            return VersionEnum.Sentinel;
+            return GameVersionEnum.Sentinel;
 
         if (container.BaseVersion >= 4135) // 3.60, 3.70
         {
             var sandwormOverrides = json.Contains("\"qs?\":"); // SandwormOverrides
             if (sandwormOverrides)
-                return VersionEnum.Emergence;
+                return GameVersionEnum.Emergence;
 
-            return VersionEnum.Frontiers;
+            return GameVersionEnum.Frontiers;
         }
 
         if (container.BaseVersion >= 4129) // 3.30, 3.40, 3.50, 3.51
         {
             var authorOnlineID = json.Contains("\"m7b\":"); // AuthorOnlineID
             if (authorOnlineID)
-                return VersionEnum.PrismsWithBytebeatAuthor;
+                return GameVersionEnum.PrismsWithBytebeatAuthor;
 
             var byteBeatLibrary = json.Contains("\"8iI\":"); // ByteBeatLibrary
             if (byteBeatLibrary)
-                return VersionEnum.Prisms;
+                return GameVersionEnum.Prisms;
 
             var mainMissionTitle = json.Contains("\"Whh\":"); // MainMissionTitle
             if (mainMissionTitle)
-                return VersionEnum.Beachhead;
+                return GameVersionEnum.Beachhead;
 
-            return VersionEnum.Expeditions;
+            return GameVersionEnum.Expeditions;
         }
 
         if (container.BaseVersion >= 4127) // 3.10, 3.20
         {
             var pets = json.Contains("\"Mcl\":"); // Pets
             if (pets)
-                return VersionEnum.Companions;
+                return GameVersionEnum.Companions;
 
-            return VersionEnum.NextGeneration;
+            return GameVersionEnum.NextGeneration;
         }
 
         if (container.BaseVersion >= 4126) // 2.50, 2.60, 3.00
         {
             var previousUniverseAddress = json.Contains("\"ux@\":"); // PreviousUniverseAddress
             if (previousUniverseAddress)
-                return VersionEnum.Origins;
+                return GameVersionEnum.Origins;
 
             var abandonedFreighterPositionInSystem = json.Contains("\"Ovv\":"); // AbandonedFreighterPositionInSystem
             if (abandonedFreighterPositionInSystem)
-                return VersionEnum.Desolation;
+                return GameVersionEnum.Desolation;
 
-            return VersionEnum.Crossplay;
+            return GameVersionEnum.Crossplay;
         }
 
         if (container.BaseVersion >= 4125) // 2.40
-            return VersionEnum.ExoMech;
+            return GameVersionEnum.ExoMech;
 
         if (container.BaseVersion >= 4124) // 2.26, 2.30
         {
             var currentPos = json.Contains("\"Xf4\":"); // CurrentPos
             if (currentPos)
-                return VersionEnum.LivingShip;
+                return GameVersionEnum.LivingShip;
 
-            return VersionEnum.SynthesisWithJetpack;
+            return GameVersionEnum.SynthesisWithJetpack;
         }
 
         if (container.BaseVersion >= 4122) // 2.20
-            return VersionEnum.Synthesis;
+            return GameVersionEnum.Synthesis;
 
         if (container.BaseVersion >= 4119) // 2.11
-            return VersionEnum.BeyondWithVehicleCam;
+            return GameVersionEnum.BeyondWithVehicleCam;
 
-        return VersionEnum.Unknown;
+        return GameVersionEnum.Unknown;
     }
 
     #endregion

@@ -13,4 +13,9 @@ internal static class IntegerExtensions
     {
         return self >= (Globals.Constants.THRESHOLD_VANILLA + ((int)(mode) * Globals.Constants.OFFSET_GAMEMODE));
     }
+
+    internal static bool IsBaseVersion(this int self)
+    {
+        return self is >= Globals.Constants.THRESHOLD_VANILLA and < Globals.Constants.THRESHOLD_VANILLA_GAMEMODE;
+    }
 }

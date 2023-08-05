@@ -1,5 +1,6 @@
 ﻿using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Text;
 
 namespace libNOM.test;
 
@@ -24,7 +25,25 @@ public class CommonTestInitializeCleanup
 
     #region Assert
 
+    protected static void AssertAllAreEqual(int expected, params int[] actual)
+    {
+        foreach (var value in actual)
+            Assert.AreEqual(expected, value);
+    }
+
     protected static void AssertAllAreEqual(uint expected, params uint[] actual)
+    {
+        foreach (var value in actual)
+            Assert.AreEqual(expected, value);
+    }
+
+    protected static void AssertAllAreEqual(long expected, params long[] actual)
+    {
+        foreach (var value in actual)
+            Assert.AreEqual(expected, value);
+    }
+
+    protected static void AssertAllAreEqual(string expected, params string[] actual)
     {
         foreach (var value in actual)
             Assert.AreEqual(expected, value);
@@ -37,21 +56,21 @@ public class CommonTestInitializeCleanup
                 throw new AssertFailedException();
     }
 
-    protected static void AssertAllNotZero(params uint[][] actual)
+    protected static void AssertAllNotZero(params IEnumerable<uint>[] actual)
     {
         foreach (var value in actual)
             if (value.Any(i => i == 0))
                 throw new AssertFailedException();
     }
 
-    protected static void AssertAllZero(params uint[] actual)
+    protected static void AssertAllZero(params IEnumerable<byte>[] actual)
     {
         foreach (var value in actual)
-            if (value != 0)
+            if (value.Any(i => i != 0))
                 throw new AssertFailedException();
     }
 
-    protected static void AssertAllZero(params uint[][] actual)
+    protected static void AssertAllZero(params IEnumerable<uint>[] actual)
     {
         foreach (var value in actual)
             if (value.Any(i => i != 0))
@@ -83,13 +102,25 @@ public class CommonTestInitializeCleanup
             Copy(directory.FullName, Path.Combine(destination, directory.Name));
     }
 
-    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
-    protected static uint[] GetUInt32(byte[] bytes)
+    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetGuid(IEnumerable{byte})"/>
+    /// <see cref="libNOM.io.Extensions.GuidExtensions.ToPath(Guid)"/>
+    internal static string GetGuid(IEnumerable<byte> source)
     {
-        var result = new uint[bytes.Length / sizeof(uint)];
-        Buffer.BlockCopy(bytes, 0, result, 0, bytes.Length);
+        return new Guid(source.ToArray()).ToString("N").ToUpper();
+    }
+
+    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
+    protected static uint[] GetUInt32(byte[] source)
+    {
+        var result = new uint[source.Length / sizeof(uint)];
+        Buffer.BlockCopy(source, 0, result, 0, source.Length);
 
         return result;
+    }
+    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
+    protected static string GetUnicode(IEnumerable<byte> source)
+    {
+        return Encoding.Unicode.GetString(source.ToArray());
     }
 
     protected static ReadOnlySpan<string> ReadUserIdentification(string path)

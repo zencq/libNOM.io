@@ -175,8 +175,10 @@ public static class IEnumerableExtensions
     /// <param name="self"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/39599083"/>
-    internal static string? MostCommon(this IEnumerable<string> self)
+    internal static string? MostCommon(this IEnumerable<string?> self)
     {
+        self = self.Where(i => i is not null);
+
         if (!self.Any())
             return null;
 

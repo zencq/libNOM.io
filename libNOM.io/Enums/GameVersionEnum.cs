@@ -6,7 +6,7 @@ namespace libNOM.io.Enums;
 /// <summary>
 /// Specifies all versions of big game updates and smaller ones if necessary for specific features.
 /// </summary>
-public enum VersionEnum
+public enum GameVersionEnum
 {
     Unknown = 0,
     Vanilla = 100,
