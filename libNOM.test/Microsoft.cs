@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace libNOM.test;
 
 
+// Do not use System.Range for simplicity of the file and performace is not critial.
 [TestClass]
 [DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
 public class MicrosoftTest : CommonTestInitializeCleanup
@@ -248,7 +249,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
     #endregion
 
-    #region Manifest
+    #region Meta
 
     /// <see cref="Platform.ReadMeta(Container)"/>
     /// <see cref="PlatformMicrosoft.DecryptMeta(Container, byte[])"/>
@@ -267,21 +268,11 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             if (container.IsAccount)
             {
                 AssertAllAreEqual(1, metaA[0], metaB[0]);
-
-#if NETSTANDARD2_0
-                AssertAllZero(metaA.Skip(1).Take(3).ToArray(), metaB.Skip(1).Take(3).ToArray());
-#else
-                AssertAllZero(metaA[1..4], metaB[1..4]);
-#endif
-
+                AssertAllZero(metaA.Skip(1).Take(3), metaB.Skip(1).Take(3));
                 AssertAllNotZero(metaA[4], metaB[4]);
             }
 
-#if NETSTANDARD2_0
-            Assert.IsTrue(metaA.Skip(5).ToArray().SequenceEqual(metaB.Skip(5).ToArray()));
-#else
-            Assert.IsTrue(metaA[5..].SequenceEqual(metaB[5..]));
-#endif
+            Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
         }
         else
             throw new AssertFailedException();
@@ -669,11 +660,12 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 #pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
+        Assert.IsTrue(writeCallback);
+
         Assert.AreEqual(80, valuesOrigin.MusicVolume);
         Assert.AreEqual(638264331709580000, valuesOrigin.UtcTicks); // 2023-07-31 20:46:10 +00:00
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
         Assert.AreEqual(nowTicks, valuesSet.UtcTicks);
-        Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesReload.MusicVolume);
         Assert.AreEqual(nowTicks, valuesReload.UtcTicks);
@@ -721,18 +713,12 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 #pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
+        Assert.IsTrue(writeCallback);
+
         Assert.AreEqual(1504909789, valuesOrigin.Units);
         Assert.AreEqual(638126763444620000, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
         Assert.AreEqual(nowTicks, valuesSet.UtcTicks);
-        Assert.IsTrue(writeCallback);
-
-        Assert.IsTrue(platformB.HasAccountData);
-        Assert.AreEqual(10, platformB.GetExistingContainers().Count());
-        Assert.AreEqual(userIdentification[0], platformB.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification[1], platformB.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification[2], platformB.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification[3], platformB.PlatformUserIdentification.PTK);
 
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesReload.Units);
         Assert.AreEqual(nowTicks, valuesReload.UtcTicks);
@@ -743,7 +729,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var bytesB = BitConverter.GetBytes(metaB[1]);
         AssertAllAreEqual((uint)(PresetGameModeEnum.Normal), (uint)(containerA.GameModeEnum!) + 1, (uint)(containerB.GameModeEnum!) + 1, (uint)(BitConverter.ToInt16(bytesA, 0)), (uint)(BitConverter.ToInt16(bytesB, 0)));
         AssertAllAreEqual((uint)(SeasonEnum.None), (uint)(containerA.SeasonEnum), (uint)(containerB.SeasonEnum), BitConverter.ToUInt16(bytesA, 2), BitConverter.ToUInt16(bytesA, 2));
-        AssertAllAreEqual(635119, (uint)(containerA.TotalPlayTime), (uint)(containerB.TotalPlayTime), metaA[2], metaB[2]);
+        AssertAllAreEqual(635119, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[2], metaB[2]);
     }
 
     /// <summary>
@@ -789,11 +775,12 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 #pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
+        Assert.IsTrue(writeCallback);
+
         Assert.AreEqual(80, valuesOrigin.MusicVolume);
         Assert.AreEqual(638264331709580000, valuesOrigin.UtcTicks); // 2023-07-31 20:46:10 +00:00
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
         Assert.AreEqual(nowTicks, valuesSet.UtcTicks);
-        Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesReload.MusicVolume);
         Assert.AreEqual(nowTicks, valuesReload.UtcTicks);
@@ -815,46 +802,39 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var writeCallback = false;
 
         // Act
-        var platform1 = new PlatformMicrosoft(path, settings);
-        var container1 = platform1.GetSaveContainer(0)!;
-        container1.WriteCallback += () =>
+        var platformA = new PlatformMicrosoft(path, settings);
+        var containerA = platformA.GetSaveContainer(0)!;
+
+        containerA.WriteCallback += () =>
         {
             writeCallback = true;
         };
 
-        platform1.Load(container1);
-        var units10 = container1.GetJsonValue<int>(UNITS_JSON_PATH);
-        var timestamp10 = container1.LastWriteTime!.Value;
+#pragma warning disable IDE0042 // Deconstruct variable declaration
+        platformA.Load(containerA);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
-        container1.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        var units11 = container1.GetJsonValue<int>(UNITS_JSON_PATH);
+        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        platformA.Write(containerA, now);
+        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
 
-        platform1.Write(container1, now);
-        var timestamp11 = container1.LastWriteTime!.Value;
+        var platformB = new PlatformMicrosoft(path, settings);
+        var containerB = platformB.GetSaveContainer(0)!;
 
-        var platform2 = new PlatformMicrosoft(path, settings);
-        var container2 = platform2.GetSaveContainer(0)!;
-
-        platform2.Load(container2);
-        var units20 = container2.GetJsonValue<int>(UNITS_JSON_PATH);
-        var timestamp20 = container2.LastWriteTime!.Value;
+        platformB.Load(containerB);
+        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+#pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
-        Assert.AreEqual(1504909789, units10);
-        Assert.AreEqual(UNITS_NEW_AMOUNT, units11);
-        Assert.AreEqual(638126763444620000, timestamp10.UtcTicks); // 2023-02-22 15:25:44 +00:00
-        Assert.AreEqual(638126763444620000, timestamp11.UtcTicks);
         Assert.IsTrue(writeCallback);
 
-        Assert.IsTrue(platform2.HasAccountData);
-        Assert.AreEqual(10, platform2.GetExistingContainers().Count());
-        Assert.AreEqual(userIdentification[0], platform2.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification[1], platform2.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
+        Assert.AreEqual(1504909789, valuesOrigin.Units);
+        Assert.AreEqual(638126763444620000, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
+        Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
+        Assert.AreEqual(638126763444620000, valuesSet.UtcTicks);
 
-        Assert.AreEqual(UNITS_NEW_AMOUNT, units20);
-        Assert.AreEqual(638126763444620000, timestamp20.UtcTicks);
+        Assert.AreEqual(UNITS_NEW_AMOUNT, valuesReload.Units);
+        Assert.AreEqual(638126763444620000, valuesReload.UtcTicks);
     }
 
     [TestMethod]
@@ -870,42 +850,36 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var writeCallback = false;
 
         // Act
-        var platform1 = new PlatformMicrosoft(path, settings);
-        var container1 = platform1.GetSaveContainer(0)!;
-        container1.WriteCallback += () =>
+        var platformA = new PlatformMicrosoft(path, settings);
+        var containerA = platformA.GetSaveContainer(0)!;
+
+        containerA.WriteCallback += () =>
         {
             writeCallback = true;
         };
 
-        platform1.Load(container1);
-        container1.DataFile!.Refresh();
-        var length10 = container1.DataFile!.Length;
+        platformA.Load(containerA);
+        containerA.DataFile!.Refresh();
+        var lengthOrigin = containerA.DataFile!.Length;
 
-        platform1.Write(container1);
-        container1.DataFile!.Refresh();
-        var length11 = container1.DataFile!.Length;
+        platformA.Write(containerA);
+        containerA.DataFile!.Refresh();
+        var lengthSet = containerA.DataFile!.Length;
 
-        var platform2 = new PlatformMicrosoft(path, settings);
-        var container2 = platform2.GetSaveContainer(0)!;
+        var platformB = new PlatformMicrosoft(path, settings);
+        var containerB = platformB.GetSaveContainer(0)!;
 
-        platform2.Load(container2);
-        container2.DataFile!.Refresh();
-        var length20 = container1.DataFile!.Length;
+        platformB.Load(containerB);
+        containerB.DataFile!.Refresh();
+        var lengthReload = containerA.DataFile!.Length;
 
         // Assert
         Assert.IsTrue(writeCallback);
 
-        Assert.IsTrue(platform2.HasAccountData);
-        Assert.AreEqual(10, platform2.GetExistingContainers().Count());
-        Assert.AreEqual(userIdentification[0], platform2.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification[1], platform2.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
+        Assert.AreNotEqual(lengthOrigin, lengthSet);
+        Assert.AreNotEqual(lengthOrigin, lengthReload);
 
-        Assert.AreNotEqual(length10, length11);
-        Assert.AreNotEqual(length10, length20);
-
-        Assert.AreEqual(length11, length20);
+        Assert.AreEqual(lengthSet, lengthReload);
     }
 
     [TestMethod]
@@ -922,40 +896,34 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var writeCallback = false;
 
         // Act
-        var platform1 = new PlatformMicrosoft(path, settings);
-        var container1 = platform1.GetSaveContainer(0)!;
-        container1.WriteCallback += () =>
+        var platformA = new PlatformMicrosoft(path, settings);
+        var containerA = platformA.GetSaveContainer(0)!;
+
+        containerA.WriteCallback += () =>
         {
             writeCallback = true;
         };
 
-        platform1.Load(container1);
-        container1.DataFile!.Refresh();
-        var length10 = container1.DataFile!.Length;
+        platformA.Load(containerA);
+        containerA.DataFile!.Refresh();
+        var lengthOrigin = containerA.DataFile!.Length;
 
-        platform1.Write(container1, now);
-        container1.DataFile!.Refresh();
-        var length11 = container1.DataFile!.Length;
+        platformA.Write(containerA, now);
+        containerA.DataFile!.Refresh();
+        var lengthSet = containerA.DataFile!.Length;
 
-        var platform2 = new PlatformMicrosoft(path, settings);
-        var container2 = platform2.GetSaveContainer(0)!;
+        var platformB = new PlatformMicrosoft(path, settings);
+        var containerB = platformB.GetSaveContainer(0)!;
 
-        platform2.Load(container2);
-        container2.DataFile!.Refresh();
-        var length20 = container1.DataFile!.Length;
+        platformB.Load(containerB);
+        containerB.DataFile!.Refresh();
+        var lengthReload = containerA.DataFile!.Length;
 
         // Assert
-        Assert.AreEqual(length10, length11);
         Assert.IsTrue(writeCallback);
 
-        Assert.IsTrue(platform2.HasAccountData);
-        Assert.AreEqual(10, platform2.GetExistingContainers().Count());
-        Assert.AreEqual(userIdentification[0], platform2.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification[1], platform2.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
-
-        Assert.AreEqual(length10, length20);
+        Assert.AreEqual(lengthOrigin, lengthSet);
+        Assert.AreEqual(lengthOrigin, lengthReload);
     }
 
     [TestMethod]

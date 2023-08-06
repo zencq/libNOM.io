@@ -169,7 +169,7 @@ public partial class PlatformSteam : Platform
         var steamIndex = metaIndex == Constants.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
         var name = metaIndex == 0 ? "accountdata.hg" : $"save{steamIndex}.hg";
         var data = new FileInfo(Path.Combine(Location.FullName, name));
-        var manifest = new FileInfo(Path.Combine(Location.FullName, $"mf_{name}"));
+        var meta = new FileInfo(Path.Combine(Location.FullName, $"mf_{name}"));
 
         return new Container(metaIndex)
         {
@@ -178,10 +178,10 @@ public partial class PlatformSteam : Platform
             {
                 /// Additional values will be set in <see cref="DecryptMeta"/>.
                 LastWriteTime = data.LastWriteTime,
-                Size = manifest.Exists ? (uint)(manifest.Length) : 0,
+                Size = meta.Exists ? (uint)(meta.Length) : 0,
                 SizeDisk = data.Exists ? (uint)(data.Length) : 0,
             },
-            MetaFile = manifest,
+            MetaFile = meta,
         };
     }
 
