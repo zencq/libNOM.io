@@ -210,7 +210,6 @@ public class SwitchTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -270,7 +269,6 @@ public class SwitchTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act

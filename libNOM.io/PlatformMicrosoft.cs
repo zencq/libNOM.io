@@ -444,28 +444,25 @@ public partial class PlatformMicrosoft : Platform
         return Array.Empty<byte>();
     }
 
-    protected override uint[] DecryptMeta(Container container, byte[] meta)
+    protected override void UpdateContainerWithMetaInformation(Container container, byte[] raw, uint[] converted)
     {
-        var value = base.DecryptMeta(container, meta);
-        var season = BitConverter.ToInt16(meta, 1 * sizeof(uint) + 2);
+        var season = BitConverter.ToInt16(raw, 1 * sizeof(uint) + 2);
 
         container.Extra = container.Extra with
         {
 #if NETSTANDARD2_0
-            Bytes = meta.Skip(META_LENGTH_KNOWN).ToArray(),
+            Bytes = raw.Skip(META_LENGTH_KNOWN).ToArray(),
 #else
-            Bytes = meta[META_LENGTH_KNOWN..],
+            Bytes = raw[META_LENGTH_KNOWN..],
 #endif
 
-            SizeDecompressed = value[4],
-            BaseVersion = (int)(value[0]),
-            GameMode = BitConverter.ToInt16(meta, 1 * sizeof(uint)),
+            SizeDecompressed = converted[4],
+            BaseVersion = (int)(converted[0]),
+            GameMode = BitConverter.ToInt16(raw, 1 * sizeof(uint)),
             Season = (short)(season <= 0 ? 0 : season),
-            TotalPlayTime = value[2],
+            TotalPlayTime = converted[2],
         };
         container.SaveVersion = Calculate.CalculateVersion(container.Extra.BaseVersion, container.Extra.GameMode, container.Extra.Season);
-
-        return value;
     }
 
     protected override byte[] DecompressData(Container container, uint[] meta, byte[] data)
@@ -473,6 +470,12 @@ public partial class PlatformMicrosoft : Platform
         var length = meta.ContainsIndex(4) ? (int)(meta[4]) : data.Length;
         _ = Globals.LZ4.Decode(data, out byte[] target, length);
         return target;
+    }
+
+    protected override void UpdateContainerWithDataInformation(Container container, byte[] raw, byte[] converted)
+    {
+        if (container.Extra.SizeDecompressed == 0)
+            container.Extra.SizeDecompressed = (uint)(converted.Length);
     }
 
     #endregion
@@ -595,7 +598,7 @@ public partial class PlatformMicrosoft : Platform
         {
             writer.Write(container.Extra.BaseVersion); // 4
 
-            writer.Write(container.IsWaypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
+            writer.Write(container.Is400Waypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
             writer.Write(container.Extra.Season); // 2
 
             writer.Write((long)(container.Extra.TotalPlayTime)); // 8
@@ -1016,7 +1019,7 @@ public partial class PlatformMicrosoft : Platform
             MicrosoftBlobDirectoryGuid = Guid.NewGuid(),
             MicrosoftBlobContainerExtension = 0,
             LastWriteTime = source.LastWriteTime,
-            Bytes = new byte[(source.IsWaypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
+            Bytes = new byte[(source.Is400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
             MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
         };
     }

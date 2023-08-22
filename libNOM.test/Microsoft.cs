@@ -630,7 +630,6 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -683,7 +682,6 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -745,7 +743,6 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -798,7 +795,6 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             SetLastWriteTime = false,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -846,7 +842,6 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             WriteAlways = true,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -892,7 +887,6 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             WriteAlways = false,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act

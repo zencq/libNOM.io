@@ -132,7 +132,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Container
 
-    public Container? GetAccountContainer()
+    public Container GetAccountContainer()
     {
         return AccountContainer;
     }
@@ -187,7 +187,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected int GetMetaSize(Container container)
     {
         var size = (int)(container.Extra.Size);
-        return (size == META_LENGTH_TOTAL_WAYPOINT || size == META_LENGTH_TOTAL_VANILLA) ? size : (container.IsWaypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA);
+        return (size == META_LENGTH_TOTAL_WAYPOINT || size == META_LENGTH_TOTAL_VANILLA) ? size : (container.Is400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA);
     }
 
     #endregion
@@ -568,12 +568,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected uint[] LoadMeta(Container container, byte[] read)
     {
-        if (read.IsNullOrEmpty())
-            return Array.Empty<uint>();
-
         // 2. Decrypt
         // 3. Decompress
-        return DecompressMeta(container, DecryptMeta(container, read));
+        var result = DecompressMeta(container, DecryptMeta(container, read));
+        // 4. Update Container Information
+        UpdateContainerWithMetaInformation(container, read, result);
+
+        return result;
     }
 
     /// <summary>
@@ -611,6 +612,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         return meta;
     }
 
+    protected abstract void UpdateContainerWithMetaInformation(Container container, byte[] raw, uint[] converted);
+
     /// <inheritdoc cref="LoadData(Container, uint[], byte[])"/>
     protected virtual byte[] LoadData(Container container, uint[] meta)
     {
@@ -629,7 +632,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         // 2. Decrypt
         // 3. Decompress
-        return DecompressData(container, meta, DecryptData(container, meta, read));
+        var result = DecompressData(container, meta, DecryptData(container, meta, read));
+        // 4. Update Container Information
+        UpdateContainerWithDataInformation(container, read, result);
+
+        return result;
     }
 
     /// <summary>
@@ -668,11 +675,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
 #if NETSTANDARD2_0
         // No compression for account data and before Frontiers.
-        if (!container.IsSave || data.Take(4).GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
+        if (!container.IsSave || !data.Any() || data.Take(4).GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
             return data;
 #else
         // No compression for account data and before Frontiers.
-        if (!container.IsSave || data[..4].GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
+        if (!container.IsSave || !data.Any() || data[..4].GetUInt32().FirstOrDefault() != Globals.Constants.HEADER_SAVE_STREAMING_CHUNK)
             return data;
 #endif
         var concurrent = new ConcurrentDictionary<int, byte[]>();
@@ -710,6 +717,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         return result.ToArray();
     }
+
+    protected abstract void UpdateContainerWithDataInformation(Container container, byte[] raw, byte[] converted);
 
     #endregion
 
@@ -945,7 +954,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual byte[] CompressData(Container container, byte[] data)
     {
-        if (!container.IsSave || !container.IsFrontiers)
+        if (!container.IsSave || !container.Is360Frontiers)
             return data;
 
         var concurrent = new ConcurrentDictionary<int, byte[]>();
@@ -1519,10 +1528,10 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (sourceTransferData.TransferBase) // 1.1
             TransferBaseOwnership(jsonObject, sourceTransferData);
 
-        if (container.IsPrismsWithBytebeatAuthor && sourceTransferData.TransferBytebeat) // 3.51
+        if (container.Is351PrismsWithBytebeatAuthor && sourceTransferData.TransferBytebeat) // 3.51
             TransferBytebeatOwnership(jsonObject, sourceTransferData);
 
-        if (container.IsFrontiers && sourceTransferData.TransferSettlement) // 3.6
+        if (container.Is360Frontiers && sourceTransferData.TransferSettlement) // 3.6
             TransferGeneralOwnership(jsonObject, usesMapping ? $"PlayerStateData.SettlementStatesV2..[?(@.UID == '{sourceTransferData.UserIdentification!.UID}')]" : $"6f=.GQA..[?(@.K7E == '{sourceTransferData.UserIdentification!.UID}')]");
 
         container.SetJsonObject(jsonObject);

@@ -7,24 +7,6 @@ using System.Text.RegularExpressions;
 namespace libNOM.io;
 
 
-#region Container
-
-internal record class PlatformExtraPlaystation
-{
-    internal byte[]? Bytes;
-    internal int Size;
-    internal int Offset;
-    internal int SizeCompressed;
-    internal int SizeDecompressed;
-}
-
-public partial class Container
-{
-    internal PlatformExtraPlaystation? Playstation { get; set; }
-}
-
-#endregion
-
 public partial class PlatformPlaystation : Platform
 {
     #region Constant
@@ -36,6 +18,8 @@ public partial class PlatformPlaystation : Platform
     private const uint META_HEADER = 0xCA55E77E;
     private int META_OFFSET => _usesSaveWizard ? 0x40 : 0x0; // 64 : 0
     private int META_SIZE => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
+    protected override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104 byte
+    protected override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360 byte
 
     private const int MEMORYDAT_ANCHORFILE_INDEX = 1;
     private int MEMORYDAT_META_INDEX_OFFSET => _usesSaveWizard ? 8 : 3;
@@ -194,7 +178,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Generate
 
-    protected override Container CreateContainer(int metaIndex, object? extra)
+    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
         if (_usesSaveStreaming)
         {
@@ -262,6 +246,7 @@ public partial class PlatformPlaystation : Platform
         // Load meta data outside the if as it sets whether the container exists.
         var meta = LoadMeta(container);
 
+        //container.Exists &= meta?.Any() == true;
         if (container.Exists)
         {
             var data = LoadData(container, meta);
@@ -300,20 +285,21 @@ public partial class PlatformPlaystation : Platform
         return Array.Empty<byte>();
     }
 
-    protected override uint[] DecryptMeta(Container container, byte[] meta)
+    protected override void UpdateContainerWithMetaInformation(Container container, byte[] raw, uint[] converted)
     {
-        var metaInt = base.DecryptMeta(container, meta);
-
         if (_usesSaveStreaming)
         {
             if (_usesSaveWizard)
             {
-                container.Playstation = new PlatformExtraPlaystation
+                if (!converted.Any())
+                    return;
+
+                container.Extra = new PlatformExtra
                 {
-                    Offset = 0x70,
-                    Size = (int)(metaInt[19]),
-                    SizeCompressed = (int)(metaInt[1]),
-                    SizeDecompressed = (int)(metaInt[19]),
+                    PlaystationOffset = 0x70,
+                    Size = converted[19],
+                    SizeDisk = converted[1],
+                    SizeDecompressed = converted[19],
                 };
             }
             //else
@@ -321,23 +307,28 @@ public partial class PlatformPlaystation : Platform
         }
         else
         {
-            container.Exists = metaInt[2] != 0;
-            container.LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(metaInt[6]).ToLocalTime();
-            container.Playstation = new PlatformExtraPlaystation
+            if (!converted.Any())
             {
-                Offset = (int)(metaInt[MEMORYDAT_META_INDEX_OFFSET]),
-                Size = (int)(metaInt[MEMORYDAT_META_INDEX_SIZE]), // either compressed or decompressed size depending on SaveWizard usage
-                SizeCompressed = (int)(metaInt[2]),
-                SizeDecompressed = (int)(metaInt[7]),
-            };
-        }
+                container.Exists = false;
+                return;
+            }
 
-        return metaInt;
+            container.Extra = new PlatformExtra
+            {
+                PlaystationOffset = (int)(converted[MEMORYDAT_META_INDEX_OFFSET]),
+                Size = converted[MEMORYDAT_META_INDEX_SIZE], // either compressed or decompressed size depending on SaveWizard usage
+                SizeDisk = converted[2],
+                SizeDecompressed = converted[7],
+            };
+
+            container.Exists = converted[2] != 0;
+            container.LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(converted[6]).ToLocalTime();
+        }
     }
 
     protected override byte[] LoadData(Container container, uint[] meta)
     {
-        return LoadData(container, meta, container.Playstation?.Bytes ?? ReadData(container));
+        return LoadData(container, meta, container.Extra.Bytes ?? ReadData(container));
     }
 
     protected override byte[] ReadData(Container container)
@@ -345,13 +336,13 @@ public partial class PlatformPlaystation : Platform
         if (!_usesSaveStreaming || (_usesSaveWizard && container.IsSave))
         {
             using var reader = new BinaryReader(File.Open(container.DataFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-            reader.BaseStream.Seek(container.Playstation!.Offset, SeekOrigin.Begin);
+            reader.BaseStream.Seek(container.Extra.PlaystationOffset!.Value, SeekOrigin.Begin);
 
-            var data = reader.ReadBytes(container.Playstation!.Size);
+            var data = reader.ReadBytes((int)(container.Extra.Size));
 
             // Store raw bytes as the block size is dynamic and moves if SaveWizard is used. Therefore the entire file needs to be rebuild.
             if (!_usesSaveStreaming)
-                container.Playstation!.Bytes = data;
+                container.Extra.Bytes = data;
 
             return data;
         }
@@ -365,35 +356,39 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveWizard)
             return data;
 
-        // Same as for Steam.
         if (_usesSaveStreaming)
         {
-            // No compression for account data.
-            if (!container.IsSave)
-            {
-                // Create PlayStation container in case it will be copied.
-                container.Playstation = new PlatformExtraPlaystation
-                {
-                    SizeCompressed = data.Length,
-                    SizeDecompressed = data.Length,
-                };
-                return data;
-            }
-
-            var result = DecompressSaveStreamingData(data);
-
-            // Create PlayStation container in case it will be copied.
-            container.Playstation = new PlatformExtraPlaystation
-            {
-                SizeCompressed = data.Length,
-                SizeDecompressed = result.Length,
-            };
-            return result;
+            // Same as for Steam.
+            return base.DecompressData(container, meta, data);
         }
         else
         {
-            _ = Globals.LZ4.Decode(data, out byte[] target, container.Playstation!.SizeDecompressed);
+            _ = Globals.LZ4.Decode(data, out byte[] target, (int)(container.Extra.SizeDecompressed));
             return target;
+        }
+    }
+
+    protected override void UpdateContainerWithDataInformation(Container container, byte[] raw, byte[] converted)
+    {
+        if (_usesSaveStreaming)
+        {
+            if (container.IsSave)
+            {
+                container.Extra = container.Extra with
+                {
+                    SizeDecompressed = (uint)(converted.Length),
+                    SizeDisk = (uint)(raw.Length),
+                };
+            }
+            // No compression for account data.
+            else
+            {
+                container.Extra = container.Extra with
+                {
+                    SizeDecompressed = (uint)(raw.Length),
+                    SizeDisk = (uint)(raw.Length),
+                };
+            }
         }
     }
 
@@ -405,7 +400,7 @@ public partial class PlatformPlaystation : Platform
     {
         if (_usesSaveStreaming)
         {
-            base.Write(container, writeTime: writeTime);
+            base.Write(container, writeTime);
         }
         else
         {
@@ -422,7 +417,13 @@ public partial class PlatformPlaystation : Platform
                     container.Exists = true;
                     container.IsSynced = true;
 
-                    (container.Playstation!.Bytes, _) = CreateData(container); // properties SizeCompressed and SizeDecompressed are set inside
+                    var data = CreateData(container); // updates container.Extra inside
+                    container.Extra = container.Extra with
+                    {
+                        Bytes = data,
+                    };
+
+                    //container.Extra.Bytes = CreateData(container);
                 }
 
                 if (Settings.SetLastWriteTime)
@@ -440,6 +441,20 @@ public partial class PlatformPlaystation : Platform
             container.WriteCallback.Invoke();
         }
     }
+    protected override byte[] CreateData(Container container)
+    {
+        var plain = container.GetJsonObject()!.GetBytes(Settings.UseMapping);
+        var encrypted = EncryptData(container, CompressData(container, plain));
+
+        container.Extra = container.Extra with
+        {
+            Size = _usesSaveWizard ? (uint)(plain.Length) : (uint)(encrypted.Length), // override because of this
+            SizeDecompressed = (uint)(plain.Length),
+            SizeDisk = (uint)(encrypted.Length),
+        };
+
+        return encrypted;
+    }
 
     protected override byte[] CompressData(Container container, byte[] data)
     {
@@ -448,10 +463,10 @@ public partial class PlatformPlaystation : Platform
             if (!container.IsSave)
                 return data;
 
-            var result = CompressSaveStreamingData(data);
+            var result = base.CompressData(container, data);
 
-            container.Playstation!.SizeDecompressed = data.Length;
-            container.Playstation!.SizeCompressed = result.Length;
+            //container.Extra.SizeDecompressed = (uint)(data.Length);
+            //container.Extra.SizeDisk = (uint)(result.Length);
 
             // SaveWizard will do the compression itself.
             if (_usesSaveWizard)
@@ -461,8 +476,10 @@ public partial class PlatformPlaystation : Platform
         }
         else
         {
-            container.Playstation!.SizeDecompressed = data.Length;
-            container.Playstation!.SizeCompressed = Globals.LZ4.Encode(data, out byte[] target);
+            //container.Extra.SizeDecompressed = (uint)(data.Length);
+            //container.Extra.SizeDisk = (uint)(Globals.LZ4.Encode(data, out byte[] target));
+
+            _ = Globals.LZ4.Encode(data, out byte[] target);
 
             // SaveWizard will do the compression itself.
             if (_usesSaveWizard)
@@ -486,7 +503,7 @@ public partial class PlatformPlaystation : Platform
         }
     }
 
-    protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
+    protected override byte[] CreateMeta(Container container, byte[] data)
     {
         if (_usesSaveStreaming)
         {
@@ -500,7 +517,7 @@ public partial class PlatformPlaystation : Platform
                 writer.Write(2);
                 writer.Write(META_OFFSET);
                 writer.Write(1);
-                writer.Write(container.Playstation!.SizeCompressed);
+                writer.Write(container.Extra.SizeDisk);
 
                 writer.Seek(META_OFFSET + 0x4, SeekOrigin.Begin);
 
@@ -508,7 +525,7 @@ public partial class PlatformPlaystation : Platform
 
                 writer.Seek(0x5C, SeekOrigin.Begin);
 
-                writer.Write(container.Playstation!.SizeDecompressed);
+                writer.Write(container.Extra.SizeDecompressed);
 
                 writer.Seek(4, SeekOrigin.Current);
 
@@ -528,11 +545,12 @@ public partial class PlatformPlaystation : Platform
             //  5. META INDEX           ( 4)
             //  6. TIMESTAMP            ( 4)
             //  7. DECOMPRESSED SIZE    ( 4)
-            //  8. EMPTY                (32)
-            // 16. SAVEWIZARD OFFSET    ( 4)
-            // 17. 1                    ( 4)
-            // 18. UNKNOWN              ( 8)
-            //                          (48)
+            //                          (32) // Vanilla
+
+            //  8. SAVEWIZARD OFFSET    ( 4)
+            //  9. 1                    ( 4)
+            // 10. EMPTY                ( 8)
+            //                          (48) // SaveWizard
 
             var buffer = new byte[META_SIZE];
 
@@ -540,18 +558,18 @@ public partial class PlatformPlaystation : Platform
             {
                 var legacyOffset = !container.IsSave ? 0x20000 : (uint)(MEMORYDAT_OFFSET_CONTAINER + (container.CollectionIndex * MEMORYDAT_SIZE_CONTAINER));
                 var legacyLength = !container.IsSave ? MEMORYDAT_SIZE_ACCOUNTDATA : MEMORYDAT_SIZE_CONTAINER;
-                var unixSeconds = (uint)(container.LastWriteTime.ToUniversalTime().ToUnixTimeSeconds());
+                var unixSeconds = (uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
 
                 using var writer = new BinaryWriter(new MemoryStream(buffer));
 
                 writer.Write(META_HEADER);
                 writer.Write(Globals.Constants.SAVE_FORMAT_2);
-                writer.Write(container.Playstation!.SizeCompressed);
+                writer.Write(container.Extra.SizeDisk);
                 writer.Write(legacyOffset);
                 writer.Write(legacyLength);
                 writer.Write(container.MetaIndex);
                 writer.Write(unixSeconds);
-                writer.Write(container.Playstation!.SizeDecompressed);
+                writer.Write(container.Extra.SizeDecompressed);
 
                 if (_usesSaveWizard)
                 {
@@ -560,11 +578,11 @@ public partial class PlatformPlaystation : Platform
                     {
                         var precedingContainer = SaveContainerCollection.Where(i => i.Exists && i.CollectionIndex < container.CollectionIndex);
 
-                        offset += AccountContainer!.Playstation!.SizeDecompressed;
-                        offset += precedingContainer.Sum(i => SAVEWIZARD_HEADER.Length + i.Playstation!.SizeDecompressed);
+                        offset += AccountContainer!.Extra.SizeDecompressed;
+                        offset += precedingContainer.Sum(i => SAVEWIZARD_HEADER.Length + i.Extra.SizeDecompressed);
                         offset += SAVEWIZARD_HEADER.Length;
                     }
-                    writer.Write(offset);
+                    writer.Write((uint)(offset));
                     writer.Write(1);
                 }
             }
@@ -609,7 +627,7 @@ public partial class PlatformPlaystation : Platform
 
             // AccountData
             {
-                var meta = CreateMeta(AccountContainer!, AccountContainer!.Playstation!.Bytes!, AccountContainer!.Playstation!.SizeDecompressed);
+                var meta = CreateMeta(AccountContainer!, AccountContainer!.Extra!.Bytes!);
                 writer.Write(meta);
                 writer.BaseStream.Seek(META_SIZE, SeekOrigin.Current); // skip index 1 as not used
             }
@@ -617,7 +635,7 @@ public partial class PlatformPlaystation : Platform
             // Container
             foreach (var container in SaveContainerCollection)
             {
-                var meta = CreateMeta(container, container.Playstation!.Bytes!, container.Playstation!.SizeDecompressed);
+                var meta = CreateMeta(container, container.Extra.Bytes!);
                 writer.Write(meta);
             }
         }
@@ -628,11 +646,11 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveWizard)
         {
             // AccountData
-            result = result.Concat(SAVEWIZARD_HEADER_BINARY).Concat(AccountContainer!.Playstation!.Bytes!);
+            result = result.Concat(SAVEWIZARD_HEADER_BINARY).Concat(AccountContainer!.Extra.Bytes!);
 
             // Container
             foreach (var container in SaveContainerCollection.Where(i => i.Exists))
-                result = result.Concat(SAVEWIZARD_HEADER_BINARY).Concat(container.Playstation!.Bytes!);
+                result = result.Concat(SAVEWIZARD_HEADER_BINARY).Concat(container.Extra.Bytes!);
         }
         else
         {
@@ -640,7 +658,7 @@ public partial class PlatformPlaystation : Platform
             buffer = new byte[MEMORYDAT_OFFSET_CONTAINER - MEMORYDAT_OFFSET_DATA];
             using (var writer = new BinaryWriter(new MemoryStream(buffer)))
             {
-                writer.Write(AccountContainer!.Playstation!.Bytes!);
+                writer.Write(AccountContainer!.Extra.Bytes!);
             }
             result = result.Concat(buffer);
 
@@ -651,7 +669,7 @@ public partial class PlatformPlaystation : Platform
                 if (container.Exists)
                 {
                     using var writer = new BinaryWriter(new MemoryStream(buffer));
-                    writer.Write(container.Playstation!.Bytes!);
+                    writer.Write(container.Extra.Bytes!);
                 }
                 result = result.Concat(buffer);
             }
@@ -686,9 +704,6 @@ public partial class PlatformPlaystation : Platform
                 }
                 else if (Destination.Exists || !Destination.Exists && CanCreate)
                 {
-                    if (GuardPlatformExtra(Source))
-                        throw new InvalidOperationException("Cannot copy as the source container has no platform extra.");
-
                     if (!Source.IsLoaded)
                         BuildContainerFull(Source);
 
@@ -707,7 +722,7 @@ public partial class PlatformPlaystation : Platform
 
                     // Properties requied to properly build the container below.
                     Destination.BaseVersion = Source.BaseVersion;
-                    Destination.VersionEnum = Source.VersionEnum;
+                    Destination.GameVersionEnum = Source.GameVersionEnum;
                     Destination.SeasonEnum = Source.SeasonEnum;
 
                     Destination.SetJsonObject(Source.GetJsonObject());
@@ -724,18 +739,13 @@ public partial class PlatformPlaystation : Platform
         UpdateUserIdentification();
     }
 
-    protected override bool GuardPlatformExtra(Container source)
-    {
-        return source.Playstation is null;
-    }
-
     protected override void CopyPlatformExtra(Container destination, Container source)
     {
-        destination.Playstation = new PlatformExtraPlaystation
+        destination.Extra = new PlatformExtra
         {
-            Bytes = source.Playstation!.Bytes,
-            SizeCompressed = source.Playstation!.SizeCompressed,
-            SizeDecompressed = source.Playstation!.SizeDecompressed,
+            Bytes = source.Extra.Bytes,
+            SizeDisk = source.Extra.SizeDisk,
+            SizeDecompressed = source.Extra.SizeDecompressed,
         };
     }
 
@@ -835,14 +845,14 @@ public partial class PlatformPlaystation : Platform
 
                     // Properties requied to properly build the container below.
                     Destination.BaseVersion = Source.BaseVersion;
-                    Destination.VersionEnum = Source.VersionEnum;
+                    Destination.GameVersionEnum = Source.GameVersionEnum;
                     Destination.SeasonEnum = Source.SeasonEnum;
 
                     Destination.SetJsonObject(Source.GetJsonObject());
                     TransferOwnership(Destination, sourceTransferData);
 
                     // Update bytes in platform extra as it is what will be written later.
-                    (Destination.Playstation!.Bytes, _) = CreateData(Destination);
+                    Destination.Extra!.Bytes = CreateData(Destination);
 
                     BuildContainerFull(Destination);
                 }
@@ -858,7 +868,7 @@ public partial class PlatformPlaystation : Platform
 
     protected override void CreatePlatformExtra(Container destination, Container source)
     {
-        destination.Playstation = new();
+        destination.Extra = new();
     }
 
     #endregion
@@ -875,7 +885,7 @@ public partial class PlatformPlaystation : Platform
         for (var containerIndex = 0; containerIndex < COUNT_SAVES_TOTAL; containerIndex++)
         {
             // Reset bytes to read the file again.
-            SaveContainerCollection[containerIndex].Playstation!.Bytes = null;
+            SaveContainerCollection[containerIndex].Extra.Bytes = null;
 
             // Rebuild new container to set its properties.
             if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)

@@ -120,15 +120,18 @@ public partial class PlatformSwitch : Platform
     private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
         var data = new FileInfo(Path.Combine(Location!.FullName, $"savedata{metaIndex:D2}.hg"));
+        var meta = new FileInfo(Path.Combine(Location.FullName, $"manifest{metaIndex:D2}.hg"));
+
         return new Container(metaIndex)
         {
             DataFile = data,
             Extra = new()
             {
                 /// Additional values will be set in <see cref="DecryptMeta"/>.
+                Size = meta.Exists ? (uint)(meta.Length) : 0,
                 SizeDisk = data.Exists ? (uint)(data.Length) : 0,
             },
-            MetaFile = new FileInfo(Path.Combine(Location!.FullName, $"manifest{metaIndex:D2}.hg")),
+            MetaFile = meta,
         };
     }
 
@@ -136,28 +139,36 @@ public partial class PlatformSwitch : Platform
 
     #region Load
 
-    protected override uint[] DecryptMeta(Container container, byte[] meta)
+    protected override void UpdateContainerWithMetaInformation(Container container, byte[] raw, uint[] converted)
     {
-        var value = base.DecryptMeta(container, meta);
-
         container.Extra = new()
         {
 #if NETSTANDARD2_0
-            Bytes = meta.Skip(META_LENGTH_KNOWN).ToArray(),
+            Bytes = raw.Skip(META_LENGTH_KNOWN).ToArray(),
 #else
-            Bytes = meta[META_LENGTH_KNOWN..],
+            Bytes = raw[META_LENGTH_KNOWN..],
 #endif
 
-            Size = (uint)(meta.Length),
-            SizeDecompressed = meta[2],
-            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(value[4]).ToLocalTime(),
-            BaseVersion = (int)(value[5]),
-            GameMode = BitConverter.ToInt16(meta, 6 * sizeof(uint)),
-            Season = BitConverter.ToInt16(meta, 6 * sizeof(uint) + 2),
-            TotalPlayTime = value[7],
+            Size = (uint)(raw.Length),
+            SizeDecompressed = converted[2],
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(converted[4]).ToLocalTime(),
+            BaseVersion = (int)(converted[5]),
+            GameMode = BitConverter.ToInt16(raw, 6 * sizeof(uint)),
+            Season = BitConverter.ToInt16(raw, 6 * sizeof(uint) + 2),
+            TotalPlayTime = converted[7],
         };
 
-        return value;
+        if (container.Extra.Size == 0)
+            container.Extra.Size = (uint)(raw.Length);
+    }
+
+    protected override void UpdateContainerWithDataInformation(Container container, byte[] raw, byte[] converted)
+    {
+        if (container.Extra.SizeDecompressed == 0)
+            container.Extra.SizeDecompressed = (uint)(converted.Length);
+
+        if (container.Extra.SizeDisk == 0)
+            container.Extra.SizeDisk = (uint)(raw.Length);
     }
 
     #endregion
@@ -203,7 +214,7 @@ public partial class PlatformSwitch : Platform
             writer.Write(container.MetaIndex); // 4
             writer.Write(unixSeconds); // 4
             writer.Write(container.Extra.BaseVersion); // 4
-            writer.Write(container.IsWaypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
+            writer.Write(container.Is400Waypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
             writer.Write(container.Extra.Season); // 2
             writer.Write(container.Extra.TotalPlayTime); // 4
         }
@@ -222,7 +233,7 @@ public partial class PlatformSwitch : Platform
     {
         destination.Extra = new PlatformExtra
         {
-            Bytes = new byte[(source.IsWaypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
+            Bytes = new byte[(source.Is400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
             BaseVersion = source.Extra.BaseVersion,
             TotalPlayTime = source.Extra.TotalPlayTime,
         };

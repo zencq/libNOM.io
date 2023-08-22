@@ -53,6 +53,8 @@ internal record class PlatformExtra
 
     internal string SaveSummary = string.Empty;
 
+    internal byte DifficultyPreset;
+
     #endregion
 
     #region Microsoft

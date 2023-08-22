@@ -4,7 +4,7 @@
 /// <summary>
 /// Specifies all known Expeditions incl. a placeholder for the next one.
 /// </summary>
-public enum SeasonEnum
+public enum SeasonEnum : uint
 {
     None = 0,
     Pioneers = None, // 1st

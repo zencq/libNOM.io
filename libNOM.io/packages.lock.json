@@ -25,9 +25,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.5, )",
-        "resolved": "1.3.5",
-        "contentHash": "TS4mqlT0X1OlnvOGNfl02QdVUhuqgWuCnn7UxupIa7C9Pb6qlQ5yZA2sPhRh0OSmVULaQU64KV4wJuu//UyVQQ==",
+        "requested": "[1.3.6, )",
+        "resolved": "1.3.6",
+        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A==",
         "dependencies": {
           "System.Memory": "4.5.5",
           "System.Runtime.CompilerServices.Unsafe": "5.0.0"
@@ -45,12 +45,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.9.1.2, )",
-        "resolved": "0.9.1.2",
-        "contentHash": "/QoTJOMTHuwGhUov06pyP5rz6LxX/VI6xEsPTGJr5fnEV7P8IIgRIJ9Z/PJ75vgghNJiJih4Y9JUpJ4d+XfoUA==",
+        "requested": "[0.9.1.20, )",
+        "resolved": "0.9.1.20",
+        "contentHash": "1yAEICxt6RmwT/pUVQxBucjT7g3gAK6ngKKoZIeL8Q9dPMoDSJtIlP9BPlC6Boc/v/T7cSPpSG0yX7b3Zt8GUg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "6.1.0"
+          "Octokit": "7.1.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -166,8 +166,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "6.1.0",
-        "contentHash": "ZGXknnmO+PaKkw9BU/ysSjuDnvIFpzQjIdUQy62k7nllmqh3sxkkU8XHgfThav3UuPKW7sEMsVJqRWYfYU3dUw=="
+        "resolved": "7.1.0",
+        "contentHash": "v2qhKBe1Zlssa4XOmpOXNDFBrOAMw2tBmr8L8YMSrEi+PlF/L/PboZcXHSkZuhIxIeOGxEFiwkuJLkvG4aHNHQ=="
       },
       "System.Buffers": {
         "type": "Transitive",
@@ -224,9 +224,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.5, )",
-        "resolved": "1.3.5",
-        "contentHash": "TS4mqlT0X1OlnvOGNfl02QdVUhuqgWuCnn7UxupIa7C9Pb6qlQ5yZA2sPhRh0OSmVULaQU64KV4wJuu//UyVQQ==",
+        "requested": "[1.3.6, )",
+        "resolved": "1.3.6",
+        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A==",
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
@@ -243,12 +243,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.9.1.2, )",
-        "resolved": "0.9.1.2",
-        "contentHash": "/QoTJOMTHuwGhUov06pyP5rz6LxX/VI6xEsPTGJr5fnEV7P8IIgRIJ9Z/PJ75vgghNJiJih4Y9JUpJ4d+XfoUA==",
+        "requested": "[0.9.1.20, )",
+        "resolved": "0.9.1.20",
+        "contentHash": "1yAEICxt6RmwT/pUVQxBucjT7g3gAK6ngKKoZIeL8Q9dPMoDSJtIlP9BPlC6Boc/v/T7cSPpSG0yX7b3Zt8GUg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "6.1.0"
+          "Octokit": "7.1.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -334,8 +334,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "6.1.0",
-        "contentHash": "ZGXknnmO+PaKkw9BU/ysSjuDnvIFpzQjIdUQy62k7nllmqh3sxkkU8XHgfThav3UuPKW7sEMsVJqRWYfYU3dUw=="
+        "resolved": "7.1.0",
+        "contentHash": "v2qhKBe1Zlssa4XOmpOXNDFBrOAMw2tBmr8L8YMSrEi+PlF/L/PboZcXHSkZuhIxIeOGxEFiwkuJLkvG4aHNHQ=="
       },
       "System.Buffers": {
         "type": "Transitive",
@@ -378,9 +378,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.5, )",
-        "resolved": "1.3.5",
-        "contentHash": "TS4mqlT0X1OlnvOGNfl02QdVUhuqgWuCnn7UxupIa7C9Pb6qlQ5yZA2sPhRh0OSmVULaQU64KV4wJuu//UyVQQ=="
+        "requested": "[1.3.6, )",
+        "resolved": "1.3.6",
+        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A=="
       },
       "LazyCache": {
         "type": "Direct",
@@ -394,12 +394,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.9.1.2, )",
-        "resolved": "0.9.1.2",
-        "contentHash": "/QoTJOMTHuwGhUov06pyP5rz6LxX/VI6xEsPTGJr5fnEV7P8IIgRIJ9Z/PJ75vgghNJiJih4Y9JUpJ4d+XfoUA==",
+        "requested": "[0.9.1.20, )",
+        "resolved": "0.9.1.20",
+        "contentHash": "1yAEICxt6RmwT/pUVQxBucjT7g3gAK6ngKKoZIeL8Q9dPMoDSJtIlP9BPlC6Boc/v/T7cSPpSG0yX7b3Zt8GUg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "6.1.0"
+          "Octokit": "7.1.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -485,8 +485,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "6.1.0",
-        "contentHash": "ZGXknnmO+PaKkw9BU/ysSjuDnvIFpzQjIdUQy62k7nllmqh3sxkkU8XHgfThav3UuPKW7sEMsVJqRWYfYU3dUw=="
+        "resolved": "7.1.0",
+        "contentHash": "v2qhKBe1Zlssa4XOmpOXNDFBrOAMw2tBmr8L8YMSrEi+PlF/L/PboZcXHSkZuhIxIeOGxEFiwkuJLkvG4aHNHQ=="
       },
       "System.Memory": {
         "type": "Transitive",
@@ -514,9 +514,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.5, )",
-        "resolved": "1.3.5",
-        "contentHash": "TS4mqlT0X1OlnvOGNfl02QdVUhuqgWuCnn7UxupIa7C9Pb6qlQ5yZA2sPhRh0OSmVULaQU64KV4wJuu//UyVQQ=="
+        "requested": "[1.3.6, )",
+        "resolved": "1.3.6",
+        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A=="
       },
       "LazyCache": {
         "type": "Direct",
@@ -530,12 +530,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.9.1.2, )",
-        "resolved": "0.9.1.2",
-        "contentHash": "/QoTJOMTHuwGhUov06pyP5rz6LxX/VI6xEsPTGJr5fnEV7P8IIgRIJ9Z/PJ75vgghNJiJih4Y9JUpJ4d+XfoUA==",
+        "requested": "[0.9.1.20, )",
+        "resolved": "0.9.1.20",
+        "contentHash": "1yAEICxt6RmwT/pUVQxBucjT7g3gAK6ngKKoZIeL8Q9dPMoDSJtIlP9BPlC6Boc/v/T7cSPpSG0yX7b3Zt8GUg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "6.1.0"
+          "Octokit": "7.1.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -621,8 +621,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "6.1.0",
-        "contentHash": "ZGXknnmO+PaKkw9BU/ysSjuDnvIFpzQjIdUQy62k7nllmqh3sxkkU8XHgfThav3UuPKW7sEMsVJqRWYfYU3dUw=="
+        "resolved": "7.1.0",
+        "contentHash": "v2qhKBe1Zlssa4XOmpOXNDFBrOAMw2tBmr8L8YMSrEi+PlF/L/PboZcXHSkZuhIxIeOGxEFiwkuJLkvG4aHNHQ=="
       },
       "System.Memory": {
         "type": "Transitive",

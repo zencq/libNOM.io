@@ -13,7 +13,10 @@ public class CommonTestInitializeCleanup
     protected const uint SAVE_FORMAT_2 = 0x7D1; // 2001
     protected const uint SAVE_FORMAT_3 = 0x7D2; // 2002
 
-    protected const int FILESYSTEMWATCHER_SLEEP = 2000;
+    protected const int FILESYSTEMWATCHER_SLEEP = 5000;
+
+    protected const int OFFSET_INDEX = 2;
+
     protected static readonly int[] MUSICVOLUME_INDICES = new[] { 1, 7 };
     protected const string MUSICVOLUME_JSON_PATH = "UserSettingsData.MusicVolume";
     protected const int MUSICVOLUME_NEW_AMOUNT = 100;
@@ -24,6 +27,12 @@ public class CommonTestInitializeCleanup
     #endregion
 
     #region Assert
+
+    protected static void AssertAllAreEqual(IEnumerable<byte> expected, params IEnumerable<byte>[] actual)
+    {
+        foreach (var value in actual)
+            Assert.IsTrue(expected.SequenceEqual(value));
+    }
 
     protected static void AssertAllAreEqual(int expected, params int[] actual)
     {
@@ -49,6 +58,13 @@ public class CommonTestInitializeCleanup
             Assert.AreEqual(expected, value);
     }
 
+    protected static void AssertAllNotZero(params IEnumerable<byte>[] actual)
+    {
+        foreach (var value in actual)
+            if (value.Any(i => i == 0))
+                throw new AssertFailedException();
+    }
+
     protected static void AssertAllNotZero(params uint[] actual)
     {
         foreach (var value in actual)
@@ -67,6 +83,13 @@ public class CommonTestInitializeCleanup
     {
         foreach (var value in actual)
             if (value.Any(i => i != 0))
+                throw new AssertFailedException();
+    }
+
+    protected static void AssertAllZero(params uint[] actual)
+    {
+        foreach (var value in actual)
+            if (value != 0)
                 throw new AssertFailedException();
     }
 

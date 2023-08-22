@@ -675,6 +675,9 @@ internal static partial class Json
         GameVersion = CreativeVersion/BaseVersion (Obfuscated = Deobfuscated)
         ??? = ????/???? (??? = ?)
 
+        Echoes
+        440 = ????/???? (??? = ?)
+
         Singularity
         438 = 4657/4145
         437 = 4657/4145
@@ -845,6 +848,8 @@ internal static partial class Json
         */
 
         var usesMapping = jsonObject.UsesMapping();
+
+        //return GameVersionEnum.Echoes;
 
         if (container.BaseVersion >= 4144) // 4.20, 4.25, 4.30
         {

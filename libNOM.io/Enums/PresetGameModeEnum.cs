@@ -4,7 +4,7 @@
 /// Specifies available game modes.
 /// </summary>
 /// <seealso cref="libMBIN\Source\NMS\GameComponents\GcGameMode.cs"/>
-public enum PresetGameModeEnum
+public enum PresetGameModeEnum : uint
 {
     Unspecified,
     Normal,

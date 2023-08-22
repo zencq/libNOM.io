@@ -230,27 +230,6 @@ public partial class PlatformSteam : Platform
             hash += 0x61C88647;
         }
 
-        // Do not write wrong data.
-        if (value[0] == META_HEADER)
-        {
-            var mode = BitConverter.GetBytes(value[18]);
-            container.Extra = container.Extra with
-            {
-#if NETSTANDARD2_0
-                Bytes = value.Skip(META_LENGTH_KNOWN / sizeof(uint)).GetBytes(),
-#else
-                Bytes = value[(META_LENGTH_KNOWN / sizeof(uint))..].GetBytes(),
-#endif
-
-                SizeDecompressed = value[14],
-                BaseVersion = (int)(value[17]),
-                GameMode = BitConverter.ToInt16(mode, 0),
-                Season = BitConverter.ToInt16(mode, 2),
-                TotalPlayTime = value[19],
-            };
-            container.SaveVersion = Calculate.CalculateVersion(container.Extra.BaseVersion, container.Extra.GameMode, container.Extra.Season);
-        }
-
         return value;
     }
 
@@ -272,6 +251,42 @@ public partial class PlatformSteam : Platform
     private static uint RotateLeft(uint value, int bits)
     {
         return (value << bits) | (value >> (32 - bits));
+    }
+
+    protected override void UpdateContainerWithMetaInformation(Container container, byte[] raw, uint[] converted)
+    {
+        // Do not write wrong data.
+        if (converted[0] == META_HEADER)
+        {
+            var mode = BitConverter.GetBytes(converted[18]);
+            container.Extra = container.Extra with
+            {
+#if NETSTANDARD2_0
+                Bytes = converted.Skip(META_LENGTH_KNOWN / sizeof(uint)).GetBytes(),
+#else
+                Bytes = converted[(META_LENGTH_KNOWN / sizeof(uint))..].GetBytes(),
+#endif
+
+                SizeDecompressed = converted[14],
+                BaseVersion = (int)(converted[17]),
+                GameMode = BitConverter.ToInt16(mode, 0),
+                Season = BitConverter.ToInt16(mode, 2),
+                TotalPlayTime = converted[19],
+            };
+            container.SaveVersion = Calculate.CalculateVersion(container.Extra.BaseVersion, container.Extra.GameMode, container.Extra.Season);
+        }
+
+        if (container.Extra.Size == 0)
+            container.Extra.Size = (uint)(raw.Length);
+    }
+
+    protected override void UpdateContainerWithDataInformation(Container container, byte[] raw, byte[] converted)
+    {
+        if (container.Extra.SizeDecompressed == 0)
+            container.Extra.SizeDecompressed = (uint)(converted.Length);
+
+        if (container.Extra.SizeDisk == 0)
+            container.Extra.SizeDisk = (uint)(raw.Length);
     }
 
     #endregion
@@ -309,9 +324,9 @@ public partial class PlatformSteam : Platform
         // Editing account data is possible since Frontiers and therefore has always the new format.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
         writer.Write(META_HEADER); // 4
-        writer.Write((container.IsAccount || container.IsFrontiers) ? Globals.Constants.SAVE_FORMAT_3 : Globals.Constants.SAVE_FORMAT_2); // 4
+        writer.Write((container.IsAccount || container.Is360Frontiers) ? Globals.Constants.SAVE_FORMAT_3 : Globals.Constants.SAVE_FORMAT_2); // 4
 
-        if (container.IsSave && container.IsFrontiers) // SAVE_FORMAT_3
+        if (container.IsSave && container.Is360Frontiers) // SAVE_FORMAT_3
         {
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current);
@@ -322,7 +337,7 @@ public partial class PlatformSteam : Platform
             writer.Seek(0x8, SeekOrigin.Current);
 
             writer.Write(container.Extra.BaseVersion); // 4
-            writer.Write(container.IsWaypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
+            writer.Write(container.Is400Waypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
             writer.Write(container.Extra.Season); // 2
             writer.Write(container.Extra.TotalPlayTime); // 4
         }
@@ -399,7 +414,7 @@ public partial class PlatformSteam : Platform
     {
         destination.Extra = new()
         {
-            Bytes = new byte[(source.IsWaypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
+            Bytes = new byte[(source.Is400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
             Size = source.Extra.Size,
             SizeDecompressed = source.Extra.SizeDecompressed,
             SizeDisk = source.DataFile?.Exists == true ? (uint)(source.DataFile!.Length) : 0,

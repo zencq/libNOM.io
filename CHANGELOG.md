@@ -12,11 +12,14 @@ All notable changes to this project will be documented in this file. It uses the
 * A setting to choose between writing always or only if a container is unsynced
 ### Changed
 * Renamed the settings _LastWriteTime_ and _Mapping_
+* Names of the IsVersion flags now include the version number as well
+* DifficultyPresetTypeEnum has been added and therefore PresetGameModeEnum is now
+  only used internal
 ### Deprecated
 ### Removed
 ### Fixed
 * The _Mapping_ settings is now only used to determine input/output and not for modifying things internally
-* A number of different issues reported on [Discord](https://discord.gg/nomnom-762409407488720918) and the [NomNom repository](https://github.com/zencq/NomNom/issues)
+* A number of different issues reported on [Discord](https://discord.gg/nomnom-762409407488720918) and the [NomNom repository](https://github.com/zencq/NomNom/milestone/10)
 ### Security
 
 ## 0.5.3 (2023-06-24)

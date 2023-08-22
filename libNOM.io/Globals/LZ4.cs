@@ -35,6 +35,7 @@ internal static class LZ4
         if (targetLength > 0)
         {
             target = new byte[targetLength];
+            // TODO ReadOnlySpan
             bytesWritten = LZ4Codec.Decode(self, 0, self.Length, target, 0, target.Length);
         }
 

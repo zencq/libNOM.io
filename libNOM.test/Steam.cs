@@ -91,7 +91,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         if (metaA.Length == META_SIZE)
         {
-            if (container.IsAccount || container.IsSave && !container.IsFrontiers)
+            if (container.IsAccount || container.IsSave && !container.Is360Frontiers)
             {
                 // Editing account data is possible since Frontiers and therefore has always the new format but otherwise uses the old format.
                 AssertAllAreEqual(container.IsAccount ? SAVE_FORMAT_3 : SAVE_FORMAT_2, metaA[1], metaB[1]);
@@ -100,7 +100,7 @@ public class SteamTest : CommonTestInitializeCleanup
                 AssertAllNotZero(metaA.Skip(6).Take(8), metaB.Skip(6).Take(8));
                 AssertAllZero(metaA.Skip(14), metaB.Skip(14));
             }
-            else if (container.IsFrontiers)
+            else if (container.Is360Frontiers)
             {
                 AssertAllAreEqual(SAVE_FORMAT_3, metaA[1], metaB[1]);
 
@@ -326,7 +326,6 @@ public class SteamTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -378,7 +377,6 @@ public class SteamTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -436,7 +434,6 @@ public class SteamTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -495,7 +492,6 @@ public class SteamTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -547,7 +543,6 @@ public class SteamTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -600,7 +595,6 @@ public class SteamTest : CommonTestInitializeCleanup
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             SetLastWriteTime = false,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -648,7 +642,6 @@ public class SteamTest : CommonTestInitializeCleanup
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             WriteAlways = true,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act
@@ -694,7 +687,6 @@ public class SteamTest : CommonTestInitializeCleanup
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             WriteAlways = false,
         };
-        var userIdentification = ReadUserIdentification(path);
         var writeCallback = false;
 
         // Act

@@ -104,7 +104,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     public DateTimeOffset? LastWriteTime // { get; set; }
     {
         get => Extra.LastWriteTime ?? (Exists ? DataFile?.LastWriteTime : null);
-        set => Extra.LastWriteTime = value;
+        set => Extra = Extra with { LastWriteTime = value };
     }
 
     public FileInfo? MetaFile { get; internal set; }
@@ -136,7 +136,13 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     public int BaseVersion
     {
         get => Extra.BaseVersion;
-        internal set => Extra.BaseVersion = value;
+        internal set => Extra = Extra with { BaseVersion = value };
+    }
+
+    public DifficultyPresetTypeEnum GameDifficultyPresetEnum // { get; internal set; }
+    {
+        get => (DifficultyPresetTypeEnum)(Extra.DifficultyPreset);
+        internal set => Extra = Extra with { DifficultyPreset = (byte)(value) };
     }
 
     public PresetGameModeEnum GameModeEnum // { get; internal set; }
@@ -148,67 +154,86 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
             {
                 SaveVersion = Calculate.CalculateVersion(BaseVersion, value, SeasonEnum);
             }
-            Extra.GameMode = (short)(value);
+            Extra = Extra with { GameMode = (short)(value) };
         }
     }
 
     public GameVersionEnum GameVersionEnum { get; internal set; } = GameVersionEnum.Unknown;
 
-    public bool IsBeyondWithVehicleCam => IsVersion(GameVersionEnum.BeyondWithVehicleCam); // { get; }
+    public bool Is211BeyondWithVehicleCam => IsVersion(GameVersionEnum.BeyondWithVehicleCam); // { get; }
 
-    public bool IsSynthesis => IsVersion(GameVersionEnum.Synthesis); // { get; }
+    public bool Is220Synthesis => IsVersion(GameVersionEnum.Synthesis); // { get; }
 
-    public bool IsSynthesisWithJetpack => IsVersion(GameVersionEnum.SynthesisWithJetpack); // { get; }
+    public bool Is226SynthesisWithJetpack => IsVersion(GameVersionEnum.SynthesisWithJetpack); // { get; }
 
-    public bool IsLivingShip => IsVersion(GameVersionEnum.LivingShip); // { get; }
+    public bool Is230LivingShip => IsVersion(GameVersionEnum.LivingShip); // { get; }
 
-    public bool IsExoMech => IsVersion(GameVersionEnum.ExoMech); // { get; }
+    public bool Is240ExoMech => IsVersion(GameVersionEnum.ExoMech); // { get; }
 
-    public bool IsCrossplay => IsVersion(GameVersionEnum.Crossplay); // { get; }
+    public bool Is250Crossplay => IsVersion(GameVersionEnum.Crossplay); // { get; }
 
-    public bool IsDesolation => IsVersion(GameVersionEnum.Desolation); // { get; }
+    public bool Is260Desolation => IsVersion(GameVersionEnum.Desolation); // { get; }
 
-    public bool IsOrigins => IsVersion(GameVersionEnum.Origins); // { get; }
+    public bool Is300Origins => IsVersion(GameVersionEnum.Origins); // { get; }
 
-    public bool IsNextGeneration => IsVersion(GameVersionEnum.NextGeneration); // { get; }
+    public bool Is310NextGeneration => IsVersion(GameVersionEnum.NextGeneration); // { get; }
 
-    public bool IsCompanions => IsVersion(GameVersionEnum.Companions); // { get; }
+    public bool Is320Companions => IsVersion(GameVersionEnum.Companions); // { get; }
 
-    public bool IsExpeditions => IsVersion(GameVersionEnum.Expeditions); // { get; }
+    public bool Is330Expeditions => IsVersion(GameVersionEnum.Expeditions); // { get; }
 
-    public bool IsBeachhead => IsVersion(GameVersionEnum.Beachhead); // { get; }
+    public bool Is340Beachhead => IsVersion(GameVersionEnum.Beachhead); // { get; }
 
-    public bool IsPrisms => IsVersion(GameVersionEnum.Prisms); // { get; }
+    public bool Is350Prisms => IsVersion(GameVersionEnum.Prisms); // { get; }
 
-    public bool IsPrismsWithBytebeatAuthor => IsVersion(GameVersionEnum.PrismsWithBytebeatAuthor); // { get; }
+    public bool Is351PrismsWithBytebeatAuthor => IsVersion(GameVersionEnum.PrismsWithBytebeatAuthor); // { get; }
 
-    public bool IsFrontiers => IsVersion(GameVersionEnum.Frontiers); // { get; }
+    public bool Is360Frontiers => IsVersion(GameVersionEnum.Frontiers); // { get; }
 
-    public bool IsEmergence => IsVersion(GameVersionEnum.Emergence); // { get; }
+    public bool Is370Emergence => IsVersion(GameVersionEnum.Emergence); // { get; }
 
-    public bool IsSentinel => IsVersion(GameVersionEnum.Sentinel); // { get; }
+    public bool Is380Sentinel => IsVersion(GameVersionEnum.Sentinel); // { get; }
 
-    public bool IsSentinelWithWeaponResource => IsVersion(GameVersionEnum.SentinelWithWeaponResource); // { get; }
+    public bool Is381SentinelWithWeaponResource => IsVersion(GameVersionEnum.SentinelWithWeaponResource); // { get; }
 
-    public bool IsSentinelWithVehicleAI => IsVersion(GameVersionEnum.SentinelWithVehicleAI); // { get; }
+    public bool Is384SentinelWithVehicleAI => IsVersion(GameVersionEnum.SentinelWithVehicleAI); // { get; }
 
-    public bool IsOutlaws => IsVersion(GameVersionEnum.Outlaws); // { get; }
+    public bool Is385Outlaws => IsVersion(GameVersionEnum.Outlaws); // { get; }
 
-    public bool IsLeviathan => IsVersion(GameVersionEnum.Leviathan); // { get; }
+    public bool Is390Leviathan => IsVersion(GameVersionEnum.Leviathan); // { get; }
 
-    public bool IsEndurance => IsVersion(GameVersionEnum.Endurance); // { get; }
+    public bool Is394Endurance => IsVersion(GameVersionEnum.Endurance); // { get; }
 
-    public bool IsWaypoint => IsVersion(GameVersionEnum.Waypoint); // { get; }
+    public bool Is400Waypoint => IsVersion(GameVersionEnum.Waypoint); // { get; }
 
-    public bool IsWaypointWithAgileStat => IsVersion(GameVersionEnum.WaypointWithAgileStat); // { get; }
+    public bool Is404WaypointWithAgileStat => IsVersion(GameVersionEnum.WaypointWithAgileStat); // { get; }
 
-    public bool IsWaypointWithSuperchargedSlots => IsVersion(GameVersionEnum.WaypointWithSuperchargedSlots); // { get; }
+    public bool Is405WaypointWithSuperchargedSlots => IsVersion(GameVersionEnum.WaypointWithSuperchargedSlots); // { get; }
 
-    public bool IsFractal => IsVersion(GameVersionEnum.Fractal); // { get; }
+    public bool Is410Fractal => IsVersion(GameVersionEnum.Fractal); // { get; }
 
-    public bool IsInterceptor => IsVersion(GameVersionEnum.Interceptor); // { get; }
+    public bool Is420Interceptor => IsVersion(GameVersionEnum.Interceptor); // { get; }
 
-    public bool IsSingularity => IsVersion(GameVersionEnum.Singularity); // { get; }
+    public bool Is430Singularity => IsVersion(GameVersionEnum.Singularity); // { get; }
+
+    public bool Is440Echoes => IsVersion(GameVersionEnum.Echoes); // { get; }
+
+    internal SaveFormatEnum SaveFormatEnum
+    {
+        get
+        {
+            if (Is400Waypoint)
+                return SaveFormatEnum.Waypoint;
+
+            if (Is360Frontiers)
+                return SaveFormatEnum.Frontiers;
+
+            if (BaseVersion > Constants.THRESHOLD_VANILLA)
+                return SaveFormatEnum.Foundation;
+
+            return SaveFormatEnum.Vanilla;
+        }
+    }
 
     public string SaveName // { get; set; }
     {
@@ -218,7 +243,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
 
-            Extra.SaveName = value;
+            Extra = Extra with { SaveName = value };
         }
     }
 
@@ -230,7 +255,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
 
-            Extra.SaveSummary = value;
+            Extra = Extra with { SaveSummary = value };
         }
     }
 
@@ -245,7 +270,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
             {
                 SaveVersion = Calculate.CalculateVersion(BaseVersion, GameModeEnum, value);
             }
-            Extra.Season = (short)(value);
+            Extra = Extra with { Season = (short)(value) };
         }
     }
 
@@ -257,7 +282,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.Lg8", "PlayerStateData.TotalPlayTime");
 
-            Extra.TotalPlayTime = value;
+            Extra = Extra with { TotalPlayTime = value };
         }
     }
 
@@ -539,7 +564,7 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public override string ToString()
     {
-        return $"{nameof(Container)} {MetaIndex} {Identifier}";
+        return $"{nameof(Container)} {MetaIndex:00} {Identifier}{(Exists ? " (exists)" : string.Empty)}";
     }
 
     #endregion

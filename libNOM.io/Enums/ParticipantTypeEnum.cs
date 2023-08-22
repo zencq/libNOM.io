@@ -4,7 +4,7 @@
 /// 
 /// </summary>
 /// <seealso cref="libMBIN\Source\NMS\GameComponents\GcPlayerMissionParticipantType.cs"/>
-public enum ParticipantTypeEnum
+public enum ParticipantTypeEnum : uint
 {
     None,
     MissionGiver,
