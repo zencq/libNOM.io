@@ -2,7 +2,7 @@
 
 
 /// <summary>
-/// Specifies states used in the containers.index of the <see cref="PlatformMicrosoft"/>.
+/// Specifies sync states used in the containers.index of the <see cref="PlatformMicrosoft"/> used globally.
 /// </summary>
 internal enum MicrosoftIndexSyncStateEnum : uint
 {

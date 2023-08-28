@@ -1,4 +1,5 @@
-﻿using K4os.Compression.LZ4;
+﻿using CommunityToolkit.HighPerformance;
+using K4os.Compression.LZ4;
 
 namespace libNOM.io.Globals;
 
@@ -11,39 +12,34 @@ internal static class LZ4
     /// <param name="source"></param>
     /// <param name="target"></param>
     /// <returns>Number of bytes written, or negative value if output buffer is too small.</returns>
-    internal static int Encode(this byte[] source, out byte[] target)
+    internal static int Encode(ReadOnlySpan<byte> source, out Span<byte> target)
     {
-        target = new byte[LZ4Codec.MaximumOutputSize(source.Length)];
-        var bytesWritten = LZ4Codec.Encode(source, 0, source.Length, target, 0, target.Length);
+        target = new Span<byte>(new byte[LZ4Codec.MaximumOutputSize(source.Length)]);
+        var bytesWritten = LZ4Codec.Encode(source, target);
 
-        target = target.Take(bytesWritten).ToArray();
+        target = target.Slice(0, bytesWritten);
+
         return bytesWritten;
     }
 
     /// <summary>
     /// Decompresses data from one buffer into another.
     /// </summary>
-    /// <param name="self"></param>
+    /// <param name="source"></param>
     /// <param name="target"></param>
     /// <param name="targetLength"></param>
     /// <returns>Number of bytes written, or negative value if output buffer is too small.</returns>
-    internal static int Decode(this byte[] self, out byte[] target, int targetLength)
-    {
-        target = Array.Empty<byte>();
-        var bytesWritten = -1;
 
-        if (targetLength > 0)
-        {
-            target = new byte[targetLength];
-            // TODO ReadOnlySpan
-            bytesWritten = LZ4Codec.Decode(self, 0, self.Length, target, 0, target.Length);
-        }
+    internal static int Decode(ReadOnlySpan<byte> source, out Span<byte> target, int targetLength)
+    {
+        target = new Span<byte>(new byte[targetLength]);
+        var bytesWritten = LZ4Codec.Decode(source, target);
 
         // Fallback. https://github.com/MiloszKrajewski/K4os.Compression.LZ4#decompression
-        if (bytesWritten < 0)
+        if (bytesWritten == -1)
         {
-            target = new byte[self.Length * 255];
-            bytesWritten = LZ4Codec.Decode(self, 0, self.Length, target, 0, target.Length);
+            target = new Span<byte>(new byte[source.Length * 255]);
+            bytesWritten = LZ4Codec.Decode(source, target);
         }
 
         return bytesWritten;

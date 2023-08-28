@@ -44,7 +44,7 @@ public interface IPlatform
     public bool CanDelete { get; }
 
     /// <summary>
-    /// Whether the platform and the location it is in exists .
+    /// Whether the location for the platform exists.
     /// </summary>
     public bool Exists { get; }
 
@@ -59,17 +59,17 @@ public interface IPlatform
     public bool HasModding { get; }
 
     /// <summary>
+    /// Whether this platform is a console or not.
+    /// </summary>
+    public bool IsConsolePlatform { get; }
+
+    /// <summary>
     /// Whether any save files are found and added to the internal collection.
     /// </summary>
     public bool IsLoaded { get; }
 
     /// <summary>
-    /// Whether this platform is on personal computer or not (console otherwise).
-    /// </summary>
-    public bool IsPersonalComputerPlatform { get; }
-
-    /// <summary>
-    /// Whether the game is currently running on this platform.
+    /// Whether the game is currently running on this platform (only if not a console).
     /// </summary>
     public bool IsRunning { get; }
 
@@ -88,8 +88,14 @@ public interface IPlatform
 
     #region Platform Indicator
 
+    /// <summary>
+    /// Defines the platform via enum.
+    /// </summary>
     public PlatformEnum PlatformEnum { get; }
 
+    /// <summary>
+    /// Identification of the user including username and some ids.
+    /// </summary>
     public UserIdentificationData PlatformUserIdentification { get; }
 
     #endregion
@@ -101,45 +107,45 @@ public interface IPlatform
     #region Container
 
     /// <summary>
-    /// Gets the <see cref="Container"/> with the account data from this platform.
+    /// Gets the <see cref="Container"/> with the account data.
     /// </summary>
     /// <returns></returns>
     public Container? GetAccountContainer();
 
     /// <summary>
-    /// Gets a single <see cref="Container"/> with save data from this platform.
+    /// Gets a single <see cref="Container"/> with save data.
     /// </summary>
     /// <param name="collectionIndex"></param>
     /// <returns></returns>
     public Container? GetSaveContainer(int collectionIndex);
 
     /// <summary>
-    /// Gets all <see cref="Container"/> that exist.
+    /// Gets all <see cref="Container"/>s that exist.
     /// </summary>
     /// <returns></returns>
     public IEnumerable<Container> GetExistingContainers();
 
     /// <summary>
-    /// Gets all <see cref="Container"/> that are currently loaded.
+    /// Gets all <see cref="Container"/>s that are currently loaded.
     /// </summary>
     /// <returns></returns>
     public IEnumerable<Container> GetLoadedContainers();
 
     /// <summary>
-    /// Gets all <see cref="Container"/> for the specified slot.
+    /// Gets all <see cref="Container"/>s for the specified slot.
     /// </summary>
     /// <param name="slotIndex"></param>
     /// <returns></returns>
     public IEnumerable<Container> GetSlotContainers(int slotIndex);
 
     /// <summary>
-    /// Gets all <see cref="Container"/> that are loaded but unsynced.
+    /// Gets all <see cref="Container"/>s that are loaded but unsynced.
     /// </summary>
     /// <returns></returns>
     public IEnumerable<Container> GetUnsyncedContainers();
 
     /// <summary>
-    /// Gets all <see cref="Container"/> with unresolved changes by the <see cref="FileSystemWatcher"/>.
+    /// Gets all <see cref="Container"/>s with unresolved changes by the <see cref="FileSystemWatcher"/>.
     /// </summary>
     /// <returns></returns>
     public IEnumerable<Container> GetWatcherContainers();
@@ -173,7 +179,7 @@ public interface IPlatform
     #region Setter
 
     /// <summary>
-    /// Updates the instance with a new configuration.
+    /// Updates the instance with a new settings configuration.
     /// </summary>
     /// <param name="platformSettings"></param>
     public void SetSettings(PlatformSettings platformSettings);
@@ -195,11 +201,10 @@ public interface IPlatform
     /// </summary>
     /// <param name="container"></param>
     /// <param name="jsonObject"></param>
-    /// <exception cref="ArgumentNullException"/>
     public void Rebuild(Container container, JObject jsonObject);
 
     /// <summary>
-    /// Fully reloads of the specified <see cref="Container"/> and resets the data with those currently on the drive.
+    /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
     /// </summary>
     /// <param name="container"></param>
     public void Reload(Container container);
@@ -244,7 +249,7 @@ public interface IPlatform
     #region Copy
 
     /// <summary>
-    /// Uses a pair of <see cref="Container"/> to copy from one location to the other.
+    /// Uses a pair of <see cref="Container"/>s to copy from one location to the other.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="destination"></param>
@@ -267,7 +272,7 @@ public interface IPlatform
     public void Delete(Container container);
 
     /// <summary>
-    /// Deletes all files of all <see cref="Container"/> in the specified enumerable.
+    /// Deletes all files of all <see cref="Container"/>s in the specified enumerable.
     /// </summary>
     /// <param name="containers"></param>
     public void Delete(IEnumerable<Container> containers);
@@ -277,7 +282,7 @@ public interface IPlatform
     #region Move
 
     /// <summary>
-    /// Uses a pair of <see cref="Container"/> to move one location to the other.
+    /// Uses a pair of <see cref="Container"/>s to move one location to the other.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="destination"></param>
@@ -294,7 +299,7 @@ public interface IPlatform
     #region Swap
 
     /// <summary>
-    /// Uses a pair of <see cref="Container"/> to swap their locations.
+    /// Uses a pair of <see cref="Container"/>s to swap their locations.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="destination"></param>
@@ -313,15 +318,15 @@ public interface IPlatform
     /// <summary>
     /// Prepares the specified slot for transfer.
     /// </summary>
-    /// <param name="sourceSlot"></param>
+    /// <param name="sourceSlotIndex"></param>
     /// <returns></returns>
-    public ContainerTransferData PrepareTransferSource(int sourceSlot);
+    public ContainerTransferData PrepareTransferSource(int sourceSlotIndex);
 
     /// <summary>
     /// Ensures that the destination is prepared for the incoming <see cref="Transfer(ContainerTransferData, int)"/>.
     /// </summary>
-    /// <param name="destinationSlot"></param>
-    public void PrepareTransferDestination(int destinationSlot);
+    /// <param name="destinationSlotIndex"></param>
+    public void PrepareTransferDestination(int destinationSlotIndex);
 
     /// <summary>
     /// Transfers a specified slot to another account or platform according to the prepared <see cref="ContainerTransferData"/>.
@@ -338,7 +343,7 @@ public interface IPlatform
     #region FileSystemWatcher
 
     /// <summary>
-    /// Resolves automatic decions or those made by the user by reloading the container or mark as unsynced.
+    /// Resolves automatic decisions or those made by the user by reloading the container or mark as unsynced.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="execute"></param>

@@ -8,7 +8,7 @@ namespace libNOM.io.Enums;
 /// </summary>
 public enum GameVersionEnum : uint
 {
-    Unknown = 0,
+    Unknown,
     Vanilla = 100,
     Foundation = 110,
     PathFinder = 120,

@@ -17,12 +17,12 @@ public record class ContainerTransferData
     public bool TransferBase { get; set; } = true;
 
     /// <summary>
-    /// Data about all bases in <see cref="Containers"/> which should not be modified after preperation.
+    /// Data about all bases in <see cref="Container"/>s which should not be modified after preperation.
     /// </summary>
     public Dictionary<string, bool> TransferBaseReadonly { get; set; } = new();
 
     /// <summary>
-    /// Decisions of the user which bases should be transferred to avoid issues with uploaded ones.
+    /// Decisions of the user which bases should be transferred (e.g. to avoid issues with uploaded ones).
     /// </summary>
     public Dictionary<string, BaseUserDecisionData> TransferBaseUserDecision { get; set; } = new();
 

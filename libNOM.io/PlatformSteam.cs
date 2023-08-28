@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CommunityToolkit.HighPerformance;
+using libNOM.io.Services;
 using Newtonsoft.Json.Linq;
 using SpookilySharp;
 using System.Runtime.InteropServices;
@@ -16,21 +17,34 @@ public partial class PlatformSteam : Platform
     #region Platform Specific
 
     protected const uint META_HEADER = 0xEEEEEEBE; // 4008636094
-    protected const int META_LENGTH_KNOWN = 0x50; // 80 byte // usage: 1 uint, 2 byte
-    protected override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104 byte
-    protected override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360 byte
+    protected const int META_LENGTH_KNOWN = 0x50; // 80
+    protected override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104
+    protected override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360
+
+    #endregion
+
+    #region Generated Regex
+
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+    private static readonly Regex AnchorFileRegex0 = new("save\\d{0,2}\\.hg", RegexOptions.Compiled);
+#else
+    [GeneratedRegex("save\\d{0,2}\\.hg", RegexOptions.Compiled)]
+    private static partial Regex AnchorFileRegex0();
+#endif
 
     #endregion
 
     #region Directory Data
 
     public const string ACCOUNT_PATTERN = "st_76561198*";
+
     public static readonly string[] ANCHOR_FILE_GLOB = new[] { "save*.hg" };
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0! };
+    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
 #else
     public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
 #endif
+
     public static readonly string PATH = ((Func<string>)(() =>
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -47,47 +61,26 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    #region Generated Regex
-
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    private static readonly Regex AnchorFileRegex0 = new("save\\d{0,2}\\.hg", RegexOptions.Compiled);
-#else
-    [GeneratedRegex("save\\d{0,2}\\.hg", RegexOptions.Compiled)]
-    private static partial Regex AnchorFileRegex0();
-#endif
-
-    #endregion
-
     #endregion
 
     #region Field
 
-    private readonly HttpClient _httpClient = new();
+    private SteamService? _steamService;
     private string? _steamId;
 
     #endregion
 
     #region Property
 
-    #region Flags
+    private SteamService SteamService => _steamService ??= new();
 
-    public override bool CanCreate { get; } = true;
+    #region Configuration
 
-    public override bool CanRead { get; } = true;
+    // public //
 
-    public override bool CanUpdate { get; } = true;
+    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Steam;
 
-    public override bool CanDelete { get; } = true;
-
-    public override bool HasModding { get; } = true;
-
-    public override bool IsPersonalComputerPlatform { get; } = true;
-
-    public override bool RestartToApply { get; } = false;
-
-    #endregion
-
-    #region Platform Indicator
+    // protected //
 
     protected override string[] PlatformAnchorFileGlob { get; } = ANCHOR_FILE_GLOB;
 
@@ -108,9 +101,7 @@ public partial class PlatformSteam : Platform
         }
     }
 
-    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Steam;
-
-    protected override string? PlatformProcess
+    protected override string? PlatformProcessPath
     {
         get
         {
@@ -126,6 +117,28 @@ public partial class PlatformSteam : Platform
     }
 
     protected override string PlatformToken { get; } = "ST";
+
+    #endregion
+
+    #region Flags
+
+    // public //
+
+    public override bool HasModding { get; } = true;
+
+    public override bool RestartToApply { get; } = false;
+
+    // protected //
+
+    protected override bool CanCreate { get; } = true;
+
+    protected override bool CanRead { get; } = true;
+
+    protected override bool CanUpdate { get; } = true;
+
+    protected override bool CanDelete { get; } = true;
+
+    protected override bool IsConsolePlatform { get; } = false;
 
     #endregion
 
@@ -148,10 +161,10 @@ public partial class PlatformSteam : Platform
     {
         // Proceed to base method even if no directory.
 #if NETSTANDARD2_0
-        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory.Name.Substring(11).IsAllDigits())
+        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory.Name.Substring(11).All(char.IsDigit))
             _steamId = directory.Name.Substring(3); // remove "st_"
 #else
-        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory.Name[11..].IsAllDigits())
+        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory.Name[11..].All(char.IsDigit))
             _steamId = directory.Name[3..]; // remove "st_"
 #endif
 
@@ -174,14 +187,14 @@ public partial class PlatformSteam : Platform
         return new Container(metaIndex)
         {
             DataFile = data,
+            MetaFile = meta,
+            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
             Extra = new()
             {
-                /// Additional values will be set in <see cref="DecryptMeta"/>.
                 LastWriteTime = data.LastWriteTime,
                 Size = meta.Exists ? (uint)(meta.Length) : 0,
                 SizeDisk = data.Exists ? (uint)(data.Length) : 0,
             },
-            MetaFile = meta,
         };
     }
 
@@ -189,12 +202,12 @@ public partial class PlatformSteam : Platform
 
     #region Load
 
-    protected override uint[] DecryptMeta(Container container, byte[] meta)
+    protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
     {
         uint hash = 0;
         int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
-        uint[] key = GetKey(container);
-        uint[] value = base.DecryptMeta(container, meta);
+        ReadOnlySpan<uint> key = GetKey(container);
+        Span<uint> value = base.DecryptMeta(container, meta);
 
         int lastIndex = value.Length - 1;
 
@@ -238,13 +251,10 @@ public partial class PlatformSteam : Platform
     /// </summary>
     /// <param name="container"></param>
     /// <returns></returns>
-    private static uint[] GetKey(Container container)
+    private static Span<uint> GetKey(Container container)
     {
-        uint index = (uint)(container.MetaIndex == 0 ? 1 : container.MetaIndex) ^ 0x1422CB8C;
-        uint[] key = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").GetUInt32();
-
-        key[0] = (RotateLeft(index, 13) * 5) + 0xE6546B64;
-
+        Span<uint> key = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>();
+        key[0] = (RotateLeft((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64;
         return key;
     }
 
@@ -253,54 +263,7 @@ public partial class PlatformSteam : Platform
         return (value << bits) | (value >> (32 - bits));
     }
 
-    protected override void UpdateContainerWithMetaInformation(Container container, byte[] raw, uint[] converted)
-    {
-        // Do not write wrong data.
-        if (converted[0] == META_HEADER)
-        {
-            var mode = BitConverter.GetBytes(converted[18]);
-            container.Extra = container.Extra with
-            {
-#if NETSTANDARD2_0
-                Bytes = converted.Skip(META_LENGTH_KNOWN / sizeof(uint)).GetBytes(),
-#else
-                Bytes = converted[(META_LENGTH_KNOWN / sizeof(uint))..].GetBytes(),
-#endif
-
-                SizeDecompressed = converted[14],
-                BaseVersion = (int)(converted[17]),
-                GameMode = BitConverter.ToInt16(mode, 0),
-                Season = BitConverter.ToInt16(mode, 2),
-                TotalPlayTime = converted[19],
-            };
-            container.SaveVersion = Calculate.CalculateVersion(container.Extra.BaseVersion, container.Extra.GameMode, container.Extra.Season);
-        }
-
-        if (container.Extra.Size == 0)
-            container.Extra.Size = (uint)(raw.Length);
-    }
-
-    protected override void UpdateContainerWithDataInformation(Container container, byte[] raw, byte[] converted)
-    {
-        if (container.Extra.SizeDecompressed == 0)
-            container.Extra.SizeDecompressed = (uint)(converted.Length);
-
-        if (container.Extra.SizeDisk == 0)
-            container.Extra.SizeDisk = (uint)(raw.Length);
-    }
-
-    #endregion
-
-    #region Write
-
-    public override void Write(Container container, DateTimeOffset writeTime)
-    {
-        // Update Platform marker in save depending on the current operating system without changing the sync state.
-        container.GetJsonObject()?.SetValue(PlatformArchitecture, "8>q", "Platform");
-        base.Write(container, writeTime);
-    }
-
-    protected override byte[] CreateMeta(Container container, byte[] data)
+    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> raw, ReadOnlySpan<uint> converted)
     {
         //  0. META HEADER          (  4)
         //  1. META FORMAT          (  4)
@@ -309,70 +272,156 @@ public partial class PlatformSteam : Platform
         // 14. DECOMPRESSED SIZE    (  4) // SAVE_FORMAT_3
         // 15. COMPRESSED SIZE      (  4) // SAVE_FORMAT_1
         // 16. PROFILE HASH         (  4) // SAVE_FORMAT_1
-        // 17. SAVE VERSION         (  4) // SAVE_FORMAT_3
+        // 17. BASE VERSION         (  4) // SAVE_FORMAT_3
         // 18. GAME MODE            (  2) // SAVE_FORMAT_3
         // 18. SEASON               (  2) // SAVE_FORMAT_3
         // 19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
+
         // 20. UNKNOWN              ( 24) // SAVE_FORMAT_2
         //                          (104)
 
-        // 20. UNKNOWN              (280) // SAVE_FORMAT_3
+        // 20. EMPTY                (  8) // SAVE_FORMAT_3
+        // 22. SAVE NAME            (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
+        // 54. SAVE SUMMARY         (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
+        // 86. DIFFICULTY PRESET    (  1) // SAVE_FORMAT_3
+        // 87. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
         //                          (360)
 
+        // Do not write wrong data.
+        if (converted[0] == META_HEADER)
+        {
+            container.Extra = container.Extra with
+            {
+                Bytes = converted.Slice(META_LENGTH_KNOWN / sizeof(uint)).AsBytes().ToArray(),
+                SizeDecompressed = converted[14],
+                BaseVersion = (int)(converted[17]),
+                GameMode = converted.Slice(18, 1).AsBytes().Slice(0, 2).Cast<byte, ushort>()[0],
+                Season = converted.Slice(18, 1).AsBytes().Slice(2, 2).Cast<byte, ushort>()[0],
+                TotalPlayTime = converted[19],
+            };
+            // Extended data since Waypoint.
+            if (raw.Length == META_LENGTH_TOTAL_WAYPOINT)
+            {
+                container.Extra = container.Extra with
+                {
+                    SaveName = converted.Slice(22, 32).GetSaveRenamingString(),
+                    SaveSummary = converted.Slice(54, 32).GetSaveRenamingString(),
+                    DifficultyPreset = converted.Slice(86, 1).AsBytes()[0],
+                };
+            }
+
+            container.SaveVersion = Calculate.CalculateSaveVersion(container);
+        }
+
+        // Size is save to write always.
+        container.Extra = container.Extra with { Size = (uint)(raw.Length) };
+    }
+
+    #endregion
+
+    #region Write
+
+    public override void Write(Container container, DateTimeOffset writeTime)
+    {
+        // Update PlatformArchitecture in save depending on the current operating system without changing the sync state.
+        container.GetJsonObject().SetValue(PlatformArchitecture, "8>q", "Platform");
+        base.Write(container, writeTime);
+    }
+
+    protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
+    {
         var buffer = new byte[GetMetaSize(container)];
 
         // Editing account data is possible since Frontiers and therefore has always the new format.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
         writer.Write(META_HEADER); // 4
-        writer.Write((container.IsAccount || container.Is360Frontiers) ? Globals.Constants.SAVE_FORMAT_3 : Globals.Constants.SAVE_FORMAT_2); // 4
+        writer.Write((container.IsAccount || container.IsVersion360Frontiers) ? Constants.SAVE_FORMAT_3 : Constants.SAVE_FORMAT_2); // 4
 
-        if (container.IsSave && container.Is360Frontiers) // SAVE_FORMAT_3
+        if (container.IsSave && container.MetaFormat >= MetaFormatEnum.Frontiers) // SAVE_FORMAT_3
         {
             // SPOOKY HASH and SHA256 HASH not used.
-            writer.Seek(0x30, SeekOrigin.Current);
+            writer.Seek(0x30, SeekOrigin.Current); // 16 + 32 = 48
 
             writer.Write(container.Extra.SizeDecompressed); // 4
 
             // COMPRESSED SIZE and PROFILE HASH not used.
-            writer.Seek(0x8, SeekOrigin.Current);
+            writer.Seek(0x8, SeekOrigin.Current); // 4 + 4 = 8
 
-            writer.Write(container.Extra.BaseVersion); // 4
-            writer.Write(container.Is400Waypoint && container.GameModeEnum < PresetGameModeEnum.Permadeath ? (short)(PresetGameModeEnum.Normal) : container.Extra.GameMode); // 2
-            writer.Write(container.Extra.Season); // 2
-            writer.Write(container.Extra.TotalPlayTime); // 4
+            writer.Write(container.BaseVersion); // 4
+            writer.Write((ushort)(container.GameMode)); // 2
+            writer.Write((ushort)(container.Season)); // 2
+            writer.Write(container.TotalPlayTime); // 4
+
+            // Extended data since Waypoint.
+            if (container.MetaFormat >= MetaFormatEnum.Waypoint)
+            {
+                // Append cached bytes and overwrite afterwards.
+                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 280
+
+                writer.Seek(META_LENGTH_KNOWN + 0x8, SeekOrigin.Begin);
+                var name = container.SaveName.AsSpanSubstring(0, Math.Min(container.SaveName.Length, Constants.SAVE_RENAMING_LENGTH));
+#if NETSTANDARD2_0_OR_GREATER
+                if (name.Length < Constants.SAVE_RENAMING_LENGTH)
+                    name = $"{name.ToString()}\0".AsSpan();
+                writer.Write(name.GetUTF8Bytes().ToArray()); // 128
+#else
+                if (name.Length < Constants.SAVE_RENAMING_LENGTH)
+                    name = $"{name}\0";
+                writer.Write(name.GetUTF8Bytes()); // 128
+#endif
+
+                writer.Seek(META_LENGTH_KNOWN + 0x8 + 1 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                var summary = container.SaveSummary.AsSpanSubstring(0, Math.Min(container.SaveSummary.Length, Constants.SAVE_RENAMING_LENGTH));
+#if NETSTANDARD2_0_OR_GREATER
+                if (summary.Length < Constants.SAVE_RENAMING_LENGTH)
+                    summary = $"{summary.ToString()}\0".AsSpan();
+                writer.Write(summary.GetUTF8Bytes().ToArray()); // 128
+#else
+                if (summary.Length < Constants.SAVE_RENAMING_LENGTH)
+                    summary = $"{summary}\0";
+                writer.Write(summary.GetUTF8Bytes()); // 128
+#endif
+
+                writer.Seek(META_LENGTH_KNOWN + 0x8 + 2 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Write((byte)(container.GameDifficulty)); // 1
+            }
+            else
+            {
+                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 24
+            }
         }
         else // SAVE_FORMAT_2
         {
 #if NETSTANDARD2_0_OR_GREATER
-            var sha256 = SHA256.Create().ComputeHash(data);
+            var sha256 = SHA256.Create().ComputeHash(data.ToArray());
 #else
             var sha256 = SHA256.HashData(data);
 #endif
             var spookyHash = new SpookyHash(0x155AF93AC304200, 0x8AC7230489E7FFFF);
             spookyHash.Update(sha256);
-            spookyHash.Update(data);
+            spookyHash.Update(data.ToArray());
             spookyHash.Final(out ulong hash1, out ulong hash2);
 
             writer.Write(hash1); // 8
             writer.Write(hash2); // 8
 
             writer.Write(sha256); // 256 / 8 = 32
+
+            // Seek to position of last known byte and append the cached bytes.
+            writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+            writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 24
         }
 
-        // Seek to position of last known byte and append the tail.
-        writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-        writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 24 or 280
-
-        return EncryptMeta(container, data, CompressMeta(container, data, buffer));
+        return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    protected override byte[] EncryptMeta(Container container, byte[] data, byte[] meta)
+    protected override ReadOnlySpan<byte> EncryptMeta(Container container, ReadOnlySpan<byte> data, Span<byte> meta)
     {
         uint current = 0;
         uint hash = 0;
-        int iterations = GetMetaSize(container) == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
-        uint[] key = GetKey(container);
-        uint[] value = meta.GetUInt32();
+        int iterations = container.MetaFormat < MetaFormatEnum.Waypoint ? 8 : 6;
+        ReadOnlySpan<uint> key = GetKey(container);
+        Span<uint> value = meta.Cast<byte, uint>();
 
         int lastIndex = value.Length - 1;
 
@@ -401,12 +450,14 @@ public partial class PlatformSteam : Platform
             current = value[lastIndex];
         }
 
-        return value.GetBytes();
+        return value.Cast<uint, byte>();
     }
 
     #endregion
 
     // // File Operation
+
+    // TODO Transfer Refactoring
 
     #region Transfer
 
@@ -414,7 +465,7 @@ public partial class PlatformSteam : Platform
     {
         destination.Extra = new()
         {
-            Bytes = new byte[(source.Is400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
+            Bytes = new byte[(source.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
             Size = source.Extra.Size,
             SizeDecompressed = source.Extra.SizeDecompressed,
             SizeDisk = source.DataFile?.Exists == true ? (uint)(source.DataFile!.Length) : 0,
@@ -441,10 +492,27 @@ public partial class PlatformSteam : Platform
         if (!string.IsNullOrEmpty(result))
             return result;
 
-        if (key is "USN" && _steamId is not null)
+        // Get via API only if not found in-file.
+        if (key is "USN" && _steamId is not null && Settings.UseExternalSourcesForUserIdentification)
             return GetUserIdentificationBySteam() ?? string.Empty;
 
         return result;
+    }
+
+    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    {
+        if (_steamId is null)
+            return base.GetUserIdentificationByBase(jsonObject, key);
+
+        var usesMapping = jsonObject.UsesMapping();
+
+        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
+        var expressions = new[]
+        {
+            usesMapping ? $"@.OWS.UID == '{_steamId}'" : $"@.ksu.K7E == '{_steamId}'", // only with specified value
+        };
+
+        return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
     protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
@@ -459,22 +527,6 @@ public partial class PlatformSteam : Platform
         {
             usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
             usesMapping ? $"@.Owner.UID == '{_steamId}'" : $"@.3?K.K7E == '{_steamId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
-    }
-
-    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
-    {
-        if (_steamId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.OWS.UID == '{_steamId}'" : $"@.ksu.K7E == '{_steamId}'", // only with specified value
         };
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
@@ -502,22 +554,13 @@ public partial class PlatformSteam : Platform
     /// <returns></returns>
     private string? GetUserIdentificationBySteam()
     {
-        if (string.IsNullOrWhiteSpace(Properties.Resources.STEAM_API_KEY) || !Properties.Resources.STEAM_API_KEY.All(char.IsLetterOrDigit))
+        // Ensure STEAM_API_KEY is a valid one.
+        if (!Properties.Resources.STEAM_API_KEY.All(char.IsLetterOrDigit))
             return null;
 
-        var requestUri = $"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={Properties.Resources.STEAM_API_KEY}&steamids={_steamId}";
-
-        var responseTask = _httpClient.GetAsync(requestUri);
-        responseTask.Wait();
-
-        var response = responseTask.Result;
-        response.EnsureSuccessStatusCode();
-
-        var contentTask = response.Content.ReadAsStringAsync();
-        contentTask.Wait();
-
-        var jsonObject = JsonConvert.DeserializeObject(contentTask.Result) as JObject;
-        return jsonObject?.SelectToken("response.players[0].personaname")?.Value<string>();
+        var task = SteamService.GetPersonaNameAsync(_steamId!);
+        task.Wait();
+        return task.Result;
     }
 
     #endregion

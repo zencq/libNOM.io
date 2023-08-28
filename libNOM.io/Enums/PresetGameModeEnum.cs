@@ -1,10 +1,10 @@
 ﻿namespace libNOM.io.Enums;
 
 /// <summary>
-/// Specifies available game modes.
+/// Specifies all game modes.
 /// </summary>
 /// <seealso cref="libMBIN\Source\NMS\GameComponents\GcGameMode.cs"/>
-public enum PresetGameModeEnum : uint
+public enum PresetGameModeEnum : ushort
 {
     Unspecified,
     Normal,

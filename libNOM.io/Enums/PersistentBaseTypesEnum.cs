@@ -2,7 +2,7 @@
 
 
 /// <summary>
-/// Specifies types a persistent base can have.
+/// Specifies the different types a base can have.
 /// </summary>
 /// <seealso cref="libMBIN\Source\NMS\GameComponents\GcPersistentBaseTypes.cs"/>
 internal enum PersistentBaseTypesEnum : uint

@@ -2,7 +2,7 @@
 
 
 /// <summary>
-/// Holds information for a single user decision for transferring bases.
+/// Holds information about a single user decision for transferring bases.
 /// </summary>
 public record class BaseUserDecisionData
 {

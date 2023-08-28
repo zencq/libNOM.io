@@ -2,9 +2,9 @@
 
 
 /// <summary>
-/// Specifies all known Expeditions incl. a placeholder for the next one.
+/// Specifies all known expeditions including a placeholder for future ones.
 /// </summary>
-public enum SeasonEnum : uint
+public enum SeasonEnum : ushort
 {
     None = 0,
     Pioneers = None, // 1st
@@ -25,5 +25,6 @@ public enum SeasonEnum : uint
     PolestarRedux,
     Utopia, // 9th
     Singularity, // 10th
+    Voyagers, // 11th
     Future,
 }

@@ -51,7 +51,7 @@ internal static partial class Json
         {
             match = regex.Match(input);
         }
-        catch (Exception ex) when (ex is RegexMatchTimeoutException)
+        catch (RegexMatchTimeoutException)
         {
             return false;
         }
@@ -71,7 +71,7 @@ internal static partial class Json
         {
             match = regex.Match(input);
         }
-        catch (Exception ex) when (ex is RegexMatchTimeoutException)
+        catch (RegexMatchTimeoutException)
         {
             return false;
         }
@@ -87,501 +87,360 @@ internal static partial class Json
 
     // //
 
-    #region GameModeEnum
-
-    private static PresetGameModeEnum? GetGameModeEnum(Container container)
-    {
-        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Seasonal))
-            return PresetGameModeEnum.Seasonal;
-
-        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Permadeath))
-            return PresetGameModeEnum.Permadeath;
-
-        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Ambient))
-            return PresetGameModeEnum.Ambient;
-
-        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Survival))
-            return PresetGameModeEnum.Survival;
-
-        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Creative))
-            return PresetGameModeEnum.Creative;
-
-        if (container.SaveVersion.IsGameMode(PresetGameModeEnum.Normal))
-            return PresetGameModeEnum.Normal;
-
-        return null;
-    }
+    #region DifficultyPresetTypeEnum
 
     /// <summary>
-    /// Gets the game mode of a save based on the in-file version.
+    /// Gets the difficulty based on the data inside the save.
     /// </summary>
     /// <param name="container"></param>
-    /// <param name="json"></param>
+    /// <param name="jsonObject"></param>
     /// <returns></returns>
-    internal static PresetGameModeEnum? GetGameModeEnum(Container container, string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return null;
-
-        var result = GetGameModeEnum(container);
-
-        // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
-        if (result == PresetGameModeEnum.Normal && container.SaveVersion >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
-        {
-            // DifficultyState is stored again in SeasonData and therefore cut off here at an appropriate length.
-            // Without save name and summary, DifficultyState ends at around 800 characters.
-            var jsonSubstring = json.AsSpan(0, 2000);
-
-            if (IsGameModePreset(jsonSubstring, "All", "Normal", "Normal", "Normal", "Full", "Normal", "Normal", "Low", "ItemGrave", "Normal", "Normal", "Normal", "false", "Normal", "Normal", "High", "Normal", "Normal", "Normal", "FullEcosystem", "false", "true", "false", "Normal"))
-                return PresetGameModeEnum.Normal;
-
-            if (IsGameModePreset(jsonSubstring, "None", "Slow", "Slow", "Normal", "Free", "Fast", "None", "None", "None", "None", "Free", "Free", "true", "Free", "High", "High", "Normal", "Off", "Off", "NeverAttack", "true", "false", "true", "Fast"))
-                return PresetGameModeEnum.Creative;
-
-            if (IsGameModePreset(jsonSubstring, "All", "Fast", "Fast", "Low", "Full", "Normal", "High", "High", "DestroyItems", "High", "Expensive", "High", "false", "Normal", "Low", "Normal", "Normal", "Fast", "Fast", "FullEcosystem", "false", "true", "false", "Normal"))
-                return PresetGameModeEnum.Survival;
-
-            if (IsGameModePreset(jsonSubstring, "HealthAndHazard", "Slow", "Slow", "High", "Low", "VeryFast", "Low", "None", "None", "Low", "Cheap", "Low", "false", "Cheap", "High", "High", "High", "Slow", "Slow", "AttackIfProvoked", "true", "true", "true", "Fast"))
-                return PresetGameModeEnum.Ambient;
-
-            return PresetGameModeEnum.Unspecified;
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Gets the game mode of a save based on the in-file version.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="json"></param>
-    /// <returns></returns>
-    internal static PresetGameModeEnum? GetGameModeEnum(Container container, JObject? jsonObject)
+    internal static DifficultyPresetTypeEnum GetGameDifficulty(Container container, JObject? jsonObject)
     {
         if (jsonObject is null)
-            return null;
-
-        var result = GetGameModeEnum(container);
+            return DifficultyPresetTypeEnum.Invalid;
 
         // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
-        if (result == PresetGameModeEnum.Normal && container.SaveVersion >= Globals.Constants.THRESHOLD_WAYPOINT_GAMEMODE)
+        // IsVersion may not yet be available.
+        if (container.GameMode == PresetGameModeEnum.Normal && container.SaveVersion >= Constants.THRESHOLD_WAYPOINT_GAMEMODE)
         {
-            // Survival Elements
-            var activeSurvivalBars = jsonObject.GetValue<string>("6f=.LyC.:fe.tEx.ZeS", "PlayerStateData.DifficultyState.Settings.ActiveSurvivalBars.ActiveSurvivalBarsDifficulty");
+            // Compare the read difficulty with the different presets.
+            var difficulty = GetGameDifficultyPreset(jsonObject);
 
-            // Survival Difficulty
-            var hazardDrain = jsonObject.GetValue<string>("6f=.LyC.:fe.bGK.ORx", "PlayerStateData.DifficultyState.Settings.HazardDrain.HazardDrainDifficulty");
-            var energyDrain = jsonObject.GetValue<string>("6f=.LyC.:fe.A:s.Dn>", "PlayerStateData.DifficultyState.Settings.EnergyDrain.EnergyDrainDifficulty");
+            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_NORMAL))
+                return DifficultyPresetTypeEnum.Normal;
 
-            // Natural Resources
-            var substanceCollection = jsonObject.GetValue<string>("6f=.LyC.:fe.jH@.9JJ", "PlayerStateData.DifficultyState.Settings.SubstanceCollection.SubstanceCollectionDifficulty");
+            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_CREATIVE))
+                return DifficultyPresetTypeEnum.Creative;
 
-            // Sprinting
-            var sprintingCost = jsonObject.GetValue<string>("6f=.LyC.:fe.l29.LT:", "PlayerStateData.DifficultyState.Settings.SprintingCost.SprintingCostDifficulty");
+            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_RELAXED))
+                return DifficultyPresetTypeEnum.Relaxed;
 
-            // Scanner Recharge
-            var scannerRecharge = jsonObject.GetValue<string>("6f=.LyC.:fe.Lf?.gFS", "PlayerStateData.DifficultyState.Settings.ScannerRecharge.ScannerRechargeDifficulty");
+            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_SURVIVAL))
+                return DifficultyPresetTypeEnum.Survival;
 
-            // Damage Levels
-            var damageReceived = jsonObject.GetValue<string>("6f=.LyC.:fe.hXp.cYk", "PlayerStateData.DifficultyState.Settings.DamageReceived.DamageReceivedDifficulty");
-
-            // Technology Damage
-            var breakTechOnDamage = jsonObject.GetValue<string>("6f=.LyC.:fe.gd>.ef4", "PlayerStateData.DifficultyState.Settings.BreakTechOnDamage.BreakTechOnDamageProbability");
-
-            // Death Consequences
-            var deathConsequences = jsonObject.GetValue<string>("6f=.LyC.:fe.n7p.q2@", "PlayerStateData.DifficultyState.Settings.DeathConsequences.DeathConsequencesDifficulty");
-
-            // Fuel Usage
-            var chargingRequirements = jsonObject.GetValue<string>("6f=.LyC.:fe.nhq.428", "PlayerStateData.DifficultyState.Settings.ChargingRequirements.ChargingRequirementsDifficulty");
-            var fuelUse = jsonObject.GetValue<string>("6f=.LyC.:fe.jnM.Eg1", "PlayerStateData.DifficultyState.Settings.FuelUse.FuelUseDifficulty");
-            var launchFuelCost = jsonObject.GetValue<string>("6f=.LyC.:fe.A9D.iqY", "PlayerStateData.DifficultyState.Settings.LaunchFuelCost.LaunchFuelCostDifficulty");
-
-            // Crafting
-            var craftingIsFree = jsonObject.GetValue<bool?>("6f=.LyC.:fe.?Dt", "PlayerStateData.DifficultyState.Settings.CraftingIsFree");
-
-            // Purchases
-            var currencyCost = jsonObject.GetValue<string>("6f=.LyC.:fe.tsk.Ubk", "PlayerStateData.DifficultyState.Settings.CurrencyCost.CurrencyCostDifficulty");
-
-            // Goods Availability
-            var itemShopAvailability = jsonObject.GetValue<string>("6f=.LyC.:fe.FB5.TYf", "PlayerStateData.DifficultyState.Settings.ItemShopAvailability.ItemShopAvailabilityDifficulty");
-
-            // Inventory Stack Limits
-            var inventoryStackLimits = jsonObject.GetValue<string>("6f=.LyC.:fe.kZ5.?SS", "PlayerStateData.DifficultyState.Settings.InventoryStackLimits.InventoryStackLimitsDifficulty");
-
-            // Enemy Strength
-            var damageGiven = jsonObject.GetValue<string>("6f=.LyC.:fe.PYQ.mum", "PlayerStateData.DifficultyState.Settings.DamageGiven.DamageGivenDifficulty");
-
-            // On-Foot Combat
-            var groundCombatTimers = jsonObject.GetValue<string>("6f=.LyC.:fe.jGh.ZbV", "PlayerStateData.DifficultyState.Settings.GroundCombatTimers.CombatTimerDifficultyOption");
-
-            // Space Combat
-            var spaceCombatTimers = jsonObject.GetValue<string>("6f=.LyC.:fe.Od7.ZbV", "PlayerStateData.DifficultyState.Settings.SpaceCombatTimers.CombatTimerDifficultyOption");
-
-            // Creatures
-            var creatureHostility = jsonObject.GetValue<string>("6f=.LyC.:fe.BbG.1c;", "PlayerStateData.DifficultyState.Settings.CreatureHostility.CreatureHostilityDifficulty");
-
-            // Inventory Transfer Range
-            var inventoriesAlwaysInRange = jsonObject.GetValue<bool?>("6f=.LyC.:fe.pS0", "PlayerStateData.DifficultyState.Settings.InventoriesAlwaysInRange");
-
-            // Hyperdrive System Access
-            var warpDriveRequirements = jsonObject.GetValue<bool?>("6f=.LyC.:fe.aw9", "PlayerStateData.DifficultyState.Settings.WarpDriveRequirements");
-
-            // Base Power
-            var baseAutoPower = jsonObject.GetValue<bool?>("6f=.LyC.:fe.uo4", "PlayerStateData.DifficultyState.Settings.BaseAutoPower");
-
-            // Reputation & Standing Gain
-            var reputationGain = jsonObject.GetValue<string>("6f=.LyC.:fe.vo>.S@3", "PlayerStateData.DifficultyState.Settings.ReputationGain.ReputationGainDifficulty");
-
-            var stringValues = new[]
-            {
-                activeSurvivalBars,
-                hazardDrain,
-                energyDrain,
-                substanceCollection,
-                sprintingCost,
-                scannerRecharge,
-                damageReceived,
-                breakTechOnDamage,
-                deathConsequences,
-                chargingRequirements,
-                fuelUse,
-                launchFuelCost,
-                currencyCost,
-                itemShopAvailability,
-                inventoryStackLimits,
-                damageGiven,
-                groundCombatTimers,
-                spaceCombatTimers,
-                creatureHostility,
-                reputationGain,
-            };
-            var boolValues = new[]
-            {
-                craftingIsFree,
-                inventoriesAlwaysInRange,
-                warpDriveRequirements,
-                baseAutoPower,
-            };
-
-            if (IsGameModePreset(stringValues, boolValues, "All", "Normal", "Normal", "Normal", "Full", "Normal", "Normal", "Low", "ItemGrave", "Normal", "Normal", "Normal", "false", "Normal", "Normal", "High", "Normal", "Normal", "Normal", "FullEcosystem", "false", "true", "false", "Normal"))
-                return PresetGameModeEnum.Normal;
-
-            if (IsGameModePreset(stringValues, boolValues, "None", "Slow", "Slow", "Normal", "Free", "Fast", "None", "None", "None", "None", "Free", "Free", "true", "Free", "High", "High", "Normal", "Off", "Off", "NeverAttack", "true", "false", "true", "Fast"))
-                return PresetGameModeEnum.Creative;
-
-            if (IsGameModePreset(stringValues, boolValues, "All", "Fast", "Fast", "Low", "Full", "Normal", "High", "High", "DestroyItems", "High", "Expensive", "High", "false", "Normal", "Low", "Normal", "Normal", "Fast", "Fast", "FullEcosystem", "false", "true", "false", "Normal"))
-                return PresetGameModeEnum.Survival;
-
-            if (IsGameModePreset(stringValues, boolValues, "HealthAndHazard", "Slow", "Slow", "High", "Low", "VeryFast", "Low", "None", "None", "Low", "Cheap", "Low", "false", "Cheap", "High", "High", "High", "Slow", "Slow", "AttackIfProvoked", "true", "true", "true", "Fast"))
-                return PresetGameModeEnum.Ambient;
-
-            return PresetGameModeEnum.Unspecified;
+            return DifficultyPresetTypeEnum.Custom;
         }
 
-        return result;
+        return container.GameMode switch
+        {
+            PresetGameModeEnum.Unspecified => DifficultyPresetTypeEnum.Invalid,
+            PresetGameModeEnum.Creative => DifficultyPresetTypeEnum.Creative,
+            PresetGameModeEnum.Survival => DifficultyPresetTypeEnum.Survival,
+            PresetGameModeEnum.Permadeath => DifficultyPresetTypeEnum.Permadeath,
+            _ => DifficultyPresetTypeEnum.Normal,
+        };
     }
 
-    private static bool IsGameModePreset(ReadOnlySpan<char> json, params string[] setpoints)
+    private static DifficultyPresetData GetGameDifficultyPreset(JObject jsonObject)
     {
-        // TODO
-        // SettingsLocked
-        // AllSlotsUnlocked
-        // TutorialEnabled
-        // StartWithAllItemsKnown
-
-
-
         // Survival Elements
-        ReadOnlySpan<char> activeSurvivalBars = $"\"tEx\":{{\"ZeS\":\"{setpoints[0]}\"".ToReadOnlySpan();
+        var activeSurvivalBars = jsonObject.GetValue<ActiveSurvivalBarsDifficultyEnum>("6f=.LyC.:fe.tEx.ZeS", "PlayerStateData.DifficultyState.Settings.ActiveSurvivalBars.ActiveSurvivalBarsDifficulty");
+
+        // Survival Difficulty
+        var hazardDrain = jsonObject.GetValue<HazardDrainDifficultyEnum>("6f=.LyC.:fe.bGK.ORx", "PlayerStateData.DifficultyState.Settings.HazardDrain.HazardDrainDifficulty");
+        var energyDrain = jsonObject.GetValue<EnergyDrainDifficultyEnum>("6f=.LyC.:fe.A:s.Dn>", "PlayerStateData.DifficultyState.Settings.EnergyDrain.EnergyDrainDifficulty");
+
+        // Natural Resources
+        var substanceCollection = jsonObject.GetValue<SubstanceCollectionDifficultyEnum>("6f=.LyC.:fe.jH@.9JJ", "PlayerStateData.DifficultyState.Settings.SubstanceCollection.SubstanceCollectionDifficulty");
+
+        // Sprinting
+        var sprintingCost = jsonObject.GetValue<SprintingCostDifficultyEnum>("6f=.LyC.:fe.l29.LT:", "PlayerStateData.DifficultyState.Settings.SprintingCost.SprintingCostDifficulty");
+
+        // Scanner Recharge
+        var scannerRecharge = jsonObject.GetValue<ScannerRechargeDifficultyEnum>("6f=.LyC.:fe.Lf?.gFS", "PlayerStateData.DifficultyState.Settings.ScannerRecharge.ScannerRechargeDifficulty");
+
+        // Damage Levels
+        var damageReceived = jsonObject.GetValue<DamageReceivedDifficultyEnum>("6f=.LyC.:fe.hXp.cYk", "PlayerStateData.DifficultyState.Settings.DamageReceived.DamageReceivedDifficulty");
+
+        // Technology Damage
+        var breakTechOnDamage = jsonObject.GetValue<BreakTechOnDamageProbabilityEnum>("6f=.LyC.:fe.gd>.ef4", "PlayerStateData.DifficultyState.Settings.BreakTechOnDamage.BreakTechOnDamageProbability");
+
+        // Death Consequences
+        var deathConsequences = jsonObject.GetValue<DeathConsequencesDifficultyEnum>("6f=.LyC.:fe.n7p.q2@", "PlayerStateData.DifficultyState.Settings.DeathConsequences.DeathConsequencesDifficulty");
+
+        // Fuel Usage
+        var chargingRequirements = jsonObject.GetValue<ChargingRequirementsDifficultyEnum>("6f=.LyC.:fe.nhq.428", "PlayerStateData.DifficultyState.Settings.ChargingRequirements.ChargingRequirementsDifficulty");
+        var fuelUse = jsonObject.GetValue<FuelUseDifficultyEnum>("6f=.LyC.:fe.jnM.Eg1", "PlayerStateData.DifficultyState.Settings.FuelUse.FuelUseDifficulty");
+        var launchFuelCost = jsonObject.GetValue<LaunchFuelCostDifficultyEnum>("6f=.LyC.:fe.A9D.iqY", "PlayerStateData.DifficultyState.Settings.LaunchFuelCost.LaunchFuelCostDifficulty");
+
+        // Crafting
+        var craftingIsFree = jsonObject.GetValue<bool>("6f=.LyC.:fe.?Dt", "PlayerStateData.DifficultyState.Settings.CraftingIsFree");
+
+        // Purchases
+        var currencyCost = jsonObject.GetValue<CurrencyCostDifficultyEnum>("6f=.LyC.:fe.tsk.Ubk", "PlayerStateData.DifficultyState.Settings.CurrencyCost.CurrencyCostDifficulty");
+
+        // Goods Availability
+        var itemShopAvailability = jsonObject.GetValue<ItemShopAvailabilityDifficultyEnum>("6f=.LyC.:fe.FB5.TYf", "PlayerStateData.DifficultyState.Settings.ItemShopAvailability.ItemShopAvailabilityDifficulty");
+
+        // Inventory Stack Limits
+        var inventoryStackLimits = jsonObject.GetValue<InventoryStackLimitsDifficultyEnum>("6f=.LyC.:fe.kZ5.?SS", "PlayerStateData.DifficultyState.Settings.InventoryStackLimits.InventoryStackLimitsDifficulty");
+
+        // Enemy Strength
+        var damageGiven = jsonObject.GetValue<DamageGivenDifficultyEnum>("6f=.LyC.:fe.PYQ.mum", "PlayerStateData.DifficultyState.Settings.DamageGiven.DamageGivenDifficulty");
+
+        // On-Foot Combat
+        var groundCombatTimers = jsonObject.GetValue<CombatTimerDifficultyOptionEnum>("6f=.LyC.:fe.jGh.ZbV", "PlayerStateData.DifficultyState.Settings.GroundCombatTimers.CombatTimerDifficultyOption");
+
+        // Space Combat
+        var spaceCombatTimers = jsonObject.GetValue<CombatTimerDifficultyOptionEnum>("6f=.LyC.:fe.Od7.ZbV", "PlayerStateData.DifficultyState.Settings.SpaceCombatTimers.CombatTimerDifficultyOption");
+
+        // Creatures
+        var creatureHostility = jsonObject.GetValue<CreatureHostilityDifficultyEnum>("6f=.LyC.:fe.BbG.1c;", "PlayerStateData.DifficultyState.Settings.CreatureHostility.CreatureHostilityDifficulty");
+
+        // Inventory Transfer Range
+        var inventoriesAlwaysInRange = jsonObject.GetValue<bool>("6f=.LyC.:fe.pS0", "PlayerStateData.DifficultyState.Settings.InventoriesAlwaysInRange");
+
+        // Hyperdrive System Access
+        var warpDriveRequirements = jsonObject.GetValue<bool>("6f=.LyC.:fe.aw9", "PlayerStateData.DifficultyState.Settings.WarpDriveRequirements");
+
+        // Base Power
+        var baseAutoPower = jsonObject.GetValue<bool>("6f=.LyC.:fe.uo4", "PlayerStateData.DifficultyState.Settings.BaseAutoPower");
+
+        // Reputation & Standing Gain
+        var reputationGain = jsonObject.GetValue<ReputationGainDifficultyEnum>("6f=.LyC.:fe.vo>.S@3", "PlayerStateData.DifficultyState.Settings.ReputationGain.ReputationGainDifficulty");
+
+        return new(activeSurvivalBars, hazardDrain, energyDrain, substanceCollection, sprintingCost, scannerRecharge, damageReceived, breakTechOnDamage, deathConsequences, chargingRequirements, fuelUse, launchFuelCost, craftingIsFree, currencyCost, itemShopAvailability, inventoryStackLimits, damageGiven, groundCombatTimers, spaceCombatTimers, creatureHostility, inventoriesAlwaysInRange, warpDriveRequirements, baseAutoPower, reputationGain);
+    }
+
+    /// <summary>
+    /// Gets the difficulty based on the data inside the save.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    internal static DifficultyPresetTypeEnum GetGameDifficulty(Container container, string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return DifficultyPresetTypeEnum.Invalid;
+
+        // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
+        // IsVersion may not yet be available.
+        if (container.GameMode == PresetGameModeEnum.Normal && container.SaveVersion >= Constants.THRESHOLD_WAYPOINT_GAMEMODE)
+        {
+            // DifficultyState is stored again in SeasonData and therefore cut off here at an appropriate length.
+            // DifficultyState ends at around 800 characters if save name and summary are not set. Both are limited to 128 chars so 1500 should be more than enough.
+            var jsonSubstring = json.AsSpan(0, 1500);
+
+            if (IsGameDifficultyPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_NORMAL))
+                return DifficultyPresetTypeEnum.Normal;
+
+            if (IsGameDifficultyPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_CREATIVE))
+                return DifficultyPresetTypeEnum.Creative;
+
+            if (IsGameDifficultyPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_SURVIVAL))
+                return DifficultyPresetTypeEnum.Survival;
+
+            if (IsGameDifficultyPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_RELAXED))
+                return DifficultyPresetTypeEnum.Relaxed;
+
+            return DifficultyPresetTypeEnum.Custom;
+        }
+
+        return container.GameMode switch
+        {
+            PresetGameModeEnum.Unspecified => DifficultyPresetTypeEnum.Invalid,
+            PresetGameModeEnum.Creative => DifficultyPresetTypeEnum.Creative,
+            PresetGameModeEnum.Survival => DifficultyPresetTypeEnum.Survival,
+            PresetGameModeEnum.Permadeath => DifficultyPresetTypeEnum.Permadeath,
+            _ => DifficultyPresetTypeEnum.Normal,
+        };
+    }
+
+    private static bool IsGameDifficultyPreset(ReadOnlySpan<char> json, DifficultyPresetData difficultyPreset)
+    {
+        // Survival Elements
+        var activeSurvivalBars = $"\"tEx\":{{\"ZeS\":\"{difficultyPreset.ActiveSurvivalBars}\"".AsSpan();
         if (!json.Contains(activeSurvivalBars, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Survival Difficulty
-        ReadOnlySpan<char> hazardDrain = $"\"bGK\":{{\"ORx\":\"{setpoints[1]}\"".ToReadOnlySpan();
+        var hazardDrain = $"\"bGK\":{{\"ORx\":\"{difficultyPreset.HazardDrain}\"".AsSpan();
         if (!json.Contains(hazardDrain, StringComparison.OrdinalIgnoreCase))
             return false;
-        ReadOnlySpan<char> energyDrain = $"\"A:s\":{{\"Dn>\":\"{setpoints[2]}\"".ToReadOnlySpan();
+        var energyDrain = $"\"A:s\":{{\"Dn>\":\"{difficultyPreset.EnergyDrain}\"".AsSpan();
         if (!json.Contains(energyDrain, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Natural Resources
-        ReadOnlySpan<char> substanceCollection = $"\"jH@\":{{\"9JJ\":\"{setpoints[3]}\"".ToReadOnlySpan();
+        var substanceCollection = $"\"jH@\":{{\"9JJ\":\"{difficultyPreset.SubstanceCollection}\"".AsSpan();
         if (!json.Contains(substanceCollection, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Sprinting
-        ReadOnlySpan<char> sprintingCost = $"\"l29\":{{\"LT:\":\"{setpoints[4]}\"".ToReadOnlySpan();
+        var sprintingCost = $"\"l29\":{{\"LT:\":\"{difficultyPreset.SprintingCost}\"".AsSpan();
         if (!json.Contains(sprintingCost, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Scanner Recharge
-        ReadOnlySpan<char> scannerRecharge = $"\"Lf?\":{{\"gFS\":\"{setpoints[5]}\"".ToReadOnlySpan();
+        var scannerRecharge = $"\"Lf?\":{{\"gFS\":\"{difficultyPreset.ScannerRecharge}\"".AsSpan();
         if (!json.Contains(scannerRecharge, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Damage Levels
-        ReadOnlySpan<char> damageReceived = $"\"hXp\":{{\"cYk\":\"{setpoints[6]}\"".ToReadOnlySpan();
+        var damageReceived = $"\"hXp\":{{\"cYk\":\"{difficultyPreset.DamageReceived}\"".AsSpan();
         if (!json.Contains(damageReceived, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Technology Damage
-        ReadOnlySpan<char> breakTechOnDamage = $"\"gd>\":{{\"ef4\":\"{setpoints[7]}\"".ToReadOnlySpan();
+        var breakTechOnDamage = $"\"gd>\":{{\"ef4\":\"{difficultyPreset.BreakTechOnDamage}\"".AsSpan();
         if (!json.Contains(breakTechOnDamage, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Death Consequences
-        ReadOnlySpan<char> deathConsequences = $"\"n7p\":{{\"q2@\":\"{setpoints[8]}\"".ToReadOnlySpan();
+        var deathConsequences = $"\"n7p\":{{\"q2@\":\"{difficultyPreset.DeathConsequences}\"".AsSpan();
         if (!json.Contains(deathConsequences, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Fuel Usage
-        ReadOnlySpan<char> chargingRequirements = $"\"nhq\":{{\"428\":\"{setpoints[9]}\"".ToReadOnlySpan();
+        var chargingRequirements = $"\"nhq\":{{\"428\":\"{difficultyPreset.ChargingRequirements}\"".AsSpan();
         if (!json.Contains(chargingRequirements, StringComparison.OrdinalIgnoreCase))
             return false;
-        ReadOnlySpan<char> fuelUse = $"\"jnM\":{{\"Eg1\":\"{setpoints[10]}\"".ToReadOnlySpan();
+        var fuelUse = $"\"jnM\":{{\"Eg1\":\"{difficultyPreset.FuelUse}\"".AsSpan();
         if (!json.Contains(fuelUse, StringComparison.OrdinalIgnoreCase))
             return false;
-        ReadOnlySpan<char> launchFuelCost = $"\"A9D\":{{\"iqY\":\"{setpoints[11]}\"".ToReadOnlySpan();
+        var launchFuelCost = $"\"A9D\":{{\"iqY\":\"{difficultyPreset.LaunchFuelCost}\"".AsSpan();
         if (!json.Contains(launchFuelCost, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Crafting
-        ReadOnlySpan<char> craftingIsFree = $"\"?Dt\":{setpoints[12]},".ToReadOnlySpan();
+        var craftingIsFree = $"\"?Dt\":{difficultyPreset.CraftingIsFree},".AsSpan();
         if (!json.Contains(craftingIsFree, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Purchases
-        ReadOnlySpan<char> currencyCost = $"\"tsk\":{{\"Ubk\":\"{setpoints[13]}\"".ToReadOnlySpan();
+        var currencyCost = $"\"tsk\":{{\"Ubk\":\"{difficultyPreset.CurrencyCost}\"".AsSpan();
         if (!json.Contains(currencyCost, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Goods Availability
-        ReadOnlySpan<char> itemShopAvailability = $"\"FB5\":{{\"TYf\":\"{setpoints[14]}\"".ToReadOnlySpan();
+        var itemShopAvailability = $"\"FB5\":{{\"TYf\":\"{difficultyPreset.ItemShopAvailability}\"".AsSpan();
         if (!json.Contains(itemShopAvailability, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Inventory Stack Limits
-        ReadOnlySpan<char> inventoryStackLimits = $"\"kZ5\":{{\"?SS\":\"{setpoints[15]}\"".ToReadOnlySpan();
+        var inventoryStackLimits = $"\"kZ5\":{{\"?SS\":\"{difficultyPreset.InventoryStackLimits}\"".AsSpan();
         if (!json.Contains(inventoryStackLimits, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Enemy Strength
-        ReadOnlySpan<char> damageGiven = $"\"PYQ\":{{\"mum\":\"{setpoints[16]}\"".ToReadOnlySpan();
+        var damageGiven = $"\"PYQ\":{{\"mum\":\"{difficultyPreset.DamageGiven}\"".AsSpan();
         if (!json.Contains(damageGiven, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // On-Foot Combat
-        ReadOnlySpan<char> groundCombatTimers = $"\"jGh\":{{\"ZbV\":\"{setpoints[17]}\"".ToReadOnlySpan();
+        var groundCombatTimers = $"\"jGh\":{{\"ZbV\":\"{difficultyPreset.GroundCombatTimers}\"".AsSpan();
         if (!json.Contains(groundCombatTimers, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Space Combat
-        ReadOnlySpan<char> spaceCombatTimers = $"\"Od7\":{{\"ZbV\":\"{setpoints[18]}\"".ToReadOnlySpan();
+        var spaceCombatTimers = $"\"Od7\":{{\"ZbV\":\"{difficultyPreset.SpaceCombatTimers}\"".AsSpan();
         if (!json.Contains(spaceCombatTimers, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Creatures
-        ReadOnlySpan<char> creatureHostility = $"\"BbG\":{{\"1c;\":\"{setpoints[19]}\"".ToReadOnlySpan();
+        var creatureHostility = $"\"BbG\":{{\"1c;\":\"{difficultyPreset.CreatureHostility}\"".AsSpan();
         if (!json.Contains(creatureHostility, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Inventory Transfer Range
-        ReadOnlySpan<char> inventoriesAlwaysInRange = $"\"pS0\":{setpoints[20]},".ToReadOnlySpan();
+        var inventoriesAlwaysInRange = $"\"pS0\":{difficultyPreset.InventoriesAlwaysInRange},".AsSpan();
         if (!json.Contains(inventoriesAlwaysInRange, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Hyperdrive System Access
-        ReadOnlySpan<char> warpDriveRequirements = $"\"aw9\":{setpoints[21]},".ToReadOnlySpan();
+        var warpDriveRequirements = $"\"aw9\":{difficultyPreset.WarpDriveRequirements},".AsSpan();
         if (!json.Contains(warpDriveRequirements, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Base Power
-        ReadOnlySpan<char> baseAutoPower = $"\"uo4\":{setpoints[22]},".ToReadOnlySpan();
+        var baseAutoPower = $"\"uo4\":{difficultyPreset.BaseAutoPower},".AsSpan();
         if (!json.Contains(baseAutoPower, StringComparison.OrdinalIgnoreCase))
             return false;
 
         // Reputation & Standing Gain
-        ReadOnlySpan<char> reputationGain = $"\"vo>\":{{\"S@3\":\"{setpoints[23]}\"".ToReadOnlySpan();
+        var reputationGain = $"\"vo>\":{{\"S@3\":\"{difficultyPreset.ReputationGain}\"".AsSpan();
         return json.Contains(reputationGain, StringComparison.OrdinalIgnoreCase); // if true all previous values where true as well and therefore it matches the preset
-    }
-
-    private static bool IsGameModePreset(string?[] stringValues, bool?[] boolValues, params string[] setpoints)
-    {
-        // Survival Elements
-        if (stringValues[0] != setpoints[0])
-            return false;
-
-        // Survival Difficulty
-        if (stringValues[1] != setpoints[1]) // hazardDrain
-            return false;
-        if (stringValues[2] != setpoints[2]) // energyDrain
-            return false;
-
-        // Natural Resources
-        if (stringValues[3] != setpoints[3]) // substanceCollection
-            return false;
-
-        // Sprinting
-        if (stringValues[4] != setpoints[4]) // sprintingCost
-            return false;
-
-        // Scanner Recharge
-        if (stringValues[5] != setpoints[5]) // scannerRecharge
-            return false;
-
-        // Damage Levels
-        if (stringValues[6] != setpoints[6]) // damageReceived
-            return false;
-
-        // Technology Damage
-        if (stringValues[7] != setpoints[7]) // breakTechOnDamage
-            return false;
-
-        // Death Consequences
-        if (stringValues[8] != setpoints[8]) // deathConsequences
-            return false;
-
-        // Fuel Usage
-        if (stringValues[9] != setpoints[9]) // chargingRequirements
-            return false;
-        if (stringValues[10] != setpoints[10]) // fuelUse
-            return false;
-        if (stringValues[11] != setpoints[11]) // launchFuelCost
-            return false;
-
-        // Crafting
-        if (!boolValues[0].IsValue(bool.Parse(setpoints[12]))) // craftingIsFree
-            return false;
-
-        // Purchases
-        if (stringValues[12] != setpoints[13]) // currencyCost
-            return false;
-
-        // Goods Availability
-        if (stringValues[13] != setpoints[14]) // itemShopAvailability
-            return false;
-
-        // Inventory Stack Limits
-        if (stringValues[14] != setpoints[15]) // inventoryStackLimits
-            return false;
-
-        // Enemy Strength
-        if (stringValues[15] != setpoints[16]) // damageGiven
-            return false;
-
-        // On-Foot Combat
-        if (stringValues[16] != setpoints[17]) // groundCombatTimers
-            return false;
-
-        // Space Combat
-        if (stringValues[17] != setpoints[18]) // spaceCombatTimers
-            return false;
-
-        // Creatures
-        if (stringValues[18] != setpoints[19]) // creatureHostility
-            return false;
-
-        // Inventory Transfer Range
-        if (!boolValues[1].IsValue(bool.Parse(setpoints[20]))) // inventoriesAlwaysInRange
-            return false;
-
-        // Hyperdrive System Access
-        if (!boolValues[2].IsValue(bool.Parse(setpoints[21]))) // warpDriveRequirements
-            return false;
-
-        // Base Power
-        if (!boolValues[3].IsValue(bool.Parse(setpoints[22]))) // baseAutoPower
-            return false;
-
-        // Reputation & Standing Gain
-        return stringValues[19] == setpoints[23]; // reputationGain // if true all previous values where true as well and therefore it matches the preset
-    }
-
-    #endregion
-
-    #region SeasonEnum
-
-    /// <summary>
-    /// Gets the Season (Expedition) for the specified container.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <returns></returns>
-    internal static SeasonEnum GetSeasonEnum(Container container)
-    {
-        var mode = GetGameModeEnum(container);
-        if (mode is null or < PresetGameModeEnum.Seasonal)
-            return SeasonEnum.None;
-
-        var futureSeason = (short)(SeasonEnum.Future);
-        var i = (short)(SeasonEnum.Pioneers);
-
-        // Latest stop if negative base version but should usually be stopped before with future season.
-        while (Globals.Calculate.CalculateBaseVersion(container.SaveVersion, mode.Value, i) is int baseVersion && baseVersion > 0)
-        {
-            if (i >= futureSeason)
-                return SeasonEnum.Future;
-
-            if (baseVersion is >= Globals.Constants.THRESHOLD_VANILLA and < Globals.Constants.THRESHOLD_VANILLA_GAMEMODE)
-                return (SeasonEnum)(i);
-
-            i++;
-        }
-
-        return SeasonEnum.None;
     }
 
     #endregion
 
     #region Save Name
 
-    internal static string GetSaveName(string json)
+    /// <summary>
+    /// Gets the in-file name of the save.
+    /// </summary>
+    /// <param name="jsonObject"></param>
+    /// <returns></returns>
+    internal static string GetSaveName(JObject? jsonObject)
     {
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexSaveNameObfuscated, json, out string resultObfuscated))
-            return resultObfuscated;
-
-        if (GetRegex(RegexSaveNamePlaintext, json, out string resultPlaintext))
-            return resultPlaintext;
-#else
-        if (GetRegex(RegexSaveNameObfuscated(), json, out string resultObfuscated))
-            return resultObfuscated;
-
-        if (GetRegex(RegexSaveNamePlaintext(), json, out string resultPlaintext))
-            return resultPlaintext;
-#endif
-        return string.Empty;
+        return jsonObject?.GetValue<string>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty;
     }
 
-    internal static string GetSaveName(JObject jsonObject)
+    /// <summary>
+    /// Gets the in-file name of the save.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    internal static string GetSaveName(string? json)
     {
-        return jsonObject.GetValue<string>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty;
+        if (json is not null)
+        {
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+            if (GetRegex(RegexSaveNameObfuscated, json, out string resultObfuscated))
+                return resultObfuscated;
+
+            if (GetRegex(RegexSaveNamePlaintext, json, out string resultPlaintext))
+                return resultPlaintext;
+#else
+            if (GetRegex(RegexSaveNameObfuscated(), json, out string resultObfuscated))
+                return resultObfuscated;
+
+            if (GetRegex(RegexSaveNamePlaintext(), json, out string resultPlaintext))
+                return resultPlaintext;
+#endif
+        }
+        return string.Empty;
     }
 
     #endregion
 
     #region Save Summary
 
-    internal static string GetSaveSummary(string json)
+    /// <summary>
+    /// Gets the in-file summary of the save.
+    /// </summary>
+    /// <param name="jsonObject"></param>
+    /// <returns></returns>
+    internal static string GetSaveSummary(JObject? jsonObject)
     {
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexSaveSummaryObfuscated, json, out string resultObfuscated))
-            return resultObfuscated;
+        return jsonObject?.GetValue<string>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty;
+    }
 
-        if (GetRegex(RegexSaveSummaryPlaintext, json, out string resultPlaintext))
-            return resultPlaintext;
+    /// <summary>
+    /// Gets the in-file summary of the save.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    internal static string GetSaveSummary(string? json)
+    {
+        if (json is not null)
+        {
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+            if (GetRegex(RegexSaveSummaryObfuscated, json, out string resultObfuscated))
+                return resultObfuscated;
+
+            if (GetRegex(RegexSaveSummaryPlaintext, json, out string resultPlaintext))
+                return resultPlaintext;
 #else
-        if (GetRegex(RegexSaveSummaryObfuscated(), json, out string resultObfuscated))
+            if (GetRegex(RegexSaveSummaryObfuscated(), json, out string resultObfuscated))
             return resultObfuscated;
 
         if (GetRegex(RegexSaveSummaryPlaintext(), json, out string resultPlaintext))
             return resultPlaintext;
 #endif
+        }
         return string.Empty;
-    }
-
-    internal static string GetSaveSummary(JObject jsonObject)
-    {
-        return jsonObject.GetValue<string>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty;
     }
 
     #endregion
@@ -589,36 +448,39 @@ internal static partial class Json
     #region Total Play Time
 
     /// <summary>
-    /// Gets the total play time from within the save.
-    /// </summary>
-    /// <param name="json"></param>
-    /// <returns></returns>
-    public static uint GetTotalPlayTime(string json)
-    {
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexTotalPlayTimeObfuscated, json, out uint resultObfuscated))
-            return resultObfuscated;
-
-        if (GetRegex(RegexTotalPlayTimePlaintext, json, out uint resultPlaintext))
-            return resultPlaintext;
-#else
-        if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out uint resultObfuscated))
-            return resultObfuscated;
-
-        if (GetRegex(RegexTotalPlayTimePlaintext(), json, out uint resultPlaintext))
-            return resultPlaintext;
-#endif
-        return 0;
-    }
-
-    /// <summary>
-    /// Gets the total play time from within the save.
+    /// Gets the in-file total play time of the save.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
-    internal static uint GetTotalPlayTime(JObject jsonObject)
+    internal static uint GetTotalPlayTime(JObject? jsonObject)
     {
-        return jsonObject.GetValue<uint?>("6f=.Lg8", "PlayerStateData.TotalPlayTime") ?? 0;
+        return jsonObject?.GetValue<uint?>("6f=.Lg8", "PlayerStateData.TotalPlayTime") ?? 0;
+    }
+
+    /// <summary>
+    /// Gets the in-file total play time of the save.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    public static uint GetTotalPlayTime(string? json)
+    {
+        if (json is not null)
+        {
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+            if (GetRegex(RegexTotalPlayTimeObfuscated, json, out uint resultObfuscated))
+                return resultObfuscated;
+
+            if (GetRegex(RegexTotalPlayTimePlaintext, json, out uint resultPlaintext))
+                return resultPlaintext;
+#else
+            if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out uint resultObfuscated))
+            return resultObfuscated;
+
+            if (GetRegex(RegexTotalPlayTimePlaintext(), json, out uint resultPlaintext))
+                return resultPlaintext;
+#endif
+        }
+        return 0;
     }
 
     #endregion
@@ -628,34 +490,37 @@ internal static partial class Json
     /// <summary>
     /// Gets the in-file version of the save.
     /// </summary>
-    /// <param name="json"></param>
+    /// <param name="jsonObject"></param>
     /// <returns></returns>
-    internal static int GetVersion(string json)
+    internal static int GetVersion(JObject? jsonObject)
     {
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (GetRegex(RegexVersionObfuscated, json, out uint resultObfuscated))
-            return (int)(resultObfuscated);
-
-        if (GetRegex(RegexVersionPlaintext, json, out uint resultPlaintext))
-            return (int)(resultPlaintext);
-#else
-        if (GetRegex(RegexVersionObfuscated(), json, out uint resultObfuscated))
-            return (int)(resultObfuscated);
-
-        if (GetRegex(RegexVersionPlaintext(), json, out uint resultPlaintext))
-            return (int)(resultPlaintext);
-#endif
-        return 0;
+        return jsonObject?.GetValue<int?>("F2P", "Version") ?? 0;
     }
 
     /// <summary>
     /// Gets the in-file version of the save.
     /// </summary>
-    /// <param name="jsonObject"></param>
+    /// <param name="json"></param>
     /// <returns></returns>
-    internal static int GetVersion(JObject jsonObject)
+    internal static int GetVersion(string? json)
     {
-        return jsonObject.GetValue<int?>("F2P", "Version") ?? 0;
+        if (json is not null)
+        {
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+            if (GetRegex(RegexVersionObfuscated, json, out uint resultObfuscated))
+                return (int)(resultObfuscated);
+
+            if (GetRegex(RegexVersionPlaintext, json, out uint resultPlaintext))
+                return (int)(resultPlaintext);
+#else
+            if (GetRegex(RegexVersionObfuscated(), json, out uint resultObfuscated))
+                return (int)(resultObfuscated);
+
+            if (GetRegex(RegexVersionPlaintext(), json, out uint resultPlaintext))
+                return (int)(resultPlaintext);
+#endif
+        }
+        return 0;
     }
 
     #endregion
@@ -676,7 +541,8 @@ internal static partial class Json
         ??? = ????/???? (??? = ?)
 
         Echoes
-        440 = ????/???? (??? = ?)
+        441 = 4658/4146
+        440 = 4658/4146
 
         Singularity
         438 = 4657/4145
@@ -849,7 +715,10 @@ internal static partial class Json
 
         var usesMapping = jsonObject.UsesMapping();
 
-        //return GameVersionEnum.Echoes;
+        if (container.BaseVersion >= 4146) // 4.40
+        {
+            return GameVersionEnum.Echoes;
+        }
 
         if (container.BaseVersion >= 4144) // 4.20, 4.25, 4.30
         {
@@ -974,6 +843,11 @@ internal static partial class Json
     /// <inheritdoc cref="GetGameVersionEnum(Container, JObject)"/>
     internal static GameVersionEnum GetGameVersionEnum(Container container, string json)
     {
+        if (container.BaseVersion >= 4146) // 4.40
+        {
+            return GameVersionEnum.Echoes;
+        }
+
         if (container.BaseVersion >= 4144) // 4.20, 4.25, 4.30
         {
             // Only used in actual Expedition saves.

@@ -11,6 +11,7 @@ public class PlatformGog : PlatformSteam
     #region Directory Data
 
     public new const string ACCOUNT_PATTERN = "DefaultUser";
+
     public static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
     #endregion
@@ -26,11 +27,15 @@ public class PlatformGog : PlatformSteam
 
     #region Property
 
-    #region Platform Indicator
+    #region Configuration
+
+    // public //
 
     public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Gog;
 
-    protected override string? PlatformProcess { get; } = @"GOG Galaxy\No Man's Sky\Binaries\NMS.exe";
+    // protected //
+
+    protected override string? PlatformProcessPath { get; } = @"GOG Galaxy\No Man's Sky\Binaries\NMS.exe";
 
     protected override string PlatformToken { get; } = "GX";
 
@@ -53,7 +58,7 @@ public class PlatformGog : PlatformSteam
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         // Proceed to base method even if no directory.
-        if (directory is not null)
+        if (directory is not null && platformSettings?.UseExternalSourcesForUserIdentification == true)
         {
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GOG.com", "Galaxy", "Configuration", "config.json");
             if (File.Exists(path))
@@ -76,10 +81,10 @@ public class PlatformGog : PlatformSteam
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        if (key is "UID" && Settings.UseExternalSourcesForUserIdentification && _userId is not null)
+        if (key is "UID" && _userId is not null)
             return _userId;
 
-        if (key is "USN" && Settings.UseExternalSourcesForUserIdentification && _username is not null)
+        if (key is "USN" && _username is not null)
             return _username;
 
         var result = base.GetUserIdentification(jsonObject, key);
@@ -95,7 +100,7 @@ public class PlatformGog : PlatformSteam
 
     protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
-        if (!Settings.UseExternalSourcesForUserIdentification || _userId is null)
+        if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
         var usesMapping = jsonObject.UsesMapping();
@@ -112,7 +117,7 @@ public class PlatformGog : PlatformSteam
 
     protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
-        if (!Settings.UseExternalSourcesForUserIdentification || _userId is null)
+        if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
         var usesMapping = jsonObject.UsesMapping();
@@ -128,7 +133,7 @@ public class PlatformGog : PlatformSteam
 
     protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
-        if (!Settings.UseExternalSourcesForUserIdentification || _userId is null)
+        if (_userId is null)
             return base.GetUserIdentificationByBase(jsonObject, key);
 
         var usesMapping = jsonObject.UsesMapping();

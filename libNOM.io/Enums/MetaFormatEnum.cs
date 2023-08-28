@@ -2,9 +2,9 @@
 
 
 /// <summary>
-/// ...
+/// Specifies the possible formats the meta/manifest file can have.
 /// </summary>
-internal enum SaveFormatEnum : uint
+internal enum MetaFormatEnum : uint
 {
     Vanilla,
     Foundation,
