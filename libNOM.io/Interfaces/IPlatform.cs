@@ -24,26 +24,6 @@ public interface IPlatform
     #region Flags
 
     /// <summary>
-    /// Whether a save file can be created out of thin air.
-    /// </summary>
-    public bool CanCreate { get; }
-
-    /// <summary>
-    /// Whether a save file can be read.
-    /// </summary>
-    public bool CanRead { get; }
-
-    /// <summary>
-    /// Whether a save file can be written.
-    /// </summary>
-    public bool CanUpdate { get; }
-
-    /// <summary>
-    /// Whether a save file can be deleted.
-    /// </summary>
-    public bool CanDelete { get; }
-
-    /// <summary>
     /// Whether the location for the platform exists.
     /// </summary>
     public bool Exists { get; }
@@ -57,11 +37,6 @@ public interface IPlatform
     /// Whether the platform is capable of modding.
     /// </summary>
     public bool HasModding { get; }
-
-    /// <summary>
-    /// Whether this platform is a console or not.
-    /// </summary>
-    public bool IsConsolePlatform { get; }
 
     /// <summary>
     /// Whether any save files are found and added to the internal collection.

@@ -14,7 +14,7 @@ public partial class PlatformMicrosoft : Platform
     #region Platform Specific
 
     protected const int CONTAINERSINDEX_HEADER = 0xE; // 14
-    protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268,435,456
+    protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
     protected const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
 
     protected const int BLOBCONTAINER_HEADER = 0x4; // 4
@@ -395,8 +395,6 @@ public partial class PlatformMicrosoft : Platform
                         {
                             extra = extra with
                             {
-                                Size = blobFile.Exists ? (uint)(blobFile.Length) : 0,
-
                                 MicrosoftBlobMetaFile = blobFile,
                                 MicrosoftBlobMetaSyncGuid = blobSyncGuid,
                             };
@@ -496,21 +494,24 @@ public partial class PlatformMicrosoft : Platform
 
         //  5. SAVE NAME            (128) // may contain additional junk data after null terminator
         // 37. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
-        // 59. DIFFICULTY PRESET    (  1)
-        // 59. EMPTY                (  3) // may contain additional junk data
+        // 69. DIFFICULTY PRESET    (  1)
+        // 69. EMPTY                (  3) // may contain additional junk data
         //                          (280)
 
         var season = raw.Cast<ushort>(6);
 
+        // Vanilla data always available.
         container.Extra = container.Extra with
         {
             Bytes = raw.Slice(META_LENGTH_KNOWN).ToArray(),
+            Size = (uint)(raw.Length),
             SizeDecompressed = converted[4],
             BaseVersion = (int)(converted[0]),
             GameMode = raw.Cast<ushort>(4),
             Season = (ushort)(season == ushort.MaxValue ? 0 : season),
             TotalPlayTime = converted[2],
         };
+
         // Extended data since Waypoint.
         if (raw.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
@@ -644,7 +645,7 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(container.BaseVersion); // 4
             writer.Write((ushort)(container.GameMode)); // 2
             writer.Write((ushort)(container.Season)); // 2
-            writer.Write(container.Extra.TotalPlayTime); // 4
+            writer.Write(container.TotalPlayTime); // 4
 
             // Skip EMPTY.
             writer.Seek(0x4, SeekOrigin.Current); // 4
@@ -658,28 +659,10 @@ public partial class PlatformMicrosoft : Platform
                 writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 260
 
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-                var name = container.SaveName.AsSpanSubstring(0, Math.Min(container.SaveName.Length, Constants.SAVE_RENAMING_LENGTH));
-#if NETSTANDARD2_0_OR_GREATER
-                if (name.Length < Constants.SAVE_RENAMING_LENGTH)
-                    name = $"{name.ToString()}\0".AsSpan();
-                writer.Write(name.GetUTF8Bytes().ToArray()); // 128
-#else
-                if (name.Length < Constants.SAVE_RENAMING_LENGTH)
-                    name = $"{name}\0";
-                writer.Write(name.GetUTF8Bytes()); // 128
-#endif
+                writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
 
-                writer.Seek(META_LENGTH_KNOWN + 1 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
-                var summary = container.SaveSummary.AsSpanSubstring(0, Math.Min(container.SaveSummary.Length, Constants.SAVE_RENAMING_LENGTH));
-#if NETSTANDARD2_0_OR_GREATER
-                if (summary.Length < Constants.SAVE_RENAMING_LENGTH)
-                    summary = $"{summary.ToString()}\0".AsSpan();
-                writer.Write(summary.GetUTF8Bytes().ToArray()); // 128
-#else
-                if (summary.Length < Constants.SAVE_RENAMING_LENGTH)
-                    summary = $"{summary}\0";
-                writer.Write(summary.GetUTF8Bytes()); // 128
-#endif
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
 
                 writer.Seek(META_LENGTH_KNOWN + 2 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
                 writer.Write((byte)(container.GameDifficulty)); // 1

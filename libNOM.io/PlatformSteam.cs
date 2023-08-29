@@ -17,7 +17,8 @@ public partial class PlatformSteam : Platform
     #region Platform Specific
 
     protected const uint META_HEADER = 0xEEEEEEBE; // 4008636094
-    protected const int META_LENGTH_KNOWN = 0x50; // 80
+
+    protected const int META_LENGTH_KNOWN = 0x58; // 88
     protected override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104
     protected override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360
 
@@ -72,7 +73,7 @@ public partial class PlatformSteam : Platform
 
     #region Property
 
-    private SteamService SteamService => _steamService ??= new();
+    private SteamService SteamService => _steamService ??= new(); // { get; }
 
     #region Configuration
 
@@ -86,7 +87,7 @@ public partial class PlatformSteam : Platform
 
     protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
 
-    protected override string? PlatformArchitecture
+    protected override string? PlatformArchitecture // { get; }
     {
         get
         {
@@ -101,7 +102,7 @@ public partial class PlatformSteam : Platform
         }
     }
 
-    protected override string? PlatformProcessPath
+    protected override string? PlatformProcessPath // { get; }
     {
         get
         {
@@ -192,8 +193,6 @@ public partial class PlatformSteam : Platform
             Extra = new()
             {
                 LastWriteTime = data.LastWriteTime,
-                Size = meta.Exists ? (uint)(meta.Length) : 0,
-                SizeDisk = data.Exists ? (uint)(data.Length) : 0,
             },
         };
     }
@@ -276,29 +275,31 @@ public partial class PlatformSteam : Platform
         // 18. GAME MODE            (  2) // SAVE_FORMAT_3
         // 18. SEASON               (  2) // SAVE_FORMAT_3
         // 19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
+        // 20. EMPTY                (  8)
 
-        // 20. UNKNOWN              ( 24) // SAVE_FORMAT_2
+        // 22. EMPTY                ( 16) // SAVE_FORMAT_2
         //                          (104)
 
-        // 20. EMPTY                (  8) // SAVE_FORMAT_3
         // 22. SAVE NAME            (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
         // 54. SAVE SUMMARY         (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
         // 86. DIFFICULTY PRESET    (  1) // SAVE_FORMAT_3
-        // 87. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
+        // 86. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
         //                          (360)
 
-        // Do not write wrong data.
+        // Do not write wrong data in case decrypting failed.
         if (converted[0] == META_HEADER)
         {
+            // Vanilla data always available but not always set depending on the SAVE_FORMAT.
             container.Extra = container.Extra with
             {
-                Bytes = converted.Slice(META_LENGTH_KNOWN / sizeof(uint)).AsBytes().ToArray(),
+                Bytes = raw.Slice(META_LENGTH_KNOWN).ToArray(),
                 SizeDecompressed = converted[14],
                 BaseVersion = (int)(converted[17]),
-                GameMode = converted.Slice(18, 1).AsBytes().Slice(0, 2).Cast<byte, ushort>()[0],
-                Season = converted.Slice(18, 1).AsBytes().Slice(2, 2).Cast<byte, ushort>()[0],
+                GameMode = raw.Cast<ushort>(72),
+                Season = raw.Cast<ushort>(74),
                 TotalPlayTime = converted[19],
             };
+
             // Extended data since Waypoint.
             if (raw.Length == META_LENGTH_TOTAL_WAYPOINT)
             {
@@ -306,7 +307,7 @@ public partial class PlatformSteam : Platform
                 {
                     SaveName = converted.Slice(22, 32).GetSaveRenamingString(),
                     SaveSummary = converted.Slice(54, 32).GetSaveRenamingString(),
-                    DifficultyPreset = converted.Slice(86, 1).AsBytes()[0],
+                    DifficultyPreset = raw[344],
                 };
             }
 
@@ -356,38 +357,20 @@ public partial class PlatformSteam : Platform
             if (container.MetaFormat >= MetaFormatEnum.Waypoint)
             {
                 // Append cached bytes and overwrite afterwards.
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 280
+                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 272
 
-                writer.Seek(META_LENGTH_KNOWN + 0x8, SeekOrigin.Begin);
-                var name = container.SaveName.AsSpanSubstring(0, Math.Min(container.SaveName.Length, Constants.SAVE_RENAMING_LENGTH));
-#if NETSTANDARD2_0_OR_GREATER
-                if (name.Length < Constants.SAVE_RENAMING_LENGTH)
-                    name = $"{name.ToString()}\0".AsSpan();
-                writer.Write(name.GetUTF8Bytes().ToArray()); // 128
-#else
-                if (name.Length < Constants.SAVE_RENAMING_LENGTH)
-                    name = $"{name}\0";
-                writer.Write(name.GetUTF8Bytes()); // 128
-#endif
+                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+                writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
 
-                writer.Seek(META_LENGTH_KNOWN + 0x8 + 1 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
-                var summary = container.SaveSummary.AsSpanSubstring(0, Math.Min(container.SaveSummary.Length, Constants.SAVE_RENAMING_LENGTH));
-#if NETSTANDARD2_0_OR_GREATER
-                if (summary.Length < Constants.SAVE_RENAMING_LENGTH)
-                    summary = $"{summary.ToString()}\0".AsSpan();
-                writer.Write(summary.GetUTF8Bytes().ToArray()); // 128
-#else
-                if (summary.Length < Constants.SAVE_RENAMING_LENGTH)
-                    summary = $"{summary}\0";
-                writer.Write(summary.GetUTF8Bytes()); // 128
-#endif
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
 
-                writer.Seek(META_LENGTH_KNOWN + 0x8 + 2 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Seek(META_LENGTH_KNOWN + 2 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
                 writer.Write((byte)(container.GameDifficulty)); // 1
             }
             else
             {
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 24
+                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 16
             }
         }
         else // SAVE_FORMAT_2
@@ -409,7 +392,7 @@ public partial class PlatformSteam : Platform
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-            writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 24
+            writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 16
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

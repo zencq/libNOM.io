@@ -593,7 +593,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         // 3. Decompress
         var result = DecompressMeta(container, DecryptMeta(container, read));
         // 4. Update Container Information
-        UpdateContainerWithMetaInformation(container, read, result);
+        UpdateContainerWithMetaInformation(container, result.AsBytes(), result);
     }
 
     /// <summary>
