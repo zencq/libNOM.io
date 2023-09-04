@@ -233,11 +233,14 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public GameVersionEnum GameVersion { get; internal set; } = GameVersionEnum.Unknown;
 
+    // Maximum length in-game is 42 characters.
     public string SaveName // { get; set; }
     {
         get => string.IsNullOrEmpty(Extra.SaveName) ? Json.GetSaveName(_jsonObject) : Extra.SaveName;
         set
         {
+            value = value.AsSpanSubstring(0, Constants.SAVE_RENAMING_LENGTH_INGAME).ToString();
+
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
 
@@ -250,6 +253,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
         get => string.IsNullOrEmpty(Extra.SaveSummary) ? Json.GetSaveSummary(_jsonObject) : Extra.SaveSummary;
         set
         {
+            value = value.AsSpanSubstring(0, Constants.SAVE_RENAMING_LENGTH_MANIFEST - 1).ToString();
+
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
 

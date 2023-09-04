@@ -3,7 +3,7 @@
 /// <summary>
 /// Specifies all game modes.
 /// </summary>
-/// <seealso cref="libMBIN\Source\NMS\GameComponents\GcGameMode.cs"/>
+/// <seealso href="https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcGameMode.cs#L7"/>
 public enum PresetGameModeEnum : ushort
 {
     Unspecified,

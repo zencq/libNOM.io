@@ -5,7 +5,7 @@ namespace libNOM.io.Services;
 
 
 /// <summary>
-/// Specialised client for GitHub download the mapping file.
+/// Specialized client to query the Steam Web-API.
 /// </summary>
 internal class SteamService
 {

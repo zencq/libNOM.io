@@ -8,7 +8,7 @@ using System.Text;
 namespace libNOM.test;
 
 
-// Do not use System.Range for simplicity of the file and performace is not critial.
+// Do not use System.Range for simplicity of the file and performace is not critical.
 [TestClass]
 [DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
 public class SteamTest : CommonTestInitializeCleanup

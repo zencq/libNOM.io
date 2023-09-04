@@ -4,7 +4,7 @@
 /// <summary>
 /// Specifies the different types a base can have.
 /// </summary>
-/// <seealso cref="libMBIN\Source\NMS\GameComponents\GcPersistentBaseTypes.cs"/>
+/// <seealso href="https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcPersistentBaseTypes.cs#L7"/>
 internal enum PersistentBaseTypesEnum : uint
 {
     HomePlanetBase,

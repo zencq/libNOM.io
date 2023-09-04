@@ -1,46 +1,11 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
+﻿using CommunityToolkit.HighPerformance;
+using System.Text;
 
 namespace libNOM.io.Extensions;
 
 
 public static class StringExtensions
 {
-
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    /// <seealso href="https://stackoverflow.com/a/1615860"/>
-    internal static string EscapeDataString(this string self)
-    {
-        var builder = new StringBuilder();
-
-        foreach (var charValue in self)
-        {
-            // Escaping gone wrong by HG. The backslash is in the file but instead of one of the chars below, still the unescaped control char.
-            if (charValue == 0x09)
-            {
-                builder.Append('t');
-            }
-            else if (charValue == 0x0A)
-            {
-                builder.Append('n');
-            }
-            else if (charValue == 0x0D)
-            {
-                builder.Append('r');
-            }
-            else
-            {
-                builder.Append(charValue);
-            }
-        }
-        return builder.ToString();
-    }
-
     /// <summary>
     /// Encodes all the characters in the string into a sequence of bytes in UTF-16 format.
     /// </summary>
@@ -61,22 +26,35 @@ public static class StringExtensions
         return Encoding.UTF8.GetBytes(self);
     }
 
-    internal static bool IsAllDigits(this string self)
+    /// <inheritdoc cref="AsSpanSubstring(string, int, int)"/>
+    internal static ReadOnlySpan<char> AsSpanSubstring(this string self, int startIndex)
     {
-        return self.All(char.IsDigit);
+        return self.AsSpan().Slice(startIndex);
     }
 
     /// <summary>
-    /// Converts this string to a character <see cref="ReadOnlySpan{T}"/>.
+    /// Returns a substring of this string as <see cref="Span{T}"/>.
     /// </summary>
     /// <param name="self"></param>
-    /// <returns>A byte array containing the results of encoding the set of characters.</returns>
-    internal static ReadOnlySpan<char> ToReadOnlySpan(this string self)
+    /// <param name="startIndex"></param>
+    /// <param name="length"></param>
+    /// <returns></returns>
+    internal static ReadOnlySpan<char> AsSpanSubstring(this string self, int startIndex, int length)
     {
-#if NETSTANDARD2_0
-        return self.ToCharArray();
+        return self.AsSpan().Slice(startIndex, length);
+    }
+
+    /// <summary>
+    /// Prepares a save renaming text for writing.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static byte[] GetSaveRenamingBytes(this string self)
+    {
+#if NETSTANDARD2_0_OR_GREATER
+        return $"{self.Substring(0, self.Length)}\0".GetUTF8Bytes();
 #else
-        return self;
+        return $"{self.AsSpanSubstring(0, self.Length)}\0".GetUTF8Bytes();
 #endif
     }
 }

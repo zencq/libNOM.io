@@ -248,20 +248,14 @@ public partial class PlatformSwitch : Platform
             {
                 // Append cached bytes and overwrite afterwards.
                 writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 272
-#if NETSTANDARD2_0
-                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-                writer.Write(container.SaveName.GetSaveRenamingBytes().ToArray()); // 128
 
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
-                writer.Write(container.SaveSummary.GetSaveRenamingBytes().ToArray()); // 128
-#else
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
                 writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
 
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST, SeekOrigin.Begin);
                 writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
-#endif
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH * 2, SeekOrigin.Begin);
+
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2, SeekOrigin.Begin);
                 writer.Write((byte)(container.GameDifficulty)); // 1
             }
             else

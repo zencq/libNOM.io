@@ -434,10 +434,10 @@ internal static partial class Json
                 return resultPlaintext;
 #else
             if (GetRegex(RegexSaveSummaryObfuscated(), json, out string resultObfuscated))
-            return resultObfuscated;
+                return resultObfuscated;
 
-        if (GetRegex(RegexSaveSummaryPlaintext(), json, out string resultPlaintext))
-            return resultPlaintext;
+            if (GetRegex(RegexSaveSummaryPlaintext(), json, out string resultPlaintext))
+                return resultPlaintext;
 #endif
         }
         return string.Empty;
@@ -474,7 +474,7 @@ internal static partial class Json
                 return resultPlaintext;
 #else
             if (GetRegex(RegexTotalPlayTimeObfuscated(), json, out uint resultObfuscated))
-            return resultObfuscated;
+                return resultObfuscated;
 
             if (GetRegex(RegexTotalPlayTimePlaintext(), json, out uint resultPlaintext))
                 return resultPlaintext;

@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace libNOM.test;
 
 
-// Do not use System.Range for simplicity of the file and performace is not critial.
+// Do not use System.Range for simplicity of the file and performace is not critical.
 [TestClass]
 [DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
 public class SwitchTest : CommonTestInitializeCleanup

@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.HighPerformance;
-using K4os.Compression.LZ4;
+﻿using K4os.Compression.LZ4;
 
 namespace libNOM.io.Globals;
 

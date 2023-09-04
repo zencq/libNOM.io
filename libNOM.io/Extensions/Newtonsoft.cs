@@ -5,19 +5,16 @@ using Newtonsoft.Json.Linq;
 namespace libNOM.io.Extensions;
 
 
-internal static class NewtonsoftExtensions
+public static class NewtonsoftExtensions
 {
     /// <summary>
     /// Serializes and encodes the object into a sequence of bytes in UTF-8 format.
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-    internal static byte[] GetBytes(this JObject self, bool obfuscate)
+    internal static ReadOnlySpan<byte> GetBytes(this JObject self)
     {
-        if (self is null)
-            return Array.Empty<byte>();
-
-        return self.GetString(false, obfuscate).GetUTF8Bytes();
+        return self.GetString(false, true).GetUTF8Bytes();
     }
 
     /// <summary>
@@ -27,32 +24,20 @@ internal static class NewtonsoftExtensions
     /// <param name="indent">Whether the result will be indented.</param>
     /// <param name="obfuscate">Whether the result will be obfuscated.</param>
     /// <returns>A JSON string representation of the object.</returns>
-    internal static string GetString(this JObject self, bool indent, bool obfuscate)
+    public static string GetString(this JObject self, bool indent, bool obfuscate)
     {
-        if (self is null)
-            return string.Empty;
-
         var jsonObject = self;
 
         if (obfuscate)
         {
             jsonObject = self.DeepClone() as JObject;
-
             Mapping.Obfuscate(jsonObject!);
         }
 
-        string json;
-        if (indent)
-        {
-            var settings = new JsonSerializerSettings { Formatting = Formatting.Indented };
-            json = JsonConvert.SerializeObject(jsonObject, settings);
-        }
-        else
-        {
-            json = JsonConvert.SerializeObject(jsonObject) + "\0";
-        }
+        var settings = new JsonSerializerSettings { Formatting = indent ? Formatting.Indented : Formatting.None };
+        var jsonString = $"{JsonConvert.SerializeObject(jsonObject, settings)}\0";
 
-        return json.Replace("/", "\\/");
+        return jsonString.Replace("/", "\\/");
     }
 
     /// <summary>
@@ -63,13 +48,21 @@ internal static class NewtonsoftExtensions
     /// <param name="self"></param>
     /// <param name="paths"></param>
     /// <returns></returns>
-    internal static T? GetValue<T>(this JObject self, params string[] paths)
+    public static T? GetValue<T>(this JObject self, params string[] paths)
     {
         foreach (var path in paths)
         {
             var jToken = self.SelectToken(path);
             if (jToken is not null)
+            {
+                var type = typeof(T);
+                if (type.IsEnum)
+                {
+                    var value = jToken.Value<string>();
+                    return value is null ? default : (T)(Enum.Parse(type, value));
+                }
                 return jToken.Value<T>();
+            }
         }
         return default;
     }
@@ -80,7 +73,7 @@ internal static class NewtonsoftExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns>Whether setting the value was successfull.</returns>
-    internal static bool SetValue(this JObject self, JToken value, params string[] paths)
+    public static bool SetValue(this JObject self, JToken value, params string[] paths)
     {
         foreach (var path in paths)
         {
@@ -99,7 +92,7 @@ internal static class NewtonsoftExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-    internal static bool UsesMapping(this JObject self)
+    public static bool UsesMapping(this JObject self)
     {
         return self.ContainsKey("Version");
     }

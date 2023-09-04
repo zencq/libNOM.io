@@ -593,7 +593,7 @@ public partial class PlatformMicrosoft : Platform
             if (Settings.SetLastWriteTime)
             {
                 _lastWriteTime = writeTime;
-                container.LastWriteTime = _lastWriteTime.GetBlobTime();
+                container.LastWriteTime = _lastWriteTime.ToBlobFileTime();
 
                 if (container.DataFile is not null)
                 {
@@ -657,20 +657,14 @@ public partial class PlatformMicrosoft : Platform
             {
                 // Append cached bytes and overwrite afterwards.
                 writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 260
-#if NETSTANDARD2_0
-                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-                writer.Write(container.SaveName.GetSaveRenamingBytes().ToArray()); // 128
 
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
-                writer.Write(container.SaveSummary.GetSaveRenamingBytes().ToArray()); // 128
-#else
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
                 writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
 
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST, SeekOrigin.Begin);
                 writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
-#endif
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH * 2, SeekOrigin.Begin);
+
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2, SeekOrigin.Begin);
                 writer.Write((byte)(container.GameDifficulty)); // 1
             }
             else
@@ -848,14 +842,14 @@ public partial class PlatformMicrosoft : Platform
                     throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 // Due to this CanCreate can be true.
-                Platform.CopyPlatformExtra(Destination, Source);
+                CopyPlatformExtra(Destination, Source);
                 if (!Destination.Exists)
                 {
-                    // Creating dummy blob data only necessary if destionation does not exist.
+                    // Creating dummy blob data only necessary if destination does not exist.
                     ExecuteCanCreate(Destination);
                 }
 
-                // Additional properties required to properly rebuild the container. 
+                // Additional properties required to properly rebuild the container.
                 Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
 
@@ -908,7 +902,7 @@ public partial class PlatformMicrosoft : Platform
             if (Settings.SetLastWriteTime)
             {
                 _lastWriteTime = DateTimeOffset.Now.LocalDateTime;
-                container.LastWriteTime = _lastWriteTime.GetBlobTime();
+                container.LastWriteTime = _lastWriteTime.ToBlobFileTime();
             }
 
             container.Reset();

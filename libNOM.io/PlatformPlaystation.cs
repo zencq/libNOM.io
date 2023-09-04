@@ -437,7 +437,7 @@ public partial class PlatformPlaystation : Platform
 
     protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
     {
-        // Sizes other than for AccountData need to be set directly in CompressData() as the compressed data wont be retunred if _usesSaveWizard.
+        // Sizes other than for AccountData need to be set directly in CompressData() as the compressed data wont be returned if _usesSaveWizard.
         if (container.IsAccount)
         {
             container.Extra = container.Extra with
@@ -537,7 +537,7 @@ public partial class PlatformPlaystation : Platform
     {
         // memory.dat will be written in its own method and therefore we do not need to write anything here.
         if (_usesSaveStreaming)
-            if (_usesSaveWizard)
+            if (_usesSaveWizard && !container.IsAccount)
             {
                 // Append data to already written meta.
                 using var stream = new FileStream(container.DataFile!.FullName, FileMode.Append);
@@ -549,7 +549,7 @@ public partial class PlatformPlaystation : Platform
             }
             else
             {
-                // Homebrew handled as usual.
+                // Homebrew and Account always handled as usual.
                 base.WriteData(container, data);
             }
     }
@@ -764,7 +764,7 @@ public partial class PlatformPlaystation : Platform
                     // Due to this CanCreate can be true.
                     CopyPlatformExtra(Destination, Source);
 
-                    // Additional properties required to properly rebuild the container. 
+                    // Additional properties required to properly rebuild the container.
                     Destination.GameVersion = Source.GameVersion;
                     Destination.SaveVersion = Source.SaveVersion;
 
@@ -953,7 +953,7 @@ public partial class PlatformPlaystation : Platform
                     Destination.Exists = true;
                     Destination.IsSynced = false;
 
-                    // Properties requied to properly build the container below.
+                    // Properties required to properly build the container below.
                     Destination.BaseVersion = Source.BaseVersion;
                     Destination.GameVersion = Source.GameVersion;
                     Destination.Season = Source.Season;

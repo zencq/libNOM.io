@@ -29,6 +29,9 @@ public static class Constants
 
     internal const string FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmssfff";
 
+    internal const short GAMEMODE_INT_PERMADEATH = (int)(PresetGameModeEnum.Permadeath); // 5
+    internal const short GAMEMODE_INT_SEASONAL = (int)(PresetGameModeEnum.Seasonal); // 6
+
     internal const GameVersionEnum LOWEST_SUPPORTED_VERSION = GameVersionEnum.BeyondWithVehicleCam;
 
     internal const int OFFSET_GAMEMODE = 512;
@@ -39,7 +42,8 @@ public static class Constants
     internal const uint SAVE_FORMAT_2 = 0x7D1; // 2001 (1.1)
     internal const uint SAVE_FORMAT_3 = 0x7D2; // 2002 (3.6)
 
-    internal const int SAVE_RENAMING_LENGTH = 0x80; // 128
+    internal const int SAVE_RENAMING_LENGTH_MANIFEST = 0x80; // 128
+    internal const int SAVE_RENAMING_LENGTH_INGAME = 0x2A; // 42
 
     internal const uint SAVE_STREAMING_HEADER = 0xFEEDA1E5; // 4276986341
     internal const int SAVE_STREAMING_HEADER_TOTAL_LENGTH = 0x10; // 16
@@ -49,20 +53,4 @@ public static class Constants
     internal const int THRESHOLD_VANILLA_GAMEMODE = THRESHOLD_VANILLA + OFFSET_GAMEMODE;
     internal const int THRESHOLD_WAYPOINT = 4140;
     internal const int THRESHOLD_WAYPOINT_GAMEMODE = THRESHOLD_WAYPOINT + OFFSET_GAMEMODE;
-
-
-
-
-
-
-
-
-
-    internal const short GAMEMODE_INT_UNSPECIFIED = (int)(PresetGameModeEnum.Unspecified); // 0
-    internal const short GAMEMODE_INT_NORMAL = (int)(PresetGameModeEnum.Normal); // 1
-    internal const short GAMEMODE_INT_PERMADEATH = (int)(PresetGameModeEnum.Permadeath); // 5
-    internal const short GAMEMODE_INT_SEASONAL = (int)(PresetGameModeEnum.Seasonal); // 6
-
-    internal const string HEADER_PLAINTEXT = "{\"Version\":";
-    internal const string HEADER_PLAINTEXT_OBFUSCATED = "{\"F2P\":";
 }

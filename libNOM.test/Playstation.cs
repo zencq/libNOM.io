@@ -7,6 +7,7 @@ using System.Text;
 namespace libNOM.test;
 
 
+// Do not use System.Range for simplicity of the file and performace is not critical.
 [TestClass]
 [DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
 public class PlaystationTest : CommonTestInitializeCleanup
@@ -199,9 +200,6 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     #endregion
-
-    // TODO Write 0x7D2 6
-    // TODO Pre-Check all properties set in ProcessContainer 
 
     [TestMethod]
     public void T01_Read_0x7D1_Homebrew_1()
@@ -1024,7 +1022,67 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T25_Write_SetLastWriteTime_False()
+    public void T25_Write_Default_0x7D2_SaveWizard_Account()
+    {
+        // Arrange
+        _usesSaveStreaming = true;
+        _usesSaveWizard = true;
+
+        var now = DateTimeOffset.UtcNow;
+        var nowUnix = now.ToUnixTimeSeconds();
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "6");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
+        };
+        var writeCallback = false;
+
+        // Act
+        var platformA = new PlatformPlaystation(path, settings);
+        var containerA = platformA.GetAccountContainer();
+        var metaA = DecryptMeta(containerA);
+
+        containerA.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
+
+#pragma warning disable IDE0042 // Deconstruct variable declaration
+        platformA.Load(containerA);
+        (int MusicVolume, long UnixSeconds) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+
+        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
+        platformA.Write(containerA, now);
+        (int MusicVolume, long UnixSeconds) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+
+        var platformB = new PlatformPlaystation(path, settings);
+        var containerB = platformB.GetAccountContainer();
+        var metaB = DecryptMeta(containerB);
+
+        platformB.Load(containerB);
+        (int MusicVolume, long UnixSeconds) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+#pragma warning restore IDE0042 // Deconstruct variable declaration
+
+        // Assert
+        Assert.IsTrue(writeCallback);
+
+        Assert.AreEqual(0, valuesOrigin.MusicVolume);
+        Assert.AreEqual(1693206912, valuesOrigin.UnixSeconds); // 2023-08-28 07:15:12 +00:00
+        Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
+        Assert.AreEqual(nowUnix, valuesSet.UnixSeconds);
+
+        Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesReload.MusicVolume);
+        Assert.AreEqual(nowUnix, valuesReload.UnixSeconds);
+
+        // Fixed header and all equal except SizeDecompressed (meta[2]).
+        Assert.AreEqual(META_HEADER, metaA[0], metaB[0]);
+        Assert.AreEqual(SAVE_FORMAT_3, metaA[1], metaB[1]);
+        Assert.IsTrue(metaA.Skip(3).SequenceEqual(metaB.Skip(3)));
+    }
+
+    [TestMethod]
+    public void T26_Write_SetLastWriteTime_False()
     {
         // Arrange
         _usesSaveStreaming = false;
@@ -1077,7 +1135,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T26_Write_WriteAlways_True_0x7D1()
+    public void T27_Write_WriteAlways_True_0x7D1()
     {
         // Arrange
         _usesSaveStreaming = false;
@@ -1127,7 +1185,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T27_Write_WriteAlways_True_0x7D2()
+    public void T28_Write_WriteAlways_True_0x7D2()
     {
         // Arrange
         _usesSaveStreaming = true;
@@ -1177,7 +1235,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T28_Write_WriteAlways_False_0x7D1()
+    public void T29_Write_WriteAlways_False_0x7D1()
     {
         // Arrange
         _usesSaveStreaming = false;
@@ -1225,7 +1283,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T29_Write_WriteAlways_False_0x7D2()
+    public void T30_Write_WriteAlways_False_0x7D2()
     {
         // Arrange
         _usesSaveStreaming = true;
@@ -1273,7 +1331,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T30_FileSystemWatcher_0x7D1()
+    public void T40_FileSystemWatcher_0x7D1()
     {
         // Arrange
         _usesSaveStreaming = false;
@@ -1346,7 +1404,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T31_FileSystemWatcher_0x7D2()
+    public void T41_FileSystemWatcher_0x7D2()
     {
         // Arrange
         _usesSaveStreaming = true;
@@ -1419,7 +1477,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T32_Copy_0x7D1()
+    public void T42_Copy_0x7D1()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
@@ -1464,7 +1522,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T33_Copy_0x7D2()
+    public void T43_Copy_0x7D2()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "3");
@@ -1509,7 +1567,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T34_Delete_0x7D1()
+    public void T44_Delete_0x7D1()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
@@ -1531,7 +1589,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T35_Delete_0x7D2()
+    public void T45_Delete_0x7D2()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
@@ -1553,7 +1611,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T36_Move_0x7D1()
+    public void T46_Move_0x7D1()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
@@ -1621,7 +1679,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T37_Move_0x7D2()
+    public void T47_Move_0x7D2()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "3");
@@ -1689,7 +1747,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T40_TransferFromGog()
+    public void T50_TransferFromGog()
     {
         // Arrange
         // Act
@@ -1700,7 +1758,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T41_TransferFromMicrosoft()
+    public void T51_TransferFromMicrosoft()
     {
         // Arrange
         // Act
@@ -1708,7 +1766,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T42_TransferFromPlaystation()
+    public void T52_TransferFromPlaystation()
     {
         // Arrange
         // Act
@@ -1716,7 +1774,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T43_TransferFromSteam()
+    public void T53_TransferFromSteam()
     {
         // Arrange
         // Act
@@ -1724,7 +1782,7 @@ public class PlaystationTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T44_TransferFromSwitch()
+    public void T54_TransferFromSwitch()
     {
         // Arrange
         // Act
