@@ -10,15 +10,23 @@ All notable changes to this project will be documented in this file. It uses the
 * Now targeting .NET 7 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * Now publishing to [NuGet Gallery](https://www.nuget.org/packages/libNOM.io)
 * A setting to choose between writing always or only if a container is unsynced
+* A privacy setting to decide whether external sources should be used to to improve
+  user identification (e.g. launcher configs or API calls)
 ### Changed
+* Bump K4os.Compression.LZ4 from 1.3.5 to 1.3.6
+* Bump libNOM.map from 0.9.1 to 0.9.2
 * Renamed the settings _LastWriteTime_ and _Mapping_
+* Default value for some settings
 * Names of the IsVersion flags now include the version number as well
 * DifficultyPresetTypeEnum has been added and therefore PresetGameModeEnum is now
   only used internal
+* More getter and setter for JSON tokens and values
+* Probably more...
 ### Deprecated
 ### Removed
 ### Fixed
-* The _Mapping_ settings is now only used to determine input/output and not for modifying things internally
+* The _Mapping_ settings is now only used to determine input/output and not for
+  modifying things internally
 * A number of different issues reported on [Discord](https://discord.gg/nomnom-762409407488720918) and the [NomNom repository](https://github.com/zencq/NomNom/milestone/10)
 ### Security
 

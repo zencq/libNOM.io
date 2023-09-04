@@ -127,9 +127,14 @@ public class CommonTestInitializeCleanup
 
     /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetGuid(IEnumerable{byte})"/>
     /// <see cref="libNOM.io.Extensions.GuidExtensions.ToPath(Guid)"/>
-    internal static string GetGuid(IEnumerable<byte> source)
+    protected static string GetGuid(IEnumerable<byte> source)
     {
         return new Guid(source.ToArray()).ToString("N").ToUpper();
+    }
+
+    protected static T GetPrivateFieldOrProperty<T>(object obj, string name)
+    {
+        return (T)(new PrivateObject(obj).GetFieldOrProperty(name));
     }
 
     /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
@@ -140,6 +145,13 @@ public class CommonTestInitializeCleanup
 
         return result;
     }
+
+    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
+    protected static string GetString(IEnumerable<byte> source)
+    {
+        return Encoding.UTF8.GetString(source.ToArray());
+    }
+
     /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
     protected static string GetUnicode(IEnumerable<byte> source)
     {

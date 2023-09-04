@@ -6,6 +6,7 @@
 /// </summary>
 internal enum MetaFormatEnum : uint
 {
+    Unknown,
     Vanilla,
     Foundation,
     Frontiers,

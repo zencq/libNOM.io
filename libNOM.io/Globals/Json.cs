@@ -799,7 +799,7 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4127) // 3.10, 3.20
         {
-            var pets = jsonObject.SelectToken(usesMapping ? "PlayerStateData.Pets" : "6f=.;4P");
+            var pets = jsonObject.SelectToken(usesMapping ? "PlayerStateData.Pets" : "6f=.Mcl");
             if (pets is not null)
                 return GameVersionEnum.Companions;
 
@@ -812,7 +812,7 @@ internal static partial class Json
             if (previousUniverseAddress is not null)
                 return GameVersionEnum.Origins;
 
-            var abandonedFreighterPositionInSystem = jsonObject.SelectToken(usesMapping ? "SpawnStateData.AbandonedFreighterPositionInSystem" : "6f=.Ovv");
+            var abandonedFreighterPositionInSystem = jsonObject.SelectToken(usesMapping ? "SpawnStateData.AbandonedFreighterPositionInSystem" : "rnc.Ovv");
             if (abandonedFreighterPositionInSystem is not null)
                 return GameVersionEnum.Desolation;
 

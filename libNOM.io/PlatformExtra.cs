@@ -9,59 +9,28 @@ internal record class PlatformExtra
 #if NETSTANDARD2_0_OR_GREATER
     #region Global
 
-    // Microsoft = Meta (tail)
-    //     Playstation = Data
-    // Steam = Meta (tail)
-    //     Switch = Tail
+    internal MetaFormatEnum MetaFormat { get; set; }
+
     internal byte[]? Bytes { get; set; }
 
-    // Microsoft = Meta
-    //     Playstation = Data (compressed or decompressed depending on SaveWizard usage)
-    // Steam = Meta
     internal uint Size { get; set; }
 
-    // Microsoft = Data (decompressed)
-    //     Playstation = Data (decompressed)
-    // Steam = Data (decompressed)
-    //     Switch = Data (decompressed)
     internal uint SizeDecompressed { get; set; }
 
-    // Microsoft = Meta + Data (compressed)
-    // Steam = Data (compressed)
-    //     Playstation = Data (compressed)
     internal uint SizeDisk { get; set; }
 
-    // Microsoft
-    // Steam
-    //     Switch
-    //     Playstation (0x7D1 only)
     internal DateTimeOffset? LastWriteTime { get; set; }
 
-    // Microsoft
-    // Steam
-    //     Switch
     internal int BaseVersion { get; set; } // actually uint as well but for better readability due to less casting int is used
 
-    // Microsoft
-    // Steam
-    //     Switch
     internal ushort GameMode { get; set; }
 
     internal ushort Season { get; set; }
 
-    // Microsoft
-    // Steam
-    //     Switch
     internal uint TotalPlayTime { get; set; }
 
-    // Microsoft
-    // Steam
-    //     Switch
     internal string SaveName { get; set; } = string.Empty;
 
-    // Microsoft
-    // Steam
-    //     Switch
     internal string SaveSummary { get; set; } = string.Empty;
 
     internal uint DifficultyPreset { get; set; }
@@ -93,37 +62,41 @@ internal record class PlatformExtra
 #else
     #region Global
 
-    // Microsoft = Meta (tail)
-    //     Playstation = Data
-    // Steam = Meta (tail)
-    //     Switch = Tail
+    internal MetaFormatEnum MetaFormat { get; init; }
+
+    // Microsoft = Meta (Waypoint)
+    // Playstation = Data (memory.dat) or Meta (SaveStreaming and manifest00.hg)
+    // Steam = Meta (Waypoint or AccountData)
+    // Switch = Meta (Waypoint)
     internal byte[]? Bytes { get; init; }
 
     // Microsoft = Meta
-    //     Playstation = Data (compressed or decompressed depending on SaveWizard usage)
+    // Playstation = Data (compressed or decompressed depending on SaveWizard usage)
     // Steam = Meta
+    // Switch = Meta
     internal uint Size { get; init; }
 
-    // Microsoft = Data (decompressed)
-    //     Playstation = Data (decompressed)
-    // Steam = Data (decompressed)
-    //     Switch = Data (decompressed)
+    // Microsoft
+    // Playstation
+    // Steam
+    // Switch
     internal uint SizeDecompressed { get; init; }
 
     // Microsoft = Meta + Data (compressed)
     // Steam = Data (compressed)
-    //     Playstation = Data (compressed)
+    // Playstation = Data (compressed)
+    // Switch = Data (compressed)
     internal uint SizeDisk { get; init; }
 
     // Microsoft
+    // Playstation (SAVE_FORMAT_2)
     // Steam
-    //     Switch
-    //     Playstation (0x7D1 only)
+    // Switch
     internal DateTimeOffset? LastWriteTime { get; init; }
 
     // Microsoft
     // Steam
-    //     Switch
+    // Switch
     internal int BaseVersion { get; init; } // actually uint as well but for better readability due to less casting int is used
 
     internal ushort GameMode { get; init; }

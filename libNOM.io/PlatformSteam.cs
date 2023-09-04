@@ -27,26 +27,26 @@ public partial class PlatformSteam : Platform
     #region Generated Regex
 
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    private static readonly Regex AnchorFileRegex0 = new("save\\d{0,2}\\.hg", RegexOptions.Compiled);
+    protected static readonly Regex AnchorFileRegex0 = new("save\\d{0,2}\\.hg", RegexOptions.Compiled);
 #else
     [GeneratedRegex("save\\d{0,2}\\.hg", RegexOptions.Compiled)]
-    private static partial Regex AnchorFileRegex0();
+    protected static partial Regex AnchorFileRegex0();
 #endif
 
     #endregion
 
     #region Directory Data
 
-    public const string ACCOUNT_PATTERN = "st_76561198*";
+    protected const string ACCOUNT_PATTERN = "st_76561198*";
 
-    public static readonly string[] ANCHOR_FILE_GLOB = new[] { "save*.hg" };
+    protected static readonly string[] ANCHOR_FILE_GLOB = new[] { "save*.hg" };
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
+    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
 #else
-    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
+    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
 #endif
 
-    public static readonly string PATH = ((Func<string>)(() =>
+    protected static readonly string PATH = ((Func<string>)(() =>
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
@@ -262,7 +262,7 @@ public partial class PlatformSteam : Platform
         return (value << bits) | (value >> (32 - bits));
     }
 
-    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> raw, ReadOnlySpan<uint> converted)
+    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         //  0. META HEADER          (  4)
         //  1. META FORMAT          (  4)
@@ -287,35 +287,38 @@ public partial class PlatformSteam : Platform
         //                          (360)
 
         // Do not write wrong data in case decrypting failed.
-        if (converted[0] == META_HEADER)
+        if (decompressed.TryGetValue(0, out var header) && header == META_HEADER)
         {
             // Vanilla data always available but not always set depending on the SAVE_FORMAT.
             container.Extra = container.Extra with
             {
-                Bytes = raw.Slice(META_LENGTH_KNOWN).ToArray(),
-                SizeDecompressed = converted[14],
-                BaseVersion = (int)(converted[17]),
-                GameMode = raw.Cast<ushort>(72),
-                Season = raw.Cast<ushort>(74),
-                TotalPlayTime = converted[19],
+                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? (decompressed[1] == Constants.SAVE_FORMAT_2 ? MetaFormatEnum.Foundation : (decompressed[1] == Constants.SAVE_FORMAT_3 ? MetaFormatEnum.Frontiers : MetaFormatEnum.Unknown)) : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
+                Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
+                SizeDecompressed = decompressed[14],
+                BaseVersion = (int)(decompressed[17]),
+                GameMode = disk.Cast<ushort>(72),
+                Season = disk.Cast<ushort>(74),
+                TotalPlayTime = decompressed[19],
             };
 
             // Extended data since Waypoint.
-            if (raw.Length == META_LENGTH_TOTAL_WAYPOINT)
+            if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
             {
                 container.Extra = container.Extra with
                 {
-                    SaveName = converted.Slice(22, 32).GetSaveRenamingString(),
-                    SaveSummary = converted.Slice(54, 32).GetSaveRenamingString(),
-                    DifficultyPreset = raw[344],
+                    SaveName = decompressed.Slice(22, 32).GetSaveRenamingString(),
+                    SaveSummary = decompressed.Slice(54, 32).GetSaveRenamingString(),
+                    DifficultyPreset = disk[344],
                 };
             }
 
-            container.SaveVersion = Calculate.CalculateSaveVersion(container);
+            // Only write if all three values are in their valid ranges.
+            if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
+                container.SaveVersion = Calculate.CalculateSaveVersion(container);
         }
 
         // Size is save to write always.
-        container.Extra = container.Extra with { Size = (uint)(raw.Length) };
+        container.Extra = container.Extra with { Size = (uint)(disk.Length) };
     }
 
     #endregion
@@ -353,19 +356,28 @@ public partial class PlatformSteam : Platform
             writer.Write((ushort)(container.Season)); // 2
             writer.Write(container.TotalPlayTime); // 4
 
+            // Skip EMPTY bytes.
+            writer.Seek(0x8, SeekOrigin.Current); // 8
+
             // Extended data since Waypoint.
             if (container.MetaFormat >= MetaFormatEnum.Waypoint)
             {
-                // Append cached bytes and overwrite afterwards.
+                // Append cached bytes and modify afterwards.
                 writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 272
+#if NETSTANDARD2_0
+                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+                writer.Write(container.SaveName.GetSaveRenamingBytes().ToArray()); // 128
 
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Write(container.SaveSummary.GetSaveRenamingBytes().ToArray()); // 128
+#else
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
                 writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
 
                 writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
                 writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
-
-                writer.Seek(META_LENGTH_KNOWN + 2 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+#endif
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH * 2, SeekOrigin.Begin);
                 writer.Write((byte)(container.GameDifficulty)); // 1
             }
             else

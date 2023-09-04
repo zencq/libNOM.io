@@ -495,7 +495,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         }
         else
         {
-            // Make sure the file is obfuscated if the setting is set to false.
+            // Do deliver a consistent experience, make sure the file is obfuscated if the setting is set to false.
             Mapping.Obfuscate(jsonObject);
         }
 
@@ -560,7 +560,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             LoadMeta(container);
 
             var data = LoadData(container);
-            if (data.IsTrimEmpty())
+            if (data.IsEmpty())
             {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
             }
@@ -591,7 +591,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         // 2. Decrypt
         // 3. Decompress
-        var result = DecompressMeta(container, DecryptMeta(container, read));
+        var result = read.IsEmpty() ? Array.Empty<uint>() : DecompressMeta(container, DecryptMeta(container, read));
         // 4. Update Container Information
         UpdateContainerWithMetaInformation(container, result.AsBytes(), result);
     }
@@ -635,11 +635,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// Updates the specified container with information from the meta file.
     /// </summary>
     /// <param name="container"></param>
-    /// <param name="raw"></param>
-    /// <param name="converted"></param>
-    protected abstract void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> raw, ReadOnlySpan<uint> converted);
+    /// <param name="disk"></param>
+    /// <param name="decompressed"></param>
+    protected abstract void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
 
-    /// <inheritdoc cref="LoadData(Container, ReadOnlySpan{uint}, ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="LoadData(Container, ReadOnlySpan{byte})"/>
     protected virtual ReadOnlySpan<byte> LoadData(Container container)
     {
         // 1. Read
@@ -650,11 +650,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// Loads the data file into a processable format including reading, decrypting, and decompressing.
     /// </summary>
     /// <param name="container"></param>
-    /// <param name="meta">Processed content of the meta file.</param>
-    /// <param name="read">Already read content of the data file.</param>
+    /// <param name="read"></param>
     /// <returns></returns>
-    protected virtual ReadOnlySpan<byte> LoadData(Container container, ReadOnlySpan<byte> read)
+    protected ReadOnlySpan<byte> LoadData(Container container, ReadOnlySpan<byte> read)
     {
+        if (read.IsEmpty())
+            return read;
+
         // 2. Decrypt
         // 3. Decompress
         var result = DecompressData(container, DecryptData(container, read));
@@ -681,7 +683,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// Decrypts the read content of the data file.
     /// </summary>
     /// <param name="container"></param>
-    /// <param name="meta"></param>
     /// <param name="data"></param>
     /// <returns></returns>
     protected virtual ReadOnlySpan<byte> DecryptData(Container container, ReadOnlySpan<byte> data)
@@ -692,13 +693,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <summary>
     /// Decompresses the read and decrypted content of the data file.
     /// </summary>
-    /// <param name="container"></param>
-    /// <param name="meta"></param>
+    /// <param name="container"></param
     /// <param name="data"></param>
     /// <returns></returns>
     protected virtual ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)
     {
-        if (container.IsAccount || data.IsEmpty || data.Slice(0, 4).Cast<byte, uint>()[0] != Constants.SAVE_STREAMING_HEADER) // no compression before Frontiers
+        if (container.IsAccount || data.Cast<uint>(0) != Constants.SAVE_STREAMING_HEADER) // no compression before Frontiers
             return data;
 
         var offset = 0;
@@ -723,14 +723,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// Updates the specified container with information from the data file.
     /// </summary>
     /// <param name="container"></param>
-    /// <param name="raw"></param>
-    /// <param name="converted"></param>
-    protected virtual void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> raw, ReadOnlySpan<byte> converted)
+    /// <param name="disk"></param>
+    /// <param name="decompressed"></param>
+    protected virtual void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
     {
         container.Extra = container.Extra with
         {
-            SizeDecompressed = (uint)(converted.Length),
-            SizeDisk = (uint)(raw.Length),
+            SizeDecompressed = (uint)(decompressed.Length),
+            SizeDisk = (uint)(disk.Length),
         };
     }
 
@@ -747,7 +747,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     private void ProcessContainerData(Container container, JObject jsonObject, bool force = false)
     {
         // Values relevant for AccountData first.
-        container.SaveVersion = container.SaveVersion == 0 ? Json.GetVersion(jsonObject) : container.SaveVersion;
+        if (container.SaveVersion == 0)
+            container.SaveVersion = Json.GetVersion(jsonObject);
 
         // No need to do these things for AccountData.
         if (container.IsSave)
@@ -763,17 +764,17 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 container.SaveSummary = Json.GetSaveSummary(jsonObject);
 
             // Finally all remaining values that depend on others.
-            if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-                container.GameDifficulty = Json.GetGameDifficulty(container, jsonObject); // needs SaveVersion
-
             if (container.Season == SeasonEnum.None || force)
                 container.Season = Calculate.CalculateSeason(container); // needs SaveVersion
 
             if (container.BaseVersion == 0 || force)
                 container.BaseVersion = Calculate.CalculateBaseVersion(container); // needs SaveVersion and GameMode and Season
 
-            // Definitely not set by anything else before.
-            container.GameVersion = Json.GetGameVersionEnum(container, jsonObject); // needs BaseVersion
+            if (container.GameVersion == GameVersionEnum.Unknown)
+                container.GameVersion = Json.GetGameVersionEnum(container, jsonObject); // needs BaseVersion
+
+            if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
+                container.GameDifficulty = Json.GetGameDifficulty(container, jsonObject); // needs BaseVersion and GameVersion
 
             // Set UserIdentification.
             container.UserIdentification = GetUserIdentification(jsonObject);
@@ -804,17 +805,17 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             container.SaveSummary = Json.GetSaveSummary(json);
 
         // Finally all remaining values that depend on others.
-        if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-            container.GameDifficulty = Json.GetGameDifficulty(container, json); // needs SaveVersion
-
         if (container.Season == SeasonEnum.None || force)
             container.Season = Calculate.CalculateSeason(container); // needs SaveVersion
 
         if (container.BaseVersion == 0 || force)
             container.BaseVersion = Calculate.CalculateBaseVersion(container); // needs SaveVersion and GameMode and Season
 
-        // Definitely not set by anything else before.
-        container.GameVersion = Json.GetGameVersionEnum(container, json); // needs BaseVersion
+        if (container.GameVersion == GameVersionEnum.Unknown)
+            container.GameVersion = Json.GetGameVersionEnum(container, json); // needs BaseVersion
+
+        if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
+            container.GameDifficulty = Json.GetGameDifficulty(container, json); // needs BaseVersion and GameVersion
     }
 
     #endregion
@@ -855,7 +856,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             LoadMeta(container, meta);
 
             var binary = LoadData(container, data);
-            if (binary.IsTrimEmpty())
+            if (binary.IsEmpty())
             {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
                 return;
@@ -863,7 +864,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             // Process
             if (DeserializeContainer(container, binary) is JObject jsonObject)
-                ProcessContainerData(container, jsonObject);
+                ProcessContainerData(container, jsonObject, true);
         }
     }
 
@@ -988,7 +989,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <returns></returns>
-    protected virtual ReadOnlySpan<byte> PrepareData(Container container)
+    protected ReadOnlySpan<byte> PrepareData(Container container)
     {
         // 1. Create
         var plain = CreateData(container);
@@ -1063,7 +1064,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="data"></param>
     protected virtual void WriteData(Container container, ReadOnlySpan<byte> data)
     {
-        File.WriteAllBytes(container.DataFile!.FullName, data.ToArray());
+        if (container.DataFile is not null)
+            File.WriteAllBytes(container.DataFile.FullName, data.ToArray());
     }
 
     /// <summary>
@@ -1072,7 +1074,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="data"></param>
     /// <returns></returns>
-    protected virtual ReadOnlySpan<byte> PrepareMeta(Container container, ReadOnlySpan<byte> data)
+    protected ReadOnlySpan<byte> PrepareMeta(Container container, ReadOnlySpan<byte> data)
     {
         // 1. Create
         var plain = CreateMeta(container, data);
@@ -1124,7 +1126,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="meta"></param>
     protected virtual void WriteMeta(Container container, ReadOnlySpan<byte> meta)
     {
-        File.WriteAllBytes(container.MetaFile!.FullName, meta.ToArray());
+        if (container.MetaFile is not null)
+            File.WriteAllBytes(container.MetaFile.FullName, meta.ToArray());
     }
 
     #endregion
@@ -1225,26 +1228,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 // Due to this CanCreate can be true.
-                if (!Destination.Exists)
-                {
-                    CopyPlatformExtra(Destination, Source);
-                }
+                Platform.CopyPlatformExtra(Destination, Source);
+
+                // Additional properties required to properly rebuild the container. 
+                Destination.GameVersion = Source.GameVersion;
+                Destination.SaveVersion = Source.SaveVersion;
 
                 // Faking relevant properties to force it to Write().
                 Destination.Exists = true;
-                Destination.IsSynced = false;
-
-                // Properties required to properly build the container below (order is important).
-                Destination.GameVersion = Source.GameVersion;
-                Destination.SaveName = Source.SaveName;
-                Destination.SaveSummary = Source.SaveSummary;
-                Destination.TotalPlayTime = Source.TotalPlayTime;
-
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.GameMode = Source.GameMode;
-                Destination.Season = Source.Season;
-
-                Destination.SaveVersion = Source.SaveVersion;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
@@ -1252,7 +1243,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 if (write)
                 {
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    BuildContainerFull(Destination);
+                    RebuildContainerFull(Destination);
                 }
             }
             //else
@@ -1268,10 +1259,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="destination"></param>
     /// <param name="source"></param>
     /// <returns></returns>
-    protected virtual void CopyPlatformExtra(Container destination, Container source)
+    protected static void CopyPlatformExtra(Container destination, Container source)
     {
-        destination.Extra = new()
+        // Overwrite all general values but keep platform specific stuff unchanged.
+        destination.Extra = destination.Extra with
         {
+            MetaFormat = source.Extra.MetaFormat,
             Bytes = source.Extra.Bytes,
             Size = source.Extra.Size,
             SizeDecompressed = source.Extra.SizeDecompressed,
@@ -1753,7 +1746,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="value"></param>
     /// <param name="reason"></param>
     /// <param name="state"></param>
-    protected virtual void OnCacheEviction(object key, object value, EvictionReason reason, object state)
+    protected void OnCacheEviction(object key, object value, EvictionReason reason, object state)
     {
         /** Vanilla Format (GOG.com, Steam)
          * save.hg (Created)

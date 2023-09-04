@@ -16,15 +16,15 @@ public class GogTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (0, true, true, PresetGameModeEnum.Normal, SeasonEnum.None, 4098, GameVersionEnum.Unknown), // 1Auto
-            (1, true, true, PresetGameModeEnum.Normal, SeasonEnum.None, 4098, GameVersionEnum.Unknown), // 1Manual
-            (2, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Auto
-            (3, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Manual
-            (4, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 3Auto
-            (5, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 3Manual
-            (6, true, false, PresetGameModeEnum.Creative, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 4Auto
+            (0, true, true, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4098, GameVersionEnum.Unknown), // 1Auto
+            (1, true, true, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4098, GameVersionEnum.Unknown), // 1Manual
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Manual
+            (4, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 3Auto
+            (5, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 3Manual
+            (6, true, false, PresetGameModeEnum.Creative, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 4Auto
         };
         var settings = new PlatformSettings
         {
@@ -47,17 +47,20 @@ public class GogTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
         }
     }
 
     [TestMethod]
-    public void TransferToGog()
+    public void T10_TransferFromGog()
     {
         // Arrange
         // Act
@@ -68,7 +71,7 @@ public class GogTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToMicrosoft()
+    public void T11_TransferFromMicrosoft()
     {
         // Arrange
         // Act
@@ -76,7 +79,7 @@ public class GogTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToPlaystation()
+    public void T12_TransferFromPlaystation()
     {
         // Arrange
         // Act
@@ -84,7 +87,7 @@ public class GogTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToSteam()
+    public void T13_TransferFromSteam()
     {
         // Arrange
         // Act
@@ -92,7 +95,7 @@ public class GogTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToSwitch()
+    public void T14_TransferFromSwitch()
     {
         // Arrange
         // Act

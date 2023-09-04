@@ -31,24 +31,24 @@ public partial class PlatformMicrosoft : Platform
     #region Generated Regex
 
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    private static readonly Regex AnchorFileRegex0 = new("containers\\.index", RegexOptions.Compiled);
+    protected static readonly Regex AnchorFileRegex0 = new("containers\\.index", RegexOptions.Compiled);
 #else
     [GeneratedRegex("containers\\.index", RegexOptions.Compiled)]
-    private static partial Regex AnchorFileRegex0();
+    protected static partial Regex AnchorFileRegex0();
 #endif
 
     #region Directory Data
 
-    public const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
+    protected const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
 
-    public static readonly string[] ANCHOR_FILE_GLOB = new[] { "containers.index" };
+    protected static readonly string[] ANCHOR_FILE_GLOB = new[] { "containers.index" };
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
+    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
 #else
-    public static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
+    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
 #endif
 
-    public static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
+    protected static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
 
     #endregion
 
@@ -141,7 +141,6 @@ public partial class PlatformMicrosoft : Platform
     {
         return new(Path.Combine(extra.MicrosoftBlobDirectory!.FullName, guid.ToPath()));
     }
-
 
     #endregion
 
@@ -347,7 +346,7 @@ public partial class PlatformMicrosoft : Platform
                     ReadOnlySpan<byte> bytesBlobContainer = File.ReadAllBytes(blobContainer.FullName);
                     int offsetBlobContainer = 8; // start after header
 
-                    if (bytesBlobContainer.Length != BLOBCONTAINER_TOTAL_LENGTH || bytesBlobContainer.Cast<int>(0) != CONTAINERSINDEX_HEADER)
+                    if (bytesBlobContainer.Length != BLOBCONTAINER_TOTAL_LENGTH || bytesBlobContainer.Cast<int>(0) != BLOBCONTAINER_HEADER)
                         continue;
 
                     for (var k = 0; k < bytesBlobContainer.Cast<int>(4); k++) // blob count
@@ -361,7 +360,7 @@ public partial class PlatformMicrosoft : Platform
                         offsetBlobContainer += 32; // 2 * sizeof(Guid)
 
 #if NETSTANDARD2_0
-                        if (blobIdentifier.ToString() == "data")
+                        if (blobIdentifier.ToString().Equals("data"))
                         {
                             extra = extra with
                             {
@@ -370,19 +369,17 @@ public partial class PlatformMicrosoft : Platform
                             };
                             continue;
                         }
-                        if (blobIdentifier.ToString() == "meta")
+                        if (blobIdentifier.ToString().Equals("meta"))
                         {
                             extra = extra with
                             {
-                                Size = blobFile.Exists ? (uint)(blobFile.Length) : 0,
-
                                 MicrosoftBlobMetaFile = blobFile,
                                 MicrosoftBlobMetaSyncGuid = blobSyncGuid,
                             };
                             continue;
                         }
 #else
-                        if (blobIdentifier == "data")
+                        if (blobIdentifier.Equals("data".AsSpan(), StringComparison.Ordinal))
                         {
                             extra = extra with
                             {
@@ -391,7 +388,7 @@ public partial class PlatformMicrosoft : Platform
                             };
                             continue;
                         }
-                        if (blobIdentifier == "meta")
+                        if (blobIdentifier.Equals("meta".AsSpan(), StringComparison.Ordinal))
                         {
                             extra = extra with
                             {
@@ -458,7 +455,7 @@ public partial class PlatformMicrosoft : Platform
             LoadMeta(container);
 
             var data = LoadData(container);
-            if (data.IsTrimEmpty())
+            if (data.IsEmpty())
             {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
             }
@@ -480,7 +477,7 @@ public partial class PlatformMicrosoft : Platform
         return Array.Empty<byte>();
     }
 
-    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> raw, ReadOnlySpan<uint> converted)
+    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         //  0. BASE VERSION         (  4)
         //  1. GAME MODE            (  2)
@@ -498,32 +495,35 @@ public partial class PlatformMicrosoft : Platform
         // 69. EMPTY                (  3) // may contain additional junk data
         //                          (280)
 
-        var season = raw.Cast<ushort>(6);
+        var season = disk.Cast<ushort>(6);
 
         // Vanilla data always available.
         container.Extra = container.Extra with
         {
-            Bytes = raw.Slice(META_LENGTH_KNOWN).ToArray(),
-            Size = (uint)(raw.Length),
-            SizeDecompressed = converted[4],
-            BaseVersion = (int)(converted[0]),
-            GameMode = raw.Cast<ushort>(4),
+            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown,
+            Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
+            Size = (uint)(disk.Length),
+            SizeDecompressed = decompressed[4],
+            BaseVersion = (int)(decompressed[0]),
+            GameMode = disk.Cast<ushort>(4),
             Season = (ushort)(season == ushort.MaxValue ? 0 : season),
-            TotalPlayTime = converted[2],
+            TotalPlayTime = decompressed[2],
         };
 
         // Extended data since Waypoint.
-        if (raw.Length == META_LENGTH_TOTAL_WAYPOINT)
+        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
             container.Extra = container.Extra with
             {
-                SaveName = converted.Slice(5, 32).GetSaveRenamingString(),
-                SaveSummary = converted.Slice(37, 32).GetSaveRenamingString(),
-                DifficultyPreset = raw[276],
+                SaveName = decompressed.Slice(5, 32).GetSaveRenamingString(),
+                SaveSummary = decompressed.Slice(37, 32).GetSaveRenamingString(),
+                DifficultyPreset = disk[276],
             };
         }
 
-        container.SaveVersion = Calculate.CalculateSaveVersion(container);
+        // Only write if all three values are in their valid ranges.
+        if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
+            container.SaveVersion = Calculate.CalculateSaveVersion(container);
     }
 
     protected override ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)
@@ -532,12 +532,12 @@ public partial class PlatformMicrosoft : Platform
         return target;
     }
 
-    protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> raw, ReadOnlySpan<byte> converted)
+    protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
     {
         // Removed SizeDisk as it is the sum of data and meta for this platform.
         container.Extra = container.Extra with
         {
-            SizeDecompressed = (uint)(converted.Length),
+            SizeDecompressed = (uint)(decompressed.Length),
         };
     }
 
@@ -657,14 +657,20 @@ public partial class PlatformMicrosoft : Platform
             {
                 // Append cached bytes and overwrite afterwards.
                 writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 260
+#if NETSTANDARD2_0
+                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+                writer.Write(container.SaveName.GetSaveRenamingBytes().ToArray()); // 128
 
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+                writer.Write(container.SaveSummary.GetSaveRenamingBytes().ToArray()); // 128
+#else
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
                 writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
 
                 writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
                 writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
-
-                writer.Seek(META_LENGTH_KNOWN + 2 * Constants.SAVE_RENAMING_LENGTH, SeekOrigin.Begin);
+#endif
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH * 2, SeekOrigin.Begin);
                 writer.Write((byte)(container.GameDifficulty)); // 1
             }
             else
@@ -842,27 +848,19 @@ public partial class PlatformMicrosoft : Platform
                     throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 // Due to this CanCreate can be true.
+                Platform.CopyPlatformExtra(Destination, Source);
                 if (!Destination.Exists)
                 {
-                    CopyPlatformExtra(Destination, Source);
+                    // Creating dummy blob data only necessary if destionation does not exist.
                     ExecuteCanCreate(Destination);
                 }
 
+                // Additional properties required to properly rebuild the container. 
+                Destination.GameVersion = Source.GameVersion;
+                Destination.SaveVersion = Source.SaveVersion;
+
                 // Faking relevant properties to force it to Write().
                 Destination.Exists = true;
-                Destination.IsSynced = false;
-
-                // Properties required to properly build the container below (order is important).
-                Destination.GameVersion = Source.GameVersion;
-                Destination.SaveName = Source.SaveName;
-                Destination.SaveSummary = Source.SaveSummary;
-                Destination.TotalPlayTime = Source.TotalPlayTime;
-
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.GameMode = Source.GameMode;
-                Destination.Season = Source.Season;
-
-                Destination.SaveVersion = Source.SaveVersion;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
@@ -870,7 +868,7 @@ public partial class PlatformMicrosoft : Platform
                 if (write)
                 {
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    BuildContainerFull(Destination);
+                    RebuildContainerFull(Destination);
                 }
             }
             //else
@@ -878,19 +876,6 @@ public partial class PlatformMicrosoft : Platform
         }
 
         UpdateUserIdentification();
-    }
-
-    protected override void CopyPlatformExtra(Container destination, Container source)
-    {
-        base.CopyPlatformExtra(destination, source);
-
-        destination.Extra = destination.Extra with
-        {
-            MicrosoftSyncTime = string.Empty,
-            MicrosoftBlobContainerExtension = 0,
-            MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
-            MicrosoftBlobDirectoryGuid = Guid.NewGuid(),
-        };
     }
 
     #endregion
@@ -1000,6 +985,7 @@ public partial class PlatformMicrosoft : Platform
     {
         destination.Extra = new()
         {
+            MetaFormat = source.MetaFormat,
             MicrosoftBlobDirectoryGuid = Guid.NewGuid(),
             MicrosoftBlobContainerExtension = 0,
             LastWriteTime = source.LastWriteTime,
@@ -1012,12 +998,16 @@ public partial class PlatformMicrosoft : Platform
 
     private void ExecuteCanCreate(Container Destination)
     {
-        // New directory Guid was set in the method before this was called.
-        var directory = new DirectoryInfo(Path.Combine(Location!.FullName, Destination.Extra.MicrosoftBlobDirectoryGuid!.Value.ToPath()));
+        var directoryGuid = Guid.NewGuid();
+        var directory = new DirectoryInfo(Path.Combine(Location!.FullName, directoryGuid.ToPath()));
 
         // Update container and its extra with dummy data.
         Destination.Extra = Destination.Extra with
         {
+            MicrosoftSyncTime = string.Empty,
+            MicrosoftBlobContainerExtension = 0,
+            MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
+            MicrosoftBlobDirectoryGuid = directoryGuid,
             MicrosoftBlobDataFile = Destination.DataFile = new(Path.Combine(directory.FullName, "data.guid")),
             MicrosoftBlobMetaFile = Destination.MetaFile = new(Path.Combine(directory.FullName, "meta.guid")),
 
@@ -1111,7 +1101,9 @@ public partial class PlatformMicrosoft : Platform
                     }
                     else
                     {
-                        RebuildContainerFull(container);
+                        // Do not rebuild if not synced (to not overwrite pending watcher changes).
+                        if (container.IsSynced)
+                            RebuildContainerFull(container);
                     }
                     GenerateBackupCollection(container);
                 }

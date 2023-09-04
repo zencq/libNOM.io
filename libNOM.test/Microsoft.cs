@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.HighPerformance;
 using libNOM.io;
 using libNOM.io.Enums;
 using libNOM.io.Globals;
@@ -15,10 +16,10 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     #region Constant
 
     protected const int CONTAINERSINDEX_HEADER = 0xE; // 14
-    protected const long CONTAINERSINDEX_UNKNOWN_CONST = 0x10000000; // 268,435,456
+    protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
 
-    protected const int CONTAINER_BLOB_COUNT = 0x2; // 2
-    protected const int CONTAINER_HEADER = 0x4; // 4
+    protected const int BLOBCONTAINER_HEADER = 0x4; // 4
+    protected const int BLOBCONTAINER_COUNT = 0x2; // 2
 
     protected const int META_LENGTH_TOTAL_VANILLA = 0x18 / sizeof(uint); // 6
     protected const int META_LENGTH_TOTAL_WAYPOINT = 0x118 / sizeof(uint); // 70
@@ -57,7 +58,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         // Header User Guid (120 - 191)
         AssertAllAreEqual("d734a97e-2855-43d9-b848-0748c9010231", GetUnicode(containersIndexA.Skip(120).Take(guidLengthA * 2)), GetUnicode(containersIndexB.Skip(120).Take(guidLengthB * 2)));
         // Header Suffix (192 - 199)
-        AssertAllAreEqual(CONTAINERSINDEX_UNKNOWN_CONST, BitConverter.ToInt64(containersIndexA, 192), BitConverter.ToInt64(containersIndexB, 192));
+        AssertAllAreEqual(CONTAINERSINDEX_FOOTER, BitConverter.ToInt64(containersIndexA, 192), BitConverter.ToInt64(containersIndexB, 192));
 
         // Account Identifier 1 Length (200 - 203)
         var accountLengthA1 = BitConverter.ToInt32(containersIndexA, 200);
@@ -99,9 +100,9 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var accountBlobB = File.ReadAllBytes(Path.Combine(path, "8C69E739E59646B995E48ACB5B01E16A", "container.24"));
 
         // Account Blob Prefix (000 - 003)
-        AssertAllAreEqual(CONTAINER_HEADER, BitConverter.ToInt32(accountBlobA, 0), BitConverter.ToInt32(accountBlobB, 0));
+        AssertAllAreEqual(BLOBCONTAINER_HEADER, BitConverter.ToInt32(accountBlobA, 0), BitConverter.ToInt32(accountBlobB, 0));
         // Account Blob Number of Containers (004 - 007)
-        AssertAllAreEqual(CONTAINER_BLOB_COUNT, BitConverter.ToInt32(accountBlobA, 4), BitConverter.ToInt32(accountBlobB, 4));
+        AssertAllAreEqual(BLOBCONTAINER_COUNT, BitConverter.ToInt32(accountBlobA, 4), BitConverter.ToInt32(accountBlobB, 4));
         // Account Blob Data Identifier (008 - 015)
         AssertAllAreEqual("data", GetUnicode(accountBlobA.Skip(8).Take(4 * 2)), GetUnicode(accountBlobB.Skip(8).Take(4 * 2)));
         // Account Blob Empty Data Space (16 - 135)
@@ -212,9 +213,9 @@ public class MicrosoftTest : CommonTestInitializeCleanup
             var blobBlobB = File.ReadAllBytes(Path.Combine(path, blobGuidB, $"container.{blobContainerExtensionB}"));
 
             // Blob Blob Prefix (000 - 003)
-            AssertAllAreEqual(CONTAINER_HEADER, BitConverter.ToInt32(blobBlobA, 0), BitConverter.ToInt32(blobBlobB, 0));
+            AssertAllAreEqual(BLOBCONTAINER_HEADER, BitConverter.ToInt32(blobBlobA, 0), BitConverter.ToInt32(blobBlobB, 0));
             // Blob Blob Number of Containers (004 - 007)
-            AssertAllAreEqual(CONTAINER_BLOB_COUNT, BitConverter.ToInt32(blobBlobA, 4), BitConverter.ToInt32(blobBlobB, 4));
+            AssertAllAreEqual(BLOBCONTAINER_COUNT, BitConverter.ToInt32(blobBlobA, 4), BitConverter.ToInt32(blobBlobB, 4));
             // Blob Blob Data Identifier (008 - 015)
             AssertAllAreEqual("data", GetUnicode(blobBlobA.Skip(8).Take(4 * 2)), GetUnicode(blobBlobB.Skip(8).Take(4 * 2)));
             // Blob Blob Empty Data Space (16 - 135)
@@ -285,10 +286,10 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (2, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
-            (3, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
         };
         var settings = new PlatformSettings
         {
@@ -310,12 +311,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
         }
     }
 
@@ -324,14 +328,14 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (0, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Auto
-            (1, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Manual
-            (2, true, false, PresetGameModeEnum.Seasonal, SeasonEnum.Exobiology, 4137, GameVersionEnum.SentinelWithVehicleAI), // 2Auto
-            (3, true, false, PresetGameModeEnum.Seasonal, SeasonEnum.Exobiology, 4137, GameVersionEnum.SentinelWithVehicleAI), // 2Manual
-            (4, true, false, PresetGameModeEnum.Seasonal, SeasonEnum.Blighted, 4138, GameVersionEnum.Outlaws), // 3Auto
-            (5, true, false, PresetGameModeEnum.Seasonal, SeasonEnum.Blighted, 4138, GameVersionEnum.Outlaws), // 3Manual
+            (0, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Auto
+            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Manual
+            (2, true, false, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.Exobiology, 4137, GameVersionEnum.SentinelWithVehicleAI), // 2Auto
+            (3, true, false, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.Exobiology, 4137, GameVersionEnum.SentinelWithVehicleAI), // 2Manual
+            (4, true, false, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.Blighted, 4138, GameVersionEnum.Outlaws), // 3Auto
+            (5, true, false, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.Blighted, 4138, GameVersionEnum.Outlaws), // 3Manual
         };
         var settings = new PlatformSettings
         {
@@ -353,12 +357,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
         }
     }
 
@@ -367,18 +374,18 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version, string SaveName, string SaveSummary)[]
         {
-            (0, true, false, PresetGameModeEnum.Unspecified, SeasonEnum.None, 4143, GameVersionEnum.Fractal), // 1Auto
-            (1, true, false, PresetGameModeEnum.Unspecified, SeasonEnum.None, 4143, GameVersionEnum.Fractal), // 1Manual
-            (2, true, false, PresetGameModeEnum.Survival, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots), // 2Auto
-            (3, true, false, PresetGameModeEnum.Survival, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots), // 2Manual
-            (4, true, false, PresetGameModeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots), // 3Auto
-            (5, true, false, PresetGameModeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots), // 3Manual
-            (6, true, false, PresetGameModeEnum.Unspecified, SeasonEnum.None, 4143, GameVersionEnum.Fractal), // 4Auto
-            (7, true, false, PresetGameModeEnum.Unspecified, SeasonEnum.None, 4143, GameVersionEnum.Fractal), // 4Manual
-            (8, true, false, PresetGameModeEnum.Seasonal, SeasonEnum.Utopia, 4143, GameVersionEnum.Fractal), // 5Auto
-            (9, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4143, GameVersionEnum.Fractal), // 5Manual
+            (0, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, GameVersionEnum.Fractal, "1. Haupt", "Auf dem Frachter (WF-4 Dawajima)"), // 1Auto
+            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, GameVersionEnum.Fractal, "1. Haupt", "Auf dem Frachter (WF-4 Dawajima)"), // 1Manual
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "", "An Bord von „Otfolk“-Station Majoris"), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "", "An Bord von „Otfolk“-Station Majoris"), // 2Manual
+            (4, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "", "An Bord von Akelmon-Yelan Primus"), // 3Auto
+            (5, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "", "An Bord von Akelmon-Yelan Primus"), // 3Manual
+            (6, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, GameVersionEnum.Fractal, "2. Haupt", "Auf dem Frachter (WF-4 Dawajima)"), // 4Auto
+            (7, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, GameVersionEnum.Fractal, "2. Haupt", "Auf dem Frachter (WF-4 Dawajima)"), // 4Manual
+            (8, true, false, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.Utopia, 4143, GameVersionEnum.Fractal, "Utopia", "An Bord von „Pivogarde III“-Zentrum"), // 5Auto
+            (9, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4143, GameVersionEnum.Fractal, "Utopia", "An Bord von „Pivogarde III“-Zentrum"), // 5Manual
         };
         var settings = new PlatformSettings
         {
@@ -400,12 +407,17 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
+            Assert.AreEqual(results[i].SaveName, container.SaveName);
+            Assert.AreEqual(results[i].SaveSummary, container.SaveSummary);
         }
     }
 
@@ -414,11 +426,11 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (0, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 1Auto
-            (2, true, false, PresetGameModeEnum.Permadeath, SeasonEnum.None, 4127, GameVersionEnum.Companions), // 2Auto
-            (4, true, false, PresetGameModeEnum.Survival, SeasonEnum.None, 4133, GameVersionEnum.Beachhead), // 3Auto
+            (0, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 1Auto
+            (2, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4127, GameVersionEnum.Companions), // 2Auto
+            (4, true, false, PresetGameModeEnum.Survival, DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4133, GameVersionEnum.Beachhead), // 3Auto
         };
         var settings = new PlatformSettings
         {
@@ -445,12 +457,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
         }
     }
 
@@ -459,9 +474,9 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FE2C5492FC_29070100B936489ABCE8B9AF3980429C");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (1, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 1Manual
+            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 1Manual
         };
         var settings = new PlatformSettings
         {
@@ -488,12 +503,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
         }
     }
 
@@ -502,10 +520,10 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FFCAB85905_29070100B936489ABCE8B9AF3980429C");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (0, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Auto
-            (1, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Manual
+            (0, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Auto
+            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Manual
         };
         var settings = new PlatformSettings
         {
@@ -527,12 +545,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
         }
     }
 
@@ -541,13 +562,13 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version, string SaveName, string SaveSummary)[]
         {
-            (0, true, false, PresetGameModeEnum.Creative, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots), // 1Auto
-            (1, true, false, PresetGameModeEnum.Creative, SeasonEnum.None, 4140, GameVersionEnum.Waypoint), // 1Manual
-            (2, true, false, PresetGameModeEnum.Seasonal, SeasonEnum.Polestar, 4139, GameVersionEnum.Endurance), // 2Auto
-            (6, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 4Auto
-            (7, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4124, GameVersionEnum.LivingShip), // 4Manual
+            (0, true, false, PresetGameModeEnum.Creative, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris"), // 1Auto // for some reason SaveVersion has still the old format
+            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4140, GameVersionEnum.Waypoint, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris"), // 1Manual
+            (2, true, false, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.Polestar, 4139, GameVersionEnum.Endurance, "", ""), // 2Auto
+            (6, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence, "", ""), // 4Auto
+            (7, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4124, GameVersionEnum.LivingShip, "", ""), // 4Manual
         };
         var settings = new PlatformSettings
         {
@@ -569,12 +590,17 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
+            Assert.AreEqual(results[i].SaveName, container.SaveName);
+            Assert.AreEqual(results[i].SaveSummary, container.SaveSummary);
         }
     }
 
@@ -586,10 +612,10 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "something");
-        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
         {
-            (0, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Auto
-            (1, true, false, PresetGameModeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Manual
+            (0, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Auto
+            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, GameVersionEnum.Outlaws), // 1Manual
         };
         var settings = new PlatformSettings
         {
@@ -611,12 +637,15 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         for (var i = 0; i < results.Length; i++)
         {
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
-            Assert.AreEqual(results[i].GameMode, container.GameModeEnum);
-            Assert.AreEqual(results[i].Season, container.SeasonEnum);
-            Assert.AreEqual(results[i].BaseVersion, container.BaseVersion);
-            Assert.AreEqual(results[i].Version, container.GameVersionEnum);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].Season, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].Version, container.GameVersion);
         }
     }
 
@@ -629,6 +658,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
         };
         var writeCallback = false;
 
@@ -681,6 +711,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
         };
         var writeCallback = false;
 
@@ -688,6 +719,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var platformA = new PlatformMicrosoft(path, settings);
         var containerA = platformA.GetSaveContainer(0)!;
         var metaA = DecryptMeta(containerA);
+        var priectA = new PrivateObject(containerA);
 
         containerA.WriteCallback += () =>
         {
@@ -696,7 +728,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
 #pragma warning disable IDE0042 // Deconstruct variable declaration
         platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
 
         containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
         platformA.Write(containerA, now);
@@ -705,6 +737,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var platformB = new PlatformMicrosoft(path, settings);
         var containerB = platformB.GetSaveContainer(0)!;
         var metaB = DecryptMeta(containerB);
+        var priectB = new PrivateObject(containerB);
 
         platformB.Load(containerB);
         (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
@@ -714,7 +747,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(1504909789, valuesOrigin.Units);
-        Assert.AreEqual(638126763444620000, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
+        Assert.AreEqual(63812676344462, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
         Assert.AreEqual(nowTicks, valuesSet.UtcTicks);
 
@@ -722,12 +755,17 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.AreEqual(nowTicks, valuesReload.UtcTicks);
 
         AssertCommonMeta(containerA, metaA, metaB);
-        AssertAllAreEqual(4143, (uint)(containerA.BaseVersion), (uint)(containerB.BaseVersion), metaA[0], metaB[0]);
-        var bytesA = BitConverter.GetBytes(metaA[1]);
-        var bytesB = BitConverter.GetBytes(metaB[1]);
-        AssertAllAreEqual((uint)(PresetGameModeEnum.Normal), (uint)(containerA.GameModeEnum!) + 1, (uint)(containerB.GameModeEnum!) + 1, (uint)(BitConverter.ToInt16(bytesA, 0)), (uint)(BitConverter.ToInt16(bytesB, 0)));
-        AssertAllAreEqual((uint)(SeasonEnum.None), (uint)(containerA.SeasonEnum), (uint)(containerB.SeasonEnum), BitConverter.ToUInt16(bytesA, 2), BitConverter.ToUInt16(bytesA, 2));
+
+        var bytesA = metaA.AsSpan().AsBytes().ToArray();
+        var bytesB = metaB.AsSpan().AsBytes().ToArray();
+
+        AssertAllAreEqual(4143, (uint)(int)(priectA.GetFieldOrProperty("BaseVersion")), (uint)(int)(priectB.GetFieldOrProperty("BaseVersion")), metaA[0], metaB[0]);
+        AssertAllAreEqual((ushort)(PresetGameModeEnum.Normal), (ushort)(PresetGameModeEnum)(priectA.GetFieldOrProperty("GameMode")), (ushort)(PresetGameModeEnum)(priectB.GetFieldOrProperty("GameMode")), BitConverter.ToInt16(bytesA, 4), BitConverter.ToInt16(bytesB, 4));
+        AssertAllAreEqual((ushort)(SeasonEnum.None), (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 6), BitConverter.ToUInt16(bytesA, 6));
         AssertAllAreEqual(635119, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[2], metaB[2]);
+        AssertAllAreEqual("1. Haupt", containerA.SaveName, containerB.SaveName, GetString(bytesA.Skip(20).TakeWhile(i => i != 0)), GetString(bytesB.Skip(20).TakeWhile(i => i != 0)));
+        AssertAllAreEqual("Auf dem Frachter (WF-4 Dawajima)", containerA.SaveSummary, containerB.SaveSummary, GetString(bytesA.Skip(148).TakeWhile(i => i != 0)), GetString(bytesB.Skip(148).TakeWhile(i => i != 0)));
+        AssertAllAreEqual((byte)(DifficultyPresetTypeEnum.Custom), (byte)(containerA.GameDifficulty), (byte)(containerB.GameDifficulty), bytesA[276], bytesB[276]);
     }
 
     /// <summary>
@@ -742,6 +780,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
         };
         var writeCallback = false;
 
@@ -794,6 +833,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             SetLastWriteTime = false,
+            UseMapping = true,
         };
         var writeCallback = false;
 
@@ -808,7 +848,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
 #pragma warning disable IDE0042 // Deconstruct variable declaration
         platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
 
         containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
         platformA.Write(containerA, now);
@@ -825,12 +865,12 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(1504909789, valuesOrigin.Units);
-        Assert.AreEqual(638126763444620000, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
+        Assert.AreEqual(63812676344462, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
-        Assert.AreEqual(638126763444620000, valuesSet.UtcTicks);
+        Assert.AreEqual(63812676344462, valuesSet.UtcTicks);
 
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesReload.Units);
-        Assert.AreEqual(638126763444620000, valuesReload.UtcTicks);
+        Assert.AreEqual(63812676344462, valuesReload.UtcTicks);
     }
 
     [TestMethod]
@@ -924,21 +964,23 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     public void T20_FileSystemWatcher()
     {
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
-        var path_containers_index = Path.Combine(path, "containers.index");
+        var pathWatching = Path.Combine(path, "containers.index");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
             Watcher = true,
         };
 
         // Act
-        var bytes = File.ReadAllBytes(path_containers_index);
-        var platform = new PlatformMicrosoft(path, settings);
+        var bytes = File.ReadAllBytes(pathWatching);
 
+        var platform = new PlatformMicrosoft(path, settings);
         var container = platform.GetSaveContainer(0)!;
+
         platform.Load(container);
 
-        File.WriteAllBytes(path_containers_index, bytes);
+        File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers1 = platform.GetWatcherContainers();
         var count1 = watchers1.Count();
@@ -947,7 +989,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
         var synced2 = container.IsSynced;
 
-        File.WriteAllBytes(path_containers_index, bytes);
+        File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers2 = platform.GetWatcherContainers();
         var count2 = watchers2.Count();
@@ -958,7 +1000,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         platform.OnWatcherDecision(watcherContainer2, false);
         var synced4 = container.IsSynced;
 
-        File.WriteAllBytes(path_containers_index, bytes);
+        File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers3 = platform.GetWatcherContainers();
         var count3 = watchers3.Count();
@@ -1013,17 +1055,26 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         platform.Copy(container9, container0); // 5Manual -> 1Auto (delete)
 
         // Assert
+        var priect1 = new PrivateObject(container1);
+        var priect2 = new PrivateObject(container2);
+        var priect4 = new PrivateObject(container4);
+        var priect8 = new PrivateObject(container8);
+
         Assert.IsTrue(container1.Exists);
-        Assert.AreEqual(container4.GameModeEnum, container1.GameModeEnum);
-        Assert.AreEqual(container4.SeasonEnum, container1.SeasonEnum);
-        Assert.AreEqual(container4.BaseVersion, container1.BaseVersion);
-        Assert.AreEqual(container4.GameVersionEnum, container1.GameVersionEnum);
+        Assert.AreEqual((PresetGameModeEnum)(priect4.GetFieldOrProperty("GameMode")), (PresetGameModeEnum)(priect1.GetFieldOrProperty("GameMode")));
+        Assert.AreEqual(container4.GameDifficulty, container1.GameDifficulty);
+        Assert.AreEqual(container4.Season, container1.Season);
+        Assert.AreEqual((int)(priect4.GetFieldOrProperty("BaseVersion")), (int)(priect1.GetFieldOrProperty("BaseVersion")));
+        Assert.AreEqual(container4.GameVersion, container1.GameVersion);
+        Assert.AreEqual(container4.TotalPlayTime, container1.TotalPlayTime);
 
         Assert.IsTrue(container8.Exists);
-        Assert.AreEqual(container2.GameModeEnum, container8.GameModeEnum);
-        Assert.AreEqual(container2.SeasonEnum, container8.SeasonEnum);
-        Assert.AreEqual(container2.BaseVersion, container8.BaseVersion);
-        Assert.AreEqual(container2.GameVersionEnum, container8.GameVersionEnum);
+        Assert.AreEqual((PresetGameModeEnum)(priect2.GetFieldOrProperty("GameMode")), (PresetGameModeEnum)(priect8.GetFieldOrProperty("GameMode")));
+        Assert.AreEqual(container2.GameDifficulty, container8.GameDifficulty);
+        Assert.AreEqual(container2.Season, container8.Season);
+        Assert.AreEqual((int)(priect2.GetFieldOrProperty("BaseVersion")), (int)(priect8.GetFieldOrProperty("BaseVersion")));
+        Assert.AreEqual(container4.GameVersion, container1.GameVersion);
+        Assert.AreEqual(container4.TotalPlayTime, container1.TotalPlayTime);
 
         Assert.IsFalse(container0.Exists);
     }
@@ -1077,45 +1128,57 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var container5 = platform.GetSaveContainer(5)!; // 3Manual
         var container9 = platform.GetSaveContainer(9)!; // 5Manual
 
-        var gameModeEnum2 = container2.GameModeEnum;
-        var seasonEnum2 = container2.SeasonEnum;
-        var baseVersion2 = container2.BaseVersion;
-        var versionEnum2 = container2.GameVersionEnum;
+        var priect2 = new PrivateObject(container2);
+        var priect4 = new PrivateObject(container4);
+
+        var gameModeEnum2 = (PresetGameModeEnum)(priect2.GetFieldOrProperty("GameMode"));
+        var gameDifficultyEnum2 = container2.GameDifficulty;
+        var seasonEnum2 = container2.Season;
+        var baseVersion2 = (int)(priect2.GetFieldOrProperty("BaseVersion"));
+        var versionEnum2 = container2.GameVersion;
+        var totalPlayTime2 = container2.TotalPlayTime;
         platform.Copy(container4, container5);
         platform.Move(container2, container5); // overwrite
 
         // 1 is corrupted, therefore 0 gets deleted and then 1 is also deleted after copying.
         platform.Move(container1, container0); // delete
 
-        var gameModeEnum4 = container4.GameModeEnum;
-        var seasonEnum4 = container4.SeasonEnum;
-        var baseVersion4 = container4.BaseVersion;
-        var versionEnum4 = container4.GameVersionEnum;
+        var gameModeEnum4 = (PresetGameModeEnum)(priect4.GetFieldOrProperty("GameMode"));
+        var gameDifficultyEnum4 = container4.GameDifficulty;
+        var seasonEnum4 = container4.Season;
+        var baseVersion4 = (int)(priect4.GetFieldOrProperty("BaseVersion"));
+        var versionEnum4 = container4.GameVersion;
+        var totalPlayTime4 = container4.TotalPlayTime;
         platform.Move(container4, container9); // move
 
         // Assert
-        Assert.IsFalse(container2.Exists);
-        Assert.IsTrue(container5.Exists);
-        Assert.AreEqual(gameModeEnum2, container5.GameModeEnum);
-        Assert.AreEqual(seasonEnum2, container5.SeasonEnum);
-        Assert.AreEqual(baseVersion2, container5.BaseVersion);
-        Assert.AreEqual(versionEnum2, container5.GameVersionEnum);
+        var priect5 = new PrivateObject(container5);
+        var priect9 = new PrivateObject(container9);
+
+        Assert.IsFalse(container2.Exists); Assert.IsTrue(container5.Exists);
+        Assert.AreEqual(gameModeEnum2, (PresetGameModeEnum)(priect5.GetFieldOrProperty("GameMode")));
+        Assert.AreEqual(gameDifficultyEnum2, container5.GameDifficulty);
+        Assert.AreEqual(seasonEnum2, container5.Season);
+        Assert.AreEqual(baseVersion2, (int)(priect5.GetFieldOrProperty("BaseVersion")));
+        Assert.AreEqual(versionEnum2, container5.GameVersion);
+        Assert.AreEqual(totalPlayTime2, container5.TotalPlayTime);
 
         Assert.IsFalse(container0.Exists);
         Assert.IsFalse(container1.Exists);
         Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container0.IncompatibilityTag);
         Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_004, container1.IncompatibilityTag);
 
-        Assert.IsFalse(container4.Exists);
-        Assert.IsTrue(container9.Exists);
-        Assert.AreEqual(gameModeEnum4, container9.GameModeEnum);
-        Assert.AreEqual(seasonEnum4, container9.SeasonEnum);
-        Assert.AreEqual(baseVersion4, container9.BaseVersion);
-        Assert.AreEqual(versionEnum4, container9.GameVersionEnum);
+        Assert.IsFalse(container4.Exists); Assert.IsTrue(container9.Exists);
+        Assert.AreEqual(gameModeEnum4, (PresetGameModeEnum)(priect9.GetFieldOrProperty("GameMode")));
+        Assert.AreEqual(gameDifficultyEnum4, container9.GameDifficulty);
+        Assert.AreEqual(seasonEnum4, container9.Season);
+        Assert.AreEqual(baseVersion4, (int)(priect9.GetFieldOrProperty("BaseVersion")));
+        Assert.AreEqual(versionEnum4, container9.GameVersion);
+        Assert.AreEqual(totalPlayTime4, container9.TotalPlayTime);
     }
 
     [TestMethod]
-    public void TransferToGog()
+    public void T40_TransferFromGog()
     {
         // Arrange
         // Act
@@ -1126,7 +1189,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToMicrosoft()
+    public void T41_TransferFromMicrosoft()
     {
         // Arrange
         // Act
@@ -1134,7 +1197,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToPlaystation()
+    public void T42_TransferFromPlaystation()
     {
         // Arrange
         // Act
@@ -1142,7 +1205,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToSteam()
+    public void T43_TransferFromSteam()
     {
         // Arrange
         // Act
@@ -1150,7 +1213,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void TransferToSwitch()
+    public void T44_TransferFromSwitch()
     {
         // Arrange
         // Act

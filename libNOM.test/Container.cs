@@ -91,6 +91,7 @@ public class ContainerTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
+            UseMapping = true,
         };
 
         // Act
@@ -117,6 +118,7 @@ public class ContainerTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
+            UseMapping = true,
         };
 
         // Act
@@ -179,6 +181,7 @@ public class ContainerTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
+            UseMapping = true,
         };
 
         // Act
@@ -217,6 +220,7 @@ public class ContainerTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
+            UseMapping = true,
         };
         var validSlotIndices = new JArray { new JObject { { "X", 0 }, { "Y", 0 } } };
 

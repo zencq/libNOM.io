@@ -65,5 +65,4 @@ public static class Constants
 
     internal const string HEADER_PLAINTEXT = "{\"Version\":";
     internal const string HEADER_PLAINTEXT_OBFUSCATED = "{\"F2P\":";
-    internal const string HEADER_SAVEWIZARD = "NOMANSKY";
 }

@@ -202,18 +202,29 @@ public class Container : IComparable<Container>, IEquatable<Container>
         {
             if (IsVersion400Waypoint)
             {
+                if (GameMode < PresetGameModeEnum.Seasonal)
+                {
+                    if (value == DifficultyPresetTypeEnum.Permadeath)
+                    {
+                        GameMode = PresetGameModeEnum.Permadeath;
+                    }
+                    else if (value < DifficultyPresetTypeEnum.Permadeath)
+                    {
+                        GameMode = PresetGameModeEnum.Normal;
+                    }
+                }
                 // TODO set preset
             }
             else
             {
-                GameMode = value switch
-                {
-                    DifficultyPresetTypeEnum.Invalid => PresetGameModeEnum.Unspecified,
-                    DifficultyPresetTypeEnum.Creative => PresetGameModeEnum.Creative,
-                    DifficultyPresetTypeEnum.Survival => PresetGameModeEnum.Survival,
-                    DifficultyPresetTypeEnum.Permadeath => PresetGameModeEnum.Permadeath,
-                    _ => PresetGameModeEnum.Normal,
-                };
+                if (GameMode < PresetGameModeEnum.Seasonal)
+                    GameMode = value switch
+                    {
+                        DifficultyPresetTypeEnum.Creative => PresetGameModeEnum.Creative,
+                        DifficultyPresetTypeEnum.Survival => PresetGameModeEnum.Survival,
+                        DifficultyPresetTypeEnum.Permadeath => PresetGameModeEnum.Permadeath,
+                        _ => PresetGameModeEnum.Normal,
+                    };
             }
 
             Extra = Extra with { DifficultyPreset = (uint)(value) };
@@ -273,6 +284,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
         }
     }
 
+    public bool UsesMapping { get; private set; }
+
     // internal //
 
     internal int BaseVersion // { get; set; }
@@ -319,21 +332,10 @@ public class Container : IComparable<Container>, IEquatable<Container>
         }
     }
 
-    internal MetaFormatEnum MetaFormat // { get; }
+    internal MetaFormatEnum MetaFormat // { get; set; }
     {
-        get
-        {
-            if (IsVersion400Waypoint)
-                return MetaFormatEnum.Waypoint;
-
-            if (IsVersion360Frontiers)
-                return MetaFormatEnum.Frontiers;
-
-            if (BaseVersion > Constants.THRESHOLD_VANILLA)
-                return MetaFormatEnum.Foundation;
-
-            return MetaFormatEnum.Vanilla;
-        }
+        get => Extra.MetaFormat;
+        set => Extra = Extra with { MetaFormat = value };
     }
 
     internal int SaveVersion // { get; set; }
@@ -349,8 +351,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
     }
 
     internal StoragePersistentSlotEnum PersistentStorageSlot { get; }
-
-    internal bool UsesMapping { get; private set; }
 
     #endregion
 
@@ -590,7 +590,11 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public override string ToString()
     {
-        return $"{nameof(Container)} {MetaIndex:D2} {Identifier} {(IsBackup ? "Backup" : "Save")}{(Exists ? "*" : string.Empty)}";
+        var e = Exists ? (IsBackup ? "Backup" : (IsAccount ? "Account" : (IsSave ? "Save" : null))) : null;
+        if (e is not null)
+            e = $" // {e}";
+
+        return $"{nameof(Container)} {MetaIndex:D2} {Identifier}{(e ?? string.Empty)}";
     }
 
     #endregion
