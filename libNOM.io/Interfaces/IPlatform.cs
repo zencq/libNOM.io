@@ -299,6 +299,7 @@ public interface IPlatform
 
     /// <summary>
     /// Ensures that the destination is prepared for the incoming <see cref="Transfer(ContainerTransferData, int)"/>.
+    /// Mainly to lookup the user identification.
     /// </summary>
     /// <param name="destinationSlotIndex"></param>
     public void PrepareTransferDestination(int destinationSlotIndex);
@@ -308,8 +309,8 @@ public interface IPlatform
     /// Works similar to copy but with additional ownership transfer.
     /// </summary>
     /// <param name="sourceTransferData"></param>
-    /// <param name="destinationSlot"></param>
-    public void Transfer(ContainerTransferData sourceTransferData, int destinationSlot);
+    /// <param name="destinationSlotIndex"></param>
+    public void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex);
 
     #endregion
 

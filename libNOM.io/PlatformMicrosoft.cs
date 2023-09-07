@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
@@ -39,16 +40,16 @@ public partial class PlatformMicrosoft : Platform
 
     #region Directory Data
 
-    protected const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
+    internal const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
 
-    protected static readonly string[] ANCHOR_FILE_GLOB = new[] { "containers.index" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "containers.index" };
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
 #else
-    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
 #endif
 
-    protected static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
+    internal static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
 
     #endregion
 
@@ -123,7 +124,7 @@ public partial class PlatformMicrosoft : Platform
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
     {
         if (!name.Equals("containers.index", StringComparison.OrdinalIgnoreCase))
-            return Array.Empty<Container>();
+            return Enumerable.Empty<Container>();
 
         // Cache previous timestamp.
         var lastWriteTicks = _lastWriteTime.UtcTicks.GetBlobTicks();
@@ -147,6 +148,8 @@ public partial class PlatformMicrosoft : Platform
     // //
 
     #region Constructor
+
+    public PlatformMicrosoft() : base() { }
 
     public PlatformMicrosoft(string path) : base(path) { }
 
@@ -188,7 +191,7 @@ public partial class PlatformMicrosoft : Platform
     {
         var containersIndex = ParseContainersIndex();
         if (containersIndex.Count == 0)
-            return Array.Empty<Container>();
+            return Enumerable.Empty<Container>();
 
         var bag = new ConcurrentBag<Container>();
 
@@ -495,6 +498,9 @@ public partial class PlatformMicrosoft : Platform
         // 69. EMPTY                (  3) // may contain additional junk data
         //                          (280)
 
+        if (disk.IsEmpty())
+            return;
+
         var season = disk.Cast<ushort>(6);
 
         // Vanilla data always available.
@@ -676,6 +682,42 @@ public partial class PlatformMicrosoft : Platform
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
+    private void ExecuteCanCreate(Container Destination)
+    {
+        var directoryGuid = Guid.NewGuid();
+        var directory = new DirectoryInfo(Path.Combine(Location!.FullName, directoryGuid.ToPath()));
+
+        // Update container and its extra with dummy data.
+        Destination.Extra = Destination.Extra with
+        {
+            MicrosoftSyncTime = string.Empty,
+            MicrosoftBlobContainerExtension = 0,
+            MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
+            MicrosoftBlobDirectoryGuid = directoryGuid,
+            MicrosoftBlobDataFile = Destination.DataFile = new(Path.Combine(directory.FullName, "data.guid")),
+            MicrosoftBlobMetaFile = Destination.MetaFile = new(Path.Combine(directory.FullName, "meta.guid")),
+
+            MicrosoftBlobDirectory = directory,
+        };
+
+        // Prepare blob container file content. Guid of data and meta file will be set while executing Write().
+        var buffer = new byte[BLOBCONTAINER_TOTAL_LENGTH];
+        using (var writer = new BinaryWriter(new MemoryStream(buffer)))
+        {
+            writer.Write(BLOBCONTAINER_HEADER);
+            writer.Write(BLOBCONTAINER_COUNT);
+
+            writer.Write("data".GetUnicodeBytes());
+            writer.Seek(BLOBCONTAINER_IDENTIFIER_LENGTH - 8 + 32, SeekOrigin.Current);
+
+            writer.Write("meta".GetUnicodeBytes());
+        }
+
+        // Write a dummy file.
+        Directory.CreateDirectory(Destination.Extra.MicrosoftBlobDirectory!.FullName);
+        File.WriteAllBytes(Destination.Extra.MicrosoftBlobContainerFile!.FullName, buffer);
+    }
+
     /// <summary>
     /// Updates the data and meta file information for the new writing.
     /// </summary>
@@ -825,51 +867,15 @@ public partial class PlatformMicrosoft : Platform
 
     #region Copy
 
-    protected override void Copy(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
+    protected override void CopyPlatformExtra(Container destination, Container source)
     {
-        foreach (var (Source, Destination) in operationData)
+        base.CopyPlatformExtra(destination, source);
+
+        // Creating dummy blob data only necessary if destination does not exist.
+        if (!destination.Exists)
         {
-            if (!Source.Exists)
-            {
-                Delete(Destination, write);
-            }
-            else if (Destination.Exists || (!Destination.Exists && CanCreate))
-            {
-                if (!Source.IsLoaded)
-                    BuildContainerFull(Source);
-
-                if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
-
-                // Due to this CanCreate can be true.
-                CopyPlatformExtra(Destination, Source);
-                if (!Destination.Exists)
-                {
-                    // Creating dummy blob data only necessary if destination does not exist.
-                    ExecuteCanCreate(Destination);
-                }
-
-                // Additional properties required to properly rebuild the container.
-                Destination.GameVersion = Source.GameVersion;
-                Destination.SaveVersion = Source.SaveVersion;
-
-                // Faking relevant properties to force it to Write().
-                Destination.Exists = true;
-
-                Destination.SetJsonObject(Source.GetJsonObject());
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
-            }
-            //else
-            //    continue;
+            ExecuteCanCreate(destination);
         }
-
-        UpdateUserIdentification();
     }
 
     #endregion
@@ -922,113 +928,55 @@ public partial class PlatformMicrosoft : Platform
 
     #endregion
 
-    // TODO Transfer Refactoring
-
     #region Transfer
-
-    protected override void Transfer(ContainerTransferData sourceTransferData, int destinationSlot, bool write)
-    {
-        if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
-            throw new InvalidOperationException("Cannot transfer as at least one user identification is not complete.");
-
-        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(GetSlotContainers(destinationSlot), (Source, Destination) => (Source, Destination)))
-        {
-            if (!Source.Exists)
-            {
-                Delete(Destination, write);
-            }
-            else if (Destination.Exists || !Destination.Exists && CanCreate)
-            {
-                if (!Source.IsLoaded)
-                    BuildContainerFull(Source);
-
-                if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
-
-                // Due to this CanCreate can be true.
-                if (!Destination.Exists)
-                {
-                    CreatePlatformExtra(Destination, Source);
-                    ExecuteCanCreate(Destination);
-                }
-
-                // Faking relevant properties to force it to Write().
-                Destination.Exists = true;
-                Destination.IsSynced = false;
-
-                // Properties required to properly build the container below.
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.GameVersion = Source.GameVersion;
-                Destination.Season = Source.Season;
-
-                Destination.SetJsonObject(Source.GetJsonObject());
-                TransferOwnership(Destination, sourceTransferData);
-
-                if (write)
-                {
-                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    BuildContainerFull(Destination);
-                }
-            }
-            //else
-            //    continue;
-        }
-    }
 
     protected override void CreatePlatformExtra(Container destination, Container source)
     {
-        destination.Extra = new()
+        base.CreatePlatformExtra(destination, source);
+
+        // Always creating dummy blob data (already created in CopyPlatformExtra() if destination does not exist).
+        if (destination.Exists)
         {
-            MetaFormat = source.MetaFormat,
-            MicrosoftBlobDirectoryGuid = Guid.NewGuid(),
-            MicrosoftBlobContainerExtension = 0,
-            LastWriteTime = source.LastWriteTime,
-            Bytes = new byte[(source.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
-            MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
-        };
+            ExecuteCanCreate(destination);
+        }
     }
 
     #endregion
 
-    private void ExecuteCanCreate(Container Destination)
-    {
-        var directoryGuid = Guid.NewGuid();
-        var directory = new DirectoryInfo(Path.Combine(Location!.FullName, directoryGuid.ToPath()));
-
-        // Update container and its extra with dummy data.
-        Destination.Extra = Destination.Extra with
-        {
-            MicrosoftSyncTime = string.Empty,
-            MicrosoftBlobContainerExtension = 0,
-            MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
-            MicrosoftBlobDirectoryGuid = directoryGuid,
-            MicrosoftBlobDataFile = Destination.DataFile = new(Path.Combine(directory.FullName, "data.guid")),
-            MicrosoftBlobMetaFile = Destination.MetaFile = new(Path.Combine(directory.FullName, "meta.guid")),
-
-            MicrosoftBlobDirectory = directory,
-        };
-
-        // Prepare blob container file content. Guid of data and meta file will be set while executing Write().
-        var buffer = new byte[BLOBCONTAINER_TOTAL_LENGTH];
-        using (var writer = new BinaryWriter(new MemoryStream(buffer)))
-        {
-            writer.Write(BLOBCONTAINER_HEADER);
-            writer.Write(BLOBCONTAINER_COUNT);
-
-            writer.Write("data".GetUnicodeBytes());
-            writer.Seek(BLOBCONTAINER_IDENTIFIER_LENGTH - 8 + 32, SeekOrigin.Current);
-
-            writer.Write("meta".GetUnicodeBytes());
-        }
-
-        // Write a dummy file.
-        Directory.CreateDirectory(Destination.Extra.MicrosoftBlobDirectory!.FullName);
-        File.WriteAllBytes(Destination.Extra.MicrosoftBlobContainerFile!.FullName, buffer);
-    }
-
     // // FileSystemWatcher
 
     #region FileSystemWatcher
+
+    protected override void OnCacheEviction(object key, object value, EvictionReason reason, object state)
+    {
+        /** Microsoft WatcherChangeTypes
+
+        All changes by game:
+         * containers.index (Deleted)
+         * containers.index (Created)
+
+        All changes by an editor:
+         * containers.index (Changed)
+         */
+
+        if (reason is not EvictionReason.Expired and not EvictionReason.TokenExpired)
+            return;
+
+        // Choose what actually happend based on the combined change types combinations listed at the beginning of this method.
+        var changeType = (WatcherChangeTypes)(value) switch
+        {
+            WatcherChangeTypes.Deleted | WatcherChangeTypes.Created => WatcherChangeTypes.Changed, // game
+            _ => (WatcherChangeTypes)(value), // editor
+        };
+        foreach (var container in GetCacheEvictionContainers((string)(key)))
+        {
+            container.SetWatcherChange(changeType);
+            if (container.IsSynced)
+            {
+                OnWatcherDecision(container, true);
+            }
+        }
+    }
 
     /// <summary>
     /// Refreshes all containers in the collection with newly written data from the containers.index file.

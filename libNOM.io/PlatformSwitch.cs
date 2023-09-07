@@ -35,11 +35,11 @@ public partial class PlatformSwitch : Platform
 
     #region Directory Data
 
-    protected static readonly string[] ANCHOR_FILE_GLOB = new[] { "manifest*.hg", "savedata*.hg" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "manifest*.hg", "savedata*.hg" };
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0, AnchorFileRegex1 };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0, AnchorFileRegex1 };
 #else
-    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0(), AnchorFileRegex1() };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0(), AnchorFileRegex1() };
 #endif
 
     #endregion
@@ -111,6 +111,8 @@ public partial class PlatformSwitch : Platform
 
     #region Constructor
 
+    public PlatformSwitch() : base() { }
+
     public PlatformSwitch(string path) : base(path) { }
 
     public PlatformSwitch(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
@@ -164,6 +166,9 @@ public partial class PlatformSwitch : Platform
         // 74. DIFFICULTY PRESET    (  1)
         // 74. EMPTY                ( 59) // may contain additional junk data
         //                          (356)
+
+        if (disk.IsEmpty())
+            return;
 
         if (container.IsAccount)
         {
@@ -265,24 +270,6 @@ public partial class PlatformSwitch : Platform
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
-    }
-
-    #endregion
-
-    // // File Operation
-
-    // TODO Transfer Refactoring
-
-    #region Transfer
-
-    protected override void CreatePlatformExtra(Container destination, Container source)
-    {
-        destination.Extra = new PlatformExtra
-        {
-            Bytes = new byte[(source.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
-            BaseVersion = source.Extra.BaseVersion,
-            TotalPlayTime = source.Extra.TotalPlayTime,
-        };
     }
 
     #endregion

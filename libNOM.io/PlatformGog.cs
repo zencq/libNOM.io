@@ -10,9 +10,9 @@ public class PlatformGog : PlatformSteam
 
     #region Directory Data
 
-    public new const string ACCOUNT_PATTERN = "DefaultUser";
+    internal new const string ACCOUNT_PATTERN = "DefaultUser";
 
-    public static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
+    internal static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
     #endregion
 
@@ -35,6 +35,8 @@ public class PlatformGog : PlatformSteam
 
     // protected //
 
+    protected override string? PlatformArchitecture { get; } = "Win|Final";
+
     protected override string? PlatformProcessPath { get; } = @"GOG Galaxy\No Man's Sky\Binaries\NMS.exe";
 
     protected override string PlatformToken { get; } = "GX";
@@ -46,6 +48,8 @@ public class PlatformGog : PlatformSteam
     // //
 
     #region Constructor
+
+    public PlatformGog() : base() { }
 
     public PlatformGog(string path) : base(path) { }
 

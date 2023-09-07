@@ -58,6 +58,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Flags
 
+    // public //
+
     /// <summary>
     /// Whether this contains account data and is not a regular save.
     /// </summary>
@@ -151,6 +153,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion440Echoes => IsVersion(GameVersionEnum.Echoes); // { get; }
 
+    // internal //
+
     #endregion
 
     #region FileInfo
@@ -239,7 +243,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
         get => string.IsNullOrEmpty(Extra.SaveName) ? Json.GetSaveName(_jsonObject) : Extra.SaveName;
         set
         {
-            value = value.AsSpanSubstring(0, Constants.SAVE_RENAMING_LENGTH_INGAME).ToString();
+            value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_INGAME)).ToString();
 
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
@@ -253,7 +257,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
         get => string.IsNullOrEmpty(Extra.SaveSummary) ? Json.GetSaveSummary(_jsonObject) : Extra.SaveSummary;
         set
         {
-            value = value.AsSpanSubstring(0, Constants.SAVE_RENAMING_LENGTH_MANIFEST - 1).ToString();
+            value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_MANIFEST - 1)).ToString();
 
             if (_jsonObject is not null)
                 SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
@@ -406,7 +410,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
             if (jTokens is not null)
                 return jTokens;
         }
-        return Array.Empty<JToken>();
+        return Enumerable.Empty<JToken>();
     }
 
     /// <summary>

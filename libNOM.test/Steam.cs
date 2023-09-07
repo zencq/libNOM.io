@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 using libNOM.io;
+using libNOM.io.Data;
 using libNOM.io.Enums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Text;
@@ -159,6 +160,7 @@ public class SteamTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
         };
         var userIdentification = ReadUserIdentification(path);
 
@@ -211,6 +213,7 @@ public class SteamTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
         };
         var userIdentification = ReadUserIdentification(path);
 
@@ -256,6 +259,7 @@ public class SteamTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
         };
         var userIdentification = ReadUserIdentification(path);
 
@@ -304,6 +308,7 @@ public class SteamTest : CommonTestInitializeCleanup
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
         };
         var userIdentification = ReadUserIdentification(path);
 
@@ -438,11 +443,12 @@ public class SteamTest : CommonTestInitializeCleanup
 
         AssertCommonMeta(containerA, metaA, metaB);
 
+        var bytesA = metaA.AsSpan().AsBytes().ToArray();
+        var bytesB = metaB.AsSpan().AsBytes().ToArray();
+
         AssertAllAreEqual(4135, (uint)(int)(priectA.GetFieldOrProperty("BaseVersion")), (uint)(int)(priectB.GetFieldOrProperty("BaseVersion")), metaA[17], metaB[17]);
-        var bytesA = BitConverter.GetBytes(metaA[18]);
-        var bytesB = BitConverter.GetBytes(metaB[18]);
-        AssertAllAreEqual((uint)(PresetGameModeEnum.Normal), (uint)(PresetGameModeEnum)(priectA.GetFieldOrProperty("GameMode")), (uint)(PresetGameModeEnum)(priectB.GetFieldOrProperty("GameMode")), (uint)(BitConverter.ToInt16(bytesA, 0)), (uint)(BitConverter.ToInt16(bytesB, 0)));
-        AssertAllAreEqual((uint)(SeasonEnum.None), (uint)(containerA.Season), (uint)(containerB.Season), BitConverter.ToUInt16(bytesA, 2), BitConverter.ToUInt16(bytesA, 2));
+        AssertAllAreEqual((ushort)(PresetGameModeEnum.Normal), (ushort)(PresetGameModeEnum)(priectA.GetFieldOrProperty("GameMode")), (ushort)(PresetGameModeEnum)(priectB.GetFieldOrProperty("GameMode")), BitConverter.ToInt16(bytesA, 72), BitConverter.ToInt16(bytesB, 72));
+        AssertAllAreEqual((ushort)(SeasonEnum.None), (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 74), BitConverter.ToUInt16(bytesA, 74));
         AssertAllAreEqual(94164, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[19], metaB[19]);
     }
 
@@ -970,42 +976,406 @@ public class SteamTest : CommonTestInitializeCleanup
     public void T40_TransferFromGog()
     {
         // Arrange
-        // Act
+        var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var resultsGog = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        {
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence), // 2Manual
+        };
+        var userIdentificationGog = ReadUserIdentification(pathGog);
 
-        // ... Read User/Read User/Transfer/Compare
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        var platformGog = new PlatformGog(pathGog, settings);
+        var transfer = platformGog.PrepareTransferSource(1);
+
+        var platform = new PlatformSteam(path, settings);
+        platform.PrepareTransferDestination(2);
+        platform.PrepareTransferDestination(3);
+
+        platform.Transfer(transfer, 2); // overwrite
+        var container4 = platform.GetSaveContainer(4)!;
+        var priect4 = new PrivateObject(container4);
+        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+
+        platform.Transfer(transfer, 3); // create
+        var container6 = platform.GetSaveContainer(6)!;
+        var priect6 = new PrivateObject(container6);
+        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
 
         // Assert
+        AssertAllAreEqual(1, transfer.TransferBaseUserDecision.Count);
+        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+
+        AssertAllAreEqual(userIdentificationGog[0], platformGog.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
+        AssertAllAreEqual(userIdentificationGog[1], platformGog.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
+        AssertAllAreEqual(userIdentificationGog[2], platformGog.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
+        AssertAllAreEqual(userIdentificationGog[3], platformGog.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
+
+        AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification4.LID!, userIdentification6.LID!);
+        AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
+        AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification4.USN!, userIdentification6.USN!);
+        AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
+
+        for (var i = 0; i < resultsGog.Length; i++)
+        {
+            var container = platform.GetSaveContainer(resultsGog[i].CollectionIndex + offset)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(resultsGog[i].Exists, container.Exists);
+            Assert.AreEqual(resultsGog[i].IsOld, container.IsOld);
+            Assert.AreEqual(resultsGog[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(resultsGog[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsGog[i].Season, container.Season);
+            Assert.AreEqual(resultsGog[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(resultsGog[i].Version, container.GameVersion);
+        }
     }
 
     [TestMethod]
     public void T41_TransferFromMicrosoft()
     {
         // Arrange
+        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var resultsMicrosoft = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        {
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
+        };
+        var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
+
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
         // Act
+        var platformMicrosoft = new PlatformMicrosoft(pathMicrosoft, settings);
+        var transfer = platformMicrosoft.PrepareTransferSource(1);
+
+        var platform = new PlatformSteam(path, settings);
+        platform.PrepareTransferDestination(2);
+        platform.PrepareTransferDestination(3);
+
+        platform.Transfer(transfer, 2); // overwrite
+        var container4 = platform.GetSaveContainer(4)!;
+        var priect4 = new PrivateObject(container4);
+        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+
+        platform.Transfer(transfer, 3); // create
+        var container6 = platform.GetSaveContainer(6)!;
+        var priect6 = new PrivateObject(container6);
+        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+
         // Assert
+        AssertAllAreEqual(8, transfer.TransferBaseUserDecision.Count);
+        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+
+        AssertAllAreEqual(userIdentificationMicrosoft[0], platformMicrosoft.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
+        AssertAllAreEqual(userIdentificationMicrosoft[1], platformMicrosoft.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
+        AssertAllAreEqual(userIdentificationMicrosoft[2], platformMicrosoft.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
+        AssertAllAreEqual(userIdentificationMicrosoft[3], platformMicrosoft.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
+
+        AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
+        AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
+
+        for (var i = 0; i < resultsMicrosoft.Length; i++)
+        {
+            var container = platform.GetSaveContainer(resultsMicrosoft[i].CollectionIndex + offset)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(resultsMicrosoft[i].Exists, container.Exists);
+            Assert.AreEqual(resultsMicrosoft[i].IsOld, container.IsOld);
+            Assert.AreEqual(resultsMicrosoft[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(resultsMicrosoft[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsMicrosoft[i].Season, container.Season);
+            Assert.AreEqual(resultsMicrosoft[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(resultsMicrosoft[i].Version, container.GameVersion);
+        }
     }
 
     [TestMethod]
-    public void T42_TransferFromPlaystation()
+    public void T42_TransferFromPlaystation_0x7D1()
     {
         // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        {
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Manual
+        };
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
         // Act
+        var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
+        var transfer = platformPlaystation.PrepareTransferSource(1);
+
+        var platform = new PlatformSteam(path, settings);
+        platform.PrepareTransferDestination(2);
+        platform.PrepareTransferDestination(3);
+
+        platform.Transfer(transfer, 2); // overwrite
+        var container4 = platform.GetSaveContainer(4)!;
+        var priect4 = new PrivateObject(container4);
+        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+
+        platform.Transfer(transfer, 3); // create
+        var container6 = platform.GetSaveContainer(6)!;
+        var priect6 = new PrivateObject(container6);
+        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+
         // Assert
+        AssertAllAreEqual(24, transfer.TransferBaseUserDecision.Count);
+        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+
+        AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
+        AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
+        AssertAllAreEqual(userIdentificationPlaystation[2], platformPlaystation.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
+        AssertAllAreEqual(userIdentificationPlaystation[3], platformPlaystation.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
+
+        AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification4.LID!, userIdentification6.LID!);
+        AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
+        AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification4.USN!, userIdentification6.USN!);
+        AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
+
+        for (var i = 0; i < resultsPlaystation.Length; i++)
+        {
+            var container = platform.GetSaveContainer(resultsPlaystation[i].CollectionIndex + offset)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
+            Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
+            Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
+            Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
+        }
     }
 
     [TestMethod]
-    public void T43_TransferFromSteam()
+    public void T43_TransferFromPlaystation_0x7D2()
     {
         // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        {
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
+        };
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
         // Act
+        var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
+        var transfer = platformPlaystation.PrepareTransferSource(1);
+
+        var platform = new PlatformSteam(path, settings);
+        platform.PrepareTransferDestination(2);
+        platform.PrepareTransferDestination(3);
+
+        platform.Transfer(transfer, 2); // overwrite
+        var container4 = platform.GetSaveContainer(4)!;
+        var priect4 = new PrivateObject(container4);
+        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+
+        platform.Transfer(transfer, 3); // create
+        var container6 = platform.GetSaveContainer(6)!;
+        var priect6 = new PrivateObject(container6);
+        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+
         // Assert
+        AssertAllAreEqual(4, transfer.TransferBaseUserDecision.Count);
+        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+
+        AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
+        AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
+        AssertAllAreEqual(userIdentificationPlaystation[2], platformPlaystation.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
+        AssertAllAreEqual(userIdentificationPlaystation[3], platformPlaystation.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
+
+        AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification4.LID!, userIdentification6.LID!);
+        AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
+        AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification4.USN!, userIdentification6.USN!);
+        AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
+
+        for (var i = 0; i < resultsPlaystation.Length; i++)
+        {
+            var container = platform.GetSaveContainer(resultsPlaystation[i].CollectionIndex + offset)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
+            Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
+            Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
+            Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
+        }
     }
 
     [TestMethod]
-    public void T44_TransferFromSwitch()
+    public void T44_TransferFromSteam()
     {
         // Arrange
+        var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var resultsSteam = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version, string SaveName, string SaveSummary)[]
+        {
+            (6, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony"), // 4Auto
+            (7, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony"), // 4Manual
+        };
+        var userIdentificationSteam = ReadUserIdentification(pathSteam);
+
+        var offset = -2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
         // Act
+        var platformSteam = new PlatformSteam(pathSteam, settings);
+        var transfer = platformSteam.PrepareTransferSource(3);
+
+        var platform = new PlatformSteam(path, settings);
+        platform.PrepareTransferDestination(2);
+        platform.PrepareTransferDestination(3);
+
+        platform.Transfer(transfer, 2); // overwrite
+        var container4 = platform.GetSaveContainer(4)!;
+        var priect4 = new PrivateObject(container4);
+        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+
+        platform.Transfer(transfer, 3); // create
+        var container6 = platform.GetSaveContainer(6)!;
+        var priect6 = new PrivateObject(container6);
+        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+
         // Assert
+        AssertAllAreEqual(1, transfer.TransferBaseUserDecision.Count);
+        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+
+        AssertAllAreEqual(userIdentificationSteam[0], platformSteam.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
+        AssertAllAreEqual(userIdentificationSteam[1], platformSteam.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
+        AssertAllAreEqual(userIdentificationSteam[2], platformSteam.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
+        AssertAllAreEqual(userIdentificationSteam[3], platformSteam.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
+
+        AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification4.LID!, userIdentification6.LID!);
+        AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
+        AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification4.USN!, userIdentification6.USN!);
+        AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
+
+        for (var i = 0; i < resultsSteam.Length; i++)
+        {
+            var container = platform.GetSaveContainer(resultsSteam[i].CollectionIndex + offset)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(resultsSteam[i].Exists, container.Exists);
+            Assert.AreEqual(resultsSteam[i].IsOld, container.IsOld);
+            Assert.AreEqual(resultsSteam[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(resultsSteam[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsSteam[i].Season, container.Season);
+            Assert.AreEqual(resultsSteam[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(resultsSteam[i].Version, container.GameVersion);
+            Assert.AreEqual(resultsSteam[i].SaveName, container.SaveName);
+            Assert.AreEqual(resultsSteam[i].SaveSummary, container.SaveSummary);
+        }
+    }
+
+    [TestMethod]
+    public void T45_TransferFromSwitch()
+    {
+        // Arrange
+        var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var resultsSwitch = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
+        {
+            (2, true, false, PresetGameModeEnum.Survival, DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4139, GameVersionEnum.Endurance), // 2Auto
+        };
+        var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
+
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        var platformSwitch = new PlatformSwitch(pathSwitch, settings);
+        var transfer = platformSwitch.PrepareTransferSource(1);
+
+        var platform = new PlatformSteam(path, settings);
+        platform.PrepareTransferDestination(2);
+        platform.PrepareTransferDestination(3);
+
+        platform.Transfer(transfer, 2); // overwrite
+        var container4 = platform.GetSaveContainer(4)!;
+        var priect4 = new PrivateObject(container4);
+        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+
+        platform.Transfer(transfer, 3); // create
+        var container6 = platform.GetSaveContainer(6)!;
+        var priect6 = new PrivateObject(container6);
+        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+
+        // Assert
+        AssertAllAreEqual(0, transfer.TransferBaseUserDecision.Count);
+        Assert.AreEqual(6, platform.GetExistingContainers().Count()); // + 1
+
+        AssertAllAreEqual(userIdentificationSwitch[0], platformSwitch.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
+        AssertAllAreEqual(userIdentificationSwitch[1], platformSwitch.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
+        AssertAllAreEqual(userIdentificationSwitch[2], platformSwitch.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
+        AssertAllAreEqual(userIdentificationSwitch[3], platformSwitch.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
+
+        AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification4.LID!, userIdentification6.LID!);
+        AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
+        AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification4.USN!, userIdentification6.USN!);
+        AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
+
+        for (var i = 0; i < resultsSwitch.Length; i++)
+        {
+            var container = platform.GetSaveContainer(resultsSwitch[i].CollectionIndex + offset)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(resultsSwitch[i].Exists, container.Exists);
+            Assert.AreEqual(resultsSwitch[i].IsOld, container.IsOld);
+            Assert.AreEqual(resultsSwitch[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(resultsSwitch[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsSwitch[i].Season, container.Season);
+            Assert.AreEqual(resultsSwitch[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(resultsSwitch[i].Version, container.GameVersion);
+        }
     }
 }

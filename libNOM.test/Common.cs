@@ -158,7 +158,7 @@ public class CommonTestInitializeCleanup
         return Encoding.Unicode.GetString(source.ToArray());
     }
 
-    protected static ReadOnlySpan<string> ReadUserIdentification(string path)
+    protected static string[] ReadUserIdentification(string path)
     {
         return File.ReadAllLines(Path.Combine(path, "UserIdentification.txt"));
     }

@@ -851,12 +851,12 @@ internal static partial class Json
         if (container.BaseVersion >= 4144) // 4.20, 4.25, 4.30
         {
             // Only used in actual Expedition saves.
-            //var greyIfCantStart = json.Contains("\":?x\":"); // GreyIfCantStart
+            //var greyIfCantStart = json.Contains("\":?x\":") || json.Contains("\"GreyIfCantStart\":");
             //if (greyIfCantStart)
             //    return VersionEnum.Singularity;
 
             // This is actually VersionEnum.Mac but it made most of the preperation for Singularity Expedition and therefore we already use this here.
-            var seasonStartMusicOverride = json.Contains("\"XEk\":"); // SeasonStartMusicOverride
+            var seasonStartMusicOverride = json.Contains("\"XEk\":") || json.Contains("\"SeasonStartMusicOverride\":");
             if (seasonStartMusicOverride)
                 return GameVersionEnum.Singularity;
 
@@ -880,7 +880,7 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4138) // 3.85, 3.90
         {
-            var nextLoadSpawnsWithFreshStart = json.Contains("\"Sd6\":"); // NextLoadSpawnsWithFreshStart
+            var nextLoadSpawnsWithFreshStart = json.Contains("\"Sd6\":") || json.Contains("\"NextLoadSpawnsWithFreshStart\":");
             if (nextLoadSpawnsWithFreshStart)
                 return GameVersionEnum.Leviathan;
 
@@ -889,7 +889,7 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4137) // 3.81, 3.84
         {
-            var vehicleAIControlEnabled = json.Contains("\"Agx\":"); // VehicleAIControlEnabled
+            var vehicleAIControlEnabled = json.Contains("\"Agx\":") || json.Contains("\"VehicleAIControlEnabled\":");
             if (vehicleAIControlEnabled)
                 return GameVersionEnum.SentinelWithVehicleAI;
 
@@ -901,7 +901,7 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4135) // 3.60, 3.70
         {
-            var sandwormOverrides = json.Contains("\"qs?\":"); // SandwormOverrides
+            var sandwormOverrides = json.Contains("\"qs?\":") || json.Contains("\"SandwormOverrides\":");
             if (sandwormOverrides)
                 return GameVersionEnum.Emergence;
 
@@ -910,15 +910,15 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4129) // 3.30, 3.40, 3.50, 3.51
         {
-            var authorOnlineID = json.Contains("\"m7b\":"); // AuthorOnlineID
+            var authorOnlineID = json.Contains("\"m7b\":") || json.Contains("\"AuthorOnlineID\":");
             if (authorOnlineID)
                 return GameVersionEnum.PrismsWithBytebeatAuthor;
 
-            var byteBeatLibrary = json.Contains("\"8iI\":"); // ByteBeatLibrary
+            var byteBeatLibrary = json.Contains("\"8iI\":") || json.Contains("\"ByteBeatLibrary\":");
             if (byteBeatLibrary)
                 return GameVersionEnum.Prisms;
 
-            var mainMissionTitle = json.Contains("\"Whh\":"); // MainMissionTitle
+            var mainMissionTitle = json.Contains("\"Whh\":") || json.Contains("\"MainMissionTitle\":");
             if (mainMissionTitle)
                 return GameVersionEnum.Beachhead;
 
@@ -927,7 +927,7 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4127) // 3.10, 3.20
         {
-            var pets = json.Contains("\"Mcl\":"); // Pets
+            var pets = json.Contains("\"Mcl\":") || json.Contains("\"Pets\":");
             if (pets)
                 return GameVersionEnum.Companions;
 
@@ -936,11 +936,11 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4126) // 2.50, 2.60, 3.00
         {
-            var previousUniverseAddress = json.Contains("\"ux@\":"); // PreviousUniverseAddress
+            var previousUniverseAddress = json.Contains("\"ux@\":") || json.Contains("\"PreviousUniverseAddress\":");
             if (previousUniverseAddress)
                 return GameVersionEnum.Origins;
 
-            var abandonedFreighterPositionInSystem = json.Contains("\"Ovv\":"); // AbandonedFreighterPositionInSystem
+            var abandonedFreighterPositionInSystem = json.Contains("\"Ovv\":") || json.Contains("\"AbandonedFreighterPositionInSystem\":");
             if (abandonedFreighterPositionInSystem)
                 return GameVersionEnum.Desolation;
 
@@ -952,7 +952,7 @@ internal static partial class Json
 
         if (container.BaseVersion >= 4124) // 2.26, 2.30
         {
-            var currentPos = json.Contains("\"Xf4\":"); // CurrentPos
+            var currentPos = json.Contains("\"Xf4\":") || json.Contains("\"CurrentPos\":");
             if (currentPos)
                 return GameVersionEnum.LivingShip;
 

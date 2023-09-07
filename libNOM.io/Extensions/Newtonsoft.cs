@@ -7,15 +7,7 @@ namespace libNOM.io.Extensions;
 
 public static class NewtonsoftExtensions
 {
-    /// <summary>
-    /// Serializes and encodes the object into a sequence of bytes in UTF-8 format.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static ReadOnlySpan<byte> GetBytes(this JObject self)
-    {
-        return self.GetString(false, true).GetUTF8Bytes();
-    }
+    // public //
 
     /// <summary>
     /// Serializes the object to a JSON string according to the specified options.
@@ -96,4 +88,38 @@ public static class NewtonsoftExtensions
     {
         return self.ContainsKey("Version");
     }
+
+    // internal //
+
+    /// <summary>
+    /// Serializes and encodes the object into a sequence of bytes in UTF-8 format.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static ReadOnlySpan<byte> GetBytes(this JObject self)
+    {
+        return self.GetString(false, true).GetUTF8Bytes();
+    }
+
+    /// <summary>
+    /// Selects a collection of elements using multiple JSONPath expression with conjunction.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="path"></param>
+    /// <param name="expressions"></param>
+    /// <returns></returns>
+    internal static IEnumerable<JToken> SelectTokensWithIntersection(this JObject self, string path, params string[] expressions)
+    {
+        if (expressions.Length == 0)
+            return Enumerable.Empty<JToken>();
+
+        IEnumerable<JToken> result = null!;
+        foreach (var expression in expressions)
+        {
+            var query = self.SelectTokens(string.Format(path, expression));
+            result = result is null ? query : result.Intersect(query);
+        }
+        return result;
+    }
+
 }

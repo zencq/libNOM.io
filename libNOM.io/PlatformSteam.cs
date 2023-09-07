@@ -16,6 +16,8 @@ public partial class PlatformSteam : Platform
 
     #region Platform Specific
 
+    protected static readonly uint[] META_ENCRYPTION_KEY = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>().ToArray();
+
     protected const uint META_HEADER = 0xEEEEEEBE; // 4008636094
 
     protected const int META_LENGTH_KNOWN = 0x58; // 88
@@ -37,16 +39,16 @@ public partial class PlatformSteam : Platform
 
     #region Directory Data
 
-    protected const string ACCOUNT_PATTERN = "st_76561198*";
+    internal const string ACCOUNT_PATTERN = "st_76561198*";
 
-    protected static readonly string[] ANCHOR_FILE_GLOB = new[] { "save*.hg" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "save*.hg" };
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
 #else
-    protected static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
 #endif
 
-    protected static readonly string PATH = ((Func<string>)(() =>
+    internal static readonly string PATH = ((Func<string>)(() =>
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
@@ -145,9 +147,32 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
+    #region Getter
+
+    /// <summary>
+    /// Gets the necessary key for the meta file encryption.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <returns></returns>
+    private static Span<uint> GetKey(Container container)
+    {
+        Span<uint> key = META_ENCRYPTION_KEY;
+        key[0] = (RotateLeft((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64;
+        return key;
+    }
+
+    private static uint RotateLeft(uint value, int bits)
+    {
+        return (value << bits) | (value >> (32 - bits));
+    }
+
+    #endregion
+
     // //
 
     #region Constructor
+
+    public PlatformSteam() : base() { }
 
     public PlatformSteam(string path) : base(path) { }
 
@@ -245,23 +270,6 @@ public partial class PlatformSteam : Platform
         return value;
     }
 
-    /// <summary>
-    /// Gets the necessary key for the meta file encryption.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <returns></returns>
-    private static Span<uint> GetKey(Container container)
-    {
-        Span<uint> key = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>();
-        key[0] = (RotateLeft((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64;
-        return key;
-    }
-
-    private static uint RotateLeft(uint value, int bits)
-    {
-        return (value << bits) | (value >> (32 - bits));
-    }
-
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         //  0. META HEADER          (  4)
@@ -286,7 +294,7 @@ public partial class PlatformSteam : Platform
         // 86. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
         //                          (360)
 
-        // Do not write wrong data in case decrypting failed.
+        // Do not write wrong data in case a step before failed.
         if (decompressed.TryGetValue(0, out var header) && header == META_HEADER)
         {
             // Vanilla data always available but not always set depending on the SAVE_FORMAT.
@@ -440,30 +448,6 @@ public partial class PlatformSteam : Platform
         }
 
         return value.Cast<uint, byte>();
-    }
-
-    #endregion
-
-    // // File Operation
-
-    // TODO Transfer Refactoring
-
-    #region Transfer
-
-    protected override void CreatePlatformExtra(Container destination, Container source)
-    {
-        destination.Extra = new()
-        {
-            Bytes = new byte[(source.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA) - META_LENGTH_KNOWN],
-            Size = source.Extra.Size,
-            SizeDecompressed = source.Extra.SizeDecompressed,
-            SizeDisk = source.DataFile?.Exists == true ? (uint)(source.DataFile!.Length) : 0,
-            LastWriteTime = source.Extra.LastWriteTime ?? DateTimeOffset.Now,
-            BaseVersion = source.Extra.BaseVersion,
-            GameMode = source.Extra.GameMode,
-            Season = source.Extra.Season,
-            TotalPlayTime = source.Extra.TotalPlayTime,
-        };
     }
 
     #endregion
