@@ -5,134 +5,154 @@ public static class Convert
 {
     #region ToJson
 
-    /// <inheritdoc cref="ToJson(Container, string?, bool, bool)"/>
-    public static void ToJson(string input)
-    {
-        ToJson(input, string.Empty, true, true);
-    }
+    /// <summary>
+    /// Converts the specified file to an indented and deobfuscated plaintext JSON file.
+    /// The result will be right next to the specified input file.
+    /// </summary>
+    /// <param name="file"></param>
+    public static void ToJson(string file) => ToJson(file, null, true, true);
 
-    /// <inheritdoc cref="ToJson(Container, string?, bool, bool)"/>
-    public static void ToJson(string input, bool indent, bool deobfuscate)
-    {
-        ToJson(input, string.Empty, indent, deobfuscate);
-    }
+    /// <summary>
+    /// Converts the specified file to a plaintext JSON file according to the specified flags.
+    /// The result will be right next to the specified input file.
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="path"></param>
+    public static void ToJson(string file, bool indented, bool deobfuscated) => ToJson(file, null, indented, deobfuscated);
 
-    /// <inheritdoc cref="ToJson(Container, string?, bool, bool)"/>
-    public static void ToJson(string input, string? output)
-    {
-        ToJson(input, output, true, true);
-    }
+    /// <summary>
+    /// Converts the specified file to an indented and deobfuscated plaintext JSON file.
+    /// The result will be in the specified output path or next to the specified input file if the path is invalid.
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="path"></param>
+    public static void ToJson(string file, string? path) => ToJson(file, path, true, true);
 
-    /// <inheritdoc cref="ToJson(Container, string?, bool, bool)"/>
-    public static void ToJson(string input, string? output, bool indent, bool deobfuscate)
+    /// <summary>
+    /// Converts the specified file to a plaintext JSON file according to the specified flags.
+    /// The result will be in the specified output path or next to the specified input file if the path is invalid.
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="path"></param>
+    /// <param name="indented"></param>
+    /// <param name="deobfuscated"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static void ToJson(string file, string? path, bool indented, bool deobfuscated)
     {
         // Method contains all relevant checks...
-        var container = PlatformCollection.AnalyzeFile(input);
+        var container = PlatformCollection.AnalyzeFile(file);
 
         // ...so just throw an exception if container is null.
-        if (container is null)
+        if (container?.IsCompatible != true)
             throw new InvalidOperationException("The specified file does not contain valid data.");
 
-        ToJson(container, output, indent, deobfuscate);
-    }
-
-    /// <inheritdoc cref="ToJson(Container, string?, bool, bool)"/>
-    public static void ToJson(Container container)
-    {
-        ToJson(container, string.Empty, true, true);
-    }
-
-    /// <inheritdoc cref="ToJson(Container, string?, bool, bool)"/>
-    public static void ToJson(Container container, bool indent, bool deobfuscate)
-    {
-        ToJson(container, string.Empty, indent, deobfuscate);
-    }
-
-    /// <inheritdoc cref="ToJson(Container, string?, bool, bool)"/>
-    public static void ToJson(Container container, string? output)
-    {
-        ToJson(container, output, true, true);
+        ToJson(container, path, indented, deobfuscated);
     }
 
     /// <summary>
-    /// Saves a loaded <see cref="Container"/> to a plaintext JSON file according to the specified flags.
+    /// Converts the specified container to an indented and deobfuscated plaintext JSON file.
+    /// The result will be right next to the data file of the <see cref="Container"/>. If none is set, the current working directory is used.
+    /// </summary>
+    /// <param name="file"></param>
+    public static void ToJson(Container container) => ToJson(container, null, true, true);
+
+    /// <summary>
+    /// Converts the specified container to a plaintext JSON file according to the specified flags.
+    /// The result will be right next to the data file of the <see cref="Container"/>. If none is set, the current working directory is used.
     /// </summary>
     /// <param name="container"></param>
-    /// <param name="output"></param>
-    /// <param name="indent"></param>
-    /// <param name="deobfuscate"></param>
+    /// <param name="indented"></param>
+    /// <param name="deobfuscated"></param>
+    public static void ToJson(Container container, bool indented, bool deobfuscated) => ToJson(container, null, indented, deobfuscated);
+
+    /// <summary>
+    /// Converts the specified container to an indented and deobfuscated plaintext JSON file.
+    /// The result will be in the specified output path. If that is invalid it will be right next to the data file of the <see cref="Container"/> or in the current working directory if no data file is set.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="path"></param>
+    public static void ToJson(Container container, string? path) => ToJson(container, path, true, true);
+
+    /// <summary>
+    /// Converts the specified container to a plaintext JSON file according to the specified flags.
+    /// The result will be in the specified output path. If that is invalid it will be right next to the data file of the <see cref="Container"/> or in the current working directory if no data file is set.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="path"></param>
+    /// <param name="indented"></param>
+    /// <param name="deobfuscated"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void ToJson(Container container, string? output, bool indent, bool deobfuscate)
+    public static void ToJson(Container container, string? path, bool indented, bool deobfuscated)
     {
-        if (!container.IsLoaded)
-            throw new InvalidOperationException("The specified container is not loaded.");
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
+        }
 
-        var result = container.GetJsonObject()?.GetString(indent, !deobfuscate);
-        if (result is null)
-            throw new InvalidOperationException("The specified container does not contain valid data.");
+        var result = container.GetJsonObject().GetString(indented, !deobfuscated); // throws InvalidOperationException if not loaded
+        var file = Path.Combine(path, $"{container.DataFile?.Name ?? ("libNOM.io.JSON")}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json");
 
-        output = string.IsNullOrWhiteSpace(output) ? container.DataFile!.Directory!.FullName : output;
-        var path = Path.Combine(output, $"{container.DataFile!.Name}.{DateTime.Now.ToString(Globals.Constants.FILE_TIMESTAMP_FORMAT)}.json");
-
-        File.WriteAllText(path, result);
+        File.WriteAllText(file, result);
     }
 
     #endregion
 
     #region ToSave
 
-    /// <summary>
-    /// Converts an input file to a <see cref="Container"/>.
-    /// </summary>
-    /// <param name="input"></param>
-    public static Container? ToSaveContainer(string? input)
-    {
-        return GetContainer(input);
-    }
+    // public //
 
-    /// <inheritdoc cref="ToSaveFile(string, string?, PlatformEnum)"/>
-    public static void ToSaveFile(string input, PlatformEnum outputPlatform)
-    {
-        ToSaveFile(input, null, outputPlatform);
-    }
+    /// <summary>
+    /// Converts the specified file to a <see cref="Container"/>.
+    /// </summary>
+    /// <param name="file"></param>
+    public static Container? ToSaveContainer(string? file) => GetContainer(file);
 
     /// <summary>
     /// Converts an input file to a save of the specified platform.
+    /// The result will be right next to the specified input file.
     /// </summary>
-    /// <param name="input"></param>
-    /// <param name="output"></param>
-    /// <param name="outputPlatform"></param>
+    /// <param name="file"></param>
+    /// <param name="targetPlatform"></param>
+    public static void ToSaveFile(string file, PlatformEnum targetPlatform) => ToSaveFile(file, null, targetPlatform);
+
+    /// <summary>
+    /// Converts an input file to a save of the specified platform.
+    /// The result will be in the specified output path or next to the specified input file if the path is invalid.
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="path"></param>
+    /// <param name="targetPlatform"></param>
     /// <exception cref="InvalidDataException"></exception>
-    public static void ToSaveFile(string input, string? output, PlatformEnum outputPlatform)
+    public static void ToSaveFile(string file, string? path, PlatformEnum targetPlatform)
     {
-        //Platform? platform = outputPlatform switch
-        //{
-        //    PlatformEnum.Gog => new PlatformGog(),
-        //    PlatformEnum.Microsoft => new PlatformMicrosoft(),
-        //    PlatformEnum.Playstation => new PlatformPlaystation(),
-        //    PlatformEnum.Steam => new PlatformSteam(),
-        //    PlatformEnum.Switch => new PlatformSwitch(),
-        //    _ => null,
-        //};
-        //if (platform is null)
-        //    throw new InvalidDataException("The specified output platform is not supported.");
+        Platform? platform = targetPlatform switch
+        {
+            PlatformEnum.Gog => new PlatformGog(),
+            PlatformEnum.Microsoft => new PlatformMicrosoft(),
+            PlatformEnum.Playstation => new PlatformPlaystation(),
+            PlatformEnum.Steam => new PlatformSteam(),
+            PlatformEnum.Switch => new PlatformSwitch(),
+            _ => throw new InvalidDataException("The specified output platform is not yet supported."),
+        };
 
-        //// Method contains all relevant checks so just throw an exception if container is null.
-        //var container = GetContainer(input);
-        //if (container is null)
-        //    throw new InvalidDataException("Unable to read input file.");
+        // Method contains all relevant checks so just throw an exception if container is null.
+        var container = GetContainer(file) ?? throw new InvalidDataException("Unable to read input file.");
 
-        //var name = $"{container.DataFile!.Name}.{outputPlatform}.{DateTime.Now.ToString(Global.FILE_TIMESTAMP_FORMAT)}";
-        //output = string.IsNullOrWhiteSpace(output) ? container.DataFile.Directory!.FullName : output;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
+        }
+        var name = $"{container.DataFile?.Name ?? ("libNOM.io")}.{platform}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}";
 
-        //// Set new files the converted content will be written to.
-        //container.DataFile = new FileInfo(Path.Combine(output, $"{name}.data"));
-        //container.MetaFile = new FileInfo(Path.Combine(output, $"{name}.meta"));
+        // Set new files the converted content will be written to.
+        container.DataFile = new FileInfo(Path.Combine(path, $"{name}.data"));
+        container.MetaFile = new FileInfo(Path.Combine(path, $"{name}.meta"));
+        container.Exists = true;
 
-        //platform.JustWrite(container);
-
-        //container.RefreshFileInfo();
+        platform.JustWrite(container);
     }
+
+    // private //
 
     /// <summary>
     /// Tries to get a valid container from the specified input file.
@@ -147,18 +167,29 @@ public static class Convert
         Container? container = null;
         try
         {
-            container = PlatformCollection.AnalyzeFile(input);
+            container = PlatformCollection.AnalyzeFile(input!);
         }
-        catch 
+        catch
         {
             // Nothing to do.
         }
-        if (container is null)
+        if (container is null && File.Exists(input))
         {
-            //container = new Container(-1) { DataFile = new(input) };
-            //container.SetJsonObject(Platform.ReadToByte(input).GetJson());
-            //if (!container.IsLoaded)
-            //    return null;
+            ReadOnlySpan<byte> bytes;
+            try
+            {
+                bytes = File.ReadAllBytes(input);
+            }
+            catch
+            {
+                // Nothing we can do anymore.
+                return null;
+            }
+
+            container = new Container(-1) { DataFile = new(input) };
+            container.SetJsonObject(bytes.GetJson());
+            if (!container.IsLoaded) // no valid JSON in specified file
+                return null;
         }
         return container;
     }

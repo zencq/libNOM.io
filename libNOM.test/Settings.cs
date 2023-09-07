@@ -6,7 +6,7 @@ namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
 public class SettingsTest : CommonTestInitializeCleanup
 {
     [TestMethod]

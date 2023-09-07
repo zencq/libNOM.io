@@ -9,7 +9,7 @@ namespace libNOM.test;
 /// Only testing read here as it is Steam otherwise.
 /// </summary>
 [TestClass]
-[DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
 public class GogTest : CommonTestInitializeCleanup
 {
     [TestMethod]

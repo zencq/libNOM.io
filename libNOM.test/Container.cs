@@ -7,7 +7,7 @@ namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("..\\..\\..\\Resources\\TESTSUITE_ARCHIVE.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
 public class ContainerTest : CommonTestInitializeCleanup
 {
     protected static readonly int[] GALACTICADDRESS_INDICES = new[] { 2, 0, 1 };
