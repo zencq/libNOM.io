@@ -32,8 +32,8 @@ public partial class PlatformPlaystation : Platform
     protected override int META_LENGTH_TOTAL_VANILLA => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
     protected override int META_LENGTH_TOTAL_WAYPOINT => _usesSaveWizard ? 0x70 : 0x0; // 112 : 0 // actually Frontiers but reused as no use otherwise
 
-    protected const string SAVEWIZARD_HEADER = "NOMANSKY";
-    protected static readonly byte[] SAVEWIZARD_HEADER_BINARY = SAVEWIZARD_HEADER.GetUTF8Bytes();
+    internal const string SAVEWIZARD_HEADER = "NOMANSKY";
+    internal static readonly byte[] SAVEWIZARD_HEADER_BINARY = SAVEWIZARD_HEADER.GetUTF8Bytes();
     protected const int SAVEWIZARD_VERSION_1 = 1;
     protected const int SAVEWIZARD_VERSION_2 = 2;
 
@@ -56,7 +56,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Directory Data
 
-    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "savedata*.hg", "memory.dat" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "savedata*.hg", "memory*.dat" };
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
     internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0, AnchorFileRegex1 };
 #else
@@ -153,6 +153,16 @@ public partial class PlatformPlaystation : Platform
     // //
 
     #region Constructor
+
+    /// <summary>
+    /// Special case for <see cref="PlatformCollection.AnalyzeFile(string)"/> to be able to use selected methods with an empty initialization.
+    /// </summary>
+    /// <param name="usesSaveWizard"></param>
+    internal PlatformPlaystation(bool usesSaveWizard) : base()
+    {
+        _usesSaveStreaming = true;
+        _usesSaveWizard = usesSaveWizard;
+    }
 
     public PlatformPlaystation() : base() { }
 
@@ -748,31 +758,31 @@ public partial class PlatformPlaystation : Platform
             return;
         }
 
-            foreach (var (Source, Destination) in operationData)
+        foreach (var (Source, Destination) in operationData)
+        {
+            if (!Source.Exists)
             {
-                if (!Source.Exists)
-                {
-                    Delete(Destination, false);
-                }
-                else if (Destination.Exists || !Destination.Exists && CanCreate)
-                {
-                    if (!Source.IsLoaded)
-                        BuildContainerFull(Source);
+                Delete(Destination, false);
+            }
+            else if (Destination.Exists || !Destination.Exists && CanCreate)
+            {
+                if (!Source.IsLoaded)
+                    BuildContainerFull(Source);
 
-                    if (!Source.IsCompatible)
-                        throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
+                if (!Source.IsCompatible)
+                    throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
-                    // Due to this CanCreate can be true.
-                    CopyPlatformExtra(Destination, Source);
+                // Due to this CanCreate can be true.
+                CopyPlatformExtra(Destination, Source);
 
                 // Faking relevant properties to force it to Write().
                 Destination.Exists = true;
 
-                    // Additional properties required to properly rebuild the container.
-                    Destination.GameVersion = Source.GameVersion;
-                    Destination.SaveVersion = Source.SaveVersion;
+                // Additional properties required to properly rebuild the container.
+                Destination.GameVersion = Source.GameVersion;
+                Destination.SaveVersion = Source.SaveVersion;
 
                 // Update bytes in platform extra as it is what will be written later.
                 Destination.Extra = Destination.Extra with
@@ -780,16 +790,16 @@ public partial class PlatformPlaystation : Platform
                     Bytes = CreateData(Destination).ToArray(),
                 };
 
-                    // This "if" is not really useful in this method but properly implemented nonetheless.
-                    if (write)
-                    {
-                        Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                        RebuildContainerFull(Destination);
-                    }
+                // This "if" is not really useful in this method but properly implemented nonetheless.
+                if (write)
+                {
+                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
+                    RebuildContainerFull(Destination);
                 }
             }
-            //else
-            //    continue;
+        }
+        //else
+        //    continue;
 
         UpdateUserIdentification();
     }
@@ -938,25 +948,25 @@ public partial class PlatformPlaystation : Platform
 
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(GetSlotContainers(destinationSlotIndex), (Source, Destination) => (Source, Destination)))
         {
-                if (!Source.Exists)
-                {
-                    Delete(Destination, false);
-                }
-                else if (Destination.Exists || !Destination.Exists && CanCreate)
-                {
-                    if (!Source.IsCompatible)
-                        throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
+            if (!Source.Exists)
+            {
+                Delete(Destination, false);
+            }
+            else if (Destination.Exists || !Destination.Exists && CanCreate)
+            {
+                if (!Source.IsCompatible)
+                    throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
 
                 // Due to this CanCreate can be true.
-                        CreatePlatformExtra(Destination, Source);
+                CreatePlatformExtra(Destination, Source);
 
-                    // Faking relevant properties to force it to Write().
-                    Destination.Exists = true;
+                // Faking relevant properties to force it to Write().
+                Destination.Exists = true;
 
                 // Additional properties required to properly rebuild the container.
-                    Destination.GameVersion = Source.GameVersion;
+                Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
 
                 // Update bytes in platform extra as it is what will be written later.
@@ -965,18 +975,18 @@ public partial class PlatformPlaystation : Platform
                     Bytes = CreateData(Destination).ToArray(),
                 };
 
-                    TransferOwnership(Destination, sourceTransferData);
+                TransferOwnership(Destination, sourceTransferData);
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
-            if (write)
-            {
+                if (write)
+                {
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
                     RebuildContainerFull(Destination);
+                }
             }
-        }
             //else
             //    continue;
-    }
+        }
     }
 
     #endregion

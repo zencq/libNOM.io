@@ -78,7 +78,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether this contains loaded JSON data and is ready to use.
     /// </summary>
-    public bool IsLoaded => Exists && _jsonObject is not null; // { get; }
+    public bool IsLoaded => IsCompatible && _jsonObject is not null; // { get; }
 
     /// <summary>
     /// Whether this is older than the lowest supported version.
