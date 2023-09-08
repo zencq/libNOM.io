@@ -1278,6 +1278,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
+                Destination.ClearIncompatibility();
 
                 // Due to this CanCreate can be true.
                 CopyPlatformExtra(Destination, Source);
@@ -1581,6 +1582,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
+                Destination.ClearIncompatibility();
 
                 // Due to this CanCreate can be true.
                 CreatePlatformExtra(Destination, Source);
