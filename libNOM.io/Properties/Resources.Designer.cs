@@ -61,7 +61,7 @@ namespace libNOM.io.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #{STEAM_API_KEY}#.
+        ///   Looks up a localized string similar to {{ secrets.STEAM_API_KEY }}.
         /// </summary>
         internal static string STEAM_API_KEY {
             get {

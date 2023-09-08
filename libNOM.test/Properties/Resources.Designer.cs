@@ -71,7 +71,7 @@ namespace libNOM.test.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to #{TESTSUITE_PASSWORD}#.
+        ///   Looks up a localized string similar to {{ secrets.TESTSUITE_PASSWORD }}.
         /// </summary>
         internal static string TESTSUITE_PASSWORD {
             get {

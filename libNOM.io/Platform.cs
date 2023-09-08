@@ -1197,7 +1197,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var path = Path.Combine(Settings.Backup, name);
 
         Directory.CreateDirectory(Settings.Backup);
-        using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Update))
+        using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
             _ = zipArchive.CreateEntryFromFile(container.DataFile.FullName, "data");
             if (container.MetaFile?.Exists == true)

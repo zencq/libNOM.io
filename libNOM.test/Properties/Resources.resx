@@ -122,6 +122,6 @@
     <value>..\Resources\TESTSUITE_ARCHIVE.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="TESTSUITE_PASSWORD" xml:space="preserve">
-    <value>#{TESTSUITE_PASSWORD}#</value>
+    <value>{{ secrets.TESTSUITE_PASSWORD }}</value>
   </data>
 </root>
