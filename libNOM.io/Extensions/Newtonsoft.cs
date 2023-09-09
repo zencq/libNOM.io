@@ -49,14 +49,37 @@ public static class NewtonsoftExtensions
             {
                 var type = typeof(T);
                 if (type.IsEnum)
-                {
-                    var value = jToken.Value<string>();
-                    return value is null ? default : (T)(Enum.Parse(type, value));
-                }
+                    return jToken.Value<string>() is string stringValue ? (T)(Enum.Parse(type, stringValue)) : default;
+
                 return jToken.Value<T>();
             }
         }
         return default;
+    }
+
+    /// <summary>
+    /// Evaluates a JSONPath expression and converts all values to <typeparamref name="T"/>.
+    /// Multiple paths can be passed to cover different obfuscation states.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="self"></param>
+    /// <param name="paths"></param>
+    /// <returns></returns>
+    public static IEnumerable<T?> GetValues<T>(this JObject self, params string[] paths)
+    {
+        foreach (var path in paths)
+        {
+            var jTokens = self.SelectTokens(path);
+            if (jTokens.Any())
+            {
+                var type = typeof(T);
+                if (type.IsEnum)
+                    return jTokens.Select(i => i.Value<string>()).Where(j => j is not null).Select(k => (T)(Enum.Parse(type, k!)));
+
+                return jTokens.Select(i => i.Value<T>());
+            }
+        }
+        return Enumerable.Empty<T>();
     }
 
     /// <summary>

@@ -39,7 +39,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     public Exception? IncompatibilityException { get; internal set; }
 
     /// <summary>
-    /// A tag with information why this save is incompatible. To see what reasons are available have a look at <see cref="libNOM.io.Globals.Constants"/>.INCOMPATIBILITY_\d{3}.
+    /// A tag with information why this save is incompatible. To see what reasons are available have a look at <see cref="Globals.Constants"/>.INCOMPATIBILITY_\d{3}.
     /// </summary>
     public string? IncompatibilityTag { get; internal set; }
 
@@ -61,6 +61,21 @@ public class Container : IComparable<Container>, IEquatable<Container>
     // public //
 
     /// <summary>
+    /// Whether this contains potential user owned bases.
+    /// </summary>
+    public bool HasBase => IsLoaded && GetJsonValues<PersistentBaseTypesEnum>("6f=.F?0[*].peI.DPp", "PlayerStateData.PersistentPlayerBases[*].BaseType.PersistentBaseTypes").Any(i => i is PersistentBaseTypesEnum.HomePlanetBase or PersistentBaseTypesEnum.FreighterBase); // { get; }
+
+    /// <summary>
+    /// Whether this contains a user owned freighter.
+    /// </summary>
+    public bool HasFreighter => IsLoaded && (GetJsonValues<double>("6f=.lpm[*]", "PlayerStateData.FreighterMatrixPos[*]")?.Any(i => i != 0.0) ?? false); // { get; }
+
+    /// <summary>
+    /// Whether this contains a potential user owned settlement.
+    /// </summary>
+    public bool HasSettlement => IsLoaded && (GetJsonValues<string>("6f=.GQA[*].3?K.f5Q", "PlayerStateData.SettlementStatesV2[*].Owner.LID")?.Any(i => !string.IsNullOrEmpty(i)) ?? false); // { get; }
+
+    /// <summary>
     /// Whether this contains account data and is not a regular save.
     /// </summary>
     public bool IsAccount => MetaIndex == 0; // { get; }
@@ -74,6 +89,11 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// Whether this was correctly loaded and no exception or an other reason occurred while loading that made it incompatible.
     /// </summary>
     public bool IsCompatible => Exists && string.IsNullOrEmpty(IncompatibilityTag); // { get; }
+
+    /// <summary>
+    /// Whether this is a save with an ongoing expedition (<see cref="PresetGameModeEnum.Seasonal"/>).
+    /// </summary>
+    public bool IsExpedition => GameMode == PresetGameModeEnum.Seasonal; // { get; }
 
     /// <summary>
     /// Whether this contains loaded JSON data and is ready to use.
@@ -152,8 +172,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
     public bool IsVersion430Singularity => IsVersion(GameVersionEnum.Singularity); // { get; }
 
     public bool IsVersion440Echoes => IsVersion(GameVersionEnum.Echoes); // { get; }
-
-    // internal //
 
     #endregion
 
@@ -426,7 +444,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     }
 
     /// <summary>
-    /// Gets the actual value of the JSON element that matches the JSONPath expression.
+    /// Gets the actual value of the JSON element that matches the first valid JSONPath expression.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="paths">A collection of JSONPath expressions.</param>
@@ -435,6 +453,18 @@ public class Container : IComparable<Container>, IEquatable<Container>
     {
         ThrowHelperIsLoaded();
         return _jsonObject!.GetValue<T>(paths);
+    }
+
+    /// <summary>
+    /// Gets the actual values of all JSON elements that matches the first valid JSONPath expression.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="paths">A collection of JSONPath expressions.</param>
+    /// <returns>The value of the first valid expression.</returns>
+    public IEnumerable<T?> GetJsonValues<T>(params string[] paths)
+    {
+        ThrowHelperIsLoaded();
+        return _jsonObject!.GetValues<T>(paths);
     }
 
     // private //

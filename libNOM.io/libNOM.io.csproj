@@ -26,7 +26,7 @@
 
   <!-- Package -->
   <PropertyGroup>
-    <Version>0.5.99.2</Version>
+    <Version>0.5.99.3</Version>
     <Authors>cengelha</Authors>
     <Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
