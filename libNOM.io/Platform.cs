@@ -83,6 +83,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     // public //
 
+    public abstract bool CanCreate { get; }
+
+    public abstract bool CanRead { get; }
+
+    public abstract bool CanUpdate { get; }
+
+    public abstract bool CanDelete { get; }
+
     public virtual bool Exists => Location?.Exists == true; // { get; }
 
     public virtual bool HasAccountData => AccountContainer.Exists && AccountContainer.IsCompatible; // { get; }
@@ -119,14 +127,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     public abstract bool RestartToApply { get; }
 
     // protected //
-
-    protected abstract bool CanCreate { get; }
-
-    protected abstract bool CanRead { get; }
-
-    protected abstract bool CanUpdate { get; }
-
-    protected abstract bool CanDelete { get; }
 
     protected abstract bool IsConsolePlatform { get; }
 

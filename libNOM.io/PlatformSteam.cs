@@ -127,19 +127,19 @@ public partial class PlatformSteam : Platform
 
     // public //
 
+    public override bool CanCreate { get; } = true;
+
+    public override bool CanRead { get; } = true;
+
+    public override bool CanUpdate { get; } = true;
+
+    public override bool CanDelete { get; } = true;
+
     public override bool HasModding { get; } = true;
 
     public override bool RestartToApply { get; } = false;
 
     // protected //
-
-    protected override bool CanCreate { get; } = true;
-
-    protected override bool CanRead { get; } = true;
-
-    protected override bool CanUpdate { get; } = true;
-
-    protected override bool CanDelete { get; } = true;
 
     protected override bool IsConsolePlatform { get; } = false;
 

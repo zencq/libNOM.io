@@ -215,6 +215,52 @@ public class SwitchTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
+    public void T05_Read()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum SeasonEnum, int BaseVersion, GameVersionEnum GameVersionEnum, string SaveName, string SaveSummary)[]
+        {
+            (0, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4145, GameVersionEnum.Singularity, "", "登上Inzadg球体"), // 1Auto
+            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4145, GameVersionEnum.Singularity, "", "登上Inzadg球体"), // 1Manual
+            (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4145, GameVersionEnum.Singularity, "", "登上太空异象"), // 2Auto
+            (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4145, GameVersionEnum.Singularity, "", "登上太空异象"), // 2Manual
+        };
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        var platform = new PlatformSwitch(path, settings);
+
+        // Assert
+        Assert.IsTrue(platform.HasAccountData);
+        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
+        Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
+        Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
+        Assert.AreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK);
+
+        for (var i = 0; i < results.Length; i++)
+        {
+            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(results[i].Exists, container.Exists);
+            Assert.AreEqual(results[i].IsOld, container.IsOld);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].SeasonEnum, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
+            Assert.AreEqual(results[i].SaveName, container.SaveName);
+            Assert.AreEqual(results[i].SaveSummary, container.SaveSummary);
+        }
+    }
+
+    [TestMethod]
     public void T10_Write_Default_0x7D2_Frontiers()
     {
         var now = DateTimeOffset.UtcNow;
@@ -279,7 +325,7 @@ public class SwitchTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T12_Write_Default_0x7D2_Frontiers_Account()
+    public void T11_Write_Default_0x7D2_Frontiers_Account()
     {
         var now = DateTimeOffset.UtcNow;
         var nowUnix = now.ToUnixTimeSeconds();
@@ -332,7 +378,127 @@ public class SwitchTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T13_Write_SetLastWriteTime_False()
+    public void T12_Write_Default_0x7D2_Waypoint()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var nowUnix = now.ToUnixTimeSeconds();
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
+        };
+        var writeCallback = false;
+
+        // Act
+        var platformA = new PlatformSwitch(path, settings);
+        var containerA = platformA.GetSaveContainer(0)!;
+        var metaA = DecryptMeta(containerA);
+        var priectA = new PrivateObject(containerA);
+
+        containerA.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
+
+#pragma warning disable IDE0042 // Deconstruct variable declaration
+        platformA.Load(containerA);
+        (int Units, long UnixSeconds) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+
+        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        platformA.Write(containerA, now);
+        (int Units, long UnixSeconds) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+
+        var platformB = new PlatformSwitch(path, settings);
+        var containerB = platformB.GetSaveContainer(0)!;
+        var metaB = DecryptMeta(containerB);
+        var priectB = new PrivateObject(containerB);
+
+        platformB.Load(containerB);
+        (int Units, long UnixSeconds) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+#pragma warning restore IDE0042 // Deconstruct variable declaration
+
+        // Assert
+        Assert.IsTrue(writeCallback);
+
+        Assert.AreEqual(1000356262, valuesOrigin.Units);
+        Assert.AreEqual(1673766796, valuesOrigin.UnixSeconds); // 2023-01-15 07:13:16 +00:00
+        Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
+        Assert.AreEqual(nowUnix, valuesSet.UnixSeconds);
+
+        Assert.AreEqual(UNITS_NEW_AMOUNT, valuesReload.Units);
+        Assert.AreEqual(nowUnix, valuesReload.UnixSeconds);
+
+        AssertCommonMeta(metaA, metaB);
+
+        var bytesA = metaA.AsSpan().AsBytes().ToArray();
+        var bytesB = metaB.AsSpan().AsBytes().ToArray();
+
+        AssertAllAreEqual(2, (uint)(containerA.MetaIndex), (uint)(containerB.MetaIndex), metaA[3], metaB[3]);
+        AssertAllAreEqual(4145, (uint)(int)(priectA.GetFieldOrProperty("BaseVersion")), (uint)(int)(priectB.GetFieldOrProperty("BaseVersion")), metaA[5], metaB[5]);
+        AssertAllAreEqual((ushort)(PresetGameModeEnum.Normal), (ushort)(PresetGameModeEnum)(priectA.GetFieldOrProperty("GameMode")), (ushort)(PresetGameModeEnum)(priectB.GetFieldOrProperty("GameMode")), BitConverter.ToInt16(bytesA, 24), BitConverter.ToInt16(bytesB, 24));
+        AssertAllAreEqual((ushort)(SeasonEnum.None), (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 26), BitConverter.ToUInt16(bytesA, 26));
+        AssertAllAreEqual(63873, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[7], metaB[7]);
+        AssertAllAreEqual("", containerA.SaveName, containerB.SaveName, GetString(bytesA.Skip(40).TakeWhile(i => i != 0)), GetString(bytesB.Skip(40).TakeWhile(i => i != 0)));
+        AssertAllAreEqual("登上Inzadg球体", containerA.SaveSummary, containerB.SaveSummary, GetString(bytesA.Skip(168).TakeWhile(i => i != 0)), GetString(bytesB.Skip(168).TakeWhile(i => i != 0)));
+        AssertAllAreEqual((byte)(DifficultyPresetTypeEnum.Custom), (byte)(containerA.GameDifficulty), (byte)(containerB.GameDifficulty), bytesA[296], bytesB[296]);
+    }
+
+    [TestMethod]
+    public void T13_Write_Default_0x7D2_Waypoint_Account()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var nowUnix = now.ToUnixTimeSeconds();
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
+        };
+        var writeCallback = false;
+
+        // Act
+        var platformA = new PlatformSwitch(path, settings);
+        var containerA = platformA.GetAccountContainer();
+        var metaA = DecryptMeta(containerA);
+
+        containerA.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
+
+#pragma warning disable IDE0042 // Deconstruct variable declaration
+        platformA.Load(containerA);
+        (int MusicVolume, long UnixSeconds) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+
+        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
+        platformA.Write(containerA, now);
+        (int MusicVolume, long UnixSeconds) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+
+        var platformB = new PlatformSwitch(path, settings);
+        var containerB = platformB.GetAccountContainer();
+        var metaB = DecryptMeta(containerB);
+
+        platformB.Load(containerB);
+        (int MusicVolume, long UnixSeconds) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds());
+#pragma warning restore IDE0042 // Deconstruct variable declaration
+
+        // Assert
+        Assert.IsTrue(writeCallback);
+
+        Assert.AreEqual(80, valuesOrigin.MusicVolume);
+        Assert.AreEqual(1694247283, valuesOrigin.UnixSeconds); // 2023-09-09 08:14:43 +00:00
+        Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
+        Assert.AreEqual(nowUnix, valuesSet.UnixSeconds);
+
+        Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesReload.MusicVolume);
+        Assert.AreEqual(nowUnix, valuesReload.UnixSeconds);
+
+        AssertCommonMeta(metaA, metaB);
+    }
+
+    [TestMethod]
+    public void T14_Write_SetLastWriteTime_False()
     {
         var now = DateTimeOffset.UtcNow;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
@@ -389,7 +555,7 @@ public class SwitchTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T14_Write_WriteAlways_True()
+    public void T15_Write_WriteAlways_True()
     {
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
         var settings = new PlatformSettings
@@ -440,7 +606,7 @@ public class SwitchTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T15_Write_WriteAlways_False()
+    public void T16_Write_WriteAlways_False()
     {
         var now = DateTimeOffset.UtcNow;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");

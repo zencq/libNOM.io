@@ -72,6 +72,14 @@ public partial class PlatformSwitch : Platform
 
     // public //
 
+    public override bool CanCreate { get; } = true;
+
+    public override bool CanRead { get; } = true;
+
+    public override bool CanUpdate { get; } = true;
+
+    public override bool CanDelete { get; } = true;
+
     public override bool HasModding { get; } = false;
 
     public override bool IsValid => AnchorFileIndex == 0; // { get; }
@@ -79,14 +87,6 @@ public partial class PlatformSwitch : Platform
     public override bool RestartToApply { get; } = true;
 
     // protected //
-
-    protected override bool CanCreate { get; } = true;
-
-    protected override bool CanRead { get; } = true;
-
-    protected override bool CanUpdate { get; } = true;
-
-    protected override bool CanDelete { get; } = true;
 
     protected override bool IsConsolePlatform { get; } = true;
 
@@ -228,8 +228,7 @@ public partial class PlatformSwitch : Platform
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
             // Overwrite only SizeDecompressed.
-            writer.Write(META_HEADER); // 4
-            writer.Write(Constants.SAVE_FORMAT_3); // 4
+            writer.Seek(0x8, SeekOrigin.Begin);
             writer.Write(container.Extra.SizeDecompressed); // 4
         }
         else
@@ -247,6 +246,9 @@ public partial class PlatformSwitch : Platform
             writer.Write((ushort)(container.GameMode)); // 2
             writer.Write((ushort)(container.Season)); // 2
             writer.Write(container.TotalPlayTime); // 4
+
+            // Skip EMPTY.
+            writer.Seek(0x8, SeekOrigin.Current); // 8
 
             // Extended data since Waypoint.
             if (container.MetaFormat >= MetaFormatEnum.Waypoint)

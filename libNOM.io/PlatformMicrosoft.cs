@@ -95,6 +95,14 @@ public partial class PlatformMicrosoft : Platform
 
     // public //
 
+    public override bool CanCreate { get; } = true;
+
+    public override bool CanRead { get; } = true;
+
+    public override bool CanUpdate { get; } = true;
+
+    public override bool CanDelete { get; } = true;
+
     public override bool Exists => base.Exists && _containersIndexFile.Exists == true; // { get; }
 
     public override bool HasModding { get; } = false;
@@ -102,14 +110,6 @@ public partial class PlatformMicrosoft : Platform
     public override bool RestartToApply { get; } = true;
 
     // protected //
-
-    protected override bool CanCreate { get; } = true;
-
-    protected override bool CanRead { get; } = true;
-
-    protected override bool CanUpdate { get; } = true;
-
-    protected override bool CanDelete { get; } = true;
 
     protected override bool IsConsolePlatform { get; } = false;
 

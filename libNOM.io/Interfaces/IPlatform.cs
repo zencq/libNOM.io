@@ -24,6 +24,26 @@ public interface IPlatform
     #region Flags
 
     /// <summary>
+    /// Whether saves can be created out of thin air.
+    /// </summary>
+    public bool CanCreate { get; }
+
+    /// <summary>
+    /// Whether saves can be read.
+    /// </summary>
+    public bool CanRead { get; }
+
+    /// <summary>
+    /// Whether existing saves be updated.
+    /// </summary>
+    public bool CanUpdate { get; }
+
+    /// <summary>
+    /// Whether saves can be deleted.
+    /// </summary>
+    public bool CanDelete { get; }
+
+    /// <summary>
     /// Whether the location for the platform exists.
     /// </summary>
     public bool Exists { get; }
