@@ -30,27 +30,36 @@ public class ContainerTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
         var container = platform.GetSaveContainer(0)!;
+        var pattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
+
         container.BackupCreatedCallback += (backup) =>
         {
             backupCreatedCallback = true;
         };
 
-        var backups0 = container.BackupCollection.Count;
+        var backups0Container = container.BackupCollection.Count;
+        var backups0File = Directory.Exists(settings.Backup);
 
         platform.Backup(container);
-        var backups1 = container.BackupCollection.Count;
+        var backups1Container = container.BackupCollection.Count;
+        var backups1File = Directory.GetFiles(settings.Backup, pattern).Length;
 
         platform.Backup(container);
-        var backups2 = container.BackupCollection.Count;
+        var backups2Container = container.BackupCollection.Count;
+        var backups2File = Directory.GetFiles(settings.Backup, pattern).Length;
+
+        var backups2ContainerNew = new PlatformSteam(path, settings).GetSaveContainer(0)!.BackupCollection.Count;
+        var backups2FileAfter = Directory.GetFiles(settings.Backup, pattern).Length;
 
         // Assert
         Assert.IsTrue(backupCreatedCallback);
 
-        Assert.AreEqual(0, backups0);
-        Assert.AreEqual(1, backups1);
-        Assert.AreEqual(2, backups2);
+        Assert.AreEqual(0, backups0Container); Assert.IsFalse(backups0File);
 
-        Assert.AreEqual(2, new PlatformSteam(path, settings).GetSaveContainer(0)!.BackupCollection.Count);
+        AssertAllAreEqual(1, backups1Container, backups1File);
+        AssertAllAreEqual(2, backups2Container, backups2File);
+
+        AssertAllAreEqual(2, backups2ContainerNew, backups2FileAfter);
     }
 
     [TestMethod]

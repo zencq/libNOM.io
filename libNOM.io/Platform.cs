@@ -553,7 +553,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (!Directory.Exists(Settings.Backup))
             return;
 
-        foreach (var file in Directory.GetFiles(Settings.Backup, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip"))
+        foreach (var file in Directory.GetFiles(Settings.Backup, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip".ToLowerInvariant()))
         {
             var parts = Path.GetFileNameWithoutExtension(file).Split('.');
 
@@ -574,7 +574,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             catch (FormatException)
             {
                 // Ignore.
-                continue;
             }
         }
     }
