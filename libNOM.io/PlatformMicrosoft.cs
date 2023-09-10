@@ -521,8 +521,8 @@ public partial class PlatformMicrosoft : Platform
         {
             container.Extra = container.Extra with
             {
-                SaveName = decompressed.Slice(5, 32).GetSaveRenamingString(),
-                SaveSummary = decompressed.Slice(37, 32).GetSaveRenamingString(),
+                SaveName = disk.Slice(20, 128).GetSaveRenamingString(),
+                SaveSummary = disk.Slice(148, 128).GetSaveRenamingString(),
                 DifficultyPreset = disk[276],
             };
         }

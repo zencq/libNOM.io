@@ -201,8 +201,8 @@ public partial class PlatformSwitch : Platform
             {
                 container.Extra = container.Extra with
                 {
-                    SaveName = decompressed.Slice(10, 32).GetSaveRenamingString(),
-                    SaveSummary = decompressed.Slice(42, 32).GetSaveRenamingString(),
+                    SaveName = disk.Slice(40, 128).GetSaveRenamingString(),
+                    SaveSummary = disk.Slice(168, 128).GetSaveRenamingString(),
                     DifficultyPreset = disk[296],
                 };
             }

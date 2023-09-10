@@ -314,8 +314,8 @@ public partial class PlatformSteam : Platform
             {
                 container.Extra = container.Extra with
                 {
-                    SaveName = decompressed.Slice(22, 32).GetSaveRenamingString(),
-                    SaveSummary = decompressed.Slice(54, 32).GetSaveRenamingString(),
+                    SaveName = disk.Slice(88, 128).GetSaveRenamingString(),
+                    SaveSummary = disk  .Slice(216, 128).GetSaveRenamingString(),
                     DifficultyPreset = disk[344],
                 };
             }

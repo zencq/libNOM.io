@@ -95,6 +95,16 @@ internal static class ReadOnlySpanExtensions
     }
 
     /// <summary>
+    /// Gets all bytes until the first \0 as string.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static string GetSaveRenamingString(this ReadOnlySpan<byte> self)
+    {
+        return GetString(self.Slice(0, self.IndexOf((byte)(0))));
+    }
+
+    /// <summary>
     /// Decodes all the bytes in UTF-8 format into a string.
     /// </summary>
     /// <param name="self"></param>
@@ -147,22 +157,6 @@ internal static class ReadOnlySpanExtensions
     {
         result = self.Slice(start, length).Cast<byte, char>().TrimEnd('\0');
         return length;
-    }
-
-    #endregion
-
-    #region typeof(uint)    
-
-    internal static string GetSaveRenamingString(this ReadOnlySpan<uint> self)
-    {
-        var bytes = self.AsBytes();
-        var index = bytes.IndexOf((byte)(0));
-
-#if NETSTANDARD2_0
-        return Encoding.UTF8.GetString(bytes.Slice(0, index).ToArray());
-#else
-        return Encoding.UTF8.GetString(bytes.Slice(0, index));
-#endif
     }
 
     #endregion
