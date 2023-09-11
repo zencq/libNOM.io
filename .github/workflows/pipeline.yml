@@ -76,7 +76,7 @@ jobs:
         with:
           name: NuGet
       - name: Version
-        run: echo "nupkg_version=$((((Get-Item -Path .\libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
+        run: echo "nupkg_version=$((((Get-Item -Path ./libNOM.io/bin/Release/libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
         shell: pwsh
       # Exit if version mismatch.
       - name: Mismatch
