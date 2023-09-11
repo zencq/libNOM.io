@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using CommunityToolkit.HighPerformance;
+using System.Text;
 
 namespace libNOM.io.Extensions;
 
@@ -6,44 +7,11 @@ namespace libNOM.io.Extensions;
 public static class StringExtensions
 {
     /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    /// <seealso href="https://stackoverflow.com/a/1615860"/>
-    internal static string EscapeDataString(this string self)
-    {
-        var builder = new StringBuilder();
-
-        foreach (var charValue in self)
-        {
-            // Escaping gone wrong by HG. The backslash is in the file but instead of one of the chars below, still the unescaped control char.
-            if (charValue == 0x09)
-            {
-                builder.Append('t');
-            }
-            else if(charValue == 0x0A)
-            {
-                builder.Append('n');
-            }
-            else if (charValue == 0x0D)
-            {
-                builder.Append('r');
-            }
-            else
-            {
-                builder.Append(charValue);
-            }
-        }
-        return builder.ToString();
-    }
-
-    /// <summary>
     /// Encodes all the characters in the string into a sequence of bytes in UTF-16 format.
     /// </summary>
     /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding the set of characters.</returns>
-    public static byte[] GetUnicodeBytes(this string self)
+    internal static byte[] GetUnicodeBytes(this string self)
     {
         return Encoding.Unicode.GetBytes(self);
     }
@@ -53,8 +21,40 @@ public static class StringExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding the set of characters.</returns>
-    public static byte[] GetUTF8Bytes(this string self)
+    internal static byte[] GetUTF8Bytes(this string self)
     {
         return Encoding.UTF8.GetBytes(self);
+    }
+
+    /// <inheritdoc cref="AsSpanSubstring(string, int, int)"/>
+    internal static ReadOnlySpan<char> AsSpanSubstring(this string self, int startIndex)
+    {
+        return self.AsSpan().Slice(startIndex);
+    }
+
+    /// <summary>
+    /// Returns a substring of this string as <see cref="Span{T}"/>.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="startIndex"></param>
+    /// <param name="length"></param>
+    /// <returns></returns>
+    internal static ReadOnlySpan<char> AsSpanSubstring(this string self, int startIndex, int length)
+    {
+        return self.AsSpan().Slice(startIndex, length);
+    }
+
+    /// <summary>
+    /// Prepares a save renaming text for writing.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static byte[] GetSaveRenamingBytes(this string self)
+    {
+#if NETSTANDARD2_0_OR_GREATER
+        return $"{self.Substring(0, self.Length)}\0".GetUTF8Bytes();
+#else
+        return $"{self.AsSpanSubstring(0, self.Length)}\0".GetUTF8Bytes();
+#endif
     }
 }

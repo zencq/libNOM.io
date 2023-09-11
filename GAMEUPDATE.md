@@ -4,11 +4,12 @@
 
 ### Enums
 * Check whether game enums have been updated:
+    * `DifficultyPresetTypeEnum`
+    * `ParticipantTypeEnum`
     * `PersistentBaseTypesEnum`
     * `PresetGameModeEnum`
 * Extend `VersionEnum` and if there is a new Expedition, update the `SeasonEnum`
   as well.
-* In rare occasions there might be a new game mode as well (`PresetGameModeEnum`).
 * If necessary add a `Description` attribute to it.
 
 ### Container
@@ -19,6 +20,7 @@
 
 ### Global
 * For new game modes the `GetGameModeEnum` needs to be updated.
+* For new difficulty preset the `DifficultyPresetTypeEnum` needs to be updated.
 * Will probably never be the case but if the formula for the version numbers changes,
   the `CalculateBaseVersion` and `CalculateVersion` need an updated as well.
 

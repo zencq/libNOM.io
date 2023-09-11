@@ -2,9 +2,9 @@
 
 
 /// <summary>
-/// Specifies types per slot a save can have.
+/// Specifies the different types of a save per slot.
 /// </summary>
-public enum SaveTypeEnum
+public enum SaveTypeEnum : uint
 {
     Auto,
     Manual,

@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.HighPerformance;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
@@ -6,91 +8,92 @@ using System.Text.RegularExpressions;
 namespace libNOM.io;
 
 
-#region Container
-
-internal record class MicrosoftContainer
-{
-    internal FileInfo BlobContainerFile => new(Path.Combine(BlobDirectory.FullName, $"container.{Extension}"));
-
-    internal DirectoryInfo BlobDirectory = null!;
-
-    internal Guid BlobGuid;
-
-    internal FileInfo BlobDataFile = null!;
-
-    internal FileInfo BlobMetaFile = null!;
-
-    internal byte Extension;
-
-    internal DateTimeOffset LastModifiedTime;
-
-    internal byte[]? MetaTail;
-
-    internal string SyncHex = string.Empty;
-
-    internal MicrosoftBlobStateEnum State;
-
-    internal ulong TotalSize;
-}
-
-public partial class Container
-{
-    internal MicrosoftContainer? Microsoft { get; set; }
-}
-
-#endregion
-
-#region PlatformDirectoryData
-
-internal record class PlatformDirectoryDataMicrosoft : PlatformDirectoryData
-{
-    internal override string DirectoryPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
-
-    internal override string DirectoryPathPattern { get; } = "*_29070100B936489ABCE8B9AF3980429C";
-
-    internal override string[] AnchorFileGlob { get; } = new[] { "containers.index" };
-
-    internal override Regex[] AnchorFileRegex { get; } = new Regex[] { new("containers\\.index", RegexOptions.Compiled) };
-}
-
-#endregion
-
-public class PlatformMicrosoft : Platform
+public partial class PlatformMicrosoft : Platform
 {
     #region Constant
 
-    private const int CONTAINERSINDEX_HEADER = 0xE; // 14
-    private const string CONTAINERSINDEX_NAME = "containers.index";
-    private const long CONTAINERSINDEX_UNKNOWN_CONST = 0x10000000; // 268,435,456
-    private const int CONTAINERSINDEX_OFFSET_CONTAINER = 0xC8; // 200
-    private const int CONTAINERSINDEX_OFFSET_DYNAMIC = 0xC; // 12
+    #region Platform Specific
 
-    private const int CONTAINER_BLOB_COUNT = 0x2; // 2
-    private const int CONTAINER_BLOB_IDENTIFIER_LENGTH = 0x80; // 128
-    private const int CONTAINER_BLOB_SIZE = 0xA0; // 160
-    private const int CONTAINER_HEADER = 0x4; // 4
-    private const int CONTAINER_OFFSET_DATA = 0x98; // 152
-    private const int CONTAINER_OFFSET_META = 0x138; // 312
-    private const int CONTAINER_SIZE = 0x4 + 0x4 + CONTAINER_BLOB_COUNT * (0x80 + 2 * 0x10); // 328
+    protected const int CONTAINERSINDEX_HEADER = 0xE; // 14
+    protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
+    protected const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
 
-    private const int META_KNOWN = 0x14; // 20
-    private const int META_SIZE = 0x18; // 24
-    private const int META_SIZE_WAYPOINT = 0x118; // 280
+    protected const int BLOBCONTAINER_HEADER = 0x4; // 4
+    protected const int BLOBCONTAINER_COUNT = 0x2; // 2
+    protected const int BLOBCONTAINER_IDENTIFIER_LENGTH = 0x80; // 128
+    protected const int BLOBCONTAINER_TOTAL_LENGTH = sizeof(int) + sizeof(int) + BLOBCONTAINER_COUNT * (BLOBCONTAINER_IDENTIFIER_LENGTH + 2 * 0x10); // 328
+
+    protected const int META_LENGTH_KNOWN = 0x14; // 20
+    protected override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
+    protected override int META_LENGTH_TOTAL_WAYPOINT => 0x118; // 280
+
+    #endregion
+
+    #region Generated Regex
+
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+    protected static readonly Regex AnchorFileRegex0 = new("containers\\.index", RegexOptions.Compiled);
+#else
+    [GeneratedRegex("containers\\.index", RegexOptions.Compiled)]
+    protected static partial Regex AnchorFileRegex0();
+#endif
+
+    #region Directory Data
+
+    internal const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
+
+    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "containers.index" };
+#if NETSTANDARD2_0_OR_GREATER || NET6_0
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
+#else
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
+#endif
+
+    internal static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
+
+    #endregion
+
+    #endregion
 
     #endregion
 
     #region Field
 
     private string? _accountId;
-    private FileInfo? _containersIndexFile;
-    private DateTimeOffset _lastModifiedTime;
-    private MicrosoftContainer? _settingsContainer;
+    private string _accountGuid = null!; // will be set when containers.index is parsed
+    private FileInfo _containersIndexFile = null!; // will be set if valid
+    private DateTimeOffset _lastWriteTime;
+    private string _processIdentifier = null!; // will be set when containers.index is parsed
+    private PlatformExtra? _settingsContainer;
 
     #endregion
 
     #region Property
 
+    #region Configuration
+
+    // public //
+
+    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Microsoft;
+
+    // protected //
+
+    protected override string[] PlatformAnchorFileGlob { get; } = ANCHOR_FILE_GLOB;
+
+    protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
+
+    protected override string? PlatformArchitecture { get; } = "XB1|Final";
+
+    // Looks like "C:\\Program Files\\WindowsApps\\HelloGames.NoMansSky_4.38.0.0_x64__bs190hzg1sesy\\Binaries\\NMS.exe"
+    protected override string? PlatformProcessPath { get; } = @"bs190hzg1sesy\Binaries\NMS.exe";
+
+    protected override string PlatformToken { get; } = "XB";
+
+    #endregion
+
     #region Flags
+
+    // public //
 
     public override bool CanCreate { get; } = true;
 
@@ -100,31 +103,45 @@ public class PlatformMicrosoft : Platform
 
     public override bool CanDelete { get; } = true;
 
+    public override bool Exists => base.Exists && _containersIndexFile.Exists == true; // { get; }
+
+    public override bool HasModding { get; } = false;
+
     public override bool RestartToApply { get; } = true;
 
-    public override bool IsWindowsPlatform { get; } = true;
+    // protected //
+
+    protected override bool IsConsolePlatform { get; } = false;
 
     #endregion
 
-    #region Platform Indicator
+    #endregion
 
-    internal static PlatformDirectoryData DirectoryData { get; } = new PlatformDirectoryDataMicrosoft();
+    #region Getter
 
-    internal override PlatformDirectoryData PlatformDirectoryData { get; } = DirectoryData;
+    #region Container
 
-    protected override string PlatformArchitecture { get; } = "XB1|Final";
+    protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
+    {
+        if (!name.Equals("containers.index", StringComparison.OrdinalIgnoreCase))
+            return Enumerable.Empty<Container>();
 
-    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Microsoft;
+        // Cache previous timestamp.
+        var lastWriteTicks = _lastWriteTime.UtcTicks.GetBlobTicks();
 
-    protected override string PlatformToken { get; } = "XB";
+        // Refresh will also update _lastWriteTime.
+        RefreshContainerCollection();
+
+        // Get all written container that are newer than the previous timestamp.
+        return SaveContainerCollection.Where(i => i.Exists && i.LastWriteTime?.UtcTicks >= lastWriteTicks);
+    }
 
     #endregion
 
-    #region Process (System)
-
-    protected override string? ProcessPath { get; } = "bs190hzg1sesy\\Binaries\\NMS.exe";
-
-    #endregion
+    private static FileInfo GetBlobFileInfo(PlatformExtra extra, Guid guid)
+    {
+        return new(Path.Combine(extra.MicrosoftBlobDirectory!.FullName, guid.ToPath()));
+    }
 
     #endregion
 
@@ -132,23 +149,33 @@ public class PlatformMicrosoft : Platform
 
     #region Constructor
 
-    public PlatformMicrosoft() : base(null, null) { }
+    public PlatformMicrosoft() : base() { }
 
-    public PlatformMicrosoft(DirectoryInfo? directory) : base(directory, null) { }
+    public PlatformMicrosoft(string path) : base(path) { }
 
-    public PlatformMicrosoft(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
+    public PlatformMicrosoft(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+
+    public PlatformMicrosoft(DirectoryInfo directory) : base(directory) { }
+
+    public PlatformMicrosoft(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         // Proceed to base method even if no directory.
         if (directory is not null)
         {
-            try
-            {
+#if NETSTANDARD2_0
+            if (directory.Name.Length == 49 && directory.Name.EndsWith(ACCOUNT_PATTERN.Substring(1)) && directory.Name.Substring(0, 16).All("0123456789ABCDEFabcdef".Contains))
                 _accountId = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
-            }
-            catch (Exception x) when (x is FormatException or OverflowException) { }
-            _containersIndexFile = new FileInfo(Path.Combine(directory.FullName, CONTAINERSINDEX_NAME));
+#elif NETSTANDARD2_1 || NET6_0
+            if (directory.Name.Length == 49 && directory.Name.EndsWith(ACCOUNT_PATTERN[1..]) && directory.Name[..16].All("0123456789ABCDEFabcdef".Contains))
+                _accountId = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
+#else
+            if (directory.Name.Length == 49 && directory.Name.EndsWith(ACCOUNT_PATTERN[1..]) && directory.Name[..16].All(char.IsAsciiHexDigit))
+                _accountId = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
+#endif
+
+            _containersIndexFile = new FileInfo(Path.Combine(directory.FullName, "containers.index"));
         }
 
         base.InitializeComponent(directory, platformSettings);
@@ -156,656 +183,368 @@ public class PlatformMicrosoft : Platform
 
     #endregion
 
-    // //
+    // // Read / Write
 
-    #region Container
+    #region Generate
 
-    protected override IEnumerable<Container> GetCachedContainers(string name)
+    protected override IEnumerable<Container> GenerateContainerCollection()
     {
-        if (!name.Equals(CONTAINERSINDEX_NAME, StringComparison.OrdinalIgnoreCase))
-            return Array.Empty<Container>();
+        var containersIndex = ParseContainersIndex();
+        if (containersIndex.Count == 0)
+            return Enumerable.Empty<Container>();
 
-        RefreshContainerCollection();
-        return GetExistingContainers();
-    }
-
-    #endregion
-
-    #region Copy
-
-    /// <inheritdoc cref="Platform.Copy(IEnumerable{ContainerOperationData}, bool)"/>
-    protected override void Copy(IEnumerable<ContainerOperationData> containerOperationData, bool write)
-    {
-        foreach (var (Source, Destination) in containerOperationData.Select(d => (d.Source, d.Destination)))
-        {
-            if (!Source.Exists)
-            {
-                Delete(Destination, write);
-            }
-            else // if (d.Destination.Exists || !d.Destination.Exists && CanCreate)
-            {
-                if (Source.Microsoft is null)
-                    throw new InvalidOperationException("The source container has no Microsoft extra.");
-
-                if (!Source.IsLoaded)
-                {
-                    BuildContainer(Source);
-                }
-                if (!Source.IsCompatible)
-                {
-                    throw new InvalidOperationException(Source.IncompatibilityTag);
-                }
-
-                // Due to this CanCreate can be true.
-                if (!Destination.Exists)
-                {
-                    // Prepare a new Microsoft container.
-                    Destination.Microsoft = new MicrosoftContainer
-                    {
-                        BlobGuid = Guid.NewGuid(),
-                        Extension = 0,
-                        LastModifiedTime = Source.Microsoft.LastModifiedTime,
-                        MetaTail = Source.Microsoft.MetaTail,
-                        State = MicrosoftBlobStateEnum.Created,
-                    };
-
-                    var directory = new DirectoryInfo(Path.Combine(Location!.FullName, Destination.Microsoft.BlobGuid.ToPath()));
-
-                    // Set dummy files. Will be overwritten while writing.
-                    Destination.DataFile = new(Path.Combine(directory.FullName, "data.guid"));
-                    Destination.MetaFile = new(Path.Combine(directory.FullName, "meta.guid"));
-
-                    // Update Microsoft container with new directory and file information.
-                    Destination.Microsoft.BlobDirectory = directory;
-                    Destination.Microsoft.BlobDataFile = Destination.DataFile;
-                    Destination.Microsoft.BlobMetaFile = Destination.MetaFile;
-
-                    // Prepare blob container file content. Guid of data and meta file will be set while writing.
-                    var blobContainerBinary = new byte[CONTAINER_SIZE];
-                    using (var writer = new BinaryWriter(new MemoryStream(blobContainerBinary)))
-                    {
-                        var data = "data".GetUnicodeBytes();
-
-                        writer.Write(CONTAINER_HEADER);
-                        writer.Write(CONTAINER_BLOB_COUNT);
-                        writer.Write(data);
-
-                        writer.BaseStream.Seek(CONTAINER_BLOB_SIZE - data.Length, SeekOrigin.Current);
-
-                        writer.Write("meta".GetUnicodeBytes());
-                    }
-
-                    Directory.CreateDirectory(Destination.Microsoft.BlobDirectory.FullName);
-                    File.WriteAllBytes(Destination.Microsoft.BlobContainerFile.FullName, blobContainerBinary);
-                }
-
-                // Faking relevant properties to force it to Write().
-                Destination.Exists = true;
-                Destination.IsSynced = false;
-
-                // Properties requied to properly build the container below.
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.SeasonEnum = Source.SeasonEnum;
-                Destination.VersionEnum = Source.VersionEnum;
-
-                Destination.SetJsonObject(Source.GetJsonObject());
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, writeTime: Source.LastWriteTime);
-                    BuildContainer(Destination);
-                }
-            }
-        }
-
-        UpdatePlatformUserIdentification();
-    }
-
-    #endregion
-
-    #region Delete
-
-    protected override void Delete(IEnumerable<Container> containers, bool write)
-    {
-        if (!CanDelete)
-            return;
-
-        foreach (var container in containers)
-        {
-            if (!container.Exists || container.Microsoft is null)
-                continue;
-
-            container.Microsoft.State = MicrosoftBlobStateEnum.Deleted;
-
-            if (write)
-            {
-                if (container.Microsoft.BlobDirectory.Exists)
-                {
-                    Directory.Delete(container.Microsoft.BlobDirectory.FullName, true);
-                }
-            }
-
-            container.Reset();
-        }
-
-        _lastModifiedTime = DateTimeOffset.Now.LocalDateTime;
-
-        // Refresh to get the new offsets.
-        if (write)
-        {
-            WriteContainersIndex();
-            RefreshContainerCollection();
-        }
-    }
-
-    #endregion
-
-    #region FileSystemWatcher
-
-    protected override void OnCacheEviction(object key, object value, EvictionReason reason, object state)
-    {
-        // Necessary to avoid deserialization in BuildContainer for not loaded container.
-        _init = true;
-
-        base.OnCacheEviction(key, value, reason, state);
-
-        _init = false;
-    }
-
-    /// <summary>
-    /// Refreshes all containers in the collection with newly written data from the containers.index file.
-    /// </summary>
-    private void RefreshContainerCollection()
-    {
-        var microsoft = ReadContainersIndex();
-        if (microsoft.Count == 0)
-            return;
-
-        // Just store it to write it later.
-        if (microsoft.ContainsKey(1))
-        {
-            _settingsContainer = microsoft[1];
-        }
-
-        for (var slotIndex = 0; slotIndex < COUNT_SLOTS; slotIndex++)
-        {
-            foreach (var containerIndex in new[] { (COUNT_SAVES_PER_SLOT * slotIndex), (COUNT_SAVES_PER_SLOT * slotIndex + 1) })
-            {
-                var contains = microsoft.TryGetValue(containerIndex + Global.OFFSET_INDEX, out var extra);
-                if (contains)
-                {
-                    ContainerCollection[containerIndex].DataFile = extra!.BlobDataFile;
-                    ContainerCollection[containerIndex].LastWriteTime = extra!.LastModifiedTime;
-                    ContainerCollection[containerIndex].MetaFile = extra!.BlobMetaFile;
-                    ContainerCollection[containerIndex].Microsoft = extra!;
-                }
-            }
-        }
-
-        if (microsoft.ContainsKey(0))
-        {
-            var extra = microsoft[0];
-
-            AccountContainer!.DataFile = extra.BlobDataFile;
-            AccountContainer!.LastWriteTime = extra.LastModifiedTime;
-            AccountContainer!.MetaFile = extra.BlobMetaFile;
-            AccountContainer!.Microsoft = extra;
-        }
-    }
-
-    #endregion
-
-    #region Getter
-
-    private static string GetBlobContainerPath(MicrosoftContainer microsoft)
-    {
-        return GetBlobContainerPath(microsoft, microsoft.Extension);
-    }
-
-    private static string GetBlobContainerPath(MicrosoftContainer microsoft, byte extension)
-    {
-        return Path.Combine(microsoft!.BlobDirectory.FullName, $"container.{extension}");
-    }
-
-    private static FileInfo GetBlobFileInfo(string path, Guid guid)
-    {
-        return new(Path.Combine(path, guid.ToPath()));
-    }
-
-    private string GetTemporaryName(string fileToWrite)
-    {
-        return Path.Combine(DirectoryData.DirectoryPath, "t", $"{_containersIndexFile!.DirectoryName}_{fileToWrite}");
-    }
-
-    private string GetTemporaryName(string fileToWrite, Container container)
-    {
-        return Path.Combine(DirectoryData.DirectoryPath, "t", $"{_containersIndexFile!.DirectoryName}_{container.Microsoft!.BlobDirectory.Name}_{fileToWrite}");
-    }
-
-    #endregion
-
-    #region Read
-
-    #region Build
-
-    /// <summary>
-    /// Builds a <see cref="Container"/> for each blob in the containers.index file.
-    /// </summary>
-    /// <returns></returns>
-    protected override IEnumerable<Container> BuildContainerCollection()
-    {
         var bag = new ConcurrentBag<Container>();
-        var tasks = new List<Task>();
 
-        var microsoft = ReadContainersIndex();
-        if (microsoft.Count == 0)
-            return bag;
-
-        if (microsoft.ContainsKey(0))
+        var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
         {
-            tasks.Add(Task.Run(() => AccountContainer = BuildContainer(0, microsoft[0])));
-        }
-
-        // Just store it to write it later.
-        if (microsoft.ContainsKey(1))
-        {
-            _settingsContainer = microsoft[1];
-        }
-
-        _init = true;
-
-        for (var slotIndex = 0; slotIndex < COUNT_SLOTS; slotIndex++)
-        {
-            foreach (var containerIndex in new[] { (COUNT_SAVES_PER_SLOT * slotIndex), (COUNT_SAVES_PER_SLOT * slotIndex + 1) })
+            return Task.Run(() =>
             {
-                var metaIndex = containerIndex + Global.OFFSET_INDEX;
-                _ = microsoft.TryGetValue(metaIndex, out var extra);
-
-                tasks.Add(Task.Run(() =>
+                _ = containersIndex.TryGetValue(metaIndex, out var extra);
+                if (metaIndex == 0)
                 {
-                    var container = BuildContainer(metaIndex, extra);
-                    LoadBackupCollection(container);
+                    AccountContainer = CreateContainer(metaIndex, extra);
+                    BuildContainerFull(AccountContainer); // always full
+                }
+                else if (metaIndex == 1)
+                {
+                    _settingsContainer = extra; // just caching it to be able to write it again
+                }
+                else
+                {
+                    var container = CreateContainer(metaIndex, extra);
+                    if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
+                    {
+                        BuildContainerHollow(container);
+                    }
+                    else
+                    {
+                        BuildContainerFull(container);
+                    }
+                    GenerateBackupCollection(container);
                     bag.Add(container);
-                }));
-            }
-        }
-
+                }
+            });
+        });
         Task.WaitAll(tasks.ToArray());
 
-        _init = false;
         return bag;
     }
 
+    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
+    {
+        if (extra is null)
+            return new Container(metaIndex);
+
+        return new Container(metaIndex)
+        {
+            DataFile = extra.MicrosoftBlobDataFile,
+            MetaFile = extra.MicrosoftBlobMetaFile,
+            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
+            Extra = extra,
+        };
+    }
+
     /// <summary>
-    /// Reads the containers.index file to get information where each blob is.
+    /// Reads the containers.index file to get the exact information where each file is.
     /// </summary>
     /// <returns></returns>
     /// <exception cref="InvalidDataException"/>
-    private Dictionary<int, MicrosoftContainer> ReadContainersIndex()
+    private Dictionary<int, PlatformExtra> ParseContainersIndex()
     {
-        /** containers.index structure
-
-        containers.index data
+        /**
+        global index data
          0. HEADER (14)                     (  4)
          1. NUMBER OF BLOB CONTAINERS       (  8)
-         2. GAME IDENTIFIER LENGTH (44)     (  4)
-         3. GAME IDENTIFIER                 ( 88) (UTF-16)
+         2. PROCESS IDENTIFIER LENGTH (44)  (  4)
+         3. PROCESS IDENTIFIER              ( 88) (UTF-16)
          4. LAST MODIFIED TIME              (  8)
          5. SYNC STATE                      (  4) (0 = ?, 1 = ?, 2 = MODIFIED, 3 = SYNCED)
          6. ACCOUNT IDENTIFIER LENGTH (36)  (  4)
          7. ACCOUNT IDENTIFIER              ( 72) (UTF-16)
-         8. ?                               (  8)
-                                            (200)
+         8. FOOTER (268435456)              (  8)
 
-        blob container data loop
-        10. SAVE IDENTIFIER LENGTH          (  4)
-        11. SAVE IDENTIFIER                 (VAR) (UTF-16)
-        12. SAVE IDENTIFIER LENGTH          (  4)
-        13. SAVE IDENTIFIER                 (VAR) (UTF-16)
-        14. SYNC HEX LENGTH                 (  4)
-        15. SYNC HEX                        (VAR) (UTF-16)
-        16. BLOB CONTAINER FILE EXTENSION   (  1)
-        17. SYNC STATE                      (  4) (0 = ?, 1 = SYNCED, 2 = MODIFIED, 3 = DELETED, 4 = ?, 5 = CREATED)
-        18. DIRECTORY                       ( 16) (GUID)
-        19. LAST MODIFIED TIME              (  8)
-        20. ?                               (  8)
-        21. TOTAL SIZE OF FILES             (  8) (BLOB CONTAINER EXCLUDED)
+        blob container index loop
+         9. SAVE IDENTIFIER LENGTH          (  4)
+        10. SAVE IDENTIFIER                 (VAR) (UTF-16)
+        11. SAVE IDENTIFIER LENGTH          (  4)
+        12. SAVE IDENTIFIER                 (VAR) (UTF-16)
+        13. SYNC HEX LENGTH                 (  4)
+        14. SYNC HEX                        (VAR) (UTF-16)
+        15. BLOB CONTAINER FILE EXTENSION   (  1)
+        16. SYNC STATE                      (  4) (0 = ?, 1 = SYNCED, 2 = MODIFIED, 3 = DELETED, 4 = ?, 5 = CREATED)
+        17. DIRECTORY                       ( 16) (GUID)
+        18. LAST MODIFIED TIME              (  8)
+        19. EMPTY                           (  8)
+        20. TOTAL SIZE OF FILES             (  8) (BLOB CONTAINER EXCLUDED)
+
+        blob container data
+         0. HEADER (4)                      (  4)
+         1. NUMBER OF BLOBS (2)             (  4)
+         2. DATA BLOB IDENTIFIER            ( 80) (UTF-16)
+         3. DATA FILE CLOUD                 ( 16) (GUID)
+         4. DATA FILE LOCAL                 ( 16) (GUID)
+         5. META BLOB IDENTIFIER            ( 80) (UTF-16)
+         6. META FILE CLOUD                 ( 16) (GUID)
+         7. META FILE LOCAL                 ( 16) (GUID)
         */
 
-        var result = new Dictionary<int, MicrosoftContainer>();
+        ReadOnlySpan<byte> bytesIndex = File.ReadAllBytes(_containersIndexFile.FullName);
+        Dictionary<int, PlatformExtra> result = new();
+        int offsetIndex = 0;
 
-        using var readerIndex = new BinaryReader(File.Open(_containersIndexFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+        if (bytesIndex.Cast<int>(0) is int header && header != CONTAINERSINDEX_HEADER)
+            throw new InvalidDataException($"Wrong header in containers.index file! Expected {CONTAINERSINDEX_HEADER} but got {header}.");
 
-        if (readerIndex.ReadInt32() is int version && version != CONTAINERSINDEX_HEADER)
-            throw new InvalidDataException($"Wrong version of containers.index file! Expected {CONTAINERSINDEX_HEADER} but got {version}.");
+        offsetIndex += 12;
+        offsetIndex += bytesIndex.ReadString(out _processIdentifier, offsetIndex);
 
-        // Total number of blob containers in the containers.index file.
-        var containerCount = readerIndex.ReadInt64();
+        _lastWriteTime = DateTimeOffset.FromFileTime(bytesIndex.Cast<long>(offsetIndex)).ToLocalTime();
 
-        // Read length of the identifier and then the identifier itself.
-        readerIndex.BaseStream.Seek(readerIndex.ReadInt32() * 2, SeekOrigin.Current);
+        offsetIndex += 12;
+        offsetIndex += bytesIndex.ReadString(out _accountGuid, offsetIndex) + 8; // Marshal.SizeOf(CONTAINERSINDEX_FOOTER);
 
-        // Store timestamp.
-        _lastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
-
-        // Skip containers.index state enum.
-        readerIndex.BaseStream.Seek(0x4, SeekOrigin.Current);
-
-        // Skip account identifier and unknown data (0x8) end the end of the header.
-        readerIndex.BaseStream.Seek(readerIndex.ReadInt32() * 2 + 0x8, SeekOrigin.Current);
-
-        for (var i = 0; i < containerCount; i++)
+        for (var i = 0; i < bytesIndex.Cast<long>(4); i++) // container count
         {
-            var container = new MicrosoftContainer();
+            offsetIndex += bytesIndex.ReadString(out var saveIdentifier, offsetIndex) * 2; // saveIdentifier two times in a row
+            offsetIndex += bytesIndex.ReadString(out var syncTime, offsetIndex);
 
-            // Read length of the identifier and then the identifier itself. Repeats itself.
-            var saveIdentifier = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
-            if (saveIdentifier != readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode())
-                continue;
-
-            container.SyncHex = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
-            container.Extension = readerIndex.ReadByte();
-            container.State = readerIndex.ReadInt32().DenumerateTo<MicrosoftBlobStateEnum>();
-            container.BlobGuid = readerIndex.ReadBytes(0x10).GetGuid();
-            container.BlobDirectory = new DirectoryInfo(Path.Combine(Location!.FullName, container.BlobGuid.ToPath()));
-            container.LastModifiedTime = DateTimeOffset.FromFileTime(readerIndex.ReadInt64()).ToLocalTime();
-
-            readerIndex.BaseStream.Seek(8, SeekOrigin.Current); // unknown data
-
-            container.TotalSize = readerIndex.ReadUInt64();
-
-            // Stop if directory specified in the entry does not exist.
-            if (!container.BlobDirectory.Exists)
-                continue;
-
-            if (container.State != MicrosoftBlobStateEnum.Deleted)
+            var directoryGuid = bytesIndex.GetGuid(offsetIndex + 5);
+            var extra = new PlatformExtra()
             {
-                var blobContainer = GetBlobContainerPath(container);
-                var fileInfos = new HashSet<FileInfo>();
+                // Read long as it has 8 bytes but other platforms only 4.
+                SizeDisk = (uint)(bytesIndex.Cast<long>(offsetIndex + 37)),
+
+                LastWriteTime = DateTimeOffset.FromFileTime(bytesIndex.Cast<long>(offsetIndex + 21)).ToLocalTime(),
+
+                MicrosoftSyncTime = syncTime,
+                MicrosoftBlobContainerExtension = bytesIndex[offsetIndex],
+                MicrosoftSyncState = (MicrosoftBlobSyncStateEnum)(bytesIndex.Cast<int>(offsetIndex + 1)),
+                MicrosoftBlobDirectoryGuid = directoryGuid,
+
+                MicrosoftBlobDirectory = new DirectoryInfo(Path.Combine(Location!.FullName, directoryGuid.ToPath())),
+            };
+
+            offsetIndex += 45;
+
+            // Ignore if already marked as deleted.
+            if (extra.MicrosoftBlobDirectory.Exists && extra.MicrosoftSyncState != MicrosoftBlobSyncStateEnum.Deleted)
+            {
+                var blobContainerIndex = extra.MicrosoftBlobContainerFile!;
+                var files = new HashSet<FileInfo>();
 
                 // In case the blob container extension does not match the containers.index value, try all existing ones until a data file is found.
-                if (!File.Exists(blobContainer))
+                if (blobContainerIndex.Exists)
                 {
-                    foreach (var file in container.BlobDirectory.GetFiles("container.*"))
-                    {
-                        fileInfos.Add(file);
-                    }
+                    files.Add(blobContainerIndex);
                 }
                 else
                 {
-                    fileInfos.Add(new(blobContainer));
+                    foreach (var file in extra.MicrosoftBlobDirectory.GetFiles("container.*"))
+                        files.Add(file);
                 }
 
-                foreach (var file in fileInfos)
+                // Start with the presumably newest one.
+                foreach (var blobContainer in files.OrderByDescending(j => j.Extension))
                 {
-                    using var readerBlob = new BinaryReader(File.Open(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                    ReadOnlySpan<byte> bytesBlobContainer = File.ReadAllBytes(blobContainer.FullName);
+                    int offsetBlobContainer = 8; // start after header
 
-                    if (readerBlob.BaseStream.Length != CONTAINER_SIZE)
+                    if (bytesBlobContainer.Length != BLOBCONTAINER_TOTAL_LENGTH || bytesBlobContainer.Cast<int>(0) != BLOBCONTAINER_HEADER)
                         continue;
 
-                    if (readerBlob.ReadInt32() != CONTAINER_HEADER)
-                        continue;
-
-                    var blobCount = readerBlob.ReadInt32();
-                    if (blobCount != CONTAINER_BLOB_COUNT)
-                        continue;
-
-                    for (var j = 0; j < blobCount; j++)
+                    for (var k = 0; k < bytesBlobContainer.Cast<int>(4); k++) // blob count
                     {
-                        var blobIdentifier = readerBlob.ReadBytes(CONTAINER_BLOB_IDENTIFIER_LENGTH).GetUnicode().Trim('\0');
+                        offsetBlobContainer += bytesBlobContainer.ReadString(out var blobIdentifier, offsetBlobContainer, BLOBCONTAINER_IDENTIFIER_LENGTH);
 
-                        // Needs to be the second GUID as the first one not always contains the local name.
-                        readerBlob.BaseStream.Seek(0x10, SeekOrigin.Current);
-                        var guid = readerBlob.ReadBytes(0x10).GetGuid();
+                        // Second Guid is the one to use as the first one is propably the current name in the cloud.
+                        var blobFile = GetBlobFileInfo(extra, bytesBlobContainer.GetGuid(offsetBlobContainer + 16));
+                        var blobSyncGuid = bytesBlobContainer.GetGuid(offsetBlobContainer);
 
-                        var blobFile = GetBlobFileInfo(container.BlobDirectory.FullName, guid);
+                        offsetBlobContainer += 32; // 2 * sizeof(Guid)
 
-                        if (blobIdentifier == "data")
+#if NETSTANDARD2_0
+                        if (blobIdentifier.ToString().Equals("data"))
                         {
-                            container.BlobDataFile = blobFile;
-                            container.LastModifiedTime = new[] { container.LastModifiedTime, container.BlobDataFile.CreationTime }.Max();
+                            extra = extra with
+                            {
+                                MicrosoftBlobDataFile = blobFile,
+                                MicrosoftBlobDataSyncGuid = blobSyncGuid,
+                            };
                             continue;
                         }
-
-                        if (blobIdentifier == "meta")
+                        if (blobIdentifier.ToString().Equals("meta"))
                         {
-                            container.BlobMetaFile = blobFile;
+                            extra = extra with
+                            {
+                                MicrosoftBlobMetaFile = blobFile,
+                                MicrosoftBlobMetaSyncGuid = blobSyncGuid,
+                            };
                             continue;
                         }
+#else
+                        if (blobIdentifier.Equals("data".AsSpan(), StringComparison.Ordinal))
+                        {
+                            extra = extra with
+                            {
+                                MicrosoftBlobDataFile = blobFile,
+                                MicrosoftBlobDataSyncGuid = blobSyncGuid,
+                            };
+                            continue;
+                        }
+                        if (blobIdentifier.Equals("meta".AsSpan(), StringComparison.Ordinal))
+                        {
+                            extra = extra with
+                            {
+                                MicrosoftBlobMetaFile = blobFile,
+                                MicrosoftBlobMetaSyncGuid = blobSyncGuid,
+                            };
+                            continue;
+                        }
+#endif
                     }
 
                     // Update extension in case the read one was not found and break the loop.
-                    if (container.BlobDataFile?.Exists == true)
+                    if (extra.MicrosoftBlobDataFile?.Exists == true)
                     {
-#if NETSTANDARD2_0
-                        container.Extension = System.Convert.ToByte(file.Extension.Substring(1));
-#else
-                        container.Extension = System.Convert.ToByte(file.Extension[1..]);
-#endif
+                        extra = extra with
+                        {
+                            MicrosoftBlobContainerExtension = System.Convert.ToByte(blobContainer.Extension.TrimStart('.')),
+                        };
                         break;
                     }
                 }
 
                 // Mark as deleted if there is no existing data file.
-                if (container.BlobDataFile?.Exists != true)
-                {
-                    container.State = MicrosoftBlobStateEnum.Deleted;
-                }
+                if (extra.MicrosoftBlobDataFile?.Exists != true)
+                    extra = extra with
+                    {
+                        MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Deleted,
+                    };
             }
 
             // Store collected data for further processing.
             if (saveIdentifier.StartsWith("Slot"))
             {
-                var manual = System.Convert.ToInt32(saveIdentifier.EndsWith("Manual"));
                 var slot = System.Convert.ToInt32(string.Concat(saveIdentifier.Where(char.IsDigit)));
+                var metaIndex = Constants.OFFSET_INDEX + ((slot - 1) * 2) + System.Convert.ToInt32(saveIdentifier.EndsWith("Manual"));
 
-                var metaIndex = Global.OFFSET_INDEX + ((slot - 1) * 2) + manual;
-
-                result.Add(metaIndex, container);
-            }
-            else if (saveIdentifier == "Settings")
-            {
-                result.Add(1, container);
+                result.Add(metaIndex, extra);
             }
             else if (saveIdentifier == "AccountData")
             {
-                result.Add(0, container);
+                result.Add(0, extra);
+            }
+            else if (saveIdentifier == "Settings")
+            {
+                result.Add(1, extra);
             }
         }
 
         return result;
-    }
-
-    #endregion
-
-    #region Create
-
-    protected override Container CreateContainer(int metaIndex, object? extra)
-    {
-        if (extra is not MicrosoftContainer microsoft)
-            return new Container(metaIndex);
-
-        return new Container(metaIndex)
-        {
-            DataFile = microsoft.BlobDataFile,
-            LastWriteTime = microsoft.LastModifiedTime,
-            MetaFile = microsoft.BlobMetaFile,
-            Microsoft = microsoft,
-        };
     }
 
     #endregion
 
     #region Load
 
-    protected override uint[] DecryptMeta(Container container, byte[] meta)
+    protected override ReadOnlySpan<byte> LoadContainer(Container container)
     {
-#if NETSTANDARD2_0
-        container.Microsoft!.MetaTail = meta.Skip(META_KNOWN).ToArray();
-#else
-        container.Microsoft!.MetaTail = meta[META_KNOWN..];
-#endif
+        // Any incompatibility will be set again while loading.
+        container.ClearIncompatibility();
 
-        return base.DecryptMeta(container, meta);
+        if (container.Exists)
+        {
+            // Loads all meta information into the extra property.
+            LoadMeta(container);
+
+            var data = LoadData(container);
+            if (data.IsEmpty())
+            {
+                container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
+            }
+            else
+            {
+                return data;
+            }
+        }
+        else if (container.Extra.MicrosoftSyncState == MicrosoftBlobSyncStateEnum.Deleted)
+        {
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_004;
+        }
+        else if (container.Extra.MicrosoftBlobDirectory?.Exists != true)
+        {
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_005;
+        }
+
+        container.IncompatibilityTag ??= Constants.INCOMPATIBILITY_006;
+        return Array.Empty<byte>();
     }
 
-    protected override byte[] DecompressData(Container container, uint[] meta, byte[] data)
+    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
-        var length = meta.ContainsIndex(4) ? (int)(meta[4]) : data.Length;
-        _ = LZ4_Decode(data, out byte[] target, length);
+        //  0. BASE VERSION         (  4)
+        //  1. GAME MODE            (  2)
+        //  1. SEASON               (  2)
+        //  2. TOTAL PLAY TIME      (  4)
+        //  3. EMPTY                (  4)
+        //  4. DECOMPRESSED SIZE    (  4)
+
+        //  5. EMPTY                (  4)
+        //                          ( 24)
+
+        //  5. SAVE NAME            (128) // may contain additional junk data after null terminator
+        // 37. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
+        // 69. DIFFICULTY PRESET    (  1)
+        // 69. EMPTY                (  3) // may contain additional junk data
+        //                          (280)
+
+        if (disk.IsEmpty())
+            return;
+
+        var season = disk.Cast<ushort>(6);
+
+        // Vanilla data always available.
+        container.Extra = container.Extra with
+        {
+            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown,
+            Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
+            Size = (uint)(disk.Length),
+            SizeDecompressed = decompressed[4],
+            BaseVersion = (int)(decompressed[0]),
+            GameMode = disk.Cast<ushort>(4),
+            Season = (ushort)(season == ushort.MaxValue ? 0 : season),
+            TotalPlayTime = decompressed[2],
+        };
+
+        // Extended data since Waypoint.
+        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
+        {
+            container.Extra = container.Extra with
+            {
+                SaveName = disk.Slice(20, 128).GetSaveRenamingString(),
+                SaveSummary = disk.Slice(148, 128).GetSaveRenamingString(),
+                DifficultyPreset = disk[276],
+            };
+        }
+
+        // Only write if all three values are in their valid ranges.
+        if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
+            container.SaveVersion = Calculate.CalculateSaveVersion(container);
+    }
+
+    protected override ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)
+    {
+        _ = LZ4.Decode(data, out var target, (int)(container.Extra.SizeDecompressed));
         return target;
     }
 
-    #endregion
-
-    #endregion
-
-    #region Transfer
-
-    protected override void Transfer(ContainerTransferData sourceTransferData, int destinationSlot, bool write)
+    protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
     {
-        if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
-            throw new InvalidOperationException("Cannot transfer as at least one UserIdentification is not complete.");
-
-        var destinationContainers = GetSlotContainers(destinationSlot);
-
-#if NETSTANDARD2_0_OR_GREATER
-        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers, (Source, Destination) => (Source, Destination)))
-#else
-        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(destinationContainers))
-#endif
+        // Removed SizeDisk as it is the sum of data and meta for this platform.
+        container.Extra = container.Extra with
         {
-            if (!Source.Exists)
-            {
-                Delete(Destination, write);
-            }
-            else // if (Destination.Exists || !Destination.Exists && CanCreate)
-            {
-                if (!Source.IsLoaded)
-                {
-                    BuildContainer(Source);
-                }
-                if (!Source.IsCompatible)
-                {
-                    throw new InvalidOperationException(Source.IncompatibilityTag);
-                }
-
-                // Due to this CanCreate can be true.
-                if (!Destination.Exists)
-                {
-                    Destination.Microsoft = new MicrosoftContainer
-                    {
-                        BlobGuid = Guid.NewGuid(),
-                        Extension = 0,
-                        State = MicrosoftBlobStateEnum.Created,
-                        LastModifiedTime = Source.LastWriteTime,
-                    };
-
-                    var directory = new DirectoryInfo(Path.Combine(Location!.FullName, Destination.Microsoft.BlobGuid.ToPath()));
-
-                    // Set dummy files. Will be overwritten while writing.
-                    Destination.DataFile = new(Path.Combine(directory.FullName, "data.guid"));
-                    Destination.MetaFile = new(Path.Combine(directory.FullName, "meta.guid"));
-
-                    // Update Microsoft container with new directory and file information.
-                    Destination.Microsoft.BlobDirectory = directory;
-                    Destination.Microsoft.BlobDataFile = Destination.DataFile;
-                    Destination.Microsoft.BlobMetaFile = Destination.MetaFile;
-
-                    var blobContainerBinary = new byte[CONTAINER_SIZE];
-                    using (var writer = new BinaryWriter(new MemoryStream(blobContainerBinary)))
-                    {
-                        var data = "data".GetUnicodeBytes();
-
-                        writer.Write(CONTAINER_HEADER);
-                        writer.Write(CONTAINER_BLOB_COUNT);
-                        writer.Write(data);
-
-                        writer.BaseStream.Seek(CONTAINER_BLOB_SIZE - data.Length, SeekOrigin.Current);
-
-                        writer.Write("meta".GetUnicodeBytes());
-                    }
-
-                    Directory.CreateDirectory(Destination.Microsoft.BlobDirectory.FullName);
-                    File.WriteAllBytes(Destination.Microsoft.BlobContainerFile.FullName, blobContainerBinary);
-                }
-
-                // Properties requied to properly build the container below.
-                Destination.BaseVersion = Source.BaseVersion;
-                Destination.VersionEnum = Source.VersionEnum;
-
-                Destination.SetJsonObject(Source.GetJsonObject());
-                TransferOwnership(Destination, sourceTransferData);
-
-                if (write)
-                {
-                    Write(Destination, writeTime: Source.LastWriteTime);
-                    BuildContainer(Destination);
-                }
-            }
-            //else
-            //    continue;
-        }
-    }
-
-    #endregion
-
-    #region UserIdentification
-
-    protected override string GetUserIdentification(JObject jsonObject, string key)
-    {
-        if (key is "UID" && _accountId is not null)
-            return _accountId;
-
-        var result = base.GetUserIdentification(jsonObject, key);
-        if (!string.IsNullOrEmpty(result))
-            return result;
-
-        return result;
-    }
-
-    protected override IEnumerable<JToken> GetUserIdentificationByBase(JObject jsonObject, string key)
-    {
-        if (_accountId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var path = Settings.Mapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            Settings.Mapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-            Settings.Mapping ? $"@.Owner.UID == '{_accountId}'" : $"@.3?K.K7E == '{_accountId}'", // only with specified value
+            SizeDecompressed = (uint)(decompressed.Length),
         };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
-    }
-
-    protected override IEnumerable<JToken> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
-    {
-        if (_accountId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var path = Settings.Mapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
-        var expressions = new[]
-        {
-            Settings.Mapping ? $"@.OWS.UID == '{_accountId}'" : $"@.ksu.K7E == '{_accountId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
-    }
-
-    protected override IEnumerable<JToken> GetUserIdentificationBySettlement(JObject jsonObject, string key)
-    {
-        if (_accountId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var path = Settings.Mapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            Settings.Mapping ? $"@.Owner.UID == '{_accountId}'" : $"@.3?K.K7E == '{_accountId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
     #endregion
@@ -817,300 +556,568 @@ public class PlatformMicrosoft : Platform
         if (!CanUpdate || !container.IsLoaded)
             return;
 
-        container.Exists = true;
-        container.IsSynced = true;
-
-        var (data, decompressedSize) = CreateData(container);
-        var meta = CreateMeta(container, data, decompressedSize);
+        DisableWatcher();
 
         // Writing all Microsoft Store files at once in the same way as the game itself does.
+        if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
         {
-            // First update blob with new values.
-            var blobReturn = CreateBlob(container);
-
-            // Second write the previously created data and meta blob files.
-            WriteMeta(container, meta);
-            WriteData(container, data);
-
-            // Third write the blob container.
-            var tBlob = GetTemporaryName($"container.{container.Microsoft!.Extension}", container);
-            File.WriteAllBytes(tBlob, blobReturn.UpdatedContainerBytes);
-            File.Move(tBlob, GetBlobContainerPath(container.Microsoft!));
-
-            // Update timestamps if enabled.
-            if (Settings.LastWriteTime)
+            if (Settings.WriteAlways || !container.IsSynced)
             {
-                _lastModifiedTime = DateTimeOffset.Now.LocalDateTime;
+                container.Exists = true;
+                container.IsSynced = true;
 
-                writeTime = writeTime.Equals(default) ? _lastModifiedTime : writeTime;
-                var ticks = writeTime.Ticks % (long)(Math.Pow(10, 4)) * -1;
+                var data = PrepareData(container);
+                var meta = PrepareMeta(container, data);
 
-                container.LastWriteTime = writeTime.AddTicks(ticks);
+                // Cache original file information.
+                var cache = new PlatformExtra()
+                {
+                    MicrosoftBlobContainerExtension = container.Extra.MicrosoftBlobContainerExtension,
+                    MicrosoftBlobDataFile = container.Extra.MicrosoftBlobDataFile,
+                    MicrosoftBlobMetaFile = container.Extra.MicrosoftBlobMetaFile,
+
+                    MicrosoftBlobDirectory = container.Extra.MicrosoftBlobDirectory,
+                };
+
+                // Create blob container with new file information.
+                var blob = PrepareBlobContainer(container);
+
+                // Write the previously created files and delete the old ones.
+                WriteMeta(container, meta);
+                if (cache.MicrosoftBlobMetaFile is not null)
+                    File.Delete(cache.MicrosoftBlobMetaFile.FullName);
+
+                WriteData(container, data);
+                if (cache.MicrosoftBlobDataFile is not null)
+                    File.Delete(cache.MicrosoftBlobDataFile.FullName);
+
+                WriteBlob(container, blob);
+                if (cache.MicrosoftBlobContainerFile is not null)
+                    File.Delete(cache.MicrosoftBlobContainerFile.FullName);
             }
 
-            // Finally write the containers.index file and delete all old blob files.
-            WriteContainersIndex();
+            if (Settings.SetLastWriteTime)
+            {
+                _lastWriteTime = writeTime;
+                container.LastWriteTime = _lastWriteTime.ToBlobFileTime();
 
-            File.Delete(GetBlobContainerPath(container.Microsoft!, blobReturn.OldExtension));
-            File.Delete(blobReturn.OldDataFile!.FullName);
-            File.Delete(blobReturn.OldMetaFile!.FullName);
+                if (container.DataFile is not null)
+                {
+                    File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
+                    File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
+                }
+                if (container.MetaFile is not null)
+                {
+                    File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
+                    File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
+                }
+            }
+
+            // Finally write the containers.index file.
+            WriteContainersIndex();
         }
+
+        EnableWatcher();
 
         // Always refresh in case something above was executed.
         container.RefreshFileInfo();
         container.WriteCallback.Invoke();
     }
 
-    /// <summary>
-    /// Updates the library container with new blob data and returns the old ones.
-    /// </summary>
-    /// <param name="container"></param>
-    private static CreateBlobReturnData CreateBlob(Container container)
+    protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)
     {
-        // Generate things.
-        var dataGuid = Guid.NewGuid();
-        var metaGuid = Guid.NewGuid();
+        _ = LZ4.Encode(data, out var target);
+        return target;
+    }
 
-        var blobReturn = new CreateBlobReturnData
+    protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
+    {
+        var buffer = new byte[GetMetaSize(container)];
+
+        using var writer = new BinaryWriter(new MemoryStream(buffer));
+
+        if (container.IsAccount)
         {
-            OldDataFile = container.DataFile!,
-            OldExtension = container.Microsoft!.Extension,
-            OldMetaFile = container.MetaFile!,
-            UpdatedContainerBytes = File.ReadAllBytes(GetBlobContainerPath(container.Microsoft!)),
+            // Always 1.
+            writer.Write(1); // 4
+
+            // GAME MODE, SEASON, and TOTAL PLAY TIME not used.
+            writer.Seek(0x10, SeekOrigin.Begin); // 16
+
+            writer.Write(container.Extra.SizeDecompressed); // 4
+        }
+        else
+        {
+            writer.Write(container.BaseVersion); // 4
+            writer.Write((ushort)(container.GameMode)); // 2
+            writer.Write((ushort)(container.Season)); // 2
+            writer.Write(container.TotalPlayTime); // 4
+
+            // Skip EMPTY.
+            writer.Seek(0x4, SeekOrigin.Current); // 4
+
+            writer.Write(container.Extra.SizeDecompressed); // 4
+
+            // Extended data since Waypoint.
+            if (container.MetaFormat >= MetaFormatEnum.Waypoint)
+            {
+                // Append cached bytes and overwrite afterwards.
+                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 260
+
+                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+                writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
+
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST, SeekOrigin.Begin);
+                writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
+
+                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2, SeekOrigin.Begin);
+                writer.Write((byte)(container.GameDifficulty)); // 1
+            }
+            else
+            {
+                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 4
+            }
+        }
+
+        return buffer.AsSpan().Cast<byte, uint>();
+    }
+
+    private void ExecuteCanCreate(Container Destination)
+    {
+        var directoryGuid = Guid.NewGuid();
+        var directory = new DirectoryInfo(Path.Combine(Location!.FullName, directoryGuid.ToPath()));
+
+        // Update container and its extra with dummy data.
+        Destination.Extra = Destination.Extra with
+        {
+            MicrosoftSyncTime = string.Empty,
+            MicrosoftBlobContainerExtension = 0,
+            MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
+            MicrosoftBlobDirectoryGuid = directoryGuid,
+            MicrosoftBlobDataFile = Destination.DataFile = new(Path.Combine(directory.FullName, "data.guid")),
+            MicrosoftBlobMetaFile = Destination.MetaFile = new(Path.Combine(directory.FullName, "meta.guid")),
+
+            MicrosoftBlobDirectory = directory,
         };
 
-        // Update blob container content.
-        using (var writerBlob = new BinaryWriter(new MemoryStream(blobReturn.UpdatedContainerBytes)))
+        // Prepare blob container file content. Guid of data and meta file will be set while executing Write().
+        var buffer = new byte[BLOBCONTAINER_TOTAL_LENGTH];
+        using (var writer = new BinaryWriter(new MemoryStream(buffer)))
         {
-            writerBlob.Seek(CONTAINER_OFFSET_DATA, SeekOrigin.Begin);
-            writerBlob.Write(dataGuid.ToByteArray());
+            writer.Write(BLOBCONTAINER_HEADER);
+            writer.Write(BLOBCONTAINER_COUNT);
 
-            writerBlob.Seek(CONTAINER_OFFSET_META, SeekOrigin.Begin);
-            writerBlob.Write(metaGuid.ToByteArray());
+            writer.Write("data".GetUnicodeBytes());
+            writer.Seek(BLOBCONTAINER_IDENTIFIER_LENGTH - 8 + 32, SeekOrigin.Current);
+
+            writer.Write("meta".GetUnicodeBytes());
         }
 
-        // Update library container information.
-        container.DataFile = GetBlobFileInfo(container.DataFile!.Directory!.FullName, dataGuid);
-        container.MetaFile = GetBlobFileInfo(container.MetaFile!.Directory!.FullName, metaGuid);
-        container.Microsoft!.Extension = (byte)(container.Microsoft!.Extension == byte.MaxValue ? 1 : container.Microsoft!.Extension + 1);
-
-        if (container.Microsoft!.State == MicrosoftBlobStateEnum.Synced)
-        {
-            container.Microsoft!.State = MicrosoftBlobStateEnum.Modified;
-        }
-
-        return blobReturn;
+        // Write a dummy file.
+        Directory.CreateDirectory(Destination.Extra.MicrosoftBlobDirectory!.FullName);
+        File.WriteAllBytes(Destination.Extra.MicrosoftBlobContainerFile!.FullName, buffer);
     }
 
     /// <summary>
-    /// Writes the specified bytes to the containers.index file.
+    /// Updates the data and meta file information for the new writing.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <returns></returns>
+    private static byte[] PrepareBlobContainer(Container container)
+    {
+        // Initializes a new Guid to use as file names.
+        var dataGuid = Guid.NewGuid();
+        var metaGuid = Guid.NewGuid();
+
+        // Update container and its extra.
+        container.Extra = container.Extra with
+        {
+            MicrosoftBlobContainerExtension = (byte)(container.Extra.MicrosoftBlobContainerExtension == byte.MaxValue ? 1 : container.Extra.MicrosoftBlobContainerExtension!.Value + 1),
+            MicrosoftSyncState = container.Extra.MicrosoftSyncState == MicrosoftBlobSyncStateEnum.Synced ? MicrosoftBlobSyncStateEnum.Modified : container.Extra.MicrosoftSyncState,
+            MicrosoftBlobDataFile = container.DataFile = GetBlobFileInfo(container.Extra, dataGuid),
+            MicrosoftBlobMetaFile = container.MetaFile = GetBlobFileInfo(container.Extra, metaGuid),
+        };
+
+        // Create new blob container file content.
+        var buffer = new byte[BLOBCONTAINER_TOTAL_LENGTH];
+
+        using var writer = new BinaryWriter(new MemoryStream(buffer));
+        writer.Write(BLOBCONTAINER_HEADER);
+        writer.Write(BLOBCONTAINER_COUNT);
+
+        writer.Write("data".GetUnicodeBytes());
+        writer.Seek(BLOBCONTAINER_IDENTIFIER_LENGTH - 8, SeekOrigin.Current); // 8 = sizeof(data as UTF-16)
+        writer.Write(container.Extra.MicrosoftBlobDataSyncGuid?.ToByteArray() ?? new byte[16]);
+        writer.Write(dataGuid.ToByteArray());
+
+        writer.Write("meta".GetUnicodeBytes());
+        writer.Seek(BLOBCONTAINER_IDENTIFIER_LENGTH - 8, SeekOrigin.Current); // 8 = sizeof(meta as UTF-16)
+        writer.Write(container.Extra.MicrosoftBlobMetaSyncGuid?.ToByteArray() ?? new byte[16]);
+        writer.Write(metaGuid.ToByteArray());
+
+        return buffer;
+    }
+
+    /// <summary>
+    /// Writes the blob container file content to disk.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="blob"></param>
+    private static void WriteBlob(Container container, byte[] blob)
+    {
+        File.WriteAllBytes(container.Extra.MicrosoftBlobContainerFile!.FullName, blob);
+    }
+
+    /// <summary>
+    /// Creates and writes the containers.index file content to disk.
     /// </summary>
     private void WriteContainersIndex()
     {
-        var hasAccountData = AccountContainer is not null;
         var hasSettings = _settingsContainer is not null;
 
-        var collection = ContainerCollection.Where(c => c.Microsoft?.State > MicrosoftBlobStateEnum.Unknown_Zero);
-        var count = (long)(collection.Count() + (hasAccountData ? 1 : 0) + (hasSettings ? 1 : 0));
+        var collection = SaveContainerCollection.Where(i => i.Extra.MicrosoftBlobDirectoryGuid is not null);
+        var count = (long)(collection.Count() + (HasAccountData ? 1 : 0) + (hasSettings ? 1 : 0));
 
-        // Longest name (e.g. Slot10Manual) has a total length of 0x8C and therefore 0x90 is more than enough.
-        // Leftover will be cut off by using only data up to the current writer position.
-        var bytes = new byte[CONTAINERSINDEX_OFFSET_CONTAINER + (count * 0x90)];
+        // Longest name (e.g. Slot10Manual) has a total length of 0x8C (140) and any leftover for short ones will be cut off.
+        var buffer = new byte[CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST + (count * 0x8C)];
 
-        var accountIdentifier = string.Empty;
-        var gameIdentifier = string.Empty;
-        var state = MicrosoftIndexStateEnum.Unknown_Zero;
-
-        using (var readerIndex = new BinaryReader(File.Open(_containersIndexFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
-        {
-            // Skip version and count.
-            readerIndex.BaseStream.Seek(CONTAINERSINDEX_OFFSET_DYNAMIC, SeekOrigin.Begin);
-            gameIdentifier = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
-
-            // Skip timestamp.
-            readerIndex.BaseStream.Seek(0x8, SeekOrigin.Current);
-            state = readerIndex.ReadInt32().DenumerateTo<MicrosoftIndexStateEnum>();
-
-            accountIdentifier = readerIndex.ReadBytes(readerIndex.ReadInt32() * 2).GetUnicode();
-        }
-
-        using (var writer = new BinaryWriter(new MemoryStream(bytes)))
+        using (var writer = new BinaryWriter(new MemoryStream(buffer)))
         {
             writer.Write(CONTAINERSINDEX_HEADER);
             writer.Write(count);
+            writer.Write(_processIdentifier.Length);
+            writer.Write(_processIdentifier.GetUnicodeBytes());
+            writer.Write(_lastWriteTime.ToUniversalTime().ToFileTime());
+            writer.Write((int)(MicrosoftIndexSyncStateEnum.Modified));
+            writer.Write(_accountGuid.Length);
+            writer.Write(_accountGuid.GetUnicodeBytes());
+            writer.Write(CONTAINERSINDEX_FOOTER);
 
-            writer.Write(gameIdentifier.Length);
-            writer.Write(gameIdentifier.GetUnicodeBytes());
-
-            writer.Write(_lastModifiedTime.ToUniversalTime().ToFileTime());
-
-            writer.Write((state == MicrosoftIndexStateEnum.Synced ? MicrosoftIndexStateEnum.Modified : state).Numerate());
-
-            writer.Write(accountIdentifier.Length);
-            writer.Write(accountIdentifier.GetUnicodeBytes());
-
-            writer.Write(CONTAINERSINDEX_UNKNOWN_CONST);
-
-            if (hasAccountData)
+            if (HasAccountData)
             {
+                // Make sure to get the latest data.
+                AccountContainer.RefreshFileInfo();
+
                 for (var i = 0; i < 2; i++)
                 {
-                    writer.Write(AccountContainer!.Identifier.Length);
-                    writer.Write(AccountContainer!.Identifier.GetUnicodeBytes());
+                    writer.Write(AccountContainer.Identifier.Length);
+                    writer.Write(AccountContainer.Identifier.GetUnicodeBytes());
                 }
-
-                writer.Write(AccountContainer!.Microsoft!.SyncHex.Length);
-                writer.Write(AccountContainer!.Microsoft.SyncHex.GetUnicodeBytes());
-
-                writer.Write(AccountContainer!.Microsoft.Extension);
-
-                writer.Write(AccountContainer!.Microsoft.State.Numerate());
-
-                writer.Write(AccountContainer!.Microsoft.BlobGuid.ToByteArray());
-
-                writer.Write(AccountContainer!.LastWriteTime.ToUniversalTime().ToFileTime());
-
-                writer.Write(0L);
-
-                writer.Write(AccountContainer!.DataFile!.Length + AccountContainer!.MetaFile!.Length);
+                writer.Write(AccountContainer.Extra.MicrosoftSyncTime!.Length);
+                writer.Write(AccountContainer.Extra.MicrosoftSyncTime!.GetUnicodeBytes());
+                writer.Write(AccountContainer.Extra.MicrosoftBlobContainerExtension!.Value);
+                writer.Write((int)(AccountContainer.Extra.MicrosoftSyncState!.Value));
+                writer.Write(AccountContainer.Extra.MicrosoftBlobDirectoryGuid!.Value.ToByteArray());
+                writer.Write(AccountContainer.LastWriteTime!.Value.ToUniversalTime().ToFileTime());
+                writer.Write((long)(0));
+                writer.Write((AccountContainer.DataFile?.Exists == true ? AccountContainer.DataFile.Length : 0) + (AccountContainer.MetaFile?.Exists == true ? AccountContainer.MetaFile.Length : 0));
             }
 
             if (hasSettings)
             {
-                var identifier = "Settings";
+                _settingsContainer!.MicrosoftBlobDataFile?.Refresh();
+                _settingsContainer!.MicrosoftBlobMetaFile?.Refresh();
 
                 for (var i = 0; i < 2; i++)
                 {
-                    writer.Write(identifier.Length);
-                    writer.Write(identifier.GetUnicodeBytes());
+                    writer.Write("Settings".Length);
+                    writer.Write("Settings".GetUnicodeBytes());
                 }
-
-                writer.Write(_settingsContainer!.SyncHex.Length);
-                writer.Write(_settingsContainer!.SyncHex.GetUnicodeBytes());
-
-                writer.Write(_settingsContainer!.Extension);
-
-                writer.Write(_settingsContainer!.State.Numerate());
-
-                writer.Write(_settingsContainer!.BlobGuid.ToByteArray());
-
-                writer.Write(_settingsContainer!.LastModifiedTime.ToUniversalTime().ToFileTime());
-
-                writer.Write(0L);
-
-                writer.Write(_settingsContainer!.BlobDataFile!.Length + _settingsContainer!.BlobMetaFile!.Length);
+                writer.Write(_settingsContainer!.MicrosoftSyncTime!.Length);
+                writer.Write(_settingsContainer!.MicrosoftSyncTime!.GetUnicodeBytes());
+                writer.Write(_settingsContainer!.MicrosoftBlobContainerExtension!.Value);
+                writer.Write((int)(_settingsContainer!.MicrosoftSyncState!.Value));
+                writer.Write(_settingsContainer!.MicrosoftBlobDirectoryGuid!.Value.ToByteArray());
+                writer.Write(_settingsContainer!.LastWriteTime!.Value.ToUniversalTime().ToFileTime());
+                writer.Write((long)(0));
+                writer.Write((_settingsContainer!.MicrosoftBlobDataFile?.Exists == true ? _settingsContainer!.MicrosoftBlobDataFile!.Length : 0) + (_settingsContainer!.MicrosoftBlobMetaFile?.Exists == true ? _settingsContainer!.MicrosoftBlobMetaFile!.Length : 0));
             }
 
             foreach (var container in collection)
             {
+                // Make sure to get the latest data.
+                container.RefreshFileInfo();
+
                 for (var i = 0; i < 2; i++)
                 {
                     writer.Write(container.Identifier.Length);
                     writer.Write(container.Identifier.GetUnicodeBytes());
                 }
-
-                writer.Write(container.Microsoft!.SyncHex.Length);
-                writer.Write(container.Microsoft!.SyncHex.GetUnicodeBytes());
-
-                writer.Write(container.Microsoft!.Extension);
-
-                writer.Write(container.Microsoft!.State.Numerate());
-
-                writer.Write(container.Microsoft!.BlobGuid.ToByteArray());
-
-                writer.Write(container.LastWriteTime.ToUniversalTime().ToFileTime());
-
-                writer.Write(0L);
-
-                // Make sure to get the latest data.
-                container.DataFile?.Refresh();
-                container.MetaFile?.Refresh();
-
-                writer.Write((container.DataFile?.Length ?? 0) + (container.MetaFile?.Length ?? 0));
+                writer.Write(container.Extra.MicrosoftSyncTime!.Length);
+                writer.Write(container.Extra.MicrosoftSyncTime!.GetUnicodeBytes());
+                writer.Write(container.Extra.MicrosoftBlobContainerExtension!.Value);
+                writer.Write((int)(container.Extra.MicrosoftSyncState!.Value));
+                writer.Write(container.Extra.MicrosoftBlobDirectoryGuid!.Value.ToByteArray());
+                writer.Write(container.Extra.LastWriteTime!.Value.ToUniversalTime().ToFileTime());
+                writer.Write((long)(0));
+                writer.Write((container.DataFile?.Exists == true ? container.DataFile!.Length : 0) + (container.MetaFile?.Exists == true ? container.MetaFile!.Length : 0));
             }
 
-            bytes = bytes.Take((int)(writer.BaseStream.Position)).ToArray();
+            buffer = buffer.AsSpan().Slice(0, (int)(writer.BaseStream.Position)).ToArray();
         }
 
-        // Write the generated content while the watcher is disabled.
+        // Write and refresh the containers.index file.
+        File.WriteAllBytes(_containersIndexFile.FullName, buffer);
+        _containersIndexFile.Refresh();
+    }
+
+    #endregion
+
+    // // File Operation
+
+    #region Copy
+
+    protected override void CopyPlatformExtra(Container destination, Container source)
+    {
+        base.CopyPlatformExtra(destination, source);
+
+        // Creating dummy blob data only necessary if destination does not exist.
+        if (!destination.Exists)
+        {
+            ExecuteCanCreate(destination);
+        }
+    }
+
+    #endregion
+
+    #region Delete
+
+    protected override void Delete(IEnumerable<Container> containers, bool write)
+    {
+        Guard.IsTrue(CanDelete);
+
         DisableWatcher();
 
-        File.Delete(_containersIndexFile!.FullName);
+        foreach (var container in containers)
+        {
+            if (write)
+            {
+                if (container.Extra.MicrosoftBlobDirectory?.Exists == true)
+                {
+                    try
+                    {
+                        Directory.Delete(container.Extra.MicrosoftBlobDirectory.FullName, true);
+                    }
+                    catch (Exception ex) when (ex is DirectoryNotFoundException or IOException or PathTooLongException or UnauthorizedAccessException)
+                    {
+                        // Nothing to do.
+                    }
+                }
+            }
 
-        var tIndex = GetTemporaryName(_containersIndexFile!.Name);
-        File.WriteAllBytes(tIndex, bytes);
-        File.Move(tIndex, _containersIndexFile!.FullName);
+            if (Settings.SetLastWriteTime)
+            {
+                _lastWriteTime = DateTimeOffset.Now.LocalDateTime;
+                container.LastWriteTime = _lastWriteTime.ToBlobFileTime();
+            }
+
+            container.Reset();
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_004;
+
+            container.DataFile = container.MetaFile = null; // set to null as it constantly changes anyway
+            container.Extra = container.Extra with { MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Deleted };
+        }
+
+        if (write)
+        {
+            WriteContainersIndex();
+        }
 
         EnableWatcher();
     }
 
-    protected override byte[] CompressData(Container container, byte[] data)
+    #endregion
+
+    #region Transfer
+
+    protected override void CreatePlatformExtra(Container destination, Container source)
     {
-        _ = LZ4_Encode(data, out byte[] target);
-        return target;
-    }
+        base.CreatePlatformExtra(destination, source);
 
-    protected override void WriteData(Container container, byte[] data)
-    {
-        var t = GetTemporaryName(container.DataFile!.Name, container);
-        File.WriteAllBytes(t, data);
-        File.Move(t, container.DataFile!.FullName);
-        container.DataFile!.Refresh();
-    }
-
-    protected override byte[] CreateMeta(Container container, byte[] data, int decompressedSize)
-    {
-        //  0. SAVE VERSION      (  4)
-        //  1. GAME MODE         (  2)
-        //  1. SEASON            (  2)
-        //  2. TOTAL PLAY TIME   (  8)
-        //  3. DECOMPRESSED SIZE (  4)
-        //  4. UNKNOWN           (  4)
-        //                       ( 24)
-
-        //  4. UNKNOWN           (260) // Waypoint
-        //                       (280)
-
-        // Use default size if tail is not set.
-        var bufferSize = container.Microsoft?.MetaTail is not null ? (META_KNOWN + container.Microsoft!.MetaTail!.Length) : (container.IsWaypoint ? META_SIZE_WAYPOINT : META_SIZE);
-        var buffer = new byte[bufferSize];
-
-        if (container.MetaIndex == 0)
+        // Always creating dummy blob data (already created in CopyPlatformExtra() if destination does not exist).
+        if (destination.Exists)
         {
-            using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-            // Always 1.
-            writer.Write(1); // 4
-
-            // GAME MODE/SEASON and TOTAL PLAY TIME not used.
-            writer.Seek(0x10, SeekOrigin.Begin); // 16
-
-            writer.Write(decompressedSize); // 4
+            ExecuteCanCreate(destination);
         }
-        else
-        {
-            using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-            writer.Write(container.BaseVersion); // 4
-
-            writer.Write((ushort)(container.GameModeEnum ?? 0)); // 2
-            writer.Write((ushort)(container.SeasonEnum)); // 2
-
-            writer.Write(container.TotalPlayTime); // 4
-
-            writer.Write(decompressedSize); // 4
-            writer.Write(container.Microsoft!.MetaTail ?? Array.Empty<byte>()); // 4 or 260
-        }
-
-        return EncryptMeta(container, data, CompressMeta(container, data, buffer));
     }
 
-    protected override void WriteMeta(Container container, byte[] meta)
+    #endregion
+
+    // // FileSystemWatcher
+
+    #region FileSystemWatcher
+
+    protected override void OnCacheEviction(object key, object value, EvictionReason reason, object state)
     {
-        var t = GetTemporaryName(container.MetaFile!.Name, container);
-        File.WriteAllBytes(t, meta);
-        File.Move(t, container.MetaFile!.FullName);
-        container.MetaFile!.Refresh();
+        /** Microsoft WatcherChangeTypes
+
+        All changes by game:
+         * containers.index (Deleted)
+         * containers.index (Created)
+
+        All changes by an editor:
+         * containers.index (Changed)
+         */
+
+        if (reason is not EvictionReason.Expired and not EvictionReason.TokenExpired)
+            return;
+
+        // Choose what actually happend based on the combined change types combinations listed at the beginning of this method.
+        var changeType = (WatcherChangeTypes)(value) switch
+        {
+            WatcherChangeTypes.Deleted | WatcherChangeTypes.Created => WatcherChangeTypes.Changed, // game
+            _ => (WatcherChangeTypes)(value), // editor
+        };
+        foreach (var container in GetCacheEvictionContainers((string)(key)))
+        {
+            container.SetWatcherChange(changeType);
+            if (container.IsSynced)
+            {
+                OnWatcherDecision(container, true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Refreshes all containers in the collection with newly written data from the containers.index file.
+    /// Basically a single thread combination of <seealso cref="GenerateContainerCollection"/> and <seealso cref="CreateContainer"/>.
+    /// </summary>
+    private void RefreshContainerCollection()
+    {
+        var containersIndex = ParseContainersIndex();
+        if (containersIndex.Count == 0)
+            return;
+
+        for (var metaIndex = 0; metaIndex < Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL; metaIndex++)
+        {
+            var contains = containersIndex.TryGetValue(metaIndex, out var extra);
+            if (metaIndex == 0)
+            {
+                if (contains)
+                {
+                    if (AccountContainer.Exists)
+                    {
+                        // Set all properties that would be set in CreateContainer().
+                        AccountContainer.DataFile = extra!.MicrosoftBlobDataFile;
+                        AccountContainer.MetaFile = extra!.MicrosoftBlobMetaFile;
+                        AccountContainer.Extra = extra;
+                    }
+                    else
+                    {
+                        AccountContainer = CreateContainer(metaIndex, extra);
+                    }
+                    RebuildContainerFull(AccountContainer);
+                }
+                else
+                {
+                    AccountContainer.Reset();
+                }
+            }
+            else if (metaIndex == 1)
+            {
+                _settingsContainer = extra;
+            }
+            else
+            {
+                var collectionIndex = metaIndex - Constants.OFFSET_INDEX;
+                var container = SaveContainerCollection[collectionIndex];
+
+                if (contains)
+                {
+                    if (container.Exists)
+                    {
+                        // Set all properties that would be set in CreateContainer().
+                        container.DataFile = extra!.MicrosoftBlobDataFile;
+                        container.MetaFile = extra!.MicrosoftBlobMetaFile;
+                        container.Extra = extra;
+                    }
+                    else
+                    {
+                        container = SaveContainerCollection[collectionIndex] = CreateContainer(metaIndex, extra);
+                    }
+
+                    // Only build full if container was already loaded.
+                    if (Settings.LoadingStrategy < LoadingStrategyEnum.Full && !container.IsLoaded)
+                    {
+                        RebuildContainerHollow(container);
+                    }
+                    else
+                    {
+                        // Do not rebuild if not synced (to not overwrite pending watcher changes).
+                        if (container.IsSynced)
+                            RebuildContainerFull(container);
+                    }
+                    GenerateBackupCollection(container);
+                }
+                else
+                {
+                    container.Reset();
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    // // User Identification
+
+    #region UserIdentification
+
+    protected override string GetUserIdentification(JObject jsonObject, string key)
+    {
+        if (key is "UID" && _accountId is not null)
+            return _accountId;
+
+        return base.GetUserIdentification(jsonObject, key);
+    }
+
+    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    {
+        if (_accountId is null)
+            return base.GetUserIdentificationByBase(jsonObject, key);
+
+        var usesMapping = jsonObject.UsesMapping();
+
+        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
+        var expressions = new[]
+        {
+            usesMapping ? $"@.OWS.UID == '{_accountId}'" : $"@.ksu.K7E == '{_accountId}'", // only with specified value
+        };
+
+        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+    }
+
+    protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
+    {
+        if (_accountId is null)
+            return base.GetUserIdentificationByBase(jsonObject, key);
+
+        var usesMapping = jsonObject.UsesMapping();
+
+        var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
+        var expressions = new[]
+        {
+            usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
+            usesMapping ? $"@.Owner.UID == '{_accountId}'" : $"@.3?K.K7E == '{_accountId}'", // only with specified value
+        };
+
+        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+    }
+
+    protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    {
+        if (_accountId is null)
+            return base.GetUserIdentificationByBase(jsonObject, key);
+
+        var usesMapping = jsonObject.UsesMapping();
+
+        var path = usesMapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
+        var expressions = new[]
+        {
+            usesMapping ? $"@.Owner.UID == '{_accountId}'" : $"@.3?K.K7E == '{_accountId}'", // only with specified value
+        };
+
+        return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
     #endregion

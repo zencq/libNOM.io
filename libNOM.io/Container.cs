@@ -1,5 +1,5 @@
-﻿using libNOM.io.Delegates;
-using Newtonsoft.Json;
+﻿using CommunityToolkit.Diagnostics;
+using libNOM.io.Delegates;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
 
@@ -7,109 +7,197 @@ namespace libNOM.io;
 
 
 /// <summary>
-/// Holds all necessary information about a single save.
+/// Holds all information about a single save.
 /// </summary>
-public partial class Container : IComparable<Container>, IEquatable<Container>
+public class Container : IComparable<Container>, IEquatable<Container>
 {
-    #region Constant
-
-    private const string MISSION_CREATIVE = "^CREATIVE";
-
-    #endregion
-
     #region Field
 
     private bool? _exists;
-    private PresetGameModeEnum? _gameMode;
     private JObject? _jsonObject;
-    private DateTimeOffset? _lastWriteTime;
-    private long _totalPlayTime;
-    private int _version = -1;
+    private int _saveVersion;
 
     #endregion
 
     #region Property
+
+    // public //
 
     /// <summary>
     /// List of related backups.
     /// </summary>
     public ObservableCollection<Container> BackupCollection { get; } = new();
 
+    /// <summary>
+    /// Identifier of the save containing the slot number and save type.
+    /// </summary>
     public string Identifier { get; }
 
+    /// <summary>
+    /// If the incompatibility was caused by an unexpected exception, it stored here.
+    /// </summary>
     public Exception? IncompatibilityException { get; internal set; }
 
+    /// <summary>
+    /// A tag with information why this save is incompatible. To see what reasons are available have a look at <see cref="Globals.Constants"/>.INCOMPATIBILITY_\d{3}.
+    /// </summary>
     public string? IncompatibilityTag { get; internal set; }
-
-    internal UserIdentificationData? UserIdentification { get; set; }
 
     /// <summary>
     /// List of unknown keys collected during deobfuscation.
     /// </summary>
     public HashSet<string> UnknownKeys { get; set; } = new();
 
+    // internal //
+
+    internal PlatformExtra Extra { get; set; }
+
+    internal UserIdentificationData? UserIdentification { get; set; }
+
+    // //
+
     #region Flags
 
+    // public //
+
     /// <summary>
-    /// Whether this is from a backup file.
+    /// Whether this contains potential user owned bases.
+    /// </summary>
+    public bool HasBase => IsLoaded && GetJsonValues<PersistentBaseTypesEnum>("6f=.F?0[*].peI.DPp", "PlayerStateData.PersistentPlayerBases[*].BaseType.PersistentBaseTypes").Any(i => i is PersistentBaseTypesEnum.HomePlanetBase or PersistentBaseTypesEnum.FreighterBase); // { get; }
+
+    /// <summary>
+    /// Whether this contains a user owned freighter.
+    /// </summary>
+    public bool HasFreighter => IsLoaded && (GetJsonValues<double>("6f=.lpm[*]", "PlayerStateData.FreighterMatrixPos[*]")?.Any(i => i != 0.0) ?? false); // { get; }
+
+    /// <summary>
+    /// Whether this contains a potential user owned settlement.
+    /// </summary>
+    public bool HasSettlement => IsLoaded && (GetJsonValues<string>("6f=.GQA[*].3?K.f5Q", "PlayerStateData.SettlementStatesV2[*].Owner.LID")?.Any(i => !string.IsNullOrEmpty(i)) ?? false); // { get; }
+
+    /// <summary>
+    /// Whether this contains account data and is not a regular save.
+    /// </summary>
+    public bool IsAccount => MetaIndex == 0; // { get; }
+
+    /// <summary>
+    /// Whether this is a backup.
     /// </summary>
     public bool IsBackup { get; internal set; }
 
     /// <summary>
-    /// Whether there was an exception while loading or an other reason why it is incompatible.
+    /// Whether this was correctly loaded and no exception or an other reason occurred while loading that made it incompatible.
     /// </summary>
     public bool IsCompatible => Exists && string.IsNullOrEmpty(IncompatibilityTag); // { get; }
 
     /// <summary>
-    /// Whether the game mode is either Survival or Permadeath.
+    /// Whether this is a save with an ongoing expedition (<see cref="PresetGameModeEnum.Seasonal"/>).
     /// </summary>
-    public bool IsHardMode => GameModeEnum is PresetGameModeEnum.Survival or PresetGameModeEnum.Permadeath; // { get; }
+    public bool IsExpedition => GameMode == PresetGameModeEnum.Seasonal; // { get; }
 
     /// <summary>
-    /// Whether it contains loaded JSON data and is ready to use.
+    /// Whether this contains loaded JSON data and is ready to use.
     /// </summary>
-    public bool IsLoaded => Exists && _jsonObject is not null; // { get; }
+    public bool IsLoaded => IsCompatible && _jsonObject is not null; // { get; }
 
     /// <summary>
-    /// Whether it is older than the lowest supported version.
+    /// Whether this is older than the lowest supported version.
     /// </summary>
-    public bool IsOld { get; set; }
+    public bool IsOld => Exists && IsSave && GameVersion < Constants.LOWEST_SUPPORTED_VERSION; // { get; }
 
     /// <summary>
-    /// Whether it is an actual save and not something else like account data.
+    /// Whether this is an actual save and not something else like account data.
     /// </summary>
-    public bool IsSave => MetaIndex >= Global.OFFSET_INDEX; // { get; }
+    public bool IsSave => MetaIndex >= Constants.OFFSET_INDEX; // { get; }
 
     /// <summary>
-    /// Whether it is identical to the data on the drive.
+    /// Whether this is identical to the data on the drive.
     /// </summary>
     public bool IsSynced { get; set; } = true;
+
+    public bool IsVersion211BeyondWithVehicleCam => IsVersion(GameVersionEnum.BeyondWithVehicleCam); // { get; }
+
+    public bool IsVersion220Synthesis => IsVersion(GameVersionEnum.Synthesis); // { get; }
+
+    public bool IsVersion226SynthesisWithJetpack => IsVersion(GameVersionEnum.SynthesisWithJetpack); // { get; }
+
+    public bool IsVersion230LivingShip => IsVersion(GameVersionEnum.LivingShip); // { get; }
+
+    public bool IsVersion240ExoMech => IsVersion(GameVersionEnum.ExoMech); // { get; }
+
+    public bool IsVersion250Crossplay => IsVersion(GameVersionEnum.Crossplay); // { get; }
+
+    public bool IsVersion260Desolation => IsVersion(GameVersionEnum.Desolation); // { get; }
+
+    public bool IsVersion300Origins => IsVersion(GameVersionEnum.Origins); // { get; }
+
+    public bool IsVersion310NextGeneration => IsVersion(GameVersionEnum.NextGeneration); // { get; }
+
+    public bool IsVersion320Companions => IsVersion(GameVersionEnum.Companions); // { get; }
+
+    public bool IsVersion330Expeditions => IsVersion(GameVersionEnum.Expeditions); // { get; }
+
+    public bool IsVersion340Beachhead => IsVersion(GameVersionEnum.Beachhead); // { get; }
+
+    public bool IsVersion350Prisms => IsVersion(GameVersionEnum.Prisms); // { get; }
+
+    public bool IsVersion351PrismsWithBytebeatAuthor => IsVersion(GameVersionEnum.PrismsWithBytebeatAuthor); // { get; }
+
+    public bool IsVersion360Frontiers => IsVersion(GameVersionEnum.Frontiers); // { get; }
+
+    public bool IsVersion370Emergence => IsVersion(GameVersionEnum.Emergence); // { get; }
+
+    public bool IsVersion380Sentinel => IsVersion(GameVersionEnum.Sentinel); // { get; }
+
+    public bool IsVersion381SentinelWithWeaponResource => IsVersion(GameVersionEnum.SentinelWithWeaponResource); // { get; }
+
+    public bool IsVersion384SentinelWithVehicleAI => IsVersion(GameVersionEnum.SentinelWithVehicleAI); // { get; }
+
+    public bool IsVersion385Outlaws => IsVersion(GameVersionEnum.Outlaws); // { get; }
+
+    public bool IsVersion390Leviathan => IsVersion(GameVersionEnum.Leviathan); // { get; }
+
+    public bool IsVersion394Endurance => IsVersion(GameVersionEnum.Endurance); // { get; }
+
+    public bool IsVersion400Waypoint => IsVersion(GameVersionEnum.Waypoint); // { get; }
+
+    public bool IsVersion404WaypointWithAgileStat => IsVersion(GameVersionEnum.WaypointWithAgileStat); // { get; }
+
+    public bool IsVersion405WaypointWithSuperchargedSlots => IsVersion(GameVersionEnum.WaypointWithSuperchargedSlots); // { get; }
+
+    public bool IsVersion410Fractal => IsVersion(GameVersionEnum.Fractal); // { get; }
+
+    public bool IsVersion420Interceptor => IsVersion(GameVersionEnum.Interceptor); // { get; }
+
+    public bool IsVersion430Singularity => IsVersion(GameVersionEnum.Singularity); // { get; }
+
+    public bool IsVersion440Echoes => IsVersion(GameVersionEnum.Echoes); // { get; }
 
     #endregion
 
     #region FileInfo
 
-    public FileInfo? DataFile { get; set; }
+    public FileInfo? DataFile { get; internal set; }
 
-    public bool Exists // { get; set; }
+    public bool Exists // { get; internal set; }
     {
         get => _exists ?? DataFile?.Exists == true;
         internal set => _exists = value;
     }
 
-    public DateTimeOffset LastWriteTime // { get; set; }
+    public DateTimeOffset? LastWriteTime // { get; internal set; }
     {
-        get => _lastWriteTime ?? DataFile?.LastWriteTime ?? DateTimeOffset.MinValue;
-        set => _lastWriteTime = value;
+        get => Extra.LastWriteTime ?? (Exists ? DataFile?.LastWriteTime : null);
+        internal set => Extra = Extra with { LastWriteTime = value };
     }
 
-    public FileInfo? MetaFile { get; set; }
+    public FileInfo? MetaFile { get; internal set; }
 
     #endregion
 
     #region FileSystemWatcher
 
-    public WatcherChangeTypes WatcherChangeType { get; private set; }
+    public WatcherChangeTypes? WatcherChangeType { get; private set; }
 
     public bool HasWatcherChange { get; private set; }
 
@@ -129,162 +217,167 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     // public //
 
-    public int BaseVersion { get; internal set; }
-
-    public PresetGameModeEnum? GameModeEnum // { get; private set; }
+    public DifficultyPresetTypeEnum GameDifficulty // { get; set; }
     {
-        get => _jsonObject is not null ? Global.GetGameModeEnum(this, _jsonObject) : _gameMode;
-        internal set
+        get => (DifficultyPresetTypeEnum)(Extra.DifficultyPreset);
+        set
         {
-            if (_jsonObject is not null)
+            if (IsVersion400Waypoint)
             {
-                Version = Global.CalculateVersion(BaseVersion, value, SeasonEnum);
+                if (GameMode < PresetGameModeEnum.Seasonal)
+                {
+                    if (value == DifficultyPresetTypeEnum.Permadeath)
+                    {
+                        GameMode = PresetGameModeEnum.Permadeath;
+                    }
+                    else if (value < DifficultyPresetTypeEnum.Permadeath)
+                    {
+                        GameMode = PresetGameModeEnum.Normal;
+                    }
+                }
+                // TODO set preset
             }
-            _gameMode = value;
+            else
+            {
+                if (GameMode < PresetGameModeEnum.Seasonal)
+                    GameMode = value switch
+                    {
+                        DifficultyPresetTypeEnum.Creative => PresetGameModeEnum.Creative,
+                        DifficultyPresetTypeEnum.Survival => PresetGameModeEnum.Survival,
+                        DifficultyPresetTypeEnum.Permadeath => PresetGameModeEnum.Permadeath,
+                        _ => PresetGameModeEnum.Normal,
+                    };
+            }
+
+            Extra = Extra with { DifficultyPreset = (uint)(value) };
         }
     }
 
-    public bool IsBeyondWithVehicleCam => IsVersion(VersionEnum.BeyondWithVehicleCam); // { get; }
+    public GameVersionEnum GameVersion { get; internal set; } = GameVersionEnum.Unknown;
 
-    public bool IsSynthesis => IsVersion(VersionEnum.Synthesis); // { get; }
-
-    public bool IsSynthesisWithJetpack => IsVersion(VersionEnum.SynthesisWithJetpack); // { get; }
-
-    public bool IsLivingShip => IsVersion(VersionEnum.LivingShip); // { get; }
-
-    public bool IsExoMech => IsVersion(VersionEnum.ExoMech); // { get; }
-
-    public bool IsCrossplay => IsVersion(VersionEnum.Crossplay); // { get; }
-
-    public bool IsDesolation => IsVersion(VersionEnum.Desolation); // { get; }
-
-    public bool IsOrigins => IsVersion(VersionEnum.Origins); // { get; }
-
-    public bool IsNextGeneration => IsVersion(VersionEnum.NextGeneration); // { get; }
-
-    public bool IsCompanions => IsVersion(VersionEnum.Companions); // { get; }
-
-    public bool IsExpeditions => IsVersion(VersionEnum.Expeditions); // { get; }
-
-    public bool IsBeachhead => IsVersion(VersionEnum.Beachhead); // { get; }
-
-    public bool IsPrisms => IsVersion(VersionEnum.Prisms); // { get; }
-
-    public bool IsPrismsWithBytebeatAuthor => IsVersion(VersionEnum.PrismsWithBytebeatAuthor); // { get; }
-
-    public bool IsFrontiers => IsVersion(VersionEnum.Frontiers); // { get; }
-
-    public bool IsEmergence => IsVersion(VersionEnum.Emergence); // { get; }
-
-    public bool IsSentinel => IsVersion(VersionEnum.Sentinel); // { get; }
-
-    public bool IsSentinelWithWeaponResource => IsVersion(VersionEnum.SentinelWithWeaponResource); // { get; }
-
-    public bool IsSentinelWithVehicleAI => IsVersion(VersionEnum.SentinelWithVehicleAI); // { get; }
-
-    public bool IsOutlaws => IsVersion(VersionEnum.Outlaws); // { get; }
-
-    public bool IsLeviathan => IsVersion(VersionEnum.Leviathan); // { get; }
-
-    public bool IsEndurance => IsVersion(VersionEnum.Endurance); // { get; }
-
-    public bool IsWaypoint => IsVersion(VersionEnum.Waypoint); // { get; }
-
-    public bool IsWaypointWithAgileStat => IsVersion(VersionEnum.WaypointWithAgileStat); // { get; }
-
-    public bool IsWaypointWithSuperchargedSlots => IsVersion(VersionEnum.WaypointWithSuperchargedSlots); // { get; }
-
-    public bool IsFractal => IsVersion(VersionEnum.Fractal); // { get; }
-
-    public bool IsInterceptor => IsVersion(VersionEnum.Interceptor); // { get; }
-
-    public bool IsSingularity => IsVersion(VersionEnum.Singularity); // { get; }
-
+    // Maximum length in-game is 42 characters.
     public string SaveName // { get; set; }
     {
-        get => _jsonObject is not null ? _jsonObject.GetValue<string?>("6f=.Pk4", "PlayerStateData.SaveName") ?? string.Empty : string.Empty;
+        get => string.IsNullOrEmpty(Extra.SaveName) ? Json.GetSaveName(_jsonObject) : Extra.SaveName;
         set
         {
+            value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_INGAME)).ToString();
+
             if (_jsonObject is not null)
-            {
-                if (_jsonObject.UseMapping())
-                {
-                    _jsonObject["PlayerStateData"]![nameof(SaveName)] = value;
-                }
-                else
-                {
-                    _jsonObject["6f="]!["Pk4"] = value;
-                }
-            }
+                SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
+
+            Extra = Extra with { SaveName = value };
         }
     }
 
     public string SaveSummary // { get; set; }
     {
-        get => _jsonObject is not null ? _jsonObject.GetValue<string?>("6f=.n:R", "PlayerStateData.SaveSummary") ?? string.Empty : string.Empty;
+        get => string.IsNullOrEmpty(Extra.SaveSummary) ? Json.GetSaveSummary(_jsonObject) : Extra.SaveSummary;
         set
         {
+            value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_MANIFEST - 1)).ToString();
+
             if (_jsonObject is not null)
-            {
-                if (_jsonObject.UseMapping())
-                {
-                    _jsonObject["PlayerStateData"]![nameof(SaveSummary)] = value;
-                }
-                else
-                {
-                    _jsonObject["6f="]!["n:R"] = value;
-                }
-            }
+                SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
+
+            Extra = Extra with { SaveSummary = value };
         }
     }
 
-    public SaveTypeEnum SaveTypeEnum { get; }
+    public SaveTypeEnum SaveType { get; }
 
-    public SeasonEnum SeasonEnum { get; internal set; } = SeasonEnum.Pioneers;
-
-    public long TotalPlayTime // { get; set; }
+    public SeasonEnum Season // { get; internal set; }
     {
-        get => _jsonObject is not null ? Global.GetTotalPlayTime(_jsonObject) : _totalPlayTime;
-        set
+        get => (SeasonEnum)(Extra.Season);
+        internal set
         {
-            if (_jsonObject is not null)
+            if (BaseVersion.IsBaseVersion() && GameMode == PresetGameModeEnum.Seasonal)
             {
-                if (_jsonObject.UseMapping())
-                {
-                    _jsonObject["PlayerStateData"]![nameof(TotalPlayTime)] = value;
-                }
-                else
-                {
-                    _jsonObject["6f="]!["Lg8"] = value;
-                }
+                SaveVersion = Calculate.CalculateSaveVersion(BaseVersion, GameMode, value);
             }
-            _totalPlayTime = value;
+            Extra = Extra with { Season = (ushort)(value) };
         }
     }
 
-    public VersionEnum VersionEnum { get; internal set; } = VersionEnum.Unknown;
+    public uint TotalPlayTime // { get; set; }
+    {
+        get => Extra.TotalPlayTime == 0 ? Json.GetTotalPlayTime(_jsonObject) : Extra.TotalPlayTime;
+        set
+        {
+            if (_jsonObject is not null)
+                SetJsonValue(value, "6f=.Lg8", "PlayerStateData.TotalPlayTime");
+
+            Extra = Extra with { TotalPlayTime = value };
+        }
+    }
+
+    public bool UsesMapping { get; private set; }
 
     // internal //
 
-    internal int Version // { get; set; }
+    internal int BaseVersion // { get; set; }
     {
-        get => _jsonObject is not null ? Global.GetVersion(_jsonObject) : _version;
+        get => Extra.BaseVersion;
+        set => Extra = Extra with { BaseVersion = value };
+    }
+
+    internal PresetGameModeEnum GameMode // { get; set; }
+    {
+        get
+        {
+            if (Extra.GameMode == 0)
+            {
+                if (SaveVersion.IsGameMode(PresetGameModeEnum.Seasonal))
+                    return PresetGameModeEnum.Seasonal;
+
+                if (SaveVersion.IsGameMode(PresetGameModeEnum.Permadeath))
+                    return PresetGameModeEnum.Permadeath;
+
+                if (SaveVersion.IsGameMode(PresetGameModeEnum.Ambient))
+                    return PresetGameModeEnum.Ambient;
+
+                if (SaveVersion.IsGameMode(PresetGameModeEnum.Survival))
+                    return PresetGameModeEnum.Survival;
+
+                if (SaveVersion.IsGameMode(PresetGameModeEnum.Creative))
+                    return PresetGameModeEnum.Creative;
+
+                if (SaveVersion.IsGameMode(PresetGameModeEnum.Normal))
+                    return PresetGameModeEnum.Normal;
+            }
+            else
+                return (PresetGameModeEnum)(Extra.GameMode);
+
+            return PresetGameModeEnum.Unspecified;
+        }
+        set
+        {
+            if (BaseVersion.IsBaseVersion())
+                SaveVersion = Calculate.CalculateSaveVersion(BaseVersion, value, Season);
+
+            Extra = Extra with { GameMode = (ushort)(value) };
+        }
+    }
+
+    internal MetaFormatEnum MetaFormat // { get; set; }
+    {
+        get => Extra.MetaFormat;
+        set => Extra = Extra with { MetaFormat = value };
+    }
+
+    internal int SaveVersion // { get; set; }
+    {
+        get => _saveVersion == 0 ? Json.GetVersion(_jsonObject) : _saveVersion;
         set
         {
             if (_jsonObject is not null)
-            {
-                if (_jsonObject.UseMapping())
-                {
-                    _jsonObject[nameof(Version)] = value;
-                }
-                else
-                {
-                    _jsonObject["F2P"] = value;
-                }
-            }
-            _version = value;
+                SetJsonValue(value, "F2P", "Version");
+
+            _saveVersion = value;
         }
     }
+
+    internal StoragePersistentSlotEnum PersistentStorageSlot { get; }
 
     #endregion
 
@@ -292,73 +385,145 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region Getter
 
-    public JObject? GetJsonObject()
+    /// <summary>
+    /// Gets the entire JSON object.
+    /// </summary>
+    /// <returns></returns>
+    public JObject GetJsonObject()
     {
-        return _jsonObject;
+        ThrowHelperIsLoaded();
+        return _jsonObject!;
     }
 
-    private bool IsVersion(VersionEnum versionEnum)
+    /// <summary>
+    /// Gets a JSON element that matches the JSONPath expression.
+    /// </summary>
+    /// <param name="paths">A collection of JSONPath expressions.</param>
+    /// <returns>The element of the first valid expression or null if none is valid.</returns>
+    public JToken? GetJsonToken(params string[] paths)
     {
-        return VersionEnum >= versionEnum;
+        ThrowHelperIsLoaded();
+
+        foreach (var path in paths)
+        {
+            var jToken = _jsonObject?.SelectToken(path);
+            if (jToken is not null)
+                return jToken;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Gets a collection of JSON elements that matches the JSONPath expression.
+    /// </summary>
+    /// <param name="paths">A collection of JSONPath expressions.</param>
+    /// <returns>The collection of the first valid expression or an empty one  if none is valid.</returns>
+    public IEnumerable<JToken> GetJsonTokens(params string[] paths)
+    {
+        ThrowHelperIsLoaded();
+
+        foreach (var path in paths)
+        {
+            var jTokens = _jsonObject?.SelectTokens(path);
+            if (jTokens is not null)
+                return jTokens;
+        }
+        return Enumerable.Empty<JToken>();
+    }
+
+    /// <summary>
+    /// Gets the value of the JSON element that matches the path of indices.
+    /// Except the last one, each index in the entire path must point to either a JArray or a JObject.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="indices"></param>
+    /// <returns>The value at the end of the path of indices.</returns>
+    public T? GetJsonValue<T>(ReadOnlySpan<int> indices)
+    {
+        return GetJsonTokenWithValue(indices).Value<T>();
+    }
+
+    /// <summary>
+    /// Gets the actual value of the JSON element that matches the first valid JSONPath expression.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="paths">A collection of JSONPath expressions.</param>
+    /// <returns>The value of the first valid expression.</returns>
+    public T? GetJsonValue<T>(params string[] paths)
+    {
+        ThrowHelperIsLoaded();
+        return _jsonObject!.GetValue<T>(paths);
+    }
+
+    /// <summary>
+    /// Gets the actual values of all JSON elements that matches the first valid JSONPath expression.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="paths">A collection of JSONPath expressions.</param>
+    /// <returns>The value of the first valid expression.</returns>
+    public IEnumerable<T?> GetJsonValues<T>(params string[] paths)
+    {
+        ThrowHelperIsLoaded();
+        return _jsonObject!.GetValues<T>(paths);
+    }
+
+    // private //
+
+    private JToken GetJsonTokenWithValue(ReadOnlySpan<int> indices)
+    {
+        ThrowHelperIsLoaded();
+        Guard.HasSizeGreaterThan(indices, 0, nameof(indices));
+
+        JToken? jToken = _jsonObject;
+        for (var i = 0; i < indices.Length; i++)
+        {
+            var index = indices[i];
+            var jPath = jToken!.Path;
+
+            if (jToken is JArray jArray)
+            {
+                jToken = jArray.ContainsIndex(index) ? jToken[index] : null;
+            }
+            else if (jToken is JObject jObject)
+            {
+                jToken = jObject.Children().ElementAtOrDefault(index);
+            }
+
+            if (jToken is JProperty jProperty)
+                jToken = jProperty.Value;
+
+            if (jToken is null)
+                ThrowHelper.ThrowInvalidOperationException($"Index {indices[i]} at position {i} is not available ({jPath}).");
+        }
+        return jToken!;
     }
 
     #endregion
 
     #region Setter
 
-    public void SetGameMode(PresetGameModeEnum gameMode)
-    {
-        if (_jsonObject is null)
-            return;
-
-        var mapping = _jsonObject.UseMapping();
-        var mission = _jsonObject.SelectToken(mapping ? $"PlayerStateData.MissionProgress[?(@.Mission == '{MISSION_CREATIVE}')]" : $"6f=.dwb[?(@.p0c == '{MISSION_CREATIVE}')]");
-
-        // Remove MISSION_CREATIVE if new mode is not Creative.
-        if (gameMode != PresetGameModeEnum.Creative)
-        {
-            mission?.Remove();
-        }
-        // Add MISSION_CREATIVE if new mode is Creative but mission not existing.
-        else if (mission is null)
-        {
-#if NETSTANDARD2_0_OR_GREATER
-            var participantTypes = Enum.GetNames(typeof(ParticipantTypeEnum));
-#else
-            var participantTypes = Enum.GetNames<ParticipantTypeEnum>();
-#endif
-
-            var jsonAnonymous = new
-            {
-                Mission = "^CREATIVE",
-                Progress = 1,
-                Seed = 0,
-                Data = 0,
-                Participants = new object[participantTypes.Length],
-            };
-            for (var i = 0; i < participantTypes.Length; i++)
-            {
-                jsonAnonymous.Participants[i] = new
-                {
-                    UA = 0,
-                    BuildingSeed = new object[] { true, "0x0" },
-                    BuildingLocation = new[] { 0, 0, 0 },
-                    ParticipantType = new { ParticipantType = participantTypes[i] },
-                };
-            }
-
-            var jsonReturn = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(jsonAnonymous));
-
-            (_jsonObject.SelectToken(mapping ? $"PlayerStateData.MissionProgress" : $"6f=.dwb") as JArray)?.Add(jsonReturn);
-        }
-
-        // Set value.
-        GameModeEnum = gameMode;
-    }
-
     public void SetJsonObject(JObject? value)
     {
         _jsonObject = value;
+
+        IsSynced = false;
+        UsesMapping = _jsonObject?.UsesMapping() == true;
+    }
+
+    public void SetJsonValue(JToken value, ReadOnlySpan<int> indices)
+    {
+        GetJsonTokenWithValue(indices).Replace(value);
+
+        IsSynced = false;
+    }
+
+    public void SetJsonValue(JToken value, params string[] paths)
+    {
+        ThrowHelperIsLoaded();
+        Guard.HasSizeGreaterThan(paths, 0, nameof(paths));
+
+        // If setting the value was successfull mark as unsynced.
+        IsSynced = !_jsonObject!.SetValue(value, paths);
     }
 
     public void SetWatcherChange(WatcherChangeTypes changeType)
@@ -383,15 +548,19 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     #region Constructor
 
-    public Container(int metaIndex)
+    public Container(int metaIndex) : this(metaIndex, new()) { }
+
+    internal Container(int metaIndex, PlatformExtra extra)
     {
-        CollectionIndex = metaIndex - Global.OFFSET_INDEX;
+        CollectionIndex = metaIndex - Constants.OFFSET_INDEX;
+        Extra = extra;
         MetaIndex = metaIndex;
 
-        SaveTypeEnum = (SaveTypeEnum)(CollectionIndex % 2);
+        SaveType = (SaveTypeEnum)(CollectionIndex % 2);
         SlotIndex = CollectionIndex / 2; // integer division
 
-        Identifier = MetaIndex == 0 ? "AccountData" : MetaIndex == 1 ? "Settings" : $"Slot{SlotIndex + 1}{SaveTypeEnum}";
+        Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveType}";
+        PersistentStorageSlot = MetaIndex == 0 ? StoragePersistentSlotEnum.AccountData : (StoragePersistentSlotEnum)(MetaIndex);
     }
 
     #endregion
@@ -460,32 +629,58 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
 
     public override string ToString()
     {
-        return $"{nameof(Container)} {MetaIndex} {Identifier}";
+        var e = Exists ? (IsBackup ? "Backup" : (IsAccount ? "Account" : (IsSave ? "Save" : null))) : null;
+        if (e is not null)
+            e = $" // {e}";
+
+        return $"{nameof(Container)} {MetaIndex:D2} {Identifier}{(e ?? string.Empty)}";
     }
 
     #endregion
 
-    // //
+    #region ThrowHelper
+
+    private void ThrowHelperIsLoaded()
+    {
+        if (!IsLoaded)
+            ThrowHelper.ThrowInvalidOperationException("Container is not loaded.");
+    }
+
+    #endregion
+
+    // public //
 
     /// <summary>
-    /// Resets the incompatibility properties.
+    /// Whether the save is up-to-date to the specified version of the game.
     /// </summary>
+    /// <param name="versionEnum"></param>
+    /// <returns></returns>
+    public bool IsVersion(GameVersionEnum versionEnum)
+    {
+        return GameVersion >= versionEnum;
+    }
+
+    // internal //
+
     internal void ClearIncompatibility()
     {
         IncompatibilityException = null;
         IncompatibilityTag = null;
     }
 
+
     /// <summary>
-    /// Refreshes file info for data and meta.
+    /// Refreshes all <see cref="FileInfo"/> used for a save.
     /// </summary>
     internal void RefreshFileInfo()
     {
         DataFile?.Refresh();
         MetaFile?.Refresh();
 
-        // Reset to use latest data from property.
-        _lastWriteTime = null;
+        Extra.MicrosoftBlobContainerFile?.Refresh();
+        Extra.MicrosoftBlobDirectory?.Refresh();
+        Extra.MicrosoftBlobDataFile?.Refresh();
+        Extra.MicrosoftBlobMetaFile?.Refresh();
     }
 
     /// <summary>
@@ -495,20 +690,17 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     {
         _exists = null;
         _jsonObject = null;
-        _lastWriteTime = null;
-        _version = -1;
+        _saveVersion = 0;
 
         BackupCollection.Clear();
-        BaseVersion = default;
-        IsBackup = false;
-        IsOld = false;
-        IsSynced = true;
-        SeasonEnum = SeasonEnum.Pioneers;
-        VersionEnum = VersionEnum.Unknown;
         UserIdentification = null;
         UnknownKeys.Clear();
 
         ClearIncompatibility();
+
+        Extra = new();
+        IsSynced = true;
+
         RefreshFileInfo();
         ResolveWatcherChange();
     }
@@ -519,5 +711,6 @@ public partial class Container : IComparable<Container>, IEquatable<Container>
     internal void ResolveWatcherChange()
     {
         HasWatcherChange = false;
+        WatcherChangeType = null;
     }
 }

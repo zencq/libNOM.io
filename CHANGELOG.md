@@ -13,15 +13,50 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
+## 0.6.0 (2023-09-??)
+
+### Added
+* Now targeting .NET 7 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
+* Now publishing to [NuGet Gallery](https://www.nuget.org/packages/libNOM.io)
+* A setting to choose between writing always or only if a container is unsynced
+* A privacy setting to decide whether external sources should be used to to improve
+  user identification (e.g. launcher configs or API calls)
+* An IPlatform interface you can use instead of the abstract base class
+* Lots of UnitTests
+* Support for game version **Echoes 4.40**
+* Voyagers Expedition
+* Support for macOS when Steam is used
+
+### Changed
+* Bump K4os.Compression.LZ4 from 1.3.5 to 1.3.6
+* Bump libNOM.map from 0.9.1 to 0.9.2
+* Renamed the settings _LastWriteTime_ and _Mapping_
+* Default value for some settings
+* Names of the IsVersion flags now include the version number as well
+* DifficultyPresetTypeEnum has been added and therefore PresetGameModeEnum is now
+  only used internal
+* More getter and setter for JSON tokens and values
+* Probably more...
+
+### Removed
+* Maybe some things...
+
+### Fixed
+* The _Mapping_ settings is now only used to determine input/output and not for
+  modifying things internally
+* A number of different issues reported on [Discord](https://discord.gg/nomnom-762409407488720918) and the [NomNom repository](https://github.com/zencq/NomNom/milestone/10)
+
 ## 0.5.3 (2023-06-24)
 
 ### Added
 * Support for game versions up to **Singularity 4.30**
+* Singularity Expedition
 
 ## 0.5.2 (2023-03-19)
 
 ### Added
 * Support for game version **Fractal 4.10**
+* Utopia Expedition
 
 ### Fixed
 * OutOfMemoryException while reading Microsoft account files (4.10 only)
@@ -37,9 +72,11 @@ All notable changes to this project will be documented in this file. It uses the
 * OS dependent default paths for Steam
 * Support for game version **Waypoint 4.00**
 * Support for the Switch platform
+
 ### Changed
 * PlatformCollection itself is now iterable and therefore `Get()` was removed
 * Threshold is now the lowest ever used base version
+
 ### Fixed
 * Explicitly do not use compression for account data
 * SaveWizard usage detection if savedata00.hg file (account data) is present

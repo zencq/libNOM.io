@@ -2,18 +2,18 @@
 
 
 /// <summary>
-/// Specifies types a persistent base can have.
+/// Specifies the different types a base can have.
 /// </summary>
-/// <seealso cref="libMBIN\Source\NMS\GameComponents\GcPersistentBaseTypes.cs"/>
-internal enum PersistentBaseTypesEnum
+/// <seealso href="https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcPersistentBaseTypes.cs#L7"/>
+internal enum PersistentBaseTypesEnum : uint
 {
     HomePlanetBase,
-    FreighterBase, 
+    FreighterBase,
     ExternalPlanetBase,
-    CivilianFreighterBase, 
-    FriendsPlanetBase, 
-    FriendsFreighterBase, 
-    SpaceBase, 
-    GeneratedPlanetBase, 
+    CivilianFreighterBase,
+    FriendsPlanetBase,
+    FriendsFreighterBase,
+    SpaceBase,
+    GeneratedPlanetBase,
     GeneratedPlanetBaseEdits,
 }

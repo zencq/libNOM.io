@@ -19,11 +19,11 @@ public record class UserIdentificationData
     #endregion
 
     /// <summary>
-    /// Checks whether this information are complete.
+    /// Checks whether this data are complete.
     /// </summary>
     /// <returns></returns>
     public bool IsComplete()
     {
-        return new[] { LID, UID, USN, PTK }.All(property => !string.IsNullOrEmpty(property));
+        return new[] { LID, UID, USN, PTK }.All(i => !string.IsNullOrEmpty(i));
     }
 }

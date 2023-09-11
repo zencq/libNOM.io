@@ -8,56 +8,73 @@ on:
   create:
 
 jobs:
-  build:
-    name: Build and Test
-    runs-on: ubuntu-latest
+  test:
+    name: Test
+    strategy:
+      matrix:
+        framwork: [net6.0, net7.0]
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Replace
-        uses: jacobtomlinson/gha-find-replace@v2
-        with:
-          find: "#{STEAM_API_KEY}#"
-          replace: ${{ secrets.STEAM_API_KEY }}
-          include: "libNOM.io/Properties/**"
-          regex: false
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
           dotnet-quality: ga
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Cache
         uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: ${{ runner.os }}-nuget-
-      - name: Dependencies
-        run: dotnet restore
+      - name: Secret Injector
+        run: Get-ChildItem "./libNOM.test/Properties/" -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
+        shell: pwsh
       - name: Unit Test
-        run: dotnet test libNOM.test --no-restore --configuration Debug --framework net6.0
+        run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }}
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+          dotnet-quality: ga
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+      - name: Secret Injector
+        run: Get-ChildItem "./libNOM.io/Properties/" -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.STEAM_API_KEY }}","${{ secrets.STEAM_API_KEY }}" | Set-Content $_.FullName }
+        shell: pwsh
       - name: Pack
-        run: dotnet pack libNOM.io --no-restore --configuration Release
+        run: dotnet pack libNOM.io --configuration Release
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: libNOM.io NuGet
-          path: libNOM.io/bin/Release/libNOM.io.*nupkg
+          name: NuGet
+          path: |
+            ./.github/changelogs/
+            ./libNOM.io/bin/Release/libNOM.io.*nupkg
           if-no-files-found: error
   release:
     name: Release
     runs-on: ubuntu-latest
     # Only if commit was tagged.
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    needs: build
+    needs: [test, build]
     steps:
-      # Checkout again to access the changelog.
-      - name: Checkout
-        uses: actions/checkout@v3
       - name: Download
         uses: actions/download-artifact@v3
         with:
-          name: libNOM.io NuGet
+          name: NuGet
       - name: Version
         run: echo "nupkg_version=$((((Get-Item -Path .\libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
         shell: pwsh
@@ -70,7 +87,7 @@ jobs:
       - name: Create
         uses: softprops/action-gh-release@v1
         with:
-          body_path: ${{ github.workspace }}/.github/changelogs/${{ github.ref_name }}.md
-          files: libNOM.io.*nupkg
+          body_path: ./.github/changelogs/${{ github.ref_name }}.md
+          files: ./libNOM.io.*nupkg
       - name: Publish
-        run: dotnet nuget push ./libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push ./libNOM.io/bin/Release/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}

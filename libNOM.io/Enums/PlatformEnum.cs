@@ -6,8 +6,9 @@ namespace libNOM.io.Enums;
 /// <summary>
 /// Specifies platforms the game is available on.
 /// PlayStation is last as it has the least specific identification characteristics (only Steam like save file in worst case).
+/// Otherwise ordered by assumed player base.
 /// </summary>
-public enum PlatformEnum
+public enum PlatformEnum : uint
 {
     Unknown,
     Steam,
@@ -18,4 +19,7 @@ public enum PlatformEnum
     Switch,
     [Description("PlayStation")]
     Playstation,
+    // Not yet available.
+    //[Description("Apple App Store")]
+    //Apple,
 }
