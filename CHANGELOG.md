@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file. It uses the
 ### Fixed
 ### Security
 
-## 0.6.0 (2023-09-??)
+## 0.6.0 (2023-09-11)
 
 ### Added
 * Now targeting .NET 7 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file. It uses the
 * Support for game version **Echoes 4.40**
 * Voyagers Expedition
 * Support for macOS when Steam is used
+* Probably more...
 
 ### Changed
 * Bump K4os.Compression.LZ4 from 1.3.5 to 1.3.6
