@@ -1,5 +1,6 @@
 ﻿namespace libNOM.io.Enums;
 
+
 /// <summary>
 /// Specifies all game modes.
 /// </summary>

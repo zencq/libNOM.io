@@ -56,11 +56,11 @@ public partial class PlatformPlaystation : Platform
 
     #region Directory Data
 
-    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "savedata*.hg", "memory*.dat" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = ["savedata*.hg", "memory*.dat"];
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0, AnchorFileRegex1 };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0, AnchorFileRegex1];
 #else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0(), AnchorFileRegex1() };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0(), AnchorFileRegex1()];
 #endif
 
     #endregion
@@ -567,7 +567,7 @@ public partial class PlatformPlaystation : Platform
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
-        byte[] buffer = Array.Empty<byte>();
+        byte[] buffer = [];
 
         if (_usesSaveStreaming)
         {
@@ -661,6 +661,9 @@ public partial class PlatformPlaystation : Platform
     /// <summary>
     /// Writes the memory.dat file for the previous format.
     /// </summary>
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     private void WriteMemoryDat()
     {
         // 16 MB more for SaveWizard as ten uncompressed saves may exceed the default length.

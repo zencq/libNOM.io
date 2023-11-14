@@ -108,7 +108,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         //    tasks.AddRange(TryAddDirectory<PlatformApple>());
         //}
 
-        Task.WaitAll(tasks.ToArray());
+        Task.WaitAll([.. tasks]);
     }
 
     #endregion
@@ -120,6 +120,9 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// </summary>
     /// <param name="path"></param>
     /// <returns>A pre-loaded Container.</returns>
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     public static Container? AnalyzeFile(string path)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -243,29 +246,29 @@ public class PlatformCollection : IEnumerable<IPlatform>
     {
         platformSettings ??= new() { LoadingStrategy = LoadingStrategyEnum.Hollow };
 
-        if (_collection.ContainsKey(path))
+        if (_collection.TryGetValue(path, out var platform))
         {
-            _collection[path].SetSettings(platformSettings);
-            return _collection[path];
+            platform.SetSettings(platformSettings);
+            return platform;
         }
 
         if (!IsPathValid(path, out var directory))
             return null;
 
         // First add the preferred platform and then everything else.
-        HashSet<PlatformEnum> platforms = platformPreferred is not null and not PlatformEnum.Unknown ? new() { platformPreferred.Value } : new();
+        HashSet<PlatformEnum> platformSequence = platformPreferred is not null and not PlatformEnum.Unknown ? new() { platformPreferred.Value } : new();
 
 #if NETSTANDARD2_0_OR_GREATER
-        foreach (var platform in (PlatformEnum[])(Enum.GetValues(typeof(PlatformEnum))))
-            platforms.Add(platform);
+        foreach (var platformEnum in (PlatformEnum[])(Enum.GetValues(typeof(PlatformEnum))))
+            platformSequence.Add(platformEnum);
 #else
-        foreach (var platform in Enum.GetValues<PlatformEnum>())
-            platforms.Add(platform);
+        foreach (var platformEnum in Enum.GetValues<PlatformEnum>())
+            platformSequence.Add(platformEnum);
 #endif
 
-        foreach (var platform in platforms)
+        foreach (var platformEnum in platformSequence)
         {
-            Platform? result = platform switch
+            Platform? result = platformEnum switch
             {
                 PlatformEnum.Gog => new PlatformGog(directory!, platformSettings),
                 PlatformEnum.Microsoft => new PlatformMicrosoft(directory!, platformSettings),

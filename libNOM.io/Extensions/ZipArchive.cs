@@ -17,7 +17,7 @@ internal static class ZipArchiveExtensions
         var entry = self.GetEntry(entryName);
         if (entry is null)
         {
-            result = Array.Empty<byte>();
+            result = [];
             return false;
         }
 

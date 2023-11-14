@@ -41,11 +41,11 @@ public partial class PlatformSteam : Platform
 
     internal const string ACCOUNT_PATTERN = "st_76561198*";
 
-    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "save*.hg" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = ["save*.hg"];
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0];
 #else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0()];
 #endif
 
     internal static readonly string PATH = ((Func<string>)(() =>
@@ -270,6 +270,9 @@ public partial class PlatformSteam : Platform
         return value;
     }
 
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         //  0. META HEADER          (  4)
@@ -371,7 +374,7 @@ public partial class PlatformSteam : Platform
             if (container.MetaFormat >= MetaFormatEnum.Waypoint)
             {
                 // Append cached bytes and modify afterwards.
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 272
+                writer.Write(container.Extra.Bytes ?? []); // 272
 
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
                 writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
@@ -384,7 +387,7 @@ public partial class PlatformSteam : Platform
             }
             else
             {
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 16
+                writer.Write(container.Extra.Bytes ?? []); // 16
             }
         }
         else // SAVE_FORMAT_2
@@ -406,7 +409,7 @@ public partial class PlatformSteam : Platform
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-            writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 16
+            writer.Write(container.Extra.Bytes ?? []); // 16
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

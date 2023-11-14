@@ -26,7 +26,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// List of related backups.
     /// </summary>
-    public ObservableCollection<Container> BackupCollection { get; } = new();
+    public ObservableCollection<Container> BackupCollection { get; } = [];
 
     /// <summary>
     /// Identifier of the save containing the slot number and save type.
@@ -46,7 +46,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// List of unknown keys collected during deobfuscation.
     /// </summary>
-    public HashSet<string> UnknownKeys { get; set; } = new();
+    public HashSet<string> UnknownKeys { get; set; } = [];
 
     // internal //
 

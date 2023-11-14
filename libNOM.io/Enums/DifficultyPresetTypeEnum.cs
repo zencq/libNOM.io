@@ -1,5 +1,6 @@
 ﻿namespace libNOM.io.Enums;
 
+
 /// <summary>
 /// Specifies all available difficulties (PresetGameModeEnum was used for this before 4.00).
 /// </summary>

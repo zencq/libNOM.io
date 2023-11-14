@@ -42,11 +42,11 @@ public partial class PlatformMicrosoft : Platform
 
     internal const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
 
-    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "containers.index" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = ["containers.index"];
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0 };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0];
 #else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0() };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0()];
 #endif
 
     internal static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
@@ -289,7 +289,7 @@ public partial class PlatformMicrosoft : Platform
         */
 
         ReadOnlySpan<byte> bytesIndex = File.ReadAllBytes(_containersIndexFile.FullName);
-        Dictionary<int, PlatformExtra> result = new();
+        Dictionary<int, PlatformExtra> result = [];
         int offsetIndex = 0;
 
         if (bytesIndex.Cast<int>(0) is int header && header != CONTAINERSINDEX_HEADER)
@@ -480,6 +480,9 @@ public partial class PlatformMicrosoft : Platform
         return Array.Empty<byte>();
     }
 
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         //  0. BASE VERSION         (  4)
@@ -662,7 +665,7 @@ public partial class PlatformMicrosoft : Platform
             if (container.MetaFormat >= MetaFormatEnum.Waypoint)
             {
                 // Append cached bytes and overwrite afterwards.
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 260
+                writer.Write(container.Extra.Bytes ?? []); // 260
 
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
                 writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
@@ -675,7 +678,7 @@ public partial class PlatformMicrosoft : Platform
             }
             else
             {
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 4
+                writer.Write(container.Extra.Bytes ?? []); // 4
             }
         }
 
@@ -771,6 +774,9 @@ public partial class PlatformMicrosoft : Platform
     /// <summary>
     /// Creates and writes the containers.index file content to disk.
     /// </summary>
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     private void WriteContainersIndex()
     {
         var hasSettings = _settingsContainer is not null;

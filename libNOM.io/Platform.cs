@@ -47,7 +47,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     protected Container AccountContainer { get; set; }
 
-    protected List<Container> SaveContainerCollection { get; } = new();
+    protected List<Container> SaveContainerCollection { get; } = [];
 
     #endregion
 
@@ -97,7 +97,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public abstract bool HasModding { get; }
 
-    public bool IsLoaded => SaveContainerCollection.Any(); // { get; }
+    public bool IsLoaded => SaveContainerCollection.Count != 0; // { get; }
 
     public bool IsRunning // { get; }
     {
@@ -158,6 +158,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     private static string GetBaseIdentifier(JObject jsonObject)
     {
 #if NETSTANDARD2_0_OR_GREATER
@@ -1081,13 +1084,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             _ = LZ4.Encode(source, out var target);
             position += Constants.SAVE_STREAMING_CHUNK_MAX_LENGTH;
 
-            var chunkHeader = new ReadOnlySpan<uint>(new uint[]
-            {
+            var chunkHeader = new ReadOnlySpan<uint>(
+            [
                 Constants.SAVE_STREAMING_HEADER,
                 (uint)(target.Length),
                 (uint)(source.Length),
                 0,
-            });
+            ]);
 
             result = result.Concat(chunkHeader.Cast<uint, byte>()).Concat(target);
         }

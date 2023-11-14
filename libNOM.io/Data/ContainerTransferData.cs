@@ -20,7 +20,7 @@ public record class ContainerTransferData
     /// <summary>
     /// Decisions of the user which bases should be transferred (e.g. to avoid issues with uploaded ones).
     /// </summary>
-    public Dictionary<string, BaseUserDecisionData> TransferBaseUserDecision { get; set; } = new();
+    public Dictionary<string, BaseUserDecisionData> TransferBaseUserDecision { get; set; } = [];
 
     /// <summary>
     /// Whether to transfer ownership of the ByteBeat library.
@@ -56,7 +56,7 @@ public record class ContainerTransferData
     /// <summary>
     /// Decisions of the user which bases should be transferred (e.g. to avoid issues with uploaded ones).
     /// </summary>
-    public Dictionary<string, BaseUserDecisionData> TransferBaseUserDecision { get; set; } = new();
+    public Dictionary<string, BaseUserDecisionData> TransferBaseUserDecision { get; set; } = [];
 
     /// <summary>
     /// Whether to transfer ownership of the ByteBeat library.

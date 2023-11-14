@@ -81,6 +81,9 @@ internal static class ReadOnlySpanExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns>The deserialized object from the bytes.</returns>
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     internal static JObject? GetJson(this ReadOnlySpan<byte> self)
     {
         // Account has no proper decompressed size in the initial Fractal update (4.10).
@@ -99,6 +102,9 @@ internal static class ReadOnlySpanExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     internal static string GetSaveRenamingString(this ReadOnlySpan<byte> self)
     {
         return GetString(self.Slice(0, self.IndexOf((byte)(0))));
@@ -159,7 +165,7 @@ internal static class ReadOnlySpanExtensions
         return length;
     }
 
-    #endregion
+#endregion
 }
 
 internal static class SpanExtensions

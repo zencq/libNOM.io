@@ -35,11 +35,11 @@ public partial class PlatformSwitch : Platform
 
     #region Directory Data
 
-    internal static readonly string[] ANCHOR_FILE_GLOB = new[] { "manifest*.hg", "savedata*.hg" };
+    internal static readonly string[] ANCHOR_FILE_GLOB = ["manifest*.hg", "savedata*.hg"];
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0, AnchorFileRegex1 };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0, AnchorFileRegex1];
 #else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = new Regex[] { AnchorFileRegex0(), AnchorFileRegex1() };
+    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0(), AnchorFileRegex1()];
 #endif
 
     #endregion
@@ -145,6 +145,9 @@ public partial class PlatformSwitch : Platform
 
     #region Load
 
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         //  0. META HEADER          (  4)
@@ -254,7 +257,7 @@ public partial class PlatformSwitch : Platform
             if (container.MetaFormat >= MetaFormatEnum.Waypoint)
             {
                 // Append cached bytes and overwrite afterwards.
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 272
+                writer.Write(container.Extra.Bytes ?? []); // 272
 
                 writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
                 writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
@@ -267,7 +270,7 @@ public partial class PlatformSwitch : Platform
             }
             else
             {
-                writer.Write(container.Extra.Bytes ?? Array.Empty<byte>()); // 60
+                writer.Write(container.Extra.Bytes ?? []); // 60
             }
         }
 
