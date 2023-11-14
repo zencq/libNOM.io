@@ -7,7 +7,10 @@ All notable changes to this project will be documented in this file. It uses the
 ## Unreleased
 
 ### Added
+* Now targeting .NET 8 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 ### Changed
+* Bump CommunityToolkit.Diagnostics from 8.2.1 to 8.2.2
+* Bump CommunityToolkit.HighPerformance from 8.2.1 to 8.2.2
 ### Deprecated
 ### Removed
 ### Fixed
