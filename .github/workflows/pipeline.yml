@@ -12,19 +12,20 @@ jobs:
     name: Test
     strategy:
       matrix:
-        framwork: [net6.0, net7.0, net8.0] # November, 2024 / May, 2024 / November, 2026
+        # November, 2024 / May, 2024 / November, 2026
+        framwork: [net6.0, net7.0, net8.0]
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
           dotnet-quality: ga
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -39,14 +40,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
           dotnet-quality: ga
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -57,7 +58,7 @@ jobs:
       - name: Pack
         run: dotnet pack libNOM.io --configuration Release
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NuGet
           path: |
@@ -72,7 +73,7 @@ jobs:
     needs: [test, build]
     steps:
       - name: Download
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: NuGet
       - name: Version
@@ -85,9 +86,9 @@ jobs:
           echo "There is a version mismatch between git tag (${{ github.ref_name }}) and nupkg version (${{ env.nupkg_version }})!"
           exit 1
       - name: Create
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@4634c16e79c963813287e889244c50009e7f0981
         with:
           body_path: ./.github/changelogs/${{ github.ref_name }}.md
-          files: ./libNOM.io.*nupkg
+          files: ./libNOM.io/bin/Release/libNOM.io.*nupkg
       - name: Publish
         run: dotnet nuget push ./libNOM.io/bin/Release/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
