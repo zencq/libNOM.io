@@ -13,7 +13,7 @@
 * If necessary add a `Description` attribute to it.
 
 ### Container
-* Add a `Is<Version>` flag for the new version.
+* Add a `IsVersion<Number><Name>` flag for the new version.
 
 ### ContainerTransferData
 * If something new was added that has an ownership, a new flag needs to be added.

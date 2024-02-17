@@ -6,7 +6,8 @@
 [![Release](https://img.shields.io/github/v/release/zencq/libNOM.io?display_name=tag)](https://github.com/zencq/libNOM.io/releases/latest)
 [![Nuget](https://img.shields.io/nuget/v/libNOM.io)](https://www.nuget.org/packages/libNOM.io/)
 
-[![libNOM.io](https://github.com/zencq/libNOM.io/actions/workflows/pipeline.yml/badge.svg)](https://github.com/zencq/libNOM.io/actions/workflows/pipeline.yml)
+[![Maintainability](https://api.codeclimate.com/v1/badges/5f2e527d62758832d38b/maintainability)](https://codeclimate.com/github/zencq/libNOM.io/maintainability)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zencq/libNOM.io/pipeline.yml)](https://github.com/zencq/libNOM.io/actions/workflows/pipeline.yml)
 
 ## Introduction
 
@@ -124,7 +125,7 @@ Thanks to the following people for their help in one way or another.
 
 ## Dependencies
 
-* [.NET Community Toolkit](https://github.com/CommunityToolkit/dotnet) - diagnostics and high performace helper
+* [.NET Community Toolkit](https://github.com/CommunityToolkit/dotnet) - Diagnostics and high performace helper
 * [K4os.Compression.LZ4](https://www.nuget.org/packages/K4os.Compression.LZ4/) - Compression and decompression
 * [LazyCache](https://www.nuget.org/packages/LazyCache) - Caching when a file is updated in the background
 * [libNOM.map](https://www.nuget.org/packages/libNOM.map) - Obfuscation and deobfuscation
