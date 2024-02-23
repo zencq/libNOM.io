@@ -57,7 +57,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     internal PlatformExtra Extra { get; set; }
 
-    internal UserIdentificationData? UserIdentification { get; set; }
+    internal UserIdentification? UserIdentification { get; set; }
 
     // //
 

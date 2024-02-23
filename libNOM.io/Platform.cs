@@ -9,6 +9,7 @@ using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 
 using LazyCache;
+
 using libNOM.io.Interfaces;
 using libNOM.map;
 
@@ -63,7 +64,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public abstract PlatformEnum PlatformEnum { get; }
 
-    public UserIdentificationData PlatformUserIdentification { get; } = new();
+    public UserIdentification PlatformUserIdentification { get; } = new();
 
     public PlatformSettings Settings { get; protected set; }
 
@@ -199,6 +200,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return SaveContainerCollection[collectionIndex];
 
         return null;
+    }
+
+    public IEnumerable<Container> GetSaveContainers()
+    {
+        return SaveContainerCollection;
     }
 
     public IEnumerable<Container> GetExistingContainers()
@@ -811,35 +817,35 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         // Values relevant for AccountData first.
         if (container.SaveVersion == 0 || force)
-            container.SaveVersion = Helper.SaveVersion.Get(json);
+            container.SaveVersion = Meta.SaveVersion.Get(json);
 
         // Then all independent values.
         if (container.Extra.GameMode == 0 || force)
-            container.GameMode = Helper.GameMode.Get(json);
+            container.GameMode = Meta.GameMode.Get(json);
 
         if (container.TotalPlayTime == 0 || force)
-            container.TotalPlayTime = Helper.TotalPlayTime.Get(json);
+            container.TotalPlayTime = Meta.TotalPlayTime.Get(json);
 
         // Finally all remaining values that depend on others.
         if (container.GameMode == PresetGameModeEnum.Seasonal && container.Season == SeasonEnum.None || force)
-            container.Season = Helper.Season.Get(json); // needs GameMode
+            container.Season = Meta.Season.Get(json); // needs GameMode
 
         if (container.BaseVersion == 0 || force)
-            container.BaseVersion = Helper.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
+            container.BaseVersion = Meta.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
 
         if (container.GameVersion == GameVersionEnum.Unknown)
-            container.GameVersion = Helper.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
+            container.GameVersion = Meta.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
 
         if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-            container.GameDifficulty = Helper.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
+            container.GameDifficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
 
         if (container.IsVersion400Waypoint) // needs GameVersion
         {
             if (string.IsNullOrEmpty(container.SaveName) || force)
-                container.SaveName = Helper.SaveName.Get(json);
+                container.SaveName = Meta.SaveName.Get(json);
 
             if (string.IsNullOrEmpty(container.SaveSummary) || force)
-                container.SaveSummary = Helper.SaveSummary.Get(json);
+                container.SaveSummary = Meta.SaveSummary.Get(json);
         }
     }
 
@@ -1445,7 +1451,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Transfer
 
-    public ContainerTransferData PrepareTransferSource(int sourceSlotIndex)
+    public TransferData GetSourceTransferData(int sourceSlotIndex)
     {
 
         // If user identification is not complete, load saves until it is.
@@ -1458,11 +1464,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             BuildContainerFull(container);
         }
 
-        var sourceTransferData = new ContainerTransferData
-        {
-            Containers = GetSlotContainers(sourceSlotIndex),
-            UserIdentification = PlatformUserIdentification,
-        };
+        var sourceTransferData = new TransferData(GetSlotContainers(sourceSlotIndex), true, [], true, true, true, PlatformUserIdentification);
+
+        //var sourceTransferData = new TransferData
+        //{
+        //    Containers = GetSlotContainers(sourceSlotIndex),
+        //    UserIdentification = PlatformUserIdentification,
+        //};
 
         foreach (var container in sourceTransferData.Containers)
         {
@@ -1504,7 +1512,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     }
                 }
 
-                sourceTransferData.TransferBaseUserDecision[GetBaseIdentifier(persistentPlayerBase)] = new() { DoTransfer = true, Name = baseName! };
+                sourceTransferData.TransferBaseUserDecision[GetBaseIdentifier(persistentPlayerBase)] = new(true, baseName!);
             }
         }
 
@@ -1516,6 +1524,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         };
     }
 
+    // TODO call from Transfer()
+    /// <summary>
+    /// Ensures that the destination is prepared for the incoming <see cref="Transfer(TransferData, int)"/>.
+    /// Mainly to lookup the user identification.
+    /// </summary>
+    /// <param name="destinationSlotIndex"></param>
     public void PrepareTransferDestination(int destinationSlotIndex)
     {
         // Load destination as they are needed anyway.
@@ -1538,12 +1552,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         _preparedForTransfer = destinationSlotIndex;
     }
 
-    public void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex) => Transfer(sourceTransferData, destinationSlotIndex, true);
+    public void Transfer(TransferData sourceTransferData, int destinationSlotIndex) => Transfer(sourceTransferData, destinationSlotIndex, true);
 
-    /// <inheritdoc cref="Transfer(ContainerTransferData, int)"/>
+    /// <inheritdoc cref="Transfer(TransferData, int)"/>
     /// <param name="write"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    protected virtual void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex, bool write)
+    protected virtual void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
     {
         if (_preparedForTransfer != destinationSlotIndex)
             PrepareTransferDestination(destinationSlotIndex);
@@ -1611,7 +1625,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferOwnership(Container container, ContainerTransferData sourceTransferData)
+    protected void TransferOwnership(Container container, TransferData sourceTransferData)
     {
         var jsonObject = container.GetJsonObject();
 
@@ -1664,7 +1678,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferBaseOwnership(JObject jsonObject, ContainerTransferData sourceTransferData)
+    protected void TransferBaseOwnership(JObject jsonObject, TransferData sourceTransferData)
     {
         foreach (var persistentPlayerBase in jsonObject.SelectTokens(Json.GetPaths("PERSISTENT_PLAYER_BASE_ALL", jsonObject)[0]).Cast<JObject>())
         {
@@ -1680,7 +1694,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferBytebeatOwnership(JObject jsonObject, ContainerTransferData sourceTransferData)
+    protected void TransferBytebeatOwnership(JObject jsonObject, TransferData sourceTransferData)
     {
         foreach (var mySong in jsonObject.SelectTokens(Json.GetPaths("MY_SONGS_WITH_UID", jsonObject, sourceTransferData.UserIdentification!.UID)[0]).Cast<JObject>())
         {
@@ -1851,9 +1865,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
-    protected UserIdentificationData GetUserIdentification(JObject jsonObject)
+    protected UserIdentification GetUserIdentification(JObject jsonObject)
     {
-        return new UserIdentificationData
+        return new UserIdentification
         {
             LID = GetUserIdentification(jsonObject, "LID"),
             UID = GetUserIdentification(jsonObject, "UID"),

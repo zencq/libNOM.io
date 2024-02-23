@@ -89,7 +89,7 @@ internal static partial class DifficultyPreset
 
     #region Setter
 
-    internal static void Set(Container container, DifficultyPresetData preset)
+    internal static void Set(Container container, Difficulty preset)
     {
         var jsonObject = container.GetJsonObject();
 
@@ -164,7 +164,7 @@ internal static partial class DifficultyPreset
 
     #region Helper
 
-    private static DifficultyPresetData GetCurrentDifficulty(JObject jsonObject)
+    private static Difficulty GetCurrentDifficulty(JObject jsonObject)
     {
         // Survival Elements
         var activeSurvivalBars = jsonObject.GetValue<ActiveSurvivalBarsDifficultyEnum>("DIFFICULTY_ACTIVE_SURVIVAL_BARS");
@@ -235,7 +235,7 @@ internal static partial class DifficultyPreset
         return new(activeSurvivalBars, hazardDrain, energyDrain, substanceCollection, sprintingCost, scannerRecharge, damageReceived, breakTechOnDamage, deathConsequences, chargingRequirements, fuelUse, launchFuelCost, craftingIsFree, currencyCost, itemShopAvailability, inventoryStackLimits, damageGiven, groundCombatTimers, spaceCombatTimers, creatureHostility, inventoriesAlwaysInRange, warpDriveRequirements, baseAutoPower, reputationGain);
     }
 
-    private static bool IsPreset(ReadOnlySpan<char> json, DifficultyPresetData preset)
+    private static bool IsPreset(ReadOnlySpan<char> json, Difficulty preset)
     {
         string[] settings = [
             // Survival Elements
