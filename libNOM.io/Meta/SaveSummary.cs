@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace libNOM.io.Helper;
+namespace libNOM.io.Meta;
 
 
 internal static partial class SaveSummary

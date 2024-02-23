@@ -1,4 +1,4 @@
-﻿namespace libNOM.io.Data;
+﻿namespace libNOM.io.Models;
 
 
 /// <summary>

@@ -263,12 +263,12 @@ public class Container : IComparable<Container>, IEquatable<Container>
                     if (value == DifficultyPresetTypeEnum.Permadeath)
                     {
                         GameMode = PresetGameModeEnum.Permadeath;
-                        Helper.DifficultyPreset.Set(this, Constants.DIFFICULTY_PRESET_PERMADEATH);
+                        Meta.DifficultyPreset.Set(this, Constants.DIFFICULTY_PRESET_PERMADEATH);
                     }
                     else if (value < DifficultyPresetTypeEnum.Permadeath)
                     {
                         GameMode = PresetGameModeEnum.Normal;
-                        Helper.DifficultyPreset.Set(this, value switch
+                        Meta.DifficultyPreset.Set(this, value switch
                         {
                             DifficultyPresetTypeEnum.Creative => Constants.DIFFICULTY_PRESET_CREATIVE,
                             DifficultyPresetTypeEnum.Relaxed => Constants.DIFFICULTY_PRESET_RELAXED,
@@ -297,7 +297,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
         get
         {
             if (_gameVersion == GameVersionEnum.Unknown && IsLoaded)
-                _gameVersion = Helper.GameVersion.Get(BaseVersion, _jsonObject!);
+                _gameVersion = Meta.GameVersion.Get(BaseVersion, _jsonObject!);
 
             return _gameVersion;
         }
@@ -352,7 +352,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
         get
         {
             if (GameMode == PresetGameModeEnum.Seasonal && Extra.Season == 0)
-                Extra = Extra with { Season = (ushort)(Helper.Season.Get(_jsonObject)) };
+                Extra = Extra with { Season = (ushort)(Meta.Season.Get(_jsonObject)) };
 
             return (SeasonEnum)(Extra.Season);
         }
@@ -420,7 +420,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
             Extra = Extra with { GameMode = (ushort)(value) };
 
             if (IsLoaded)
-                SaveVersion = Helper.SaveVersion.Calculate(this);
+                SaveVersion = Meta.SaveVersion.Calculate(this);
         }
     }
 

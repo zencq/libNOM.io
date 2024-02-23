@@ -1,4 +1,4 @@
-﻿namespace libNOM.io.Helper;
+﻿namespace libNOM.io.Meta;
 
 
 internal static class BaseVersion
