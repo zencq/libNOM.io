@@ -1,4 +1,7 @@
 ﻿using CommunityToolkit.HighPerformance;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+
 using System.Text;
 
 namespace libNOM.io.Extensions;
@@ -6,6 +9,18 @@ namespace libNOM.io.Extensions;
 
 public static class StringExtensions
 {
+    // public
+
+    internal static JObject? GetJson(this string self)
+    {
+        if (JsonConvert.DeserializeObject(self) is JObject jsonObject)
+            return jsonObject;
+
+        return null;
+    }
+
+    // internal
+
     /// <summary>
     /// Encodes all the characters in the string into a sequence of bytes in UTF-16 format.
     /// </summary>

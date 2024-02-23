@@ -34,7 +34,7 @@ jobs:
         run: Get-ChildItem "./libNOM.test/Properties/" -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
         shell: pwsh
       - name: Unit Test
-        run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }}
+        run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }} --collect:"XPlat Code Coverage"
   build:
     name: Build
     runs-on: ubuntu-latest

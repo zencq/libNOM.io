@@ -1,7 +1,11 @@
-﻿using CommunityToolkit.Diagnostics;
+﻿using System.Collections.ObjectModel;
+
+using CommunityToolkit.Diagnostics;
+
 using libNOM.io.Delegates;
+using libNOM.map;
+
 using Newtonsoft.Json.Linq;
-using System.Collections.ObjectModel;
 
 namespace libNOM.io;
 
@@ -15,7 +19,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     private bool? _exists;
     private JObject? _jsonObject;
-    private int _saveVersion;
 
     #endregion
 
@@ -61,24 +64,34 @@ public class Container : IComparable<Container>, IEquatable<Container>
     // public //
 
     /// <summary>
+    /// Whether it is possible to switch context between the main/primary save and an active expedition/season.
+    /// </summary>
+    public bool CanSwitchContext => IsLoaded && _jsonObject!.ContainsKey(Json.GetPaths("BASE_CONTEXT", _jsonObject)[0]) && _jsonObject!.ContainsKey(Json.GetPaths("EXPEDITION_CONTEXT", _jsonObject!)[0]); // { get; }
+
+    /// <summary>
+    /// Whether this is a save with an ongoing expedition (<see cref="PresetGameModeEnum.Seasonal"/>).
+    /// </summary>
+    public bool HasActiveExpedition => GameMode == PresetGameModeEnum.Seasonal || (IsLoaded && _jsonObject!.ContainsKey(Json.GetPaths("EXPEDITION_CONTEXT", _jsonObject!)[0])); // { get; }
+
+    /// <summary>
     /// Whether this contains potential user owned bases.
     /// </summary>
-    public bool HasBase => IsLoaded && GetJsonValues<PersistentBaseTypesEnum>("6f=.F?0[*].peI.DPp", "PlayerStateData.PersistentPlayerBases[*].BaseType.PersistentBaseTypes").Any(i => i is PersistentBaseTypesEnum.HomePlanetBase or PersistentBaseTypesEnum.FreighterBase); // { get; }
+    public bool HasBase => IsLoaded && GetJsonValues<PersistentBaseTypesEnum>("PERSISTENT_PLAYER_BASE_ALL_TYPES").Any(i => i is PersistentBaseTypesEnum.HomePlanetBase or PersistentBaseTypesEnum.FreighterBase); // { get; }
 
     /// <summary>
     /// Whether this contains a user owned freighter.
     /// </summary>
-    public bool HasFreighter => IsLoaded && (GetJsonValues<double>("6f=.lpm[*]", "PlayerStateData.FreighterMatrixPos[*]")?.Any(i => i != 0.0) ?? false); // { get; }
+    public bool HasFreighter => IsLoaded && (GetJsonValues<double>("FREIGHTER_POSITION")?.Any(i => i != 0.0) ?? false); // { get; }
 
     /// <summary>
     /// Whether this contains a potential user owned settlement.
     /// </summary>
-    public bool HasSettlement => IsLoaded && (GetJsonValues<string>("6f=.GQA[*].3?K.f5Q", "PlayerStateData.SettlementStatesV2[*].Owner.LID")?.Any(i => !string.IsNullOrEmpty(i)) ?? false); // { get; }
+    public bool HasSettlement => IsLoaded && (GetJsonValues<string>("SETTLEMENT_ALL_OWNER_LID")?.Any(i => !string.IsNullOrEmpty(i)) ?? false); // { get; }
 
     /// <summary>
     /// Whether this contains account data and is not a regular save.
     /// </summary>
-    public bool IsAccount => MetaIndex == 0; // { get; }
+    public bool IsAccount => PersistentStorageSlot == StoragePersistentSlotEnum.AccountData; // { get; }
 
     /// <summary>
     /// Whether this is a backup.
@@ -91,11 +104,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
     public bool IsCompatible => Exists && string.IsNullOrEmpty(IncompatibilityTag); // { get; }
 
     /// <summary>
-    /// Whether this is a save with an ongoing expedition (<see cref="PresetGameModeEnum.Seasonal"/>).
-    /// </summary>
-    public bool IsExpedition => GameMode == PresetGameModeEnum.Seasonal; // { get; }
-
-    /// <summary>
     /// Whether this contains loaded JSON data and is ready to use.
     /// </summary>
     public bool IsLoaded => IsCompatible && _jsonObject is not null; // { get; }
@@ -103,12 +111,12 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether this is older than the lowest supported version.
     /// </summary>
-    public bool IsOld => Exists && IsSave && GameVersion < Constants.LOWEST_SUPPORTED_VERSION; // { get; }
+    public bool IsOld => IsSave && GameVersion < Constants.LOWEST_SUPPORTED_VERSION; // { get; }
 
     /// <summary>
     /// Whether this is an actual save and not something else like account data.
     /// </summary>
-    public bool IsSave => MetaIndex >= Constants.OFFSET_INDEX; // { get; }
+    public bool IsSave => PersistentStorageSlot >= StoragePersistentSlotEnum.PlayerState1; // { get; }
 
     /// <summary>
     /// Whether this is identical to the data on the drive.
@@ -173,6 +181,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion440Echoes => IsVersion(GameVersionEnum.Echoes); // { get; }
 
+    public bool IsVersion450Omega => IsVersion(GameVersionEnum.Omega); // { get; }
+
     #endregion
 
     #region FileInfo
@@ -181,7 +191,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public bool Exists // { get; internal set; }
     {
-        get => _exists ?? DataFile?.Exists == true;
+        get => _exists ?? DataFile?.Exists ?? false;
         internal set => _exists = value;
     }
 
@@ -205,10 +215,19 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Index
 
+    /// <summary>
+    /// Starts at 0 for PlayerState1, AccountData will be -2.
+    /// </summary>
     public int CollectionIndex { get; }
 
+    /// <summary>
+    /// Starts at 0 for AccountData, PlayerState1 will be 2.
+    /// </summary>
     public int MetaIndex { get; }
 
+    /// <summary>
+    /// Starts at 0 for PlayerState1 and PlayerState2, AccountData will be -1.
+    /// </summary>
     public int SlotIndex { get; }
 
     #endregion
@@ -217,11 +236,24 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     // public //
 
+    public SaveContextQueryEnum ActiveContext // { get; set; }
+    {
+        get => _jsonObject?.GetValue<SaveContextQueryEnum>("ACTIVE_CONTEXT") ?? SaveContextQueryEnum.DontCare; // DontCare is used for pre-Omega saves
+        set
+        {
+            Guard.IsTrue(CanSwitchContext, nameof(CanSwitchContext)); // block switching if only one context
+            if (IsLoaded && value is SaveContextQueryEnum.Season or SaveContextQueryEnum.Main)
+                SetJsonValue(value.ToString(), "ACTIVE_CONTEXT");
+        }
+    }
+
     public DifficultyPresetTypeEnum GameDifficulty // { get; set; }
     {
         get => (DifficultyPresetTypeEnum)(Extra.DifficultyPreset);
         set
         {
+            Extra = Extra with { DifficultyPreset = (uint)(value) };
+
             if (IsVersion400Waypoint)
             {
                 if (GameMode < PresetGameModeEnum.Seasonal)
@@ -229,13 +261,20 @@ public class Container : IComparable<Container>, IEquatable<Container>
                     if (value == DifficultyPresetTypeEnum.Permadeath)
                     {
                         GameMode = PresetGameModeEnum.Permadeath;
+                        Helper.DifficultyPreset.Set(this, Constants.DIFFICULTY_PRESET_PERMADEATH);
                     }
                     else if (value < DifficultyPresetTypeEnum.Permadeath)
                     {
                         GameMode = PresetGameModeEnum.Normal;
+                        Helper.DifficultyPreset.Set(this, value switch
+                        {
+                            DifficultyPresetTypeEnum.Creative => Constants.DIFFICULTY_PRESET_CREATIVE,
+                            DifficultyPresetTypeEnum.Relaxed => Constants.DIFFICULTY_PRESET_RELAXED,
+                            DifficultyPresetTypeEnum.Survival => Constants.DIFFICULTY_PRESET_SURVIVAL,
+                            _ => Constants.DIFFICULTY_PRESET_NORMAL,
+                        });
                     }
                 }
-                // TODO set preset
             }
             else
             {
@@ -248,39 +287,49 @@ public class Container : IComparable<Container>, IEquatable<Container>
                         _ => PresetGameModeEnum.Normal,
                     };
             }
-
-            Extra = Extra with { DifficultyPreset = (uint)(value) };
         }
     }
 
-    public GameVersionEnum GameVersion { get; internal set; } = GameVersionEnum.Unknown;
+    public GameVersionEnum GameVersion => IsLoaded ? Helper.GameVersion.Get(BaseVersion, _jsonObject!) : GameVersionEnum.Unknown; // { get; }
 
-    // Maximum length in-game is 42 characters.
     public string SaveName // { get; set; }
     {
-        get => string.IsNullOrEmpty(Extra.SaveName) ? Json.GetSaveName(_jsonObject) : Extra.SaveName;
+        get
+        {
+            if (string.IsNullOrEmpty(Extra.SaveName))
+                Extra = Extra with { SaveName = _jsonObject?.GetValue<string>("SAVE_NAME") ?? string.Empty };
+
+            return Extra.SaveName;
+        }
         set
         {
+            // Maximum length in-game is 42 characters.
             value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_INGAME)).ToString();
 
-            if (_jsonObject is not null)
-                SetJsonValue(value, "6f=.Pk4", "PlayerStateData.SaveName");
-
             Extra = Extra with { SaveName = value };
+
+            if (IsLoaded)
+                SetJsonValue(value, "SAVE_NAME");
         }
     }
 
     public string SaveSummary // { get; set; }
     {
-        get => string.IsNullOrEmpty(Extra.SaveSummary) ? Json.GetSaveSummary(_jsonObject) : Extra.SaveSummary;
+        get
+        {
+            if (string.IsNullOrEmpty(Extra.SaveSummary))
+                Extra = Extra with { SaveSummary = _jsonObject?.GetValue<string>("SAVE_SUMMARY") ?? string.Empty };
+
+            return Extra.SaveSummary;
+        }
         set
         {
             value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_MANIFEST - 1)).ToString();
 
-            if (_jsonObject is not null)
-                SetJsonValue(value, "6f=.n:R", "PlayerStateData.SaveSummary");
-
             Extra = Extra with { SaveSummary = value };
+
+            if (IsLoaded)
+                SetJsonValue(value, "SAVE_SUMMARY");
         }
     }
 
@@ -288,36 +337,47 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public SeasonEnum Season // { get; internal set; }
     {
-        get => (SeasonEnum)(Extra.Season);
-        internal set
+        get
         {
-            if (BaseVersion.IsBaseVersion() && GameMode == PresetGameModeEnum.Seasonal)
-            {
-                SaveVersion = Calculate.CalculateSaveVersion(BaseVersion, GameMode, value);
-            }
-            Extra = Extra with { Season = (ushort)(value) };
+            if (GameMode == PresetGameModeEnum.Seasonal && Extra.Season == 0)
+                Extra = Extra with { Season = (ushort)(Helper.Season.Get(_jsonObject)) };
+
+            return (SeasonEnum)(Extra.Season);
         }
+        internal set => Extra = Extra with { Season = (ushort)(value) };
     }
 
     public uint TotalPlayTime // { get; set; }
     {
-        get => Extra.TotalPlayTime == 0 ? Json.GetTotalPlayTime(_jsonObject) : Extra.TotalPlayTime;
+        get
+        {
+            if (Extra.TotalPlayTime == 0)
+                Extra = Extra with { TotalPlayTime = _jsonObject?.GetValue<uint?>("TOTAL_PLAY_TIME") ?? 0 };
+
+            return Extra.TotalPlayTime;
+        }
         set
         {
-            if (_jsonObject is not null)
-                SetJsonValue(value, "6f=.Lg8", "PlayerStateData.TotalPlayTime");
-
             Extra = Extra with { TotalPlayTime = value };
+
+            if (IsLoaded)
+                SetJsonValue(value, "TOTAL_PLAY_TIME");
         }
     }
 
-    public bool UsesMapping { get; private set; }
+    public bool UsesMapping { get; internal set; }
 
     // internal //
 
     internal int BaseVersion // { get; set; }
     {
-        get => Extra.BaseVersion;
+        get
+        {
+            if (Extra.BaseVersion == 0)
+                Extra = Extra with { BaseVersion = BaseVersion - (((int)(GameMode) + ((int)(Season) * Constants.OFFSET_SEASON)) * Constants.OFFSET_GAMEMODE) };
+
+            return Extra.BaseVersion;
+        }
         set => Extra = Extra with { BaseVersion = value };
     }
 
@@ -327,35 +387,28 @@ public class Container : IComparable<Container>, IEquatable<Container>
         {
             if (Extra.GameMode == 0)
             {
-                if (SaveVersion.IsGameMode(PresetGameModeEnum.Seasonal))
-                    return PresetGameModeEnum.Seasonal;
+                var mode = SaveVersion switch
+                {
+                    >= Constants.THRESHOLD_GAMEMODE_SEASONAL => PresetGameModeEnum.Seasonal,
+                    >= Constants.THRESHOLD_GAMEMODE_PERMADEATH => PresetGameModeEnum.Permadeath,
+                    >= Constants.THRESHOLD_GAMEMODE_SURVIVAL => PresetGameModeEnum.Survival,
+                    >= Constants.THRESHOLD_GAMEMODE_CREATIVE => PresetGameModeEnum.Creative,
+                    >= Constants.THRESHOLD_GAMEMODE_NORMAL => PresetGameModeEnum.Normal,
+                    _ => PresetGameModeEnum.Unspecified,
+                };
+                if (mode < PresetGameModeEnum.Seasonal && ActiveContext == SaveContextQueryEnum.Season)
+                    mode = PresetGameModeEnum.Seasonal;
 
-                if (SaveVersion.IsGameMode(PresetGameModeEnum.Permadeath))
-                    return PresetGameModeEnum.Permadeath;
-
-                if (SaveVersion.IsGameMode(PresetGameModeEnum.Ambient))
-                    return PresetGameModeEnum.Ambient;
-
-                if (SaveVersion.IsGameMode(PresetGameModeEnum.Survival))
-                    return PresetGameModeEnum.Survival;
-
-                if (SaveVersion.IsGameMode(PresetGameModeEnum.Creative))
-                    return PresetGameModeEnum.Creative;
-
-                if (SaveVersion.IsGameMode(PresetGameModeEnum.Normal))
-                    return PresetGameModeEnum.Normal;
+                Extra = Extra with { GameMode = (ushort)(mode) };
             }
-            else
-                return (PresetGameModeEnum)(Extra.GameMode);
-
-            return PresetGameModeEnum.Unspecified;
+            return (PresetGameModeEnum)(Extra.GameMode);
         }
         set
         {
-            if (BaseVersion.IsBaseVersion())
-                SaveVersion = Calculate.CalculateSaveVersion(BaseVersion, value, Season);
-
             Extra = Extra with { GameMode = (ushort)(value) };
+
+            if (IsLoaded)
+                SaveVersion = Helper.SaveVersion.Calculate(this);
         }
     }
 
@@ -367,13 +420,11 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     internal int SaveVersion // { get; set; }
     {
-        get => _saveVersion == 0 ? Json.GetVersion(_jsonObject) : _saveVersion;
+        get => _jsonObject?.GetValue<int>("VERSION") ?? -1;
         set
         {
-            if (_jsonObject is not null)
-                SetJsonValue(value, "F2P", "Version");
-
-            _saveVersion = value;
+            if (IsLoaded)
+                SetJsonValue(value, "VERSION");
         }
     }
 
@@ -395,40 +446,44 @@ public class Container : IComparable<Container>, IEquatable<Container>
         return _jsonObject!;
     }
 
+    /// <inheritdoc cref="GetJsonToken(string, SaveContextQueryEnum)"/>
     /// <summary>
     /// Gets a JSON element that matches the JSONPath expression.
+    /// For saves from Omega and up this will use the active context if the path goes there and you use "{0}.PlayerStateData" in the expression.
     /// </summary>
-    /// <param name="paths">A collection of JSONPath expressions.</param>
-    /// <returns>The element of the first valid expression or null if none is valid.</returns>
-    public JToken? GetJsonToken(params string[] paths)
+    public JToken? GetJsonToken(string pathIdentifier) => GetJsonToken(pathIdentifier, ActiveContext);
+
+    /// <summary>
+    /// Gets a JSON element that matches the JSONPath expression.
+    /// For saves from Omega and up this will use the specified context if the path goes there and you use "{0}.PlayerStateData" in the expression.
+    /// </summary>
+    /// <param name="pathIdentifier">A JSONPath expressions.</param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    public JToken? GetJsonToken(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
-
-        foreach (var path in paths)
-        {
-            var jToken = _jsonObject?.SelectToken(path);
-            if (jToken is not null)
-                return jToken;
-        }
-        return null;
+        return _jsonObject!.GetValue<JToken>(pathIdentifier, context);
     }
+
+    /// <inheritdoc cref="GetJsonTokens(string, SaveContextQueryEnum)"/>
+    /// <summary>
+    /// Gets a collection of JSON elements that matches the JSONPath expression.
+    /// For saves from Omega and up this will use the active context if the path goes there and you use "{0}.PlayerStateData" in the expression.
+    /// </summary>
+    public IEnumerable<JToken> GetJsonTokens(string pathIdentifier) => GetJsonTokens(pathIdentifier, ActiveContext);
 
     /// <summary>
     /// Gets a collection of JSON elements that matches the JSONPath expression.
+    /// For saves from Omega and up this will use the specified context if the path goes there and you use "{0}.PlayerStateData" in the expression.
     /// </summary>
-    /// <param name="paths">A collection of JSONPath expressions.</param>
-    /// <returns>The collection of the first valid expression or an empty one  if none is valid.</returns>
-    public IEnumerable<JToken> GetJsonTokens(params string[] paths)
+    /// <param name="pathIdentifier">A JSONPath expressions.</param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    public IEnumerable<JToken> GetJsonTokens(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
-
-        foreach (var path in paths)
-        {
-            var jTokens = _jsonObject?.SelectTokens(path);
-            if (jTokens is not null)
-                return jTokens;
-        }
-        return Enumerable.Empty<JToken>();
+        return _jsonObject!.GetValues<JToken>(pathIdentifier, context);
     }
 
     /// <summary>
@@ -440,62 +495,40 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <returns>The value at the end of the path of indices.</returns>
     public T? GetJsonValue<T>(ReadOnlySpan<int> indices)
     {
-        return GetJsonTokenWithValue(indices).Value<T>();
+        ThrowHelperIsLoaded();
+        return _jsonObject!.GetValue<T>(indices);
     }
+
+    /// <inheritdoc cref="GetJsonValue{T}(string, SaveContextQueryEnum)"/>
+    public T? GetJsonValue<T>(string pathIdentifier) => GetJsonValue<T>(pathIdentifier, ActiveContext);
 
     /// <summary>
-    /// Gets the actual value of the JSON element that matches the first valid JSONPath expression.
+    /// Gets the actual value of the JSON element that matches the JSONPath expression.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="paths">A collection of JSONPath expressions.</param>
-    /// <returns>The value of the first valid expression.</returns>
-    public T? GetJsonValue<T>(params string[] paths)
+    /// <param name="pathIdentifier">A JSONPath expressions.</param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    public T? GetJsonValue<T>(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
-        return _jsonObject!.GetValue<T>(paths);
+        return _jsonObject!.GetValue<T>(pathIdentifier, context);
     }
+
+    /// <inheritdoc cref="GetJsonValue{T}(string, SaveContextQueryEnum)"/>
+    public IEnumerable<T?> GetJsonValues<T>(string pathIdentifier) => GetJsonValues<T>(pathIdentifier, ActiveContext);
 
     /// <summary>
-    /// Gets the actual values of all JSON elements that matches the first valid JSONPath expression.
+    /// Gets the actual values of all JSON elements that matches the JSONPath expression.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="paths">A collection of JSONPath expressions.</param>
-    /// <returns>The value of the first valid expression.</returns>
-    public IEnumerable<T?> GetJsonValues<T>(params string[] paths)
+    /// <param name="pathIdentifier">A JSONPath expressions.</param>
+    /// <param name="context">A JSONPath expressions.</param>
+    /// <returns></returns>
+    public IEnumerable<T?> GetJsonValues<T>(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
-        return _jsonObject!.GetValues<T>(paths);
-    }
-
-    // private //
-
-    private JToken GetJsonTokenWithValue(ReadOnlySpan<int> indices)
-    {
-        ThrowHelperIsLoaded();
-        Guard.HasSizeGreaterThan(indices, 0, nameof(indices));
-
-        JToken? jToken = _jsonObject;
-        for (var i = 0; i < indices.Length; i++)
-        {
-            var index = indices[i];
-            var jPath = jToken!.Path;
-
-            if (jToken is JArray jArray)
-            {
-                jToken = jArray.ContainsIndex(index) ? jToken[index] : null;
-            }
-            else if (jToken is JObject jObject)
-            {
-                jToken = jObject.Children().ElementAtOrDefault(index);
-            }
-
-            if (jToken is JProperty jProperty)
-                jToken = jProperty.Value;
-
-            if (jToken is null)
-                ThrowHelper.ThrowInvalidOperationException($"Index {indices[i]} at position {i} is not available ({jPath}).");
-        }
-        return jToken!;
+        return _jsonObject!.GetValues<T>(pathIdentifier, context);
     }
 
     #endregion
@@ -504,26 +537,37 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public void SetJsonObject(JObject? value)
     {
+        // No ThrowHelperIsLoaded as setting this will determine the result.
         _jsonObject = value;
 
         IsSynced = false;
-        UsesMapping = _jsonObject?.UsesMapping() == true;
+
+        // Make sure the data are always in the format that was set in the settings.
+        if (_jsonObject is not null) // happens when the container is unloaded
+            if (UsesMapping)
+            {
+                UnknownKeys = Mapping.Deobfuscate(_jsonObject);
+            }
+            else
+            {
+                Mapping.Obfuscate(_jsonObject);
+            }
     }
 
     public void SetJsonValue(JToken value, ReadOnlySpan<int> indices)
     {
-        GetJsonTokenWithValue(indices).Replace(value);
-
-        IsSynced = false;
+        ThrowHelperIsLoaded();
+        // If setting the value was successfull, it is now unsynced.
+        IsSynced = !_jsonObject!.SetValue(value, indices);
     }
 
-    public void SetJsonValue(JToken value, params string[] paths)
+    public void SetJsonValue(JToken value, string pathIdentifier) => SetJsonValue(value, pathIdentifier, ActiveContext);
+
+    public void SetJsonValue(JToken value, string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
-        Guard.HasSizeGreaterThan(paths, 0, nameof(paths));
-
-        // If setting the value was successfull mark as unsynced.
-        IsSynced = !_jsonObject!.SetValue(value, paths);
+        // If setting the value was successfull, it is now unsynced.
+        IsSynced = !_jsonObject!.SetValue(value, pathIdentifier, context);
     }
 
     public void SetWatcherChange(WatcherChangeTypes changeType)
@@ -556,11 +600,11 @@ public class Container : IComparable<Container>, IEquatable<Container>
         Extra = extra;
         MetaIndex = metaIndex;
 
+        PersistentStorageSlot = MetaIndex == 0 ? StoragePersistentSlotEnum.AccountData : (StoragePersistentSlotEnum)(MetaIndex);
         SaveType = (SaveTypeEnum)(CollectionIndex % 2);
         SlotIndex = CollectionIndex / 2; // integer division
 
         Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveType}";
-        PersistentStorageSlot = MetaIndex == 0 ? StoragePersistentSlotEnum.AccountData : (StoragePersistentSlotEnum)(MetaIndex);
     }
 
     #endregion
@@ -633,7 +677,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
         if (e is not null)
             e = $" // {e}";
 
-        return $"{nameof(Container)} {MetaIndex:D2} {Identifier}{(e ?? string.Empty)}";
+        return $"{nameof(Container)} {PersistentStorageSlot} {Identifier}{(e ?? string.Empty)}";
     }
 
     #endregion
@@ -668,9 +712,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
         IncompatibilityTag = null;
     }
 
-
     /// <summary>
-    /// Refreshes all <see cref="FileInfo"/> used for a save.
+    /// Refreshes all <see cref="FileInfo"/> used for this save.
     /// </summary>
     internal void RefreshFileInfo()
     {
@@ -690,7 +733,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
     {
         _exists = null;
         _jsonObject = null;
-        _saveVersion = 0;
 
         BackupCollection.Clear();
         UserIdentification = null;

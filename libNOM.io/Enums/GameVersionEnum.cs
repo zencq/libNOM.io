@@ -54,4 +54,5 @@ public enum GameVersionEnum : uint
     Mac = 425,
     Singularity = 430,
     Echoes = 440,
+    Omega = 450,
 }

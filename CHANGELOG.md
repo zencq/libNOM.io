@@ -6,14 +6,23 @@ All notable changes to this project will be documented in this file. It uses the
 
 ## Unreleased
 
+### Known Issues
 ### Added
 * Now targeting .NET 8 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
+* Holiday 2023 Expeditions
+* Support for game version **Omega 4.50**
+    * PresetGameModeEnum.Seasonal is not used for new Expeditions anymore
+    * IsExpedition flag has been replaced in favor of HasActiveExpedition
+    * New property CanSwitchContext to indicated whether it is possible to switch between primary save and expedition
+* Omega Expedition
 ### Changed
 * Bump CommunityToolkit.Diagnostics from 8.2.1 to 8.2.2
 * Bump CommunityToolkit.HighPerformance from 8.2.1 to 8.2.2
+* Bump libNOM.map from 0.9.2 to 0.10.0
 ### Deprecated
 ### Removed
 ### Fixed
+* If JObject is set in a Container, ensure it will be stored with the configured obfuscation
 ### Security
 
 ## 0.6.0 (2023-09-11)

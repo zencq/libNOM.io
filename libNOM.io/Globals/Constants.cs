@@ -18,6 +18,8 @@ public static class Constants
     public const string INCOMPATIBILITY_005 = "005M_Microsoft_Missing_Blob";
     public const string INCOMPATIBILITY_006 = "006G_Non_Existent";
 
+    public static readonly Dictionary<string, string[]> JSONPATH_EXTENSION = []; // provide possibilitly to extend the internal JSONPath dictionary by the using apps
+
     // internal //
 
     internal const int CACHE_EXPIRATION = 250; // milliseconds
@@ -26,17 +28,28 @@ public static class Constants
     internal static readonly DifficultyPresetData DIFFICULTY_PRESET_CREATIVE = new(ActiveSurvivalBarsDifficultyEnum.None, HazardDrainDifficultyEnum.Slow, EnergyDrainDifficultyEnum.Slow, SubstanceCollectionDifficultyEnum.Normal, SprintingCostDifficultyEnum.Free, ScannerRechargeDifficultyEnum.Fast, DamageReceivedDifficultyEnum.None, BreakTechOnDamageProbabilityEnum.None, DeathConsequencesDifficultyEnum.None, ChargingRequirementsDifficultyEnum.None, FuelUseDifficultyEnum.Free, LaunchFuelCostDifficultyEnum.Free, true, CurrencyCostDifficultyEnum.Free, ItemShopAvailabilityDifficultyEnum.High, InventoryStackLimitsDifficultyEnum.High, DamageGivenDifficultyEnum.Normal, CombatTimerDifficultyOptionEnum.Off, CombatTimerDifficultyOptionEnum.Off, CreatureHostilityDifficultyEnum.NeverAttack, true, false, true, ReputationGainDifficultyEnum.Fast);
     internal static readonly DifficultyPresetData DIFFICULTY_PRESET_RELAXED = new(ActiveSurvivalBarsDifficultyEnum.HealthAndHazard, HazardDrainDifficultyEnum.Slow, EnergyDrainDifficultyEnum.Slow, SubstanceCollectionDifficultyEnum.High, SprintingCostDifficultyEnum.Low, ScannerRechargeDifficultyEnum.VeryFast, DamageReceivedDifficultyEnum.Low, BreakTechOnDamageProbabilityEnum.None, DeathConsequencesDifficultyEnum.None, ChargingRequirementsDifficultyEnum.Low, FuelUseDifficultyEnum.Cheap, LaunchFuelCostDifficultyEnum.Low, false, CurrencyCostDifficultyEnum.Cheap, ItemShopAvailabilityDifficultyEnum.High, InventoryStackLimitsDifficultyEnum.High, DamageGivenDifficultyEnum.High, CombatTimerDifficultyOptionEnum.Slow, CombatTimerDifficultyOptionEnum.Slow, CreatureHostilityDifficultyEnum.AttackIfProvoked, true, true, true, ReputationGainDifficultyEnum.Fast);
     internal static readonly DifficultyPresetData DIFFICULTY_PRESET_SURVIVAL = new(ActiveSurvivalBarsDifficultyEnum.All, HazardDrainDifficultyEnum.Fast, EnergyDrainDifficultyEnum.Fast, SubstanceCollectionDifficultyEnum.Low, SprintingCostDifficultyEnum.Full, ScannerRechargeDifficultyEnum.Normal, DamageReceivedDifficultyEnum.High, BreakTechOnDamageProbabilityEnum.High, DeathConsequencesDifficultyEnum.DestroyItems, ChargingRequirementsDifficultyEnum.High, FuelUseDifficultyEnum.Expensive, LaunchFuelCostDifficultyEnum.High, false, CurrencyCostDifficultyEnum.Normal, ItemShopAvailabilityDifficultyEnum.Low, InventoryStackLimitsDifficultyEnum.Normal, DamageGivenDifficultyEnum.Normal, CombatTimerDifficultyOptionEnum.Fast, CombatTimerDifficultyOptionEnum.Fast, CreatureHostilityDifficultyEnum.FullEcosystem, false, true, false, ReputationGainDifficultyEnum.Normal);
+    internal static readonly DifficultyPresetData DIFFICULTY_PRESET_PERMADEATH = new(ActiveSurvivalBarsDifficultyEnum.All, HazardDrainDifficultyEnum.Fast, EnergyDrainDifficultyEnum.Fast, SubstanceCollectionDifficultyEnum.Low, SprintingCostDifficultyEnum.Full, ScannerRechargeDifficultyEnum.Normal, DamageReceivedDifficultyEnum.High, BreakTechOnDamageProbabilityEnum.High, DeathConsequencesDifficultyEnum.DestroySave, ChargingRequirementsDifficultyEnum.High, FuelUseDifficultyEnum.Expensive, LaunchFuelCostDifficultyEnum.High, false, CurrencyCostDifficultyEnum.Normal, ItemShopAvailabilityDifficultyEnum.Low, InventoryStackLimitsDifficultyEnum.Normal, DamageGivenDifficultyEnum.Normal, CombatTimerDifficultyOptionEnum.Fast, CombatTimerDifficultyOptionEnum.Fast, CreatureHostilityDifficultyEnum.FullEcosystem, false, true, false, ReputationGainDifficultyEnum.Normal);
 
     internal const string FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmssfff";
 
+    internal const short GAMEMODE_INT_NORMAL = (int)(PresetGameModeEnum.Normal); // 1
     internal const short GAMEMODE_INT_PERMADEATH = (int)(PresetGameModeEnum.Permadeath); // 5
     internal const short GAMEMODE_INT_SEASONAL = (int)(PresetGameModeEnum.Seasonal); // 6
 
     internal const GameVersionEnum LOWEST_SUPPORTED_VERSION = GameVersionEnum.BeyondWithVehicleCam;
 
+    internal static readonly Dictionary<string, string[]> JSONPATH = new()
+    {
+    };
+    internal static readonly string[] JSONPATH_CONTEXT_OBFUSCATED = ["", "2YS", "vLc", "", ""]; // SaveContextQueryEnum
+    internal static readonly string[] JSONPATH_CONTEXT_PLAINTEXT = ["", "ExpeditionContext", "BaseContext", "", ""];
+
     internal const int OFFSET_GAMEMODE = 512;
     internal const int OFFSET_INDEX = 2;
     internal const int OFFSET_SEASON = 128;
+
+    internal const int OFFSET_GAMEMODE_SEASONAL = OFFSET_GAMEMODE * (int)(PresetGameModeEnum.Seasonal);
+    internal const int OFFSET_MULTIPLICATION_GAMEMODE_SEASON = OFFSET_GAMEMODE * OFFSET_SEASON;
 
     internal const uint SAVE_FORMAT_1 = 0x7D0; // 2000 (1.0) // not used but for completeness
     internal const uint SAVE_FORMAT_2 = 0x7D1; // 2001 (1.1)
@@ -49,6 +62,11 @@ public static class Constants
     internal const int SAVE_STREAMING_HEADER_TOTAL_LENGTH = 0x10; // 16
     internal const int SAVE_STREAMING_CHUNK_MAX_LENGTH = 0x80000; // 524288
 
+    internal const int THRESHOLD_GAMEMODE_NORMAL = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Normal) * OFFSET_GAMEMODE);
+    internal const int THRESHOLD_GAMEMODE_CREATIVE = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Creative) * OFFSET_GAMEMODE);
+    internal const int THRESHOLD_GAMEMODE_SURVIVAL = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Survival) * OFFSET_GAMEMODE);
+    internal const int THRESHOLD_GAMEMODE_PERMADEATH = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Permadeath) * OFFSET_GAMEMODE);
+    internal const int THRESHOLD_GAMEMODE_SEASONAL = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Seasonal) * OFFSET_GAMEMODE);
     internal const int THRESHOLD_VANILLA = 4098;
     internal const int THRESHOLD_VANILLA_GAMEMODE = THRESHOLD_VANILLA + OFFSET_GAMEMODE;
     internal const int THRESHOLD_WAYPOINT = 4140;

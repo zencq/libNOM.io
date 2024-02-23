@@ -289,11 +289,103 @@ public class SteamTest : CommonTestInitializeCleanup
         }
     }
 
+    [TestMethod]
+    public void T04_Read_76561198093556678()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198093556678");
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum SeasonEnum, int BaseVersion, GameVersionEnum GameVersionEnum, string SaveName, string SaveSummary)[]
+        {
+            (26, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4147, GameVersionEnum.Omega, "", "Within Test Base Terrain Edits"), // 14Auto
+            (27, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4147, GameVersionEnum.Omega, "", "Aboard the Space Anomaly"), // 14Manual
+        };
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+
+        // Assert
+        Assert.IsFalse(platform.HasAccountData);
+        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
+        Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
+        Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
+        Assert.AreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK);
+
+        for (var i = 0; i < results.Length; i++)
+        {
+            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(results[i].Exists, container.Exists);
+            Assert.AreEqual(results[i].IsOld, container.IsOld);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].SeasonEnum, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
+        }
+    }
+
+    [TestMethod]
+    public void T05_Read_76561199278291995()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561199278291995");
+        var results = new (int CollectionIndex, bool Exists, bool IsOld, bool HasActiveExpedition, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum SeasonEnum, int BaseVersion, GameVersionEnum GameVersionEnum, string SaveName, string SaveSummary)[]
+        {
+            (14, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, GameVersionEnum.Echoes, "The Cartographers Redux", "Aboard the Space Anomaly"), // 8Auto
+            (15, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, GameVersionEnum.Echoes, "The Cartographers Redux", "Aboard the Space Anomaly"), // 8Manual
+            (16, true, false, true, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.VoyagersRedux, 4146, GameVersionEnum.Echoes, "Voyagers Redux", "On freighter (DSE-6 Ariasaku)"), // 9Auto
+            (17, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, GameVersionEnum.Echoes, "Voyagers Redux", "On freighter (DSE-6 Ariasaku)"), // 9Manual
+            (20, true, false, true, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.OmegaExperimental, 4147, GameVersionEnum.Omega, "Omega", "Aboard the Space Anomaly"), // 11Auto
+            (21, true, false, true, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.OmegaExperimental, 4147, GameVersionEnum.Omega, "Omega", "Aboard the Space Anomaly"), // 11Manual
+            (22, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4147, GameVersionEnum.Omega, "", "Aboard the Space Anomaly"), // 12Auto
+        };
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+
+        // Assert
+        Assert.IsFalse(platform.HasAccountData);
+        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
+        Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
+        Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
+        Assert.AreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK);
+
+        for (var i = 0; i < results.Length; i++)
+        {
+            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(results[i].Exists, container.Exists);
+            Assert.AreEqual(results[i].IsOld, container.IsOld);
+            Assert.AreEqual(results[i].HasActiveExpedition, container.HasActiveExpedition);
+            Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
+            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].SeasonEnum, container.Season);
+            Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
+            Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
+        }
+    }
+
     /// <summary>
     /// Same as <see cref="T03_Read_76561198371877533"/>.
     /// </summary>
     [TestMethod]
-    public void T04_Read_NoAccountInDirectory()
+    public void T06_Read_NoAccountInDirectory()
     {
         // Arrange
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "something");
@@ -380,7 +472,7 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(-123571, valuesOrigin.Units); // 4294843725
-        Assert.AreEqual(637376113621684301, valuesOrigin.UtcTicks); // 2020-10-06 20:02:42 +00:00
+        Assert.AreEqual(637376113620000000, valuesOrigin.UtcTicks); // 2020-10-06 20:02:42 +00:00
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
         Assert.AreEqual(now.UtcTicks, valuesSet.UtcTicks);
 
@@ -611,7 +703,7 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(80, valuesOrigin.MusicVolume);
-        Assert.AreEqual(638263807917034129, valuesOrigin.UtcTicks); // 2023-07-22 15:12:32 +00:00
+        Assert.AreEqual(638263807910000000, valuesOrigin.UtcTicks); // 2023-07-22 15:12:32 +00:00
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
         Assert.AreEqual(now.UtcTicks, valuesSet.UtcTicks);
 

@@ -8,7 +8,7 @@ internal enum MetaFormatEnum : uint
 {
     Unknown,
     Vanilla,
-    Foundation,
-    Frontiers,
-    Waypoint,
+    Foundation, // 1.10
+    Frontiers, // 3.60
+    Waypoint, // 4.00
 }
