@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using Regex = System.Text.RegularExpressions.Regex;
 
 namespace libNOM.io.Helper;
 
@@ -65,16 +64,7 @@ internal static partial class SaveVersion
     /// </summary>
     /// <param name="json"></param>
     /// <returns></returns>
-    internal static int Get(string? json)
-    {
-        if (json is not null)
-        {
-            foreach (var regex in Regexes)
-                if (Extensions.RegexExtensions.MatchToInt32(regex, json, out int result))
-                    return result;
-        }
-        return 0;
-    }
+    internal static int Get(string? json) => Regexes.Match(json)?.ToInt32Value() ?? 0;
 
     #endregion
 }

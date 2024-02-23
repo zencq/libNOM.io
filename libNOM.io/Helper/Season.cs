@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
-using Newtonsoft.Json.Linq;
 
-using Regex = System.Text.RegularExpressions.Regex;
+using Newtonsoft.Json.Linq;
 
 namespace libNOM.io.Helper;
 
@@ -51,12 +50,9 @@ internal static partial class Season
     /// <param name="json"></param>
     internal static SeasonEnum Get(string? json)
     {
-        if (json is not null)
-        {
-            foreach (var regex in Regexes)
-                if (Extensions.RegexExtensions.MatchToInt32(regex, json, out int result))
-                    return SeasonIdToEnum(result);
-        }
+        if (Regexes.Match(json)?.ToInt32Value() is int value)
+            return SeasonIdToEnum(value);
+
         return SeasonEnum.None;
     }
 

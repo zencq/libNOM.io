@@ -19,7 +19,4 @@ public enum PlatformEnum : uint
     Switch,
     [Description("PlayStation")]
     Playstation,
-    // Not yet available.
-    //[Description("Apple App Store")]
-    //Apple,
 }

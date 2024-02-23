@@ -1,4 +1,6 @@
-﻿namespace libNOM.io.Extensions;
+﻿using System.Text.RegularExpressions;
+
+namespace libNOM.io.Extensions;
 
 
 public static class IEnumerableExtensions
@@ -14,6 +16,44 @@ public static class IEnumerableExtensions
     internal static bool ContainsIndex<T>(this IEnumerable<T> self, int index)
     {
         return 0 <= index && index < self.Count();
+    }
+
+    #endregion
+
+    #region typeof(RegEx)
+
+    /// <summary>
+    /// Searches the input string for the first occurrence of the specified regular expressions.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    internal static Match? Match(this IEnumerable<Regex> self, string? json)
+    {
+        if (json is not null)
+        {
+            foreach (var regex in self)
+                if (regex.Match(json) is Match match && match.Success)
+                    return match;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Searches the input string for all occurrences of the specified regular expressions.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    internal static MatchCollection? Matches(this IEnumerable<Regex> self, string? json)
+    {
+        if (json is not null)
+        {
+            foreach (var regex in self)
+                if (regex.Matches(json) is MatchCollection collection && collection.Count != 0)
+                    return collection;
+        }
+        return null;
     }
 
     #endregion

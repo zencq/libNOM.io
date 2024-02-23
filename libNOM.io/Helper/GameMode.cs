@@ -1,7 +1,5 @@
 ﻿using System.Text.RegularExpressions;
 
-using Regex = System.Text.RegularExpressions.Regex;
-
 namespace libNOM.io.Helper;
 
 
@@ -22,10 +20,10 @@ internal static partial class GameMode
     };
 #pragma warning restore IDE0300
 #else
-    [GeneratedRegex("\\\"XTp\\\":\\\"(\\w{4,8})\\\",", RegexOptions.Compiled, 1000)]
+    [GeneratedRegex("\\\"XTp\\\":\\\"(\\w{4,8})\\\",", RegexOptions.Compiled, 10)]
     private static partial Regex RegexObfuscatedActiveContext();
 
-    [GeneratedRegex("\\\"ActiveContext\\\":\\\"(\\w{4,8})\\\",", RegexOptions.Compiled, 1000)]
+    [GeneratedRegex("\\\"ActiveContext\\\":\\\"(\\w{4,8})\\\",", RegexOptions.Compiled, 10)]
     private static partial Regex RegexPlaintextActiveContext();
 
     [GeneratedRegex("\\\"idA\\\":\\\"(}´\\d{1})\\\",", RegexOptions.Compiled, 1000)]
@@ -56,30 +54,21 @@ internal static partial class GameMode
     /// <returns></returns>
     internal static PresetGameModeEnum Get(string? json)
     {
-        if (json is not null)
-        {
-            foreach (var regex in Regexes)
-                if (Extensions.RegexExtensions.MatchesToInt32(regex, json, out var result))
-                {
-                    // If more than one match, there is an expedition started from an existing save and we have to check which one to use.
-                    if (result.Length > 1)
-                    {
-                        var context = SaveContextQueryEnum.DontCare;
+        if (Regexes.Matches(json) is MatchCollection collection)
+            // If more than one match, there is an expedition started from an existing save and we have to check which one to use.
+            if (collection.Count > 1)
+            {
+                var context = SaveContextQueryEnum.DontCare;
 
-                        foreach (var regexActiveContext in RegexesActiveContext)
-                            if (Extensions.RegexExtensions.MatchToString(regexActiveContext, json, out var stringValue))
-                            {
-                                context = EnumExtensions.Parse<SaveContextQueryEnum>(stringValue);
-                                break;
-                            }
+                if (RegexesActiveContext.Match(json)?.ToStringValue() is string value)
+                    context = EnumExtensions.Parse<SaveContextQueryEnum>(value);
 
-                        // Main is always first and Season second.
-                        return (PresetGameModeEnum)(context == SaveContextQueryEnum.Main ? result[0] : result[1]);
-                    }
-                    else
-                        return (PresetGameModeEnum)(result[0]);
-                }
-        }
+                // Main is always first and Season second.
+                return (PresetGameModeEnum)(context == SaveContextQueryEnum.Main ? collection[0] : collection[1]).ToInt32Value();
+            }
+            else
+                return (PresetGameModeEnum)(collection[0].ToInt32Value());
+
         return PresetGameModeEnum.Unspecified;
     }
 

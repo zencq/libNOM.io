@@ -36,16 +36,7 @@ internal static partial class TotalPlayTime
     /// </summary>
     /// <param name="json"></param>
     /// <returns></returns>
-    public static uint Get(string? json)
-    {
-        if (json is not null)
-        {
-            foreach (var regex in Regexes)
-                if (Extensions.RegexExtensions.MatchToInt32(regex, json, out int result))
-                    return (uint)(result);
-        }
-        return 0;
-    }
+    public static uint Get(string? json) => (uint)(Regexes.Match(json)?.ToInt32Value() ?? 0);
 
     #endregion
 }
