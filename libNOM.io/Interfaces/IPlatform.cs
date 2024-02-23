@@ -91,7 +91,7 @@ public interface IPlatform
     /// <summary>
     /// Identification of the user including username and some ids.
     /// </summary>
-    public UserIdentificationData PlatformUserIdentification { get; }
+    public UserIdentification PlatformUserIdentification { get; }
 
     #endregion
 
@@ -262,15 +262,15 @@ public interface IPlatform
     /// </summary>
     /// <param name="sourceSlotIndex"></param>
     /// <returns></returns>
-    public ContainerTransferData GetTransferData(int sourceSlotIndex);
+    public TransferData GetSourceTransferData(int sourceSlotIndex);
 
     /// <summary>
-    /// Transfers a specified slot to another account or platform according to the prepared <see cref="ContainerTransferData"/>.
+    /// Transfers a specified slot to another account or platform according to the prepared <see cref="TransferData"/>.
     /// Works similar to copy but with additional ownership transfer.
     /// </summary>
     /// <param name="sourceTransferData"></param>
     /// <param name="destinationSlotIndex"></param>
-    public void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex);
+    public void Transfer(TransferData sourceTransferData, int destinationSlotIndex);
 
     #endregion
 

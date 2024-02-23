@@ -7,10 +7,10 @@
 
   <!-- Global Usings -->
   <ItemGroup>
-    <Using Include="libNOM.io.Data" />
     <Using Include="libNOM.io.Enums" />
     <Using Include="libNOM.io.Extensions" />
     <Using Include="libNOM.io.Globals" />
+    <Using Include="libNOM.io.Models" />
   </ItemGroup>
 
   <!-- Build -->

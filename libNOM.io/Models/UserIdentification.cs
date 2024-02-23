@@ -4,7 +4,7 @@
 /// <summary>
 /// Holds information about the users identity.
 /// </summary>
-public record class UserIdentificationData
+public record class UserIdentification
 {
     #region Property
 
@@ -19,11 +19,8 @@ public record class UserIdentificationData
     #endregion
 
     /// <summary>
-    /// Checks whether this data are complete.
+    /// Checks whether the data are complete.
     /// </summary>
     /// <returns></returns>
-    public bool IsComplete()
-    {
-        return new[] { LID, UID, USN, PTK }.All(i => !string.IsNullOrEmpty(i));
-    }
+    public bool IsComplete() => new[] { LID, UID, USN, PTK }.All(i => !string.IsNullOrEmpty(i));
 }
