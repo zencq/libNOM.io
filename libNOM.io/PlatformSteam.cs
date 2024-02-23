@@ -1,11 +1,16 @@
-﻿using CommunityToolkit.HighPerformance;
-using libNOM.io.Services;
-using Newtonsoft.Json.Linq;
-using SpookilySharp;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+
+using CommunityToolkit.HighPerformance;
+
+using DeepCopy;
+using libNOM.io.Services;
+
+using Newtonsoft.Json.Linq;
+
+using SpookilySharp;
 
 namespace libNOM.io;
 
@@ -147,27 +152,6 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    #region Getter
-
-    /// <summary>
-    /// Gets the necessary key for the meta file encryption.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <returns></returns>
-    private static Span<uint> GetKey(Container container)
-    {
-        Span<uint> key = META_ENCRYPTION_KEY;
-        key[0] = (RotateLeft((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64;
-        return key;
-    }
-
-    private static uint RotateLeft(uint value, int bits)
-    {
-        return (value << bits) | (value >> (32 - bits));
-    }
-
-    #endregion
-
     // //
 
     #region Constructor
@@ -201,6 +185,11 @@ public partial class PlatformSteam : Platform
 
     // // Read / Write
 
+    private static uint RotateLeft(uint value, int bits)
+    {
+        return (value << bits) | (value >> (32 - bits));
+    }
+
     #region Generate
 
     private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
@@ -214,7 +203,7 @@ public partial class PlatformSteam : Platform
         {
             DataFile = data,
             MetaFile = meta,
-            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
+            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="Platform.UpdateContainerWithDataInformation"/>.
             Extra = new()
             {
                 LastWriteTime = data.LastWriteTime,
@@ -228,43 +217,64 @@ public partial class PlatformSteam : Platform
 
     protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
     {
-        uint hash = 0;
-        int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
-        ReadOnlySpan<uint> key = GetKey(container);
-        Span<uint> value = base.DecryptMeta(container, meta);
+        uint[] value = base.DecryptMeta(container, meta).ToArray();
 
-        int lastIndex = value.Length - 1;
+        if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT)
+            return value;
 
-        for (int i = 0; i < iterations; i++)
+        // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
+#if NETSTANDARD2_0_OR_GREATER
+        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(((StoragePersistentSlotEnum[])(Enum.GetValues(typeof(StoragePersistentSlotEnum)))).Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
+#else
+        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(Enum.GetValues<StoragePersistentSlotEnum>().Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
+#endif
+
+        foreach (var entry in enumValues)
         {
-            // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
-            hash += 0x9E3779B9;
-        }
-        for (int i = 0; i < iterations; i++)
-        {
-            uint current = value[0];
-            int keyIndex = (int)(hash >> 2 & 3);
-            int valueIndex = lastIndex;
+            // When overwriting META_ENCRYPTION_KEY[0] it can happen that the value is not set afterwards and therefore create a new collection to ensure it will be correct.
+            ReadOnlySpan<uint> key = [(RotateLeft((uint)(entry) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
 
-            for (int j = lastIndex; j > 0; j--, valueIndex--)
+            // DeepCopy as value would be changed otherwise and casting again does not work.
+            Span<uint> result = DeepCopier.Copy(value);
+
+            uint hash = 0;
+            int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
+            int lastIndex = result.Length - 1;
+
+            for (int i = 0; i < iterations; i++)
             {
-                uint j1 = (current >> 3) ^ (value[valueIndex - 1] << 4);
-                uint j2 = (current * 4) ^ (value[valueIndex - 1] >> 5);
-                uint j3 = (value[valueIndex - 1] ^ key[(j & 3) ^ keyIndex]);
-                uint j4 = (current ^ hash);
-                value[valueIndex] -= (j1 + j2) ^ (j3 + j4);
-                current = value[valueIndex];
+                // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
+                hash += 0x9E3779B9;
+            }
+            for (int i = 0; i < iterations; i++)
+            {
+                uint current = result[0];
+                int keyIndex = (int)(hash >> 2 & 3);
+                int valueIndex = lastIndex;
+
+                for (int j = lastIndex; j > 0; j--, valueIndex--)
+                {
+                    uint j1 = (current >> 3) ^ (result[valueIndex - 1] << 4);
+                    uint j2 = (current * 4) ^ (result[valueIndex - 1] >> 5);
+                    uint j3 = (result[valueIndex - 1] ^ key[(j & 3) ^ keyIndex]);
+                    uint j4 = (current ^ hash);
+                    result[valueIndex] -= (j1 + j2) ^ (j3 + j4);
+                    current = result[valueIndex];
+                }
+
+                valueIndex = lastIndex;
+
+                uint i1 = (current >> 3) ^ (result[valueIndex] << 4);
+                uint i2 = (current * 4) ^ (result[valueIndex] >> 5);
+                uint i3 = (result[valueIndex] ^ key[keyIndex]);
+                uint i4 = (current ^ hash);
+                result[0] -= (i1 + i2) ^ (i3 + i4);
+
+                hash += 0x61C88647;
             }
 
-            valueIndex = lastIndex;
-
-            uint i1 = (current >> 3) ^ (value[valueIndex] << 4);
-            uint i2 = (current * 4) ^ (value[valueIndex] >> 5);
-            uint i3 = (value[valueIndex] ^ key[keyIndex]);
-            uint i4 = (current ^ hash);
-            value[0] -= (i1 + i2) ^ (i3 + i4);
-
-            hash += 0x61C88647;
+            if (result[0] == META_HEADER)
+                return result;
         }
 
         return value;
@@ -318,14 +328,14 @@ public partial class PlatformSteam : Platform
                 container.Extra = container.Extra with
                 {
                     SaveName = disk.Slice(88, 128).GetSaveRenamingString(),
-                    SaveSummary = disk  .Slice(216, 128).GetSaveRenamingString(),
+                    SaveSummary = disk.Slice(216, 128).GetSaveRenamingString(),
                     DifficultyPreset = disk[344],
                 };
             }
 
             // Only write if all three values are in their valid ranges.
             if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
-                container.SaveVersion = Calculate.CalculateSaveVersion(container);
+                container.SaveVersion = Helper.SaveVersion.Calculate(container);
         }
 
         // Size is save to write always.
@@ -339,7 +349,7 @@ public partial class PlatformSteam : Platform
     public override void Write(Container container, DateTimeOffset writeTime)
     {
         // Update PlatformArchitecture in save depending on the current operating system without changing the sync state.
-        container.GetJsonObject().SetValue(PlatformArchitecture, "8>q", "Platform");
+        container.GetJsonObject().SetValue(PlatformArchitecture, "PLATFORM");
         base.Write(container, writeTime);
     }
 
@@ -420,7 +430,7 @@ public partial class PlatformSteam : Platform
         uint current = 0;
         uint hash = 0;
         int iterations = container.MetaFormat < MetaFormatEnum.Waypoint ? 8 : 6;
-        ReadOnlySpan<uint> key = GetKey(container);
+        ReadOnlySpan<uint> key = [(RotateLeft((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
         Span<uint> value = meta.Cast<byte, uint>();
 
         int lastIndex = value.Length - 1;

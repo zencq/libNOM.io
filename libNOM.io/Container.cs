@@ -18,7 +18,9 @@ public class Container : IComparable<Container>, IEquatable<Container>
     #region Field
 
     private bool? _exists;
+    private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
     private JObject? _jsonObject;
+    private int _saveVersion = -1;
 
     #endregion
 
@@ -290,7 +292,17 @@ public class Container : IComparable<Container>, IEquatable<Container>
         }
     }
 
-    public GameVersionEnum GameVersion => IsLoaded ? Helper.GameVersion.Get(BaseVersion, _jsonObject!) : GameVersionEnum.Unknown; // { get; }
+    public GameVersionEnum GameVersion // { get; internal set; }
+    {
+        get
+        {
+            if (_gameVersion == GameVersionEnum.Unknown && IsLoaded)
+                _gameVersion = Helper.GameVersion.Get(BaseVersion, _jsonObject!);
+
+            return _gameVersion;
+        }
+        internal set => _gameVersion = value;
+    }
 
     public string SaveName // { get; set; }
     {
@@ -420,9 +432,17 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     internal int SaveVersion // { get; set; }
     {
-        get => _jsonObject?.GetValue<int>("VERSION") ?? -1;
+        get
+        {
+            if (_saveVersion == -1)
+                _saveVersion = _jsonObject?.GetValue<int>("VERSION") ?? -1;
+
+            return _saveVersion;
+        }
         set
         {
+            _saveVersion = value;
+
             if (IsLoaded)
                 SetJsonValue(value, "VERSION");
         }

@@ -1,17 +1,21 @@
-﻿using CommunityToolkit.Diagnostics;
-using CommunityToolkit.HighPerformance;
-using LazyCache;
-using libNOM.io.Interfaces;
-using libNOM.map;
-using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
+
+using CommunityToolkit.Diagnostics;
+using CommunityToolkit.HighPerformance;
+
+using LazyCache;
+using libNOM.io.Interfaces;
+using libNOM.map;
+
+using Microsoft.Extensions.Caching.Memory;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace libNOM.io;
 
@@ -164,16 +168,16 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     private static string GetBaseIdentifier(JObject jsonObject)
     {
 #if NETSTANDARD2_0_OR_GREATER
-        var galacticAddress = jsonObject.GetValue<string>("oZw", "GalacticAddress")!;
+        var galacticAddress = jsonObject.GetValue<string>("BASE_GALACTIC_ADDRESS")!;
         var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
 #else
-        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("oZw", "GalacticAddress");
+        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("BASE_GALACTIC_ADDRESS");
         var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Slice(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
 #endif
 
-        var positionX = jsonObject.GetValue<int>("wMC[0]", "Position[0]");
-        var positionY = jsonObject.GetValue<int>("wMC[1]", "Position[1]");
-        var positionZ = jsonObject.GetValue<int>("wMC[2]", "Position[2]");
+        var positionX = jsonObject.GetValue<int>("BASE_POSITION_0");
+        var positionY = jsonObject.GetValue<int>("BASE_POSITION_1");
+        var positionZ = jsonObject.GetValue<int>("BASE_POSITION_2");
 
         return $"{galacticInteger}{positionX:+000000;-000000}{positionY:+000000;-000000}{positionZ:+000000;-000000}";
     }
@@ -307,10 +311,10 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     // private //
 
-    private static void SetValueIfNullOrEmpty(JObject jsonObject, JToken value, string obfuscated, string deobfuscated)
+    private static void SetValueIfNullOrEmpty(JObject jsonObject, JToken value, string pathIdentifier)
     {
-        if (!string.IsNullOrEmpty(jsonObject.GetValue<string>(obfuscated, deobfuscated)))
-            jsonObject.SetValue(value, obfuscated, deobfuscated);
+        if (!string.IsNullOrEmpty(jsonObject.GetValue<string>(pathIdentifier)))
+            jsonObject.SetValue(value, pathIdentifier);
     }
 
     #endregion
@@ -503,7 +507,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var binary = LoadContainer(container);
 
         if (container.IsCompatible)
-            ProcessContainerData(container, binary.GetString());
+            ProcessContainerData(container, binary.GetString(), false);
     }
 
     /// <summary>
@@ -531,6 +535,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return null;
         }
 
+        container.UsesMapping = Settings.UseMapping;
         if (Settings.UseMapping)
         {
             container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
@@ -612,7 +617,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         }
 
         container.IncompatibilityTag ??= Constants.INCOMPATIBILITY_006;
-        return Array.Empty<byte>();
+        return [];
     }
 
     /// <inheritdoc cref="LoadMeta(Container, Span{byte})"/>
@@ -632,7 +637,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         // 2. Decrypt
         // 3. Decompress
-        var result = read.IsEmpty() ? Array.Empty<uint>() : DecompressMeta(container, DecryptMeta(container, read));
+        var result = read.IsEmpty() ? [] : DecompressMeta(container, DecryptMeta(container, read));
         // 4. Update Container Information
         UpdateContainerWithMetaInformation(container, result.AsBytes(), result);
     }
@@ -645,7 +650,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected virtual Span<byte> ReadMeta(Container container)
     {
         if (container.MetaFile?.Exists != true)
-            return Array.Empty<byte>();
+            return [];
 
         return File.ReadAllBytes(container.MetaFile!.FullName);
     }
@@ -715,7 +720,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected virtual ReadOnlySpan<byte> ReadData(Container container)
     {
         if (container.DataFile?.Exists != true)
-            return Array.Empty<byte>();
+            return [];
 
         return File.ReadAllBytes(container.DataFile!.FullName);
     }
@@ -743,7 +748,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return data;
 
         var offset = 0;
-        ReadOnlySpan<byte> result = Array.Empty<byte>();
+        ReadOnlySpan<byte> result = [];
 
         while (offset < data.Length)
         {
@@ -785,84 +790,57 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="jsonObject"></param>
     /// <param name="force"></param>
-    private void ProcessContainerData(Container container, JObject jsonObject, bool force = false)
+    private void ProcessContainerData(Container container, JObject jsonObject)
     {
-        // Values relevant for AccountData first.
-        if (container.SaveVersion == 0 || force)
-            container.SaveVersion = Json.GetVersion(jsonObject);
+        // Setting the JSON will enable all properties.
+        container.SetJsonObject(jsonObject);
 
         // No need to do these things for AccountData.
         if (container.IsSave)
         {
-            // Then all independent values.
-            if (container.TotalPlayTime == 0 || force)
-                container.TotalPlayTime = Json.GetTotalPlayTime(jsonObject);
-
-            if (container.IsVersion400Waypoint)
-            {
-                if (string.IsNullOrEmpty(container.SaveName) || force)
-                    container.SaveName = Json.GetSaveName(jsonObject);
-
-                if (string.IsNullOrEmpty(container.SaveSummary) || force)
-                    container.SaveSummary = Json.GetSaveSummary(jsonObject);
-            }
-
-            // Finally all remaining values that depend on others.
-            if (container.Season == SeasonEnum.None && container.GameMode == PresetGameModeEnum.Seasonal || force)
-                container.Season = Calculate.CalculateSeason(container); // needs SaveVersion
-
-            if (container.BaseVersion == 0 || force)
-                container.BaseVersion = Calculate.CalculateBaseVersion(container); // needs SaveVersion and GameMode and Season
-
-            if (container.GameVersion == GameVersionEnum.Unknown || force)
-                container.GameVersion = Json.GetGameVersionEnum(container, jsonObject); // needs BaseVersion
-
-            if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-                container.GameDifficulty = Json.GetGameDifficulty(container, jsonObject); // needs BaseVersion and GameVersion
-
-            // Set UserIdentification.
             container.UserIdentification = GetUserIdentification(jsonObject);
             UpdateUserIdentification();
         }
-
-        container.SetJsonObject(jsonObject);
 
         // If we are in here, the container is in sync (again).
         container.IsSynced = true;
     }
 
     /// <inheritdoc cref="ProcessContainerData(Container, JObject, bool)"/>
-    private static void ProcessContainerData(Container container, string json, bool force = false)
+    private static void ProcessContainerData(Container container, string json, bool force)
     {
         // Values relevant for AccountData first.
         if (container.SaveVersion == 0 || force)
-            container.SaveVersion = Json.GetVersion(json);
+            container.SaveVersion = Helper.SaveVersion.Get(json);
 
         // Then all independent values.
+        if (container.Extra.GameMode == 0 || force)
+            container.GameMode = Helper.GameMode.Get(json);
+
         if (container.TotalPlayTime == 0 || force)
-            container.TotalPlayTime = Json.GetTotalPlayTime(json);
-
-        if (container.IsVersion400Waypoint)
-        {
-            if (string.IsNullOrEmpty(container.SaveName) || force)
-                container.SaveName = Json.GetSaveName(json);
-
-            if (string.IsNullOrEmpty(container.SaveSummary) || force)
-                container.SaveSummary = Json.GetSaveSummary(json);
-        }
+            container.TotalPlayTime = Helper.TotalPlayTime.Get(json);
 
         // Finally all remaining values that depend on others.
-        if (container.Season == SeasonEnum.None && container.GameMode == PresetGameModeEnum.Seasonal || force)
-            container.Season = Calculate.CalculateSeason(container); // needs SaveVersion
+        if (container.GameMode == PresetGameModeEnum.Seasonal && container.Season == SeasonEnum.None || force)
+            container.Season = Helper.Season.Get(json); // needs GameMode
 
         if (container.BaseVersion == 0 || force)
-            container.BaseVersion = Calculate.CalculateBaseVersion(container); // needs SaveVersion and GameMode and Season
+            container.BaseVersion = Helper.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
 
         if (container.GameVersion == GameVersionEnum.Unknown)
-            container.GameVersion = Json.GetGameVersionEnum(container, json); // needs BaseVersion
+            container.GameVersion = Helper.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
 
         if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-            container.GameDifficulty = Json.GetGameDifficulty(container, json); // needs BaseVersion and GameVersion
+            container.GameDifficulty = Helper.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
+
+        if (container.IsVersion400Waypoint) // needs GameVersion
+        {
+            if (string.IsNullOrEmpty(container.SaveName) || force)
+                container.SaveName = Helper.SaveName.Get(json);
+
+            if (string.IsNullOrEmpty(container.SaveSummary) || force)
+                container.SaveSummary = Helper.SaveSummary.Get(json);
+        }
     }
 
     #endregion
@@ -911,7 +889,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             // Process
             if (DeserializeContainer(container, binary) is JObject jsonObject)
-                ProcessContainerData(container, jsonObject, true);
+                ProcessContainerData(container, jsonObject);
         }
     }
 
@@ -939,7 +917,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public void Rebuild(Container container, JObject jsonObject)
     {
-        ProcessContainerData(container, jsonObject, true);
+        ProcessContainerData(container, jsonObject);
     }
 
     /// <summary>
@@ -951,7 +929,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var binary = LoadContainer(container);
 
         if (container.IsCompatible && DeserializeContainer(container, binary) is JObject jsonObject)
-            ProcessContainerData(container, jsonObject, true);
+            ProcessContainerData(container, jsonObject);
     }
 
     /// <summary>
@@ -1497,6 +1475,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             var jsonObject = container.GetJsonObject();
             var usesMapping = jsonObject.UsesMapping();
 
+            // TODO JSONPath
             var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})]" : $"6f=.F?0[?({{0}})]";
             var expressions = new[]
             {
@@ -1504,10 +1483,10 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 usesMapping ? $"@.Owner.UID == '{PlatformUserIdentification.UID}'" : $"@.3?K.K7E == '{PlatformUserIdentification.UID}'",
             };
 
-            foreach (var persistentPlayerBase in jsonObject.SelectTokensWithIntersection(path, expressions).Cast<JObject>())
+            foreach (var persistentPlayerBase in Json.SelectTokensWithIntersection(jsonObject, path, expressions).Cast<JObject>())
             {
-                var baseName = persistentPlayerBase.GetValue<string>("NKm", "Name");
-                var baseType = persistentPlayerBase.GetValue<string>("peI.DPp", "BaseType.PersistentBaseTypes");
+                var baseName = persistentPlayerBase.GetValue<string>("BASE_NAME");
+                var baseType = persistentPlayerBase.GetValue<string>("BASE_TYPE");
 
                 if (string.IsNullOrEmpty(baseName))
                 {
@@ -1635,13 +1614,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected void TransferOwnership(Container container, ContainerTransferData sourceTransferData)
     {
         var jsonObject = container.GetJsonObject();
-        var usesMapping = jsonObject.UsesMapping();
 
         // Change token for Platform.
-        jsonObject.SetValue(PlatformArchitecture, "8>q", "Platform");
+        jsonObject.SetValue(PlatformArchitecture, "PLATFORM");
+
+        // TODO check both contexts
 
         if (sourceTransferData.TransferDiscovery) // 1.0
-            TransferGeneralOwnership(jsonObject, usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record..[?(@.UID == '{sourceTransferData.UserIdentification!.UID}')]" : $"fDu.ETO.OsQ.?fB..[?(@.K7E == '{sourceTransferData.UserIdentification!.UID}')]");
+            TransferGeneralOwnership(jsonObject, Json.GetPaths("DISCOVERY_DATA_WITH_UID", jsonObject, sourceTransferData.UserIdentification!.UID)[0]);
 
         if (container.IsVersion(GameVersionEnum.Foundation) && sourceTransferData.TransferBase) // 1.1
             TransferBaseOwnership(jsonObject, sourceTransferData);
@@ -1650,7 +1630,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             TransferBytebeatOwnership(jsonObject, sourceTransferData);
 
         if (container.IsVersion360Frontiers && sourceTransferData.TransferSettlement) // 3.6
-            TransferGeneralOwnership(jsonObject, usesMapping ? $"PlayerStateData.SettlementStatesV2..[?(@.UID == '{sourceTransferData.UserIdentification!.UID}')]" : $"6f=.GQA..[?(@.K7E == '{sourceTransferData.UserIdentification!.UID}')]");
+            TransferGeneralOwnership(jsonObject, Json.GetPaths("SETTLEMENT_WITH_UID", jsonObject, sourceTransferData.UserIdentification!.UID)[0]);
     }
 
     /// <summary>
@@ -1671,12 +1651,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected void TransferGeneralOwnership(JObject jsonObject)
     {
         // Only UID is guaranteed.
-        jsonObject.SetValue(PlatformUserIdentification.UID, "K7E", "UID");
+        jsonObject.SetValue(PlatformUserIdentification.UID, "OWNER_UID");
 
         // Replace LID, PTK, and USN if it is not empty.
-        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.LID, "f5Q", "LID");
-        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.USN, "V?:", "USN");
-        SetValueIfNullOrEmpty(jsonObject, PlatformToken, "D6b", "PTK");
+        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.LID, "OWNER_LID");
+        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.USN, "OWNER_USN");
+        SetValueIfNullOrEmpty(jsonObject, PlatformToken, "OWNER_PTK");
     }
 
     /// <summary>
@@ -1686,14 +1666,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="sourceTransferData"></param>
     protected void TransferBaseOwnership(JObject jsonObject, ContainerTransferData sourceTransferData)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
-        foreach (var persistentPlayerBase in jsonObject.SelectTokens(usesMapping ? "PlayerStateData.PersistentPlayerBases[*]" : "6f=.F?0[*]").Cast<JObject>())
+        foreach (var persistentPlayerBase in jsonObject.SelectTokens(Json.GetPaths("PERSISTENT_PLAYER_BASE_ALL", jsonObject)[0]).Cast<JObject>())
         {
             var identifier = GetBaseIdentifier(persistentPlayerBase);
 
             if (sourceTransferData.TransferBaseUserDecision.TryGetValue(identifier, out var userDecision) && userDecision.DoTransfer)
-                TransferGeneralOwnership((JObject)(persistentPlayerBase[usesMapping ? "Owner" : "3?K"]!));
+                TransferGeneralOwnership((JObject)(persistentPlayerBase[Json.GetPaths("BASE_OWNER", jsonObject)[0]]!));
         }
     }
 
@@ -1704,13 +1682,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="sourceTransferData"></param>
     protected void TransferBytebeatOwnership(JObject jsonObject, ContainerTransferData sourceTransferData)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
-        foreach (var mySong in jsonObject.SelectTokens(usesMapping ? $"PlayerStateData.MySongs[?(@.AuthorOnlineID == '{sourceTransferData.UserIdentification!.UID}')]" : $"6f=.ON4[?(@.m7b == '{sourceTransferData.UserIdentification!.UID}')]").Cast<JObject>())
+        foreach (var mySong in jsonObject.SelectTokens(Json.GetPaths("MY_SONGS_WITH_UID", jsonObject, sourceTransferData.UserIdentification!.UID)[0]).Cast<JObject>())
         {
-            mySong.SetValue(PlatformUserIdentification.UID, "m7b", "AuthorOnlineID");
-            mySong.SetValue(PlatformUserIdentification.USN, "4ha", "AuthorUsername");
-            mySong.SetValue(PlatformToken, "d2f", "AuthorPlatform");
+            // TODO set value w/o jsonObject -> GetPaths returns all -> try and find
+            mySong.SetValue(PlatformUserIdentification.UID, "SONG_AUTHOR_ID");
+            mySong.SetValue(PlatformUserIdentification.USN, "SONG_AUTHOR_USERNAME");
+            mySong.SetValue(PlatformToken, "SONG_AUTHOR_PLATFORM");
         }
     }
 
@@ -1893,13 +1870,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual string GetUserIdentification(JObject jsonObject, string key)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
         key = key switch
         {
-            "LID" => usesMapping ? "LID" : "f5Q",
-            "UID" => usesMapping ? "UID" : "K7E",
-            "USN" => usesMapping ? "USN" : "V?:",
+            "LID" => Json.GetPaths("OWNER_LID", jsonObject)[0],
+            "UID" => Json.GetPaths("OWNER_UID", jsonObject)[0],
+            "USN" => Json.GetPaths("OWNER_USN", jsonObject)[0],
             _ => string.Empty,
         };
         if (string.IsNullOrEmpty(key))
@@ -1917,13 +1892,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
+        // TODO check {{0}}
+        var path = Json.GetPaths("DISCOVERY_DATA_OWNERSHIP", jsonObject, key)[0];
         var expressions = new[]
         {
-            usesMapping ? $"@.OWS.PTK == '' || @.OWS.PTK == '{PlatformToken}'" : $"@.ksu.D6b == '' || @.ksu.D6b == '{PlatformToken}'", // only with valid platform
-            usesMapping ? $"@.OWS.LID != ''" : $"@.ksu.f5Q != ''", // only if set
+            Json.GetPaths("DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken)[0],
+            Json.GetPaths("DISCOVERY_DATA_OWNERSHIP_EXPRESSION_LID", jsonObject)[0],
         };
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
@@ -1938,14 +1912,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
     protected virtual IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
+        // TODO check {{0}}
+        var path = Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, key)[0];
         var expressions = new[]
         {
-            usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-            usesMapping ? $"@.Owner.PTK == '' || @.Owner.PTK == '{PlatformToken}'" : $"@.3?K.D6b == '' || @.3?K.D6b == '{PlatformToken}'", // only with valid platform
-            usesMapping ? $"@.Owner.LID != ''" : $"@.3?K.f5Q != ''", // only if set
+            Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase)[0],
+            Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken)[0],
+            Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_LID", jsonObject)[0],
         };
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
@@ -1959,13 +1932,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
+        // TODO check {{0}}
+        var path = Json.GetPaths("SETTLEMENT_OWNERSHIP", jsonObject, key)[0];
         var expressions = new[]
         {
-            usesMapping ? $"@.Owner.PTK == '{PlatformToken}'" : $"@.3?K.D6b == '{PlatformToken}'", // only with valid platform
-            usesMapping ? $"@.Owner.LID != ''" : $"@.3?K.f5Q != ''", // only if set
+            Json.GetPaths("SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken)[0],
+            Json.GetPaths("SETTLEMENT_OWNERSHIP_EXPRESSION_LID", jsonObject)[0],
         };
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
@@ -1980,7 +1952,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected static IEnumerable<string> GetUserIdentificationIntersection(JObject jsonObject, string path, params string[] expressions)
     {
-        return (IEnumerable<string>)(jsonObject.SelectTokensWithIntersection(path, expressions).Select(i => i.Value<string>()).Where(j => !string.IsNullOrWhiteSpace(j)));
+        return (IEnumerable<string>)(Json.SelectTokensWithIntersection(jsonObject, path, expressions).Select(i => i.Value<string>()).Where(j => !string.IsNullOrWhiteSpace(j)));
     }
 
     #endregion

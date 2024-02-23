@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
-
 using Newtonsoft.Json.Linq;
+
+using Regex = System.Text.RegularExpressions.Regex;
 
 namespace libNOM.io.Helper;
 
@@ -11,10 +12,10 @@ internal static partial class Season
 
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
 #pragma warning disable IDE0300 // Use collection expression for array
-    private static readonly Regex[] Regexes = [
+    private static readonly Regex[] Regexes = new Regex[] { // keep this format to have Regex syntax highlighting
         new("\\\"gou\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100)),
         new("\\\"SeasonId\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100)),
-    ];
+    };
 #pragma warning restore IDE0300
 #else
     [GeneratedRegex("\\\"gou\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, 100)]
@@ -28,46 +29,6 @@ internal static partial class Season
         RegexPlaintext(),
     ];
 #endif
-
-    private static bool GetRegex(Regex regex, string input, out uint result)
-    {
-        result = 0;
-        Match match;
-        try
-        {
-            match = regex.Match(input);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            return false;
-        }
-
-        if (match.Success)
-        {
-            result = System.Convert.ToUInt32(match.Groups[1].Value);
-        }
-        return match.Success;
-    }
-
-    private static bool GetRegex(Regex regex, string input, out string result)
-    {
-        result = string.Empty;
-        Match match;
-        try
-        {
-            match = regex.Match(input);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            return false;
-        }
-
-        if (match.Success)
-        {
-            result = match.Groups[1].Value;
-        }
-        return match.Success;
-    }
 
     #endregion
 
@@ -83,7 +44,7 @@ internal static partial class Season
         if (jsonObject is null)
             return SeasonEnum.None;
 
-        return SeasonIdToEnum(jsonObject.GetValue<uint>("SEASON_ID"));
+        return SeasonIdToEnum(jsonObject.GetValue<int>("SEASON_ID"));
     }
 
     /// <inheritdoc cref="Get(JObject?)"/>
@@ -93,13 +54,13 @@ internal static partial class Season
         if (json is not null)
         {
             foreach (var regex in Regexes)
-                if (GetRegex(regex, json, out uint result))
+                if (Extensions.RegexExtensions.MatchToInt32(regex, json, out int result))
                     return SeasonIdToEnum(result);
         }
         return SeasonEnum.None;
     }
 
-    private static SeasonEnum SeasonIdToEnum(uint id)
+    private static SeasonEnum SeasonIdToEnum(int id)
     {
         if (id == 1) // there is no entry in the enum with value 1
             return SeasonEnum.Pioneers;

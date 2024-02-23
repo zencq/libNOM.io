@@ -1,8 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-
-using CommunityToolkit.HighPerformance;
-
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using Regex = System.Text.RegularExpressions.Regex;
 
 namespace libNOM.io.Helper;
 
@@ -31,30 +28,7 @@ internal static partial class SaveVersion
     ];
 #endif
 
-    private static bool GetRegex(Regex regex, string input, out int result)
-    {
-        result = 0;
-        Match match;
-        try
-        {
-            match = regex.Match(input);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            return false;
-        }
-
-        if (match.Success)
-        {
-            result = System.Convert.ToInt32(match.Groups[1].Value);
-        }
-        return match.Success;
-    }
-
-
     #endregion
-
-    // //
 
     #region Calculate
 
@@ -96,7 +70,7 @@ internal static partial class SaveVersion
         if (json is not null)
         {
             foreach (var regex in Regexes)
-                if (GetRegex(regex, json, out int result))
+                if (Extensions.RegexExtensions.MatchToInt32(regex, json, out int result))
                     return result;
         }
         return 0;

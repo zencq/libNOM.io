@@ -1,6 +1,4 @@
-﻿using CommunityToolkit.HighPerformance;
-
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace libNOM.io.Helper;
 

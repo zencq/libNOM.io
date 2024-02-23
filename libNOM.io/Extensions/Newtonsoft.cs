@@ -12,6 +12,24 @@ namespace libNOM.io.Extensions;
 
 public static class NewtonsoftExtensions
 {
+    #region Flags
+
+    /// <summary>
+    /// Wether the specified object is the root object.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static bool IsRoot(this JObject self) => Constants.JSONPATH["VERSION"].Any(self.ContainsKey);
+
+    /// <summary>
+    /// Whether the specified object is deobfuscated. Needs to be called on the root object.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static bool UsesMapping(this JObject self) => self.ContainsKey(Constants.JSONPATH["VERSION"][1]);
+
+    #endregion
+
     #region GetBytes
 
     /// <summary>
@@ -146,7 +164,7 @@ public static class NewtonsoftExtensions
 
                     // string
                     if (jTokens.First().Value<string>() is not null)
-                        return jTokens.Select(i => i.Value<string>()).Where(j => j is not null).Select(k => (T)(Enum.Parse(type, k)));
+                        return jTokens.Select(i => i.Value<string>()).Where(j => j is not null).Select(k => (T)(Enum.Parse(type, k!)));
                 }
                 else
                     return (IEnumerable<T>)(jTokens.Select(i => i.Value<T>()).Where(j => j is not null));
@@ -206,11 +224,7 @@ public static class NewtonsoftExtensions
 
     #endregion
 
-
-    #region GetBytes
-
-    #endregion
-    // public //
+    #region Helper
 
     private static T? ConvertToken<T>(this JToken self)
     {
@@ -235,58 +249,5 @@ public static class NewtonsoftExtensions
         return default;
     }
 
-
-    // internal //
-
-
-    /// <summary>
-    /// Returns the format of the specified save file object. Needs to be called on the root object.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static SaveFormatEnum GetSaveFormat(this JObject self)
-    {
-        return Constants.JSONPATH["ACTIVE_CONTEXT"].Any(self.ContainsKey) ? SaveFormatEnum.Omega : SaveFormatEnum.Vanilla;
-    }
-
-    /// <summary>
-    /// Returns whether the specified object is the root object.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static bool IsRoot(this JObject self)
-    {
-        return Constants.JSONPATH["VERSION"].Any(self.ContainsKey);
-    }
-
-    /// <summary>
-    /// Selects a collection of elements using multiple JSONPath expression with conjunction.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <param name="path"></param>
-    /// <param name="expressions"></param>
-    /// <returns></returns>
-    internal static IEnumerable<JToken> SelectTokensWithIntersection(this JObject self, string path, params string[] expressions)
-    {
-        if (expressions.Length == 0)
-            return [];
-
-        IEnumerable<JToken> result = null!;
-        foreach (var expression in expressions)
-        {
-            var query = self.SelectTokens(string.Format(path, expression));
-            result = result is null ? query : result.Intersect(query);
-        }
-        return result;
-    }
-
-    /// <summary>
-    /// Returns whether the specified object is deobfuscated. Needs to be called on the root object.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static bool UsesMapping(this JObject self)
-    {
-        return self.ContainsKey(Constants.JSONPATH["VERSION"][1]);
-    }
+    #endregion
 }

@@ -212,7 +212,7 @@ public partial class PlatformSwitch : Platform
 
             // Only write if all three values are in their valid ranges.
             if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
-                container.SaveVersion = Calculate.CalculateSaveVersion(container);
+                container.SaveVersion = Helper.SaveVersion.Calculate(container);
         }
     }
 
