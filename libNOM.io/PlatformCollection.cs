@@ -201,7 +201,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         }
 
         // Create container and load it before returning it.
-        var container = new Container(metaIndex)
+        var container = new Container(metaIndex, platform)
         {
             DataFile = new FileInfo(path),
             MetaFile = meta,

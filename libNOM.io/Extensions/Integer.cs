@@ -1,4 +1,6 @@
-﻿namespace libNOM.io.Extensions;
+﻿using Newtonsoft.Json.Linq;
+
+namespace libNOM.io.Extensions;
 
 
 internal static class IntegerExtensions
@@ -25,6 +27,15 @@ internal static class IntegerExtensions
     internal static bool IsGameMode(this int self, PresetGameModeEnum mode)
     {
         return self >= (Constants.THRESHOLD_VANILLA + ((int)(mode) * Constants.OFFSET_GAMEMODE));
+    }
+
+    #endregion
+
+    #region typeof(uint)
+
+    internal static uint RotateLeft(this uint self, int bits)
+    {
+        return (self << bits) | (self >> (32 - bits));
     }
 
     #endregion

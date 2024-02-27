@@ -186,7 +186,7 @@ public static class Convert
                 return null;
             }
 
-            container = new Container(-1) { DataFile = new(input) };
+            container = new Container(-1, null!) { DataFile = new(input) };
             container.SetJsonObject(bytes.GetJson());
             if (!container.IsLoaded) // no valid JSON in specified file
                 return null;

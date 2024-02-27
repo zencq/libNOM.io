@@ -222,6 +222,20 @@ public static class NewtonsoftExtensions
         return false;
     }
 
+    /// <summary>
+    /// Evaluates a JSONPath expression and sets the new value only if there is one to replace.
+    /// </summary>
+    /// <param name="jsonObject"></param>
+    /// <param name="value"></param>
+    /// <param name="pathIdentifier"></param>
+    internal static void SetValueIfNullOrEmpty(this JObject self, JToken value, string pathIdentifier)
+    {
+        var paths = Json.GetPaths(pathIdentifier, self);
+
+        if (!string.IsNullOrEmpty(GetValue<string>(self, paths)))
+            SetValue(self, value, paths);
+    }
+
     #endregion
 
     #region Helper

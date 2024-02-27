@@ -8,8 +8,5 @@ internal static class GuidExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns>The value of this <see cref="Guid"/>, represented as a series of uppercase hexadecimal digits in the N format.</returns>
-    internal static string ToPath(this Guid self)
-    {
-        return self.ToString("N").ToUpper();
-    }
+    internal static string ToPath(this Guid self) => self.ToString("N").ToUpper();
 }

@@ -20,6 +20,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     private bool? _exists;
     private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
     private JObject? _jsonObject;
+    private Platform _platform;
     private int _saveVersion = -1;
 
     #endregion
@@ -62,8 +63,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
     // //
 
     #region Flags
-
-    // public //
 
     /// <summary>
     /// Whether it is possible to switch context between the main/primary save and an active expedition/season.
@@ -377,8 +376,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
         }
     }
 
-    public bool UsesMapping { get; internal set; }
-
     // internal //
 
     internal int BaseVersion // { get; set; }
@@ -430,6 +427,12 @@ public class Container : IComparable<Container>, IEquatable<Container>
         set => Extra = Extra with { MetaFormat = value };
     }
 
+    internal int MetaSize => MetaFormat switch // { get; }
+    {
+        MetaFormatEnum.Waypoint => _platform.META_LENGTH_TOTAL_WAYPOINT,
+        _ => _platform.META_LENGTH_TOTAL_VANILLA,
+    };
+
     internal int SaveVersion // { get; set; }
     {
         get
@@ -453,6 +456,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
     #endregion
 
     #endregion
+
+    // //
 
     #region Getter
 
@@ -564,7 +569,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
         // Make sure the data are always in the format that was set in the settings.
         if (_jsonObject is not null) // happens when the container is unloaded
-            if (UsesMapping)
+            if (_platform.Settings.UseMapping)
             {
                 UnknownKeys = Mapping.Deobfuscate(_jsonObject);
             }
@@ -612,10 +617,12 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Constructor
 
-    public Container(int metaIndex) : this(metaIndex, new()) { }
+    public Container(int metaIndex, Platform platform) : this(metaIndex, platform, new()) { }
 
-    internal Container(int metaIndex, PlatformExtra extra)
+    internal Container(int metaIndex, Platform platform, PlatformExtra extra)
     {
+        _platform = platform;
+
         CollectionIndex = metaIndex - Constants.OFFSET_INDEX;
         Extra = extra;
         MetaIndex = metaIndex;

@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.HighPerformance;
+﻿using System.Globalization;
+
+using CommunityToolkit.HighPerformance;
 
 using Newtonsoft.Json.Linq;
 
@@ -96,13 +98,30 @@ internal static partial class Json
         }
         return result;
     }
+
+
     /// <summary>
-    /// Returns the format of the specified save file object. Needs to be called on the root object.
+    /// Creates an unique identifier for bases based on its location.
     /// </summary>
-    /// <param name="self"></param>
+    /// <param name="jsonObject"></param>
     /// <returns></returns>
-    internal static SaveFormatEnum GetSaveFormat(JObject self)
+#if !NETSTANDARD2_0
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
+#endif
+    internal static string GetBaseIdentifier(JObject jsonObject)
     {
-        return Constants.JSONPATH["ACTIVE_CONTEXT"].Any(self.ContainsKey) ? SaveFormatEnum.Omega : SaveFormatEnum.Vanilla;
+#if NETSTANDARD2_0_OR_GREATER
+        var galacticAddress = jsonObject.GetValue<string>("BASE_GALACTIC_ADDRESS")!;
+        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
+#else
+        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("BASE_GALACTIC_ADDRESS");
+        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Slice(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
+#endif
+
+        var positionX = jsonObject.GetValue<int>("BASE_POSITION_0");
+        var positionY = jsonObject.GetValue<int>("BASE_POSITION_1");
+        var positionZ = jsonObject.GetValue<int>("BASE_POSITION_2");
+
+        return $"{galacticInteger}{positionX:+000000;-000000}{positionY:+000000;-000000}{positionZ:+000000;-000000}";
     }
 }

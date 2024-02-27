@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
-using System.Text.RegularExpressions;
 
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
@@ -28,19 +27,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 {
     #region Constant
 
-    internal virtual int COUNT_SAVE_SLOTS { get; } = 15; // overrideable for compatibility with old PlayStation format
-    internal virtual int COUNT_SAVES_PER_SLOT { get; } = 2;
+    protected virtual int COUNT_SAVE_SLOTS { get; } = 15; // overrideable for compatibility with old PlayStation format
+    private int COUNT_SAVES_PER_SLOT { get; } = 2;
     internal int COUNT_SAVES_TOTAL => COUNT_SAVE_SLOTS * COUNT_SAVES_PER_SLOT; // { get; }
 
-    protected abstract int META_LENGTH_TOTAL_VANILLA { get; }
-    protected abstract int META_LENGTH_TOTAL_WAYPOINT { get; }
+    internal abstract int META_LENGTH_TOTAL_VANILLA { get; }
+    internal abstract int META_LENGTH_TOTAL_WAYPOINT { get; }
 
     #endregion
 
     #region Field
 
     protected readonly IAppCache _cache = new CachingService();
-    protected int _preparedForTransfer = -1;
     protected readonly LazyCacheEntryOptions _options = new();
     protected readonly FileSystemWatcher _watcher = new();
 
@@ -62,25 +60,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public DirectoryInfo Location { get; protected set; }
 
-    public abstract PlatformEnum PlatformEnum { get; }
-
-    public UserIdentification PlatformUserIdentification { get; } = new();
-
     public PlatformSettings Settings { get; protected set; }
 
     // protected //
 
     protected int AnchorFileIndex { get; set; } = -1;
-
-    protected abstract string[] PlatformAnchorFileGlob { get; }
-
-    protected abstract Regex[] PlatformAnchorFileRegex { get; }
-
-    protected abstract string? PlatformArchitecture { get; }
-
-    protected abstract string? PlatformProcessPath { get; }
-
-    protected abstract string PlatformToken { get; }
 
     #endregion
 
@@ -96,7 +80,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public abstract bool CanDelete { get; }
 
-    public virtual bool Exists => Location?.Exists == true; // { get; }
+    public virtual bool Exists => Location?.Exists ?? false; // { get; }
 
     public virtual bool HasAccountData => AccountContainer.Exists && AccountContainer.IsCompatible; // { get; }
 
@@ -127,7 +111,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         }
     }
 
-    public virtual bool IsValid => PlatformAnchorFileRegex.ContainsIndex(AnchorFileIndex); // { get; }
+    public virtual bool IsValid => PlatformAnchorFilePattern.ContainsIndex(AnchorFileIndex); // { get; }
 
     public abstract bool RestartToApply { get; }
 
@@ -137,128 +121,37 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    #region Platform Indicator
+
+    // public //
+
+    public abstract PlatformEnum PlatformEnum { get; }
+
+    public UserIdentification PlatformUserIdentification { get; } = new();
+
+    // protected //
+
+    protected abstract string[] PlatformAnchorFilePattern { get; }
+
+    protected abstract string? PlatformArchitecture { get; }
+
+    protected abstract string? PlatformProcessPath { get; }
+
+    protected abstract string PlatformToken { get; }
+
     #endregion
+
+    #endregion
+
+    // //
 
     #region Getter
 
     // public //
 
-    public int GetMaximumSlots() => COUNT_SAVE_SLOTS;
+    public Container GetAccountContainer() => AccountContainer;
 
-    // protected //
-
-    protected int GetMetaSize(Container container)
-    {
-        return container.MetaFormat switch
-        {
-            MetaFormatEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
-            _ => META_LENGTH_TOTAL_VANILLA,
-        };
-    }
-
-    // private //
-
-    /// <summary>
-    /// Creates an unique identifier for bases based on its location.
-    /// </summary>
-    /// <param name="jsonObject"></param>
-    /// <returns></returns>
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
-    private static string GetBaseIdentifier(JObject jsonObject)
-    {
-#if NETSTANDARD2_0_OR_GREATER
-        var galacticAddress = jsonObject.GetValue<string>("BASE_GALACTIC_ADDRESS")!;
-        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
-#else
-        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("BASE_GALACTIC_ADDRESS");
-        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Slice(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
-#endif
-
-        var positionX = jsonObject.GetValue<int>("BASE_POSITION_0");
-        var positionY = jsonObject.GetValue<int>("BASE_POSITION_1");
-        var positionZ = jsonObject.GetValue<int>("BASE_POSITION_2");
-
-        return $"{galacticInteger}{positionX:+000000;-000000}{positionY:+000000;-000000}{positionZ:+000000;-000000}";
-    }
-
-    // //
-
-    #region Container
-
-    // public //
-
-    public Container GetAccountContainer()
-    {
-        return AccountContainer;
-    }
-
-    public Container? GetSaveContainer(int collectionIndex)
-    {
-        if (SaveContainerCollection.ContainsIndex(collectionIndex))
-            return SaveContainerCollection[collectionIndex];
-
-        return null;
-    }
-
-    public IEnumerable<Container> GetSaveContainers()
-    {
-        return SaveContainerCollection;
-    }
-
-    public IEnumerable<Container> GetExistingContainers()
-    {
-        return SaveContainerCollection.Where(i => i.Exists);
-    }
-
-    public IEnumerable<Container> GetLoadedContainers()
-    {
-        return SaveContainerCollection.Where(i => i.IsLoaded);
-    }
-
-    public IEnumerable<Container> GetSlotContainers(int slotIndex)
-    {
-        return SaveContainerCollection.Where(i => i.SlotIndex == slotIndex);
-    }
-
-    public IEnumerable<Container> GetUnsyncedContainers()
-    {
-        return SaveContainerCollection.Where(i => i.IsLoaded && !i.IsSynced);
-    }
-
-    public IEnumerable<Container> GetWatcherContainers()
-    {
-        return SaveContainerCollection.Where(i => i.HasWatcherChange);
-    }
-
-    // protected //
-
-    /// <summary>
-    /// Gets all <see cref="Container"/> affected by one cache eviction.
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name)
-    {
-        return SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
-    }
-
-    #endregion
-
-    #region Path
-
-    // public //
-
-    public string GetBackupPath()
-    {
-        return Path.GetFullPath(Settings.Backup);
-    }
-
-    public string GetDownloadPath()
-    {
-        return Path.GetFullPath(Settings.Download);
-    }
+    public IEnumerable<Container> GetSaveContainers() => SaveContainerCollection;
 
     // protected //
 
@@ -270,23 +163,23 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected int GetAnchorFileIndex(DirectoryInfo? directory)
     {
         if (directory is not null)
-        {
-            for (var i = 0; i < PlatformAnchorFileRegex.Length; i++)
-            {
-                if (directory.GetFiles().Any(j => PlatformAnchorFileRegex[i].IsMatch(j.Name)))
+            for (var i = 0; i < PlatformAnchorFilePattern.Length; i++)
+                if (directory.GetFiles(PlatformAnchorFilePattern[i]).Length != 0)
                     return i;
-            }
-        }
+
         return -1;
     }
 
-    #endregion
+    /// <summary>
+    /// Gets all <see cref="Container"/> affected by one cache eviction.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name) => SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false);
 
     #endregion
 
     #region Setter
-
-    // public //
 
     /// <summary>
     /// Updates the instance with a new configuration. If null is passed, the settings will be reset to default.
@@ -294,7 +187,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="platformSettings"></param>
     public void SetSettings(PlatformSettings? platformSettings)
     {
-        // Cache old strategy first to be able to properly react to the change.
+        // Cache old values first to be able to properly react to the change.
+        var oldMapping = Settings.UseMapping;
         var oldStrategy = Settings.LoadingStrategy;
 
         // Update.
@@ -310,17 +204,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             DisableWatcher();
         }
         else if (Settings.LoadingStrategy > LoadingStrategyEnum.Empty && oldStrategy == LoadingStrategyEnum.Empty)
-        {
-            GeneratePlatformData();
-        }
-    }
+            GeneratePlatformData(); // calls EnableWatcher()
 
-    // private //
-
-    private static void SetValueIfNullOrEmpty(JObject jsonObject, JToken value, string pathIdentifier)
-    {
-        if (!string.IsNullOrEmpty(jsonObject.GetValue<string>(pathIdentifier)))
-            jsonObject.SetValue(value, pathIdentifier);
+        // Ensure mapping is updated in the containers.
+        if (Settings.UseMapping != oldMapping)
+            foreach (var container in SaveContainerCollection)
+                container.SetJsonObject(container.GetJsonObject());
     }
 
     #endregion
@@ -330,30 +219,15 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     #region Constructor
 
 #pragma warning disable CS8618 // Non-nullable property 'Settings' must contain a non-null value when exiting constructor. Property 'Settings' is set in InitializeComponent.
-    public Platform()
-    {
-        InitializeComponent(null, null);
-    }
+    public Platform() => InitializeComponent(null, null);
 
-    public Platform(string path)
-    {
-        InitializeComponent(new(path), null);
-    }
+    public Platform(string path) => InitializeComponent(new(path), null);
 
-    public Platform(string path, PlatformSettings platformSettings)
-    {
-        InitializeComponent(new(path), platformSettings);
-    }
+    public Platform(string path, PlatformSettings platformSettings) => InitializeComponent(new(path), platformSettings);
 
-    public Platform(DirectoryInfo directory)
-    {
-        InitializeComponent(directory, null);
-    }
+    public Platform(DirectoryInfo directory) => InitializeComponent(directory, null);
 
-    public Platform(DirectoryInfo directory, PlatformSettings platformSettings)
-    {
-        InitializeComponent(directory, platformSettings);
-    }
+    public Platform(DirectoryInfo directory, PlatformSettings platformSettings) => InitializeComponent(directory, platformSettings);
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
 
     /// <summary>
@@ -380,7 +254,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         _watcher.Deleted += OnWatcherEvent;
         _watcher.Renamed += OnWatcherEvent;
 
-        _watcher.Filter = PlatformAnchorFileGlob[AnchorFileIndex];
+        _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex];
         _watcher.Path = Location.FullName;
 
         // Loading
@@ -460,14 +334,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 else if (metaIndex > 1) // skip index 1
                 {
                     var container = CreateContainer(metaIndex);
+
                     if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
-                    {
                         BuildContainerHollow(container);
-                    }
                     else
-                    {
                         BuildContainerFull(container);
-                    }
+
                     GenerateBackupCollection(container);
                     bag.Add(container);
                 }
@@ -479,10 +351,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <inheritdoc cref="CreateContainer(int, PlatformExtra?)"/>
-    internal Container CreateContainer(int metaIndex)
-    {
-        return CreateContainer(metaIndex, null);
-    }
+    internal Container CreateContainer(int metaIndex) => CreateContainer(metaIndex, null);
 
     /// <summary>
     /// Creates a <see cref="Container"/> with basic data.
@@ -517,45 +386,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Deserializes the read data of a <see cref="Container"/> into a JSON object.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="binary"></param>
-    /// <returns></returns>
-    protected virtual JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
-    {
-        JObject? jsonObject;
-        try
-        {
-            jsonObject = binary.GetJson();
-        }
-        catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
-        {
-            container.IncompatibilityException = ex;
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;
-            return null;
-        }
-        if (jsonObject is null)
-        {
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_003;
-            return null;
-        }
-
-        container.UsesMapping = Settings.UseMapping;
-        if (Settings.UseMapping)
-        {
-            container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
-        }
-        else
-        {
-            // Do deliver a consistent experience, make sure the file is obfuscated if the setting is set to false.
-            Mapping.Obfuscate(jsonObject);
-        }
-
-        return jsonObject;
-    }
-
-    /// <summary>
     /// Generates a collection with all backups of the specified <see cref="Container"/> that matches the MetaIndex and this <see cref="Platform"/>.
     /// </summary>
     /// <param name="container"></param>
@@ -577,7 +407,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             try
             {
-                container.BackupCollection.Add(new(container.MetaIndex)
+                container.BackupCollection.Add(new(container.MetaIndex, this)
                 {
                     DataFile = new(file),
                     GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
@@ -585,10 +415,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
                 });
             }
-            catch (FormatException)
-            {
-                // Ignore.
-            }
+            catch (FormatException) { } // ignore
         }
     }
 
@@ -613,13 +440,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             var data = LoadData(container);
             if (data.IsEmpty())
-            {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-            }
             else
-            {
                 return data;
-            }
         }
 
         container.IncompatibilityTag ??= Constants.INCOMPATIBILITY_006;
@@ -784,6 +607,33 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             SizeDecompressed = (uint)(decompressed.Length),
             SizeDisk = (uint)(disk.Length),
         };
+    }
+
+    /// <summary>
+    /// Deserializes the read data of a <see cref="Container"/> into a JSON object.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="binary"></param>
+    /// <returns></returns>
+    protected virtual JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
+    {
+        JObject? jsonObject;
+        try
+        {
+            jsonObject = binary.GetJson();
+        }
+        catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
+        {
+            container.IncompatibilityException = ex;
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;
+            return null;
+        }
+        if (jsonObject is null)
+        {
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_003;
+            return null;
+        }
+        return jsonObject;
     }
 
     #endregion
@@ -1193,7 +1043,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         }
 
         // Create new backup container.
-        var backup = new Container(container.MetaIndex)
+        var backup = new Container(container.MetaIndex, this)
         {
             DataFile = new(path),
             GameVersion = container.GameVersion,
@@ -1549,7 +1399,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             BuildContainerFull(container);
         }
 
-        _preparedForTransfer = destinationSlotIndex;
+        //_preparedForTransfer = destinationSlotIndex;
     }
 
     public void Transfer(TransferData sourceTransferData, int destinationSlotIndex) => Transfer(sourceTransferData, destinationSlotIndex, true);
@@ -1559,8 +1409,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <exception cref="InvalidOperationException"></exception>
     protected virtual void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
     {
-        if (_preparedForTransfer != destinationSlotIndex)
-            PrepareTransferDestination(destinationSlotIndex);
+        //if (_preparedForTransfer != destinationSlotIndex)
+        //    PrepareTransferDestination(destinationSlotIndex);
 
         if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
             throw new InvalidOperationException("Cannot transfer as at least one user identification is not complete.");

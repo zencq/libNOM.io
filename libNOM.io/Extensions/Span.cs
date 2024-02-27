@@ -154,9 +154,22 @@ internal static class ReadOnlySpanExtensions
 
     internal static int ReadString(this ReadOnlySpan<byte> self, out string result, int start)
     {
-        var length = self.Cast<int>(start) * 2;
-        result = self.Slice(start + 4, length).Cast<byte, char>().ToString();
+        var length = self.Cast<int>(start) * 2; // times two as it is UTF-16
+        result = self.Slice(start + sizeof(int), length).Cast<byte, char>().ToString();
         return sizeof(int) + length;
+    }
+
+    internal static int ReadString(this ReadOnlySpan<byte> self, int start, out string result)
+    {
+        var length = self.Cast<int>(start) * 2; // times two as it is UTF-16
+        result = self.Slice(start + sizeof(int), length).Cast<byte, char>().ToString();
+        return sizeof(int) + length;
+    }
+
+    internal static int ReadString(this ReadOnlySpan<byte> self, int start, int length, out ReadOnlySpan<char> result)
+    {
+        result = self.Slice(start, length).Cast<byte, char>().TrimEnd('\0');
+        return length;
     }
 
     internal static int ReadString(this ReadOnlySpan<byte> self, out ReadOnlySpan<char> result, int start, int length)

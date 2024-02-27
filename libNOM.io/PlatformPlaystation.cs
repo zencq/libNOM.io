@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
+
 using libNOM.map;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
 
 namespace libNOM.io;
 
@@ -12,7 +13,9 @@ public partial class PlatformPlaystation : Platform
 {
     #region Constant
 
-    internal override int COUNT_SAVE_SLOTS => _usesSaveStreaming ? base.COUNT_SAVE_SLOTS : 5;
+    internal static readonly string[] ANCHOR_FILE_PATTERN = ["savedata*.hg", "memory*.dat"];
+
+    protected override int COUNT_SAVE_SLOTS => _usesSaveStreaming ? base.COUNT_SAVE_SLOTS : 5;
 
     #region Platform Specific
 
@@ -29,8 +32,8 @@ public partial class PlatformPlaystation : Platform
 
     protected const uint META_HEADER = 0xCA55E77E;
 
-    protected override int META_LENGTH_TOTAL_VANILLA => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
-    protected override int META_LENGTH_TOTAL_WAYPOINT => _usesSaveWizard ? 0x70 : 0x0; // 112 : 0 // actually Frontiers but reused as no use otherwise
+    internal override int META_LENGTH_TOTAL_VANILLA => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
+    internal override int META_LENGTH_TOTAL_WAYPOINT => _usesSaveWizard ? 0x70 : 0x0; // 112 : 0 // actually Frontiers but reused as no use otherwise
 
     internal const string SAVEWIZARD_HEADER = "NOMANSKY";
     internal static readonly byte[] SAVEWIZARD_HEADER_BINARY = SAVEWIZARD_HEADER.GetUTF8Bytes();
@@ -39,64 +42,18 @@ public partial class PlatformPlaystation : Platform
 
     #endregion
 
-    #region Generated Regex
-
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    private static readonly Regex AnchorFileRegex0 = new("savedata\\d{2}\\.hg", RegexOptions.Compiled);
-    private static readonly Regex AnchorFileRegex1 = new("memory\\.dat", RegexOptions.Compiled);
-#else
-    [GeneratedRegex("savedata\\d{2}\\.hg", RegexOptions.Compiled)]
-    private static partial Regex AnchorFileRegex0();
-
-    [GeneratedRegex("memory\\.dat", RegexOptions.Compiled)]
-    private static partial Regex AnchorFileRegex1();
-#endif
-
-    #endregion
-
-    #region Directory Data
-
-    internal static readonly string[] ANCHOR_FILE_GLOB = ["savedata*.hg", "memory*.dat"];
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0, AnchorFileRegex1];
-#else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0(), AnchorFileRegex1()];
-#endif
-
-    #endregion
-
     #endregion
 
     #region Field
 
-    private DateTimeOffset? _lastWriteTime;
-    private FileInfo? _memorydat;
-    private bool _usesSaveStreaming;
-    private bool _usesSaveWizard;
+    private DateTimeOffset? _lastWriteTime; // will be set to track _memorydat timestamp
+    private FileInfo? _memorydat; // will be set if _usesSaveStreaming is false
+    private bool _usesSaveStreaming; // will be set to indicate whether save streaming is used
+    private bool _usesSaveWizard; // will be set to indicate whether SaveWizard is used
 
     #endregion
 
     #region Property
-
-    #region Configuration
-
-    // public //
-
-    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Playstation;
-
-    // protected //
-
-    protected override string[] PlatformAnchorFileGlob { get; } = ANCHOR_FILE_GLOB;
-
-    protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
-
-    protected override string? PlatformArchitecture { get; } = "PS4|Final";
-
-    protected override string? PlatformProcessPath { get; } = null;
-
-    protected override string PlatformToken { get; } = "PS";
-
-    #endregion
 
     #region Flags
 
@@ -122,11 +79,29 @@ public partial class PlatformPlaystation : Platform
 
     #endregion
 
+    #region Platform Indicator
+
+    // public //
+
+    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Playstation;
+
+    // protected //
+
+    protected override string[] PlatformAnchorFilePattern { get; } = ANCHOR_FILE_PATTERN;
+
+    protected override string? PlatformArchitecture { get; } = "PS4|Final";
+
+    protected override string? PlatformProcessPath { get; } = null;
+
+    protected override string PlatformToken { get; } = "PS";
+
     #endregion
 
-    #region Getter
+    #endregion
 
-    #region Container
+    // //
+
+    #region Getter
 
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
     {
@@ -134,7 +109,7 @@ public partial class PlatformPlaystation : Platform
             return base.GetCacheEvictionContainers(name);
 
         if (!name.Equals("memory.dat", StringComparison.OrdinalIgnoreCase))
-            return Enumerable.Empty<Container>();
+            return [];
 
         // Cache previous timestamp.
         var lastWriteTicks = _lastWriteTime!.Value.UtcTicks.GetBlobTicks();
@@ -145,8 +120,6 @@ public partial class PlatformPlaystation : Platform
         // Get all written container that are newer than the previous timestamp.
         return SaveContainerCollection.Where(i => i.Exists && i.LastWriteTime?.UtcTicks >= lastWriteTicks);
     }
-
-    #endregion
 
     #endregion
 
@@ -177,11 +150,11 @@ public partial class PlatformPlaystation : Platform
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         // Proceed to base method even if no directory.
-        if (directory is not null && GetAnchorFileIndex(directory) is int anchorFileIndex and not -1)
+        if (GetAnchorFileIndex(directory) is int anchorFileIndex and not -1) // implicit directory is not null
         {
             if (anchorFileIndex == 1) // memory.dat
             {
-                _memorydat = new FileInfo(Path.Combine(directory.FullName, "memory.dat"));
+                _memorydat = new FileInfo(Path.Combine(directory!.FullName, "memory.dat"));
                 _lastWriteTime = _memorydat.LastWriteTime;
             }
             else
@@ -190,11 +163,11 @@ public partial class PlatformPlaystation : Platform
             }
 
             // Get first file that is not account data if not _memorydat.
-            var f = _memorydat ?? directory.GetFiles().FirstOrDefault(f => PlatformAnchorFileRegex[anchorFileIndex].IsMatch(f.Name) && !f.Name.Contains("00"));
+            var f = _memorydat ?? directory!.GetFiles(PlatformAnchorFilePattern[anchorFileIndex]).FirstOrDefault(i => !i.Name.Contains("00"));
             if (f is not null)
             {
                 using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-                _usesSaveWizard = SAVEWIZARD_HEADER_BINARY.SequenceEqual(reader.ReadBytes(SAVEWIZARD_HEADER_BINARY.Length));
+                _usesSaveWizard = reader.ReadBytes(SAVEWIZARD_HEADER_BINARY.Length).SequenceEqual(SAVEWIZARD_HEADER_BINARY);
             }
         }
 
@@ -216,59 +189,25 @@ public partial class PlatformPlaystation : Platform
 
             // AccountData may have an additional meta/manifest file (for SaveWizard only).
             // Otherwise the meta data are at the beginning of the data file itself (for SaveWizard only).
-            return new Container(metaIndex)
+            return new Container(metaIndex, this)
             {
                 DataFile = data,
                 MetaFile = metaIndex == 0 ? (meta.Exists ? meta : null) : (_usesSaveWizard ? data : null),
                 /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-                Extra = new()
+                Extra = extra ?? new()
                 {
                     LastWriteTime = data.LastWriteTime,
                 },
             };
         }
 
-        return new Container(metaIndex)
+        return new Container(metaIndex, this)
         {
             DataFile = _memorydat,
             MetaFile = _memorydat,
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-            Extra = new(),
+            Extra = extra ?? new(),
         };
-    }
-
-    protected override JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
-    {
-        JObject? jsonObject;
-        try
-        {
-            jsonObject = binary.GetJson();
-        }
-        catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
-        {
-            container.IncompatibilityException = ex;
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;
-            return null;
-        }
-        if (jsonObject is null)
-        {
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_003;
-            return null;
-        }
-
-        // Deobfuscate anyway if _useSaveWizard to realign mapping by SaveWizard.
-        if (Settings.UseMapping || _usesSaveWizard)
-        {
-            container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
-        }
-
-        // Do deliver a consistent experience, make sure the file is obfuscated if the setting is set to false.
-        if (Settings.UseMapping is false) // is false is more visible than a !
-        {
-            Mapping.Obfuscate(jsonObject);
-        }
-
-        return jsonObject;
     }
 
     #endregion
@@ -277,6 +216,7 @@ public partial class PlatformPlaystation : Platform
 
     protected override ReadOnlySpan<byte> LoadContainer(Container container)
     {
+        // With save streaming base can be used, otherwise meta needs to be loaded earlier.
         if (_usesSaveStreaming)
             return base.LoadContainer(container);
 
@@ -290,17 +230,13 @@ public partial class PlatformPlaystation : Platform
         {
             var data = LoadData(container);
             if (data.IsEmpty())
-            {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-            }
             else
-            {
                 return data;
-            }
         }
 
         container.IncompatibilityTag ??= Constants.INCOMPATIBILITY_006;
-        return Array.Empty<byte>();
+        return [];
     }
 
     protected override Span<byte> ReadMeta(Container container)
@@ -468,6 +404,19 @@ public partial class PlatformPlaystation : Platform
         }
     }
 
+    protected override JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
+    {
+        var jsonObject = base.DeserializeContainer(container, binary);
+        if (jsonObject is null) // incompatibility properties are set in base
+            return null;
+
+        // Deobfuscate anyway if _useSaveWizard to realign mapping by SaveWizard.
+        if (_usesSaveWizard)
+            container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
+
+        return jsonObject;
+    }
+
     #endregion
 
     #region Write
@@ -610,7 +559,7 @@ public partial class PlatformPlaystation : Platform
         }
         else
         {
-            buffer = new byte[GetMetaSize(container)];
+            buffer = new byte[container.MetaSize];
 
             if (container.Exists)
             {
@@ -936,7 +885,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Transfer
 
-    protected override void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex, bool write)
+    protected override void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
     {
         if (_usesSaveStreaming)
         {
@@ -944,8 +893,8 @@ public partial class PlatformPlaystation : Platform
             return;
         }
 
-        if (_preparedForTransfer != destinationSlotIndex)
-            PrepareTransferDestination(destinationSlotIndex);
+        //if (_preparedForTransfer != destinationSlotIndex)
+        //    PrepareTransferDestination(destinationSlotIndex);
 
         if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
             throw new InvalidOperationException("Cannot transfer as at least one user identification is not complete.");

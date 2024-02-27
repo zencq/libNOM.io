@@ -8,26 +8,22 @@ public class PlatformGog : PlatformSteam
 {
     #region Constant
 
-    #region Directory Data
-
     internal new const string ACCOUNT_PATTERN = "DefaultUser";
 
     internal static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
     #endregion
 
-    #endregion
-
     #region Field
 
-    private string? _userId;
+    private string? _userId; // both will be set if GOG Galaxy config file exists
     private string? _username;
 
     #endregion
 
     #region Property
 
-    #region Configuration
+    #region Platform Indicator
 
     // public //
 
@@ -62,15 +58,14 @@ public class PlatformGog : PlatformSteam
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         // Proceed to base method even if no directory.
-        if (directory is not null && platformSettings?.UseExternalSourcesForUserIdentification == true)
+        if (directory is not null && (platformSettings?.UseExternalSourcesForUserIdentification ?? false))
         {
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GOG.com", "Galaxy", "Configuration", "config.json");
             if (File.Exists(path))
             {
                 var jsonObject = JsonConvert.DeserializeObject(File.ReadAllText(path)) as JObject;
-
-                _userId = jsonObject?.SelectToken("userId")?.Value<string>();
-                _username = jsonObject?.SelectToken("username")?.Value<string>();
+                _userId = jsonObject?.GetValue<string>("userId");
+                _username = jsonObject?.GetValue<string>("username");
             }
         }
 

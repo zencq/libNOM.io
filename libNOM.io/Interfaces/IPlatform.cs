@@ -97,6 +97,8 @@ public interface IPlatform
 
     #endregion
 
+    // //
+
     #region Getter
 
     /// <summary>
@@ -106,8 +108,9 @@ public interface IPlatform
     public Container? GetAccountContainer();
 
     /// <summary>
-    /// Gets all exsiting <see cref="Container"/> with save data, that then can be filtered further.
+    /// Gets all possible <see cref="Container"/> with save data, that then can be filtered further.
     /// Here are some exmaples:
+    /// <code>Where(i => i.Exists)</code> to get those that are actually exist.
     /// <code>Where(i => i.IsLoaded)</code> to get those that are actually loaded.
     /// <code>Where(i => i.SlotIndex == slotIndex)</code> to get those of the specified slot.
     /// <code>Where(i => i.IsLoaded && !i.IsSynced)</code> to get those that have unsaved changes.

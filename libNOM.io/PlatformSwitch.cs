@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.HighPerformance;
-using System.Text.RegularExpressions;
 
 namespace libNOM.io;
 
@@ -8,65 +7,21 @@ public partial class PlatformSwitch : Platform
 {
     #region Constant
 
+    internal static readonly string[] ANCHOR_FILE_PATTERN = ["manifest*.hg", "savedata*.hg"];
+
     #region Platform Specific
 
     protected const uint META_HEADER = 0xCA55E77E;
 
     protected const int META_LENGTH_KNOWN = 0x28; // 40
-    protected override int META_LENGTH_TOTAL_VANILLA => 0x64; // 100
-    protected override int META_LENGTH_TOTAL_WAYPOINT => 0x164; // 356
-
-    #endregion
-
-    #region Generated Regex
-
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    protected static readonly Regex AnchorFileRegex0 = new("manifest\\d{2}\\.hg", RegexOptions.Compiled);
-    protected static readonly Regex AnchorFileRegex1 = new("savedata\\d{2}\\.hg", RegexOptions.Compiled);
-#else
-    [GeneratedRegex("manifest\\d{2}\\.hg", RegexOptions.Compiled)]
-    protected static partial Regex AnchorFileRegex0();
-
-    [GeneratedRegex("savedata\\d{2}\\.hg", RegexOptions.Compiled)]
-    protected static partial Regex AnchorFileRegex1();
-#endif
-
-    #endregion
-
-    #region Directory Data
-
-    internal static readonly string[] ANCHOR_FILE_GLOB = ["manifest*.hg", "savedata*.hg"];
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0, AnchorFileRegex1];
-#else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0(), AnchorFileRegex1()];
-#endif
+    internal override int META_LENGTH_TOTAL_VANILLA => 0x64; // 100
+    internal override int META_LENGTH_TOTAL_WAYPOINT => 0x164; // 356
 
     #endregion
 
     #endregion
 
     #region Property
-
-    #region Configuration
-
-    // public //
-
-    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Switch;
-
-    // protected //
-
-    protected override string[] PlatformAnchorFileGlob { get; } = ANCHOR_FILE_GLOB;
-
-    protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
-
-    protected override string? PlatformArchitecture { get; } = "NX1|Final";
-
-    protected override string? PlatformProcessPath { get; } = null;
-
-    protected override string PlatformToken { get; } = "NS";
-
-    #endregion
 
     #region Flags
 
@@ -92,18 +47,34 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
+    #region Platform Indicator
+
+    // public //
+
+    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Switch;
+
+    // protected //
+
+    protected override string[] PlatformAnchorFilePattern { get; } = ANCHOR_FILE_PATTERN;
+
+    protected override string? PlatformArchitecture { get; } = "NX1|Final";
+
+    protected override string? PlatformProcessPath { get; } = null;
+
+    protected override string PlatformToken { get; } = "NS";
+
     #endregion
+
+    #endregion
+
+    // //
 
     #region Getter
 
-    #region Container
-
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
     {
-        return SaveContainerCollection.Where(i => i.MetaFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
+        return SaveContainerCollection.Where(i => i.MetaFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false);
     }
-
-    #endregion
 
     #endregion
 
@@ -129,15 +100,12 @@ public partial class PlatformSwitch : Platform
 
     private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
-        var data = new FileInfo(Path.Combine(Location.FullName, $"savedata{metaIndex:D2}.hg"));
-        var meta = new FileInfo(Path.Combine(Location.FullName, $"manifest{metaIndex:D2}.hg"));
-
-        return new Container(metaIndex)
+        return new Container(metaIndex, this)
         {
-            DataFile = data,
-            MetaFile = meta,
+            DataFile = new FileInfo(Path.Combine(Location.FullName, $"savedata{metaIndex:D2}.hg")),
+            MetaFile = new FileInfo(Path.Combine(Location.FullName, $"manifest{metaIndex:D2}.hg")),
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-            Extra = new(),
+            Extra = extra ?? new(),
         };
     }
 
@@ -212,7 +180,7 @@ public partial class PlatformSwitch : Platform
 
             // Only write if all three values are in their valid ranges.
             if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
-                container.SaveVersion = Helper.SaveVersion.Calculate(container);
+                container.SaveVersion = Meta.SaveVersion.Calculate(container);
         }
     }
 
@@ -226,7 +194,7 @@ public partial class PlatformSwitch : Platform
 
         if (container.IsAccount)
         {
-            buffer = container.Extra.Bytes ?? new byte[GetMetaSize(container)];
+            buffer = container.Extra.Bytes ?? new byte[container.MetaSize];
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
@@ -236,7 +204,7 @@ public partial class PlatformSwitch : Platform
         }
         else
         {
-            buffer = new byte[GetMetaSize(container)];
+            buffer = new byte[container.MetaSize];
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 

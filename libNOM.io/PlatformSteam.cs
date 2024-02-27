@@ -1,11 +1,11 @@
 ﻿using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 
 using CommunityToolkit.HighPerformance;
 
 using DeepCopy;
+
 using libNOM.io.Services;
 
 using Newtonsoft.Json.Linq;
@@ -19,39 +19,9 @@ public partial class PlatformSteam : Platform
 {
     #region Constant
 
-    #region Platform Specific
-
-    protected static readonly uint[] META_ENCRYPTION_KEY = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>().ToArray();
-
-    protected const uint META_HEADER = 0xEEEEEEBE; // 4008636094
-
-    protected const int META_LENGTH_KNOWN = 0x58; // 88
-    protected override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104
-    protected override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360
-
-    #endregion
-
-    #region Generated Regex
-
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    protected static readonly Regex AnchorFileRegex0 = new("save\\d{0,2}\\.hg", RegexOptions.Compiled);
-#else
-    [GeneratedRegex("save\\d{0,2}\\.hg", RegexOptions.Compiled)]
-    protected static partial Regex AnchorFileRegex0();
-#endif
-
-    #endregion
-
-    #region Directory Data
-
     internal const string ACCOUNT_PATTERN = "st_76561198*";
 
-    internal static readonly string[] ANCHOR_FILE_GLOB = ["save*.hg"];
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0];
-#else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0()];
-#endif
+    internal static readonly string[] ANCHOR_FILE_PATTERN = ["save*.hg"];
 
     internal static readonly string PATH = ((Func<string>)(() =>
     {
@@ -67,64 +37,32 @@ public partial class PlatformSteam : Platform
         return string.Empty; // same as if not defined at all
     }))();
 
+    #region Platform Specific
+
+    protected static readonly uint[] META_ENCRYPTION_KEY = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>().ToArray();
+
+    protected const uint META_HEADER = 0xEEEEEEBE; // 4.008.636.094
+
+    protected const int META_LENGTH_KNOWN = 0x58; // 88
+    internal override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104
+    internal override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360
+
     #endregion
 
     #endregion
 
     #region Field
 
-    private SteamService? _steamService;
-    private string? _steamId;
+    private string? _steamId; // will be set if available in path
+    private SteamService? _steamService; // will be set if SteamService is accessed
 
     #endregion
 
     #region Property
 
-    private SteamService SteamService => _steamService ??= new(); // { get; }
-
     #region Configuration
 
-    // public //
-
-    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Steam;
-
-    // protected //
-
-    protected override string[] PlatformAnchorFileGlob { get; } = ANCHOR_FILE_GLOB;
-
-    protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
-
-    protected override string? PlatformArchitecture // { get; }
-    {
-        get
-        {
-            // On SteamDeck (with Proton) the Windows architecture is also used.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return "Win|Final";
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
-                return "Mac|Final";
-
-            return null; // same as if not defined at all
-        }
-    }
-
-    protected override string? PlatformProcessPath // { get; }
-    {
-        get
-        {
-            // On SteamDeck (with Proton) the Windows executable is also used.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                return @"steamapps\common\No Man's Sky\Binaries\NMS.exe";
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
-                return @"steamapps/common/No Man's Sky/No Man's Sky.app/Contents/MacOS/No Man's Sky";
-
-            return null; // same as if not defined at all
-        }
-    }
-
-    protected override string PlatformToken { get; } = "ST";
+    private SteamService SteamService => _steamService ??= new(); // { get; }
 
     #endregion
 
@@ -150,6 +88,26 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
+    #region Platform Indicator
+
+    // public //
+
+    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Steam;
+
+    // protected //
+
+    protected override string[] PlatformAnchorFilePattern { get; } = ANCHOR_FILE_PATTERN;
+
+    // On SteamDeck (with Proton) the Windows architecture is also used.
+    protected override string? PlatformArchitecture => Common.IsWindowsOrLinux() ? "Win|Final" : (Common.IsMac() ? "Mac|Final" : null); // { get; }
+
+    // Same as the architecture but for the process.
+    protected override string? PlatformProcessPath => Common.IsWindowsOrLinux() ? @"steamapps\common\No Man's Sky\Binaries\NMS.exe" : (Common.IsMac() ? @"steamapps/common/No Man's Sky/No Man's Sky.app/Contents/MacOS/No Man's Sky" : null); // { get; }
+
+    protected override string PlatformToken { get; } = "ST";
+
+    #endregion
+
     #endregion
 
     // //
@@ -171,10 +129,10 @@ public partial class PlatformSteam : Platform
     {
         // Proceed to base method even if no directory.
 #if NETSTANDARD2_0
-        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory.Name.Substring(11).All(char.IsDigit))
+        if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory!.Name.Substring(11).All(char.IsDigit)) // implicit directory is not null
             _steamId = directory.Name.Substring(3); // remove "st_"
 #else
-        if (directory is not null && directory.Name.Length == 20 && directory.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory.Name[11..].All(char.IsDigit))
+        if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory!.Name[11..].All(char.IsDigit)) // implicit directory is not null
             _steamId = directory.Name[3..]; // remove "st_"
 #endif
 
@@ -185,26 +143,19 @@ public partial class PlatformSteam : Platform
 
     // // Read / Write
 
-    private static uint RotateLeft(uint value, int bits)
-    {
-        return (value << bits) | (value >> (32 - bits));
-    }
-
     #region Generate
 
     private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
-        var steamIndex = metaIndex == Constants.OFFSET_INDEX ? string.Empty : $"{metaIndex - 1}";
-        var name = metaIndex == 0 ? "accountdata.hg" : $"save{steamIndex}.hg";
+        var name = metaIndex == 0 ? "accountdata.hg" : $"save{(metaIndex == Constants.OFFSET_INDEX ? string.Empty : metaIndex - 1)}.hg";
         var data = new FileInfo(Path.Combine(Location.FullName, name));
-        var meta = new FileInfo(Path.Combine(Location.FullName, $"mf_{name}"));
 
-        return new Container(metaIndex)
+        return new Container(metaIndex, this)
         {
             DataFile = data,
-            MetaFile = meta,
+            MetaFile = new FileInfo(Path.Combine(Location.FullName, $"mf_{name}")),
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="Platform.UpdateContainerWithDataInformation"/>.
-            Extra = new()
+            Extra = extra ?? new()
             {
                 LastWriteTime = data.LastWriteTime,
             },
@@ -335,7 +286,7 @@ public partial class PlatformSteam : Platform
 
             // Only write if all three values are in their valid ranges.
             if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
-                container.SaveVersion = Helper.SaveVersion.Calculate(container);
+                container.SaveVersion = Meta.SaveVersion.Calculate(container);
         }
 
         // Size is save to write always.
@@ -355,7 +306,7 @@ public partial class PlatformSteam : Platform
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
-        var buffer = new byte[GetMetaSize(container)];
+        var buffer = new byte[container.MetaSize];
 
         // Editing account data is possible since Frontiers and therefore has always the new format.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
