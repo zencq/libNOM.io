@@ -73,7 +73,7 @@ public partial class PlatformSwitch : Platform
 
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
     {
-        return SaveContainerCollection.Where(i => i.MetaFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false);
+        return SaveContainerCollection.Where(i => i.MetaFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
     }
 
     #endregion
@@ -145,7 +145,7 @@ public partial class PlatformSwitch : Platform
         {
             container.Extra = container.Extra with
             {
-                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown,
+                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
                 Bytes = disk.ToArray(),
                 Size = (uint)(disk.Length),
                 SizeDecompressed = decompressed[2],
@@ -156,7 +156,7 @@ public partial class PlatformSwitch : Platform
             // Vanilla data always available.
             container.Extra = container.Extra with
             {
-                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown,
+                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
                 Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
                 Size = (uint)(disk.Length),
                 SizeDecompressed = decompressed[2],
@@ -178,9 +178,8 @@ public partial class PlatformSwitch : Platform
                 };
             }
 
-            // Only write if all three values are in their valid ranges.
-            if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
-                container.SaveVersion = Meta.SaveVersion.Calculate(container);
+            container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
+            container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
         }
     }
 

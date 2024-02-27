@@ -58,7 +58,7 @@ public class PlatformGog : PlatformSteam
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         // Proceed to base method even if no directory.
-        if (directory is not null && (platformSettings?.UseExternalSourcesForUserIdentification ?? false))
+        if (directory is not null && platformSettings?.UseExternalSourcesForUserIdentification == true)
         {
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GOG.com", "Galaxy", "Configuration", "config.json");
             if (File.Exists(path))

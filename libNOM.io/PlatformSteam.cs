@@ -168,7 +168,7 @@ public partial class PlatformSteam : Platform
 
     protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
     {
-        uint[] value = base.DecryptMeta(container, meta).ToArray();
+        var value = base.DecryptMeta(container, meta).ToArray(); // needs to be an array for the deep copy
 
         if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT)
             return value;
@@ -183,7 +183,7 @@ public partial class PlatformSteam : Platform
         foreach (var entry in enumValues)
         {
             // When overwriting META_ENCRYPTION_KEY[0] it can happen that the value is not set afterwards and therefore create a new collection to ensure it will be correct.
-            ReadOnlySpan<uint> key = [(RotateLeft((uint)(entry) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
+            ReadOnlySpan<uint> key = [(((uint)(entry) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
 
             // DeepCopy as value would be changed otherwise and casting again does not work.
             Span<uint> result = DeepCopier.Copy(value);
@@ -284,9 +284,8 @@ public partial class PlatformSteam : Platform
                 };
             }
 
-            // Only write if all three values are in their valid ranges.
-            if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
-                container.SaveVersion = Meta.SaveVersion.Calculate(container);
+            container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
+            container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
         }
 
         // Size is save to write always.

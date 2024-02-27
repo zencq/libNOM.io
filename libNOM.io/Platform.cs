@@ -10,7 +10,6 @@ using CommunityToolkit.HighPerformance;
 using LazyCache;
 
 using libNOM.io.Interfaces;
-using libNOM.map;
 
 using Microsoft.Extensions.Caching.Memory;
 
@@ -175,7 +174,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name) => SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ?? false);
+    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name) => SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
 
     #endregion
 
@@ -478,10 +477,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual Span<byte> ReadMeta(Container container)
     {
-        if (container.MetaFile?.Exists != true)
-            return [];
-
-        return File.ReadAllBytes(container.MetaFile!.FullName);
+        return container.MetaFile?.ReadAllBytes() ?? [];
     }
 
     /// <summary>
@@ -548,10 +544,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual ReadOnlySpan<byte> ReadData(Container container)
     {
-        if (container.DataFile?.Exists != true)
-            return [];
-
-        return File.ReadAllBytes(container.DataFile!.FullName);
+        return container.DataFile?.ReadAllBytes() ?? [];
     }
 
     /// <summary>
@@ -1619,7 +1612,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
          * mf_save.hg (Changed)
          * save.hg (Changed)
          * mf_save.hg (Changed)
-        
+
         Deleted by game or an editor:
          * save.hg (Deleted)
          * mf_save.hg (Deleted)

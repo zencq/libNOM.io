@@ -20,7 +20,6 @@ public partial class PlatformMicrosoft : Platform
 
     internal static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
 
-    #region Platform Specific
 
     protected const int CONTAINERSINDEX_HEADER = 0xE; // 14
     protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
@@ -34,8 +33,6 @@ public partial class PlatformMicrosoft : Platform
     protected const int META_LENGTH_KNOWN = 0x14; // 20
     internal override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x118; // 280
-
-    #endregion
 
     #endregion
 
@@ -394,7 +391,7 @@ public partial class PlatformMicrosoft : Platform
             }
 
             // Update extension in case the read one was not found and break the loop.
-            if (extra.MicrosoftBlobDataFile?.Exists ?? false)
+            if (extra.MicrosoftBlobDataFile?.Exists == true)
             {
                 extra = extra with
                 {
@@ -457,18 +454,16 @@ public partial class PlatformMicrosoft : Platform
         if (disk.IsEmpty())
             return;
 
-        var season = disk.Cast<ushort>(6);
-
         // Vanilla data always available.
         container.Extra = container.Extra with
         {
-            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown,
+            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
             Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
             Size = (uint)(disk.Length),
             SizeDecompressed = decompressed[4],
             BaseVersion = (int)(decompressed[0]),
             GameMode = disk.Cast<ushort>(4),
-            Season = (ushort)(season == ushort.MaxValue ? 0 : season),
+            Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
             TotalPlayTime = decompressed[2],
         };
 
@@ -483,9 +478,8 @@ public partial class PlatformMicrosoft : Platform
             };
         }
 
-        // Only write if all three values are in their valid ranges.
-        if (container.Extra.BaseVersion.IsBaseVersion() && container.Extra.GameMode.IsGameMode() && container.Extra.Season.IsSeason())
-            container.SaveVersion = Meta.SaveVersion.Calculate(container);
+        container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
+        container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
     }
 
     protected override ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)

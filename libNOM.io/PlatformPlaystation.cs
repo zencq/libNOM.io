@@ -166,7 +166,7 @@ public partial class PlatformPlaystation : Platform
             var f = _memorydat ?? directory!.GetFiles(PlatformAnchorFilePattern[anchorFileIndex]).FirstOrDefault(i => !i.Name.Contains("00"));
             if (f is not null)
             {
-                using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+                using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.Read));
                 _usesSaveWizard = reader.ReadBytes(SAVEWIZARD_HEADER_BINARY.Length).SequenceEqual(SAVEWIZARD_HEADER_BINARY);
             }
         }
@@ -261,7 +261,7 @@ public partial class PlatformPlaystation : Platform
             reader.BaseStream.Seek(MEMORYDAT_OFFSET_META + (container.MetaIndex * META_LENGTH_TOTAL_VANILLA), SeekOrigin.Begin);
             return reader.ReadBytes(META_LENGTH_TOTAL_VANILLA);
         }
-        return Array.Empty<byte>();
+        return [];
     }
 
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
@@ -351,7 +351,7 @@ public partial class PlatformPlaystation : Platform
     protected override ReadOnlySpan<byte> ReadData(Container container)
     {
         if (container.DataFile?.Exists != true)
-            return Array.Empty<byte>();
+            return [];
 
         if (_usesSaveStreaming && (container.IsAccount || !_usesSaveWizard))
             return base.ReadData(container);
@@ -386,23 +386,19 @@ public partial class PlatformPlaystation : Platform
     {
         // Sizes other than for AccountData need to be set directly in CompressData() as the compressed data wont be returned if _usesSaveWizard.
         if (container.IsAccount)
-        {
             container.Extra = container.Extra with
             {
                 Size = _usesSaveWizard ? (uint)(decompressed.Length) : (uint)(disk.Length),
                 SizeDecompressed = (uint)(decompressed.Length),
                 SizeDisk = (uint)(disk.Length),
             };
-        }
         // Save memory by only storing it when necessary.
         else if (!_usesSaveStreaming)
-        {
             container.Extra = container.Extra with
             {
                 Bytes = disk.ToArray(),
             };
         }
-    }
 
     protected override JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
     {

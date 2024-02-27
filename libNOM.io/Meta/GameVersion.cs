@@ -8,7 +8,37 @@ internal static partial class GameVersion
     #region Getter
 
     /// <summary>
-    /// Gets the game version for the specified BaseVersion.
+    /// Gets the game version for and purely from the specified baseVersion.
+    /// </summary>
+    /// <param name="baseVersion"></param>
+    /// <param name="jsonObject"></param>
+    /// <returns></returns>
+    internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
+    {
+        >= 4147 => GameVersionEnum.Omega, // 4.50
+        >= 4146 => GameVersionEnum.Echoes, // 4.40
+        >= 4144 => GameVersionEnum.Interceptor, // (4.30/4.25), 4.20
+        >= 4143 => GameVersionEnum.Fractal, // 4.10
+        >= 4142 => GameVersionEnum.WaypointWithSuperchargedSlots, // 4.05
+        >= 4141 => GameVersionEnum.WaypointWithAgileStat, // 4.04
+        >= 4140 => GameVersionEnum.Waypoint, // 4.00
+        >= 4139 => GameVersionEnum.Endurance, // 3.94
+        >= 4138 => GameVersionEnum.Outlaws, // (3.90), 3.85
+        >= 4137 => GameVersionEnum.SentinelWithWeaponResource, // (3.84), 3.81
+        >= 4136 => GameVersionEnum.Sentinel, // 3.80
+        >= 4135 => GameVersionEnum.Frontiers, // (3.70), 3.60
+        >= 4129 => GameVersionEnum.Expeditions, // (3.51, 3.50, 3.40), 3.30
+        >= 4127 => GameVersionEnum.NextGeneration, // (3.20), 3.10
+        >= 4126 => GameVersionEnum.Crossplay, // (3.00, 2.60), 2.50
+        >= 4125 => GameVersionEnum.ExoMech, // 2.40
+        >= 4124 => GameVersionEnum.SynthesisWithJetpack, // (2.30), 2.26
+        >= 4122 => GameVersionEnum.Synthesis, // 2.20
+        >= 4119 => GameVersionEnum.BeyondWithVehicleCam, // 2.11
+        _ => GameVersionEnum.Unknown,
+    };
+
+    /// <summary>
+    /// Gets the game version for the specified baseVersion.
     /// </summary>
     /// <param name="baseVersion"></param>
     /// <param name="jsonObject"></param>

@@ -82,12 +82,12 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether this contains a user owned freighter.
     /// </summary>
-    public bool HasFreighter => IsLoaded && (GetJsonValues<double>("FREIGHTER_POSITION")?.Any(i => i != 0.0) ?? false); // { get; }
+    public bool HasFreighter => IsLoaded && GetJsonValues<double>("FREIGHTER_POSITION")?.Any(i => i != 0.0) == true; // { get; }
 
     /// <summary>
     /// Whether this contains a potential user owned settlement.
     /// </summary>
-    public bool HasSettlement => IsLoaded && (GetJsonValues<string>("SETTLEMENT_ALL_OWNER_LID")?.Any(i => !string.IsNullOrEmpty(i)) ?? false); // { get; }
+    public bool HasSettlement => IsLoaded && GetJsonValues<string>("SETTLEMENT_ALL_OWNER_LID")?.Any(i => !string.IsNullOrEmpty(i)) == true; // { get; }
 
     /// <summary>
     /// Whether this contains account data and is not a regular save.
