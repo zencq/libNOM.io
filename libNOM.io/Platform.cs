@@ -699,13 +699,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     public void Load(Container container)
     {
         if (container.IsBackup)
-        {
             LoadBackupContainer(container);
-        }
         else
-        {
             LoadSaveContainer(container);
-        }
     }
 
     /// <summary>
@@ -731,13 +727,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             var binary = LoadData(container, data);
             if (binary.IsEmpty())
-            {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-                return;
-            }
-
-            // Process
-            if (DeserializeContainer(container, binary) is JObject jsonObject)
+            else if (DeserializeContainer(container, binary) is JObject jsonObject)
                 ProcessContainerData(container, jsonObject);
         }
     }
@@ -753,33 +744,22 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         if (Settings.LoadingStrategy == LoadingStrategyEnum.Current && container.IsSave)
         {
-            var loadedContainers = GetLoadedContainers().Where(i => !i.Equals(container));
+            // Unloads data by removing the reference to the JSON object.
+            var loadedContainers = SaveContainerCollection.Where(i => i.IsLoaded && !i.Equals(container));
             foreach (var loadedContainer in loadedContainers)
-            {
-                // Unloads data by removing the reference to the JSON object.
                 loadedContainer.SetJsonObject(null);
-            }
         }
 
         BuildContainerFull(container);
     }
 
-    public void Rebuild(Container container, JObject jsonObject)
-    {
-        ProcessContainerData(container, jsonObject);
-    }
+    public void Rebuild(Container container, JObject jsonObject) => ProcessContainerData(container, jsonObject);
 
     /// <summary>
     /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
     /// </summary>
     /// <param name="container"></param>
-    protected void RebuildContainerFull(Container container)
-    {
-        var binary = LoadContainer(container);
-
-        if (container.IsCompatible && DeserializeContainer(container, binary) is JObject jsonObject)
-            ProcessContainerData(container, jsonObject);
-    }
+    protected void RebuildContainerFull(Container container) => BuildContainerFull(container);
 
     /// <summary>
     /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by extracting from the string representation.
@@ -790,19 +770,15 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var binary = LoadContainer(container);
 
         if (container.IsCompatible)
-            ProcessContainerData(container, binary.GetString(), true);
+            ProcessContainerData(container, binary.GetString(), true); // force
     }
 
     public void Reload(Container container)
     {
         if (container.IsLoaded)
-        {
             RebuildContainerFull(container);
-        }
         else
-        {
             RebuildContainerHollow(container);
-        }
     }
 
     #endregion
