@@ -768,17 +768,14 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveStreaming)
         {
             base.Move(containerOperationData, write);
+            return;
         }
-        else
-        {
-            Copy(containerOperationData, false);
-            Delete(containerOperationData.Select(i => i.Source), false);
 
-            if (write)
-            {
-                WriteMemoryDat();
-            }
-        }
+        Copy(containerOperationData, false);
+        Delete(containerOperationData.Select(i => i.Source), false);
+
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion

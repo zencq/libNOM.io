@@ -1176,9 +1176,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Move
 
-    public void Move(Container source, Container destination) => Move(new[] { (Source: source, Destination: destination) }, true);
+    public void Move(Container source, Container destination) => Move([(Source: source, Destination: destination)], true);
 
-    protected void Move(Container source, Container destination, bool write) => Move(new[] { (Source: source, Destination: destination) }, write);
+    protected void Move(Container source, Container destination, bool write) => Move([(Source: source, Destination: destination)], write);
 
     public void Move(IEnumerable<(Container Source, Container Destination)> operationData) => Move(operationData, true);
 
