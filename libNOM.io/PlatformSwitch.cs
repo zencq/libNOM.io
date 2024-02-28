@@ -9,15 +9,10 @@ public partial class PlatformSwitch : Platform
 
     internal static readonly string[] ANCHOR_FILE_PATTERN = ["manifest*.hg", "savedata*.hg"];
 
-    #region Platform Specific
-
     protected const uint META_HEADER = 0xCA55E77E;
-
-    protected const int META_LENGTH_KNOWN = 0x28; // 40
+    protected override int META_LENGTH_KNOWN => 0x28; // 40
     internal override int META_LENGTH_TOTAL_VANILLA => 0x64; // 100
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x164; // 356
-
-    #endregion
 
     #endregion
 
@@ -195,9 +190,8 @@ public partial class PlatformSwitch : Platform
         {
             buffer = container.Extra.Bytes ?? new byte[container.MetaSize];
 
-            using var writer = new BinaryWriter(new MemoryStream(buffer));
-
             // Overwrite only SizeDecompressed.
+            using var writer = new BinaryWriter(new MemoryStream(buffer));
             writer.Seek(0x8, SeekOrigin.Begin);
             writer.Write(container.Extra.SizeDecompressed); // 4
         }
@@ -206,7 +200,6 @@ public partial class PlatformSwitch : Platform
             buffer = new byte[container.MetaSize];
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
-
             writer.Write(META_HEADER); // 4
             writer.Write(Constants.SAVE_FORMAT_3); // 4
             writer.Write(container.Extra.SizeDecompressed); // 4
@@ -220,25 +213,8 @@ public partial class PlatformSwitch : Platform
             // Skip EMPTY.
             writer.Seek(0x8, SeekOrigin.Current); // 8
 
-            // Extended data since Waypoint.
-            if (container.MetaFormat >= MetaFormatEnum.Waypoint)
-            {
-                // Append cached bytes and overwrite afterwards.
-                writer.Write(container.Extra.Bytes ?? []); // 272
-
-                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-                writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
-
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST, SeekOrigin.Begin);
-                writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
-
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2, SeekOrigin.Begin);
-                writer.Write((byte)(container.GameDifficulty)); // 1
-            }
-            else
-            {
-                writer.Write(container.Extra.Bytes ?? []); // 60
-            }
+            // Insert trailing bytes and the extended Waypoint data.
+            AddWaypointMeta(writer, container); // Extra.Bytes is 272 or 60
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

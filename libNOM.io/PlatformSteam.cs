@@ -37,17 +37,11 @@ public partial class PlatformSteam : Platform
         return string.Empty; // same as if not defined at all
     }))();
 
-    #region Platform Specific
-
     protected static readonly uint[] META_ENCRYPTION_KEY = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>().ToArray();
-
     protected const uint META_HEADER = 0xEEEEEEBE; // 4.008.636.094
-
-    protected const int META_LENGTH_KNOWN = 0x58; // 88
+    protected override int META_LENGTH_KNOWN => 0x58; // 88
     internal override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360
-
-    #endregion
 
     #endregion
 
@@ -330,25 +324,8 @@ public partial class PlatformSteam : Platform
             // Skip EMPTY bytes.
             writer.Seek(0x8, SeekOrigin.Current); // 8
 
-            // Extended data since Waypoint.
-            if (container.MetaFormat >= MetaFormatEnum.Waypoint)
-            {
-                // Append cached bytes and modify afterwards.
-                writer.Write(container.Extra.Bytes ?? []); // 272
-
-                writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
-                writer.Write(container.SaveName.GetSaveRenamingBytes()); // 128
-
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST, SeekOrigin.Begin);
-                writer.Write(container.SaveSummary.GetSaveRenamingBytes()); // 128
-
-                writer.Seek(META_LENGTH_KNOWN + Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2, SeekOrigin.Begin);
-                writer.Write((byte)(container.GameDifficulty)); // 1
-            }
-            else
-            {
-                writer.Write(container.Extra.Bytes ?? []); // 16
-            }
+            // Insert trailing bytes and the extended Waypoint data.
+            AddWaypointMeta(writer, container); // Extra.Bytes is 272 or 16
         }
         else // SAVE_FORMAT_2
         {
@@ -380,7 +357,7 @@ public partial class PlatformSteam : Platform
         uint current = 0;
         uint hash = 0;
         int iterations = container.MetaFormat < MetaFormatEnum.Waypoint ? 8 : 6;
-        ReadOnlySpan<uint> key = [(RotateLeft((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
+        ReadOnlySpan<uint> key = [(((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
         Span<uint> value = meta.Cast<byte, uint>();
 
         int lastIndex = value.Length - 1;

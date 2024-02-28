@@ -133,7 +133,7 @@ public interface IPlatform
 
     // // Read / Write
 
-    #region Reload
+    #region Load
 
     /// <summary>
     /// Loads data of a <see cref= "Container"/> in consideration of the loading strategy.
@@ -142,17 +142,17 @@ public interface IPlatform
     public void Load(Container container);
 
     /// <summary>
+    /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
+    /// </summary>
+    /// <param name="container"></param>
+    public void Reload(Container container);
+
+    /// <summary>
     /// Rebuilds the container with data from the specified JSON object.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="jsonObject"></param>
     public void Rebuild(Container container, JObject jsonObject);
-
-    /// <summary>
-    /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
-    /// </summary>
-    /// <param name="container"></param>
-    public void Reload(Container container);
 
     #endregion
 

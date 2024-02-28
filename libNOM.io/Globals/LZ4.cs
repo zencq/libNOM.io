@@ -14,12 +14,12 @@ internal static class LZ4
 #if !NETSTANDARD2_0
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
 #endif
-    internal static int Encode(ReadOnlySpan<byte> source, out Span<byte> target)
+    internal static int Encode(ReadOnlySpan<byte> source, out ReadOnlySpan<byte> target)
     {
-        target = new Span<byte>(new byte[LZ4Codec.MaximumOutputSize(source.Length)]);
-        var bytesWritten = LZ4Codec.Encode(source, target);
+        var output = new Span<byte>(new byte[LZ4Codec.MaximumOutputSize(source.Length)]);
+        var bytesWritten = LZ4Codec.Encode(source, output);
 
-        target = target.Slice(0, bytesWritten);
+        target = output.Slice(0, bytesWritten);
 
         return bytesWritten;
     }

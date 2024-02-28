@@ -30,6 +30,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     private int COUNT_SAVES_PER_SLOT { get; } = 2;
     internal int COUNT_SAVES_TOTAL => COUNT_SAVE_SLOTS * COUNT_SAVES_PER_SLOT; // { get; }
 
+    protected virtual int META_LENGTH_KNOWN { get; } = -1; // in fact, everything is known, but named as such because everything after that can contain additional junk data
     internal abstract int META_LENGTH_TOTAL_VANILLA { get; }
     internal abstract int META_LENGTH_TOTAL_WAYPOINT { get; }
 
@@ -422,6 +423,63 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Load
 
+    public void Load(Container container)
+    {
+        if (container.IsBackup)
+            LoadBackupContainer(container);
+        else
+            LoadSaveContainer(container);
+    }
+
+    /// <summary>
+    /// Loads data of the specified backup.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <exception cref="ArgumentException"/>
+    private void LoadBackupContainer(Container container)
+    {
+        Guard.IsTrue(container.Exists);
+        Guard.IsTrue(container.IsBackup);
+
+        // Load
+        container.ClearIncompatibility();
+
+        using var zipArchive = ZipFile.Open(container.DataFile!.FullName, ZipArchiveMode.Read);
+        if (zipArchive.ReadEntry("data", out var data))
+        {
+            _ = zipArchive.ReadEntry("meta", out var meta);
+
+            // Loads all meta information into the extra property.
+            LoadMeta(container, meta);
+
+            var binary = LoadData(container, data);
+            if (binary.IsEmpty())
+                container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
+            else if (DeserializeContainer(container, binary) is JObject jsonObject)
+                ProcessContainerData(container, jsonObject);
+        }
+    }
+
+    /// <summary>
+    /// Loads data of the specified save.
+    /// </summary>
+    /// <param name="container"></param>
+    private void LoadSaveContainer(Container container)
+    {
+        if (Settings.LoadingStrategy < LoadingStrategyEnum.Current)
+            Settings = Settings with { LoadingStrategy = LoadingStrategyEnum.Current };
+
+        if (Settings.LoadingStrategy == LoadingStrategyEnum.Current && container.IsSave)
+        {
+            // Unloads data by removing the reference to the JSON object.
+            var loadedContainers = SaveContainerCollection.Where(i => i.IsLoaded && !i.Equals(container));
+            foreach (var loadedContainer in loadedContainers)
+                loadedContainer.SetJsonObject(null);
+        }
+
+        BuildContainerFull(container);
+    }
+
     /// <summary>
     /// Loads the save data of a <see cref="Container"/> into a processable format using meta data.
     /// </summary>
@@ -446,6 +504,34 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         container.IncompatibilityTag ??= Constants.INCOMPATIBILITY_006;
         return [];
+    }
+
+    public void Reload(Container container)
+    {
+        if (container.IsLoaded)
+            RebuildContainerFull(container);
+        else
+            RebuildContainerHollow(container);
+    }
+
+    public void Rebuild(Container container, JObject jsonObject) => ProcessContainerData(container, jsonObject);
+
+    /// <summary>
+    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
+    /// </summary>
+    /// <param name="container"></param>
+    protected void RebuildContainerFull(Container container) => BuildContainerFull(container);
+
+    /// <summary>
+    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by extracting from the string representation.
+    /// </summary>
+    /// <param name="container"></param>
+    protected void RebuildContainerHollow(Container container)
+    {
+        var binary = LoadContainer(container);
+
+        if (container.IsCompatible)
+            ProcessContainerData(container, binary.GetString(), true); // force
     }
 
     /// <inheritdoc cref="LoadMeta(Container, Span{byte})"/>
@@ -694,95 +780,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Reload
-
-    public void Load(Container container)
-    {
-        if (container.IsBackup)
-            LoadBackupContainer(container);
-        else
-            LoadSaveContainer(container);
-    }
-
-    /// <summary>
-    /// Loads data of the specified backup.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <exception cref="ArgumentException"/>
-    private void LoadBackupContainer(Container container)
-    {
-        Guard.IsTrue(container.Exists);
-        Guard.IsTrue(container.IsBackup);
-
-        // Load
-        container.ClearIncompatibility();
-
-        using var zipArchive = ZipFile.Open(container.DataFile!.FullName, ZipArchiveMode.Read);
-        if (zipArchive.ReadEntry("data", out var data))
-        {
-            _ = zipArchive.ReadEntry("meta", out var meta);
-
-            // Loads all meta information into the extra property.
-            LoadMeta(container, meta);
-
-            var binary = LoadData(container, data);
-            if (binary.IsEmpty())
-                container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-            else if (DeserializeContainer(container, binary) is JObject jsonObject)
-                ProcessContainerData(container, jsonObject);
-        }
-    }
-
-    /// <summary>
-    /// Loads data of the specified save.
-    /// </summary>
-    /// <param name="container"></param>
-    private void LoadSaveContainer(Container container)
-    {
-        if (Settings.LoadingStrategy < LoadingStrategyEnum.Current)
-            Settings = Settings with { LoadingStrategy = LoadingStrategyEnum.Current };
-
-        if (Settings.LoadingStrategy == LoadingStrategyEnum.Current && container.IsSave)
-        {
-            // Unloads data by removing the reference to the JSON object.
-            var loadedContainers = SaveContainerCollection.Where(i => i.IsLoaded && !i.Equals(container));
-            foreach (var loadedContainer in loadedContainers)
-                loadedContainer.SetJsonObject(null);
-        }
-
-        BuildContainerFull(container);
-    }
-
-    public void Rebuild(Container container, JObject jsonObject) => ProcessContainerData(container, jsonObject);
-
-    /// <summary>
-    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
-    /// </summary>
-    /// <param name="container"></param>
-    protected void RebuildContainerFull(Container container) => BuildContainerFull(container);
-
-    /// <summary>
-    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by extracting from the string representation.
-    /// </summary>
-    /// <param name="container"></param>
-    protected void RebuildContainerHollow(Container container)
-    {
-        var binary = LoadContainer(container);
-
-        if (container.IsCompatible)
-            ProcessContainerData(container, binary.GetString(), true); // force
-    }
-
-    public void Reload(Container container)
-    {
-        if (container.IsLoaded)
-            RebuildContainerFull(container);
-        else
-            RebuildContainerHollow(container);
-    }
-
-    #endregion
-
     #region Write
 
     public void Write(Container container) => Write(container, DateTimeOffset.Now.LocalDateTime);
@@ -802,26 +799,15 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         if (Settings.WriteAlways || !container.IsSynced)
         {
+            JustWrite(container);
+
             container.Exists = true;
             container.IsSynced = true;
-
-            JustWrite(container);
         }
 
         // To ensure the timestamp will be the same the next time, the file times are always set to the currently saved one.
-        if (container.LastWriteTime is not null)
-        {
-            if (container.DataFile is not null)
-            {
-                File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-                File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-            }
-            if (container.MetaFile is not null)
-            {
-                File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-                File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-            }
-        }
+        container.DataFile?.SetFileTime(container.LastWriteTime);
+        container.MetaFile?.SetFileTime(container.LastWriteTime);
 
         EnableWatcher();
 
@@ -879,7 +865,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return data;
 
         var position = 0;
-        ReadOnlySpan<byte> result = Array.Empty<byte>();
+        ReadOnlySpan<byte> result = [];
 
         while (position < data.Length)
         {
@@ -919,8 +905,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="data"></param>
     protected virtual void WriteData(Container container, ReadOnlySpan<byte> data)
     {
-        if (container.DataFile is not null)
-            File.WriteAllBytes(container.DataFile.FullName, data.ToArray());
+        container.DataFile?.WriteAllBytes(data);
     }
 
     /// <summary>
@@ -949,6 +934,30 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="data"></param>
     /// <returns></returns>
     protected abstract Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data);
+
+    /// <summary>
+    /// Adds meta data that were added with Waypoint.
+    /// Contrary to the leading data, this is the same for all platforms.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="writer"></param>
+    protected void AddWaypointMeta(BinaryWriter writer, Container container)
+    {
+        // Always append cached bytes but overwrite afterwards if Waypoint.
+        writer.Write(container.Extra.Bytes ?? []); // length depends on platform
+
+        if (container.MetaFormat >= MetaFormatEnum.Waypoint)
+        {
+            writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+            writer.Write(container.SaveName.GetBytesWithTerminator()); // 128
+
+            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST), SeekOrigin.Begin);
+            writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
+
+            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2), SeekOrigin.Begin);
+            writer.Write((byte)(container.GameDifficulty)); // 1
+        }
+    }
 
     /// <summary>
     /// Compresses the created meta file content.
@@ -981,8 +990,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="meta"></param>
     protected virtual void WriteMeta(Container container, ReadOnlySpan<byte> meta)
     {
-        if (container.MetaFile is not null)
-            File.WriteAllBytes(container.MetaFile.FullName, meta.ToArray());
+        container.MetaFile?.WriteAllBytes(meta);
     }
 
     #endregion

@@ -15,4 +15,29 @@ internal static class FileInfoExtensions
 
         return [];
     }
+
+    /// <summary>
+    /// Sets the CreationTime and LastWriteTime for this file to the specified timestamp.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="timestamp"></param>
+    internal static void SetFileTime(this FileInfo self, DateTimeOffset? timestamp)
+    {
+        if (self.Exists && timestamp is not null)
+        {
+            File.SetCreationTime(self.FullName, timestamp!.Value.LocalDateTime);
+            File.SetLastWriteTime(self.FullName, timestamp!.Value.LocalDateTime);
+        }
+    }
+
+    /// <summary>
+    /// Writes the specified bytes to this file.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="bytes"></param>
+    internal static void WriteAllBytes(this FileInfo self, ReadOnlySpan<byte> bytes)
+    {
+        if (self.Exists)
+            File.WriteAllBytes(self.FullName, bytes.ToArray());
+    }
 }
