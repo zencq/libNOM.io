@@ -128,7 +128,7 @@ public partial class PlatformMicrosoft : Platform
 
     public PlatformMicrosoft(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
-#if !NETSTANDARD2_0
+#if NETSTANDARD2_1_OR_GREATER || NET6_0
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and we do not want three ways, so we only do oldest and newest.")]
 #endif
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
@@ -657,7 +657,7 @@ public partial class PlatformMicrosoft : Platform
         var hasSettings = _settingsContainer is not null;
 
         var collection = SaveContainerCollection.Where(i => i.Extra.MicrosoftBlobDirectoryGuid is not null);
-        var count = (long)(collection.Count() + (HasAccountData ? 1 : 0) + (hasSettings ? 1 : 0));
+        var count = (long)(collection.Count() + HasAccountData.ToByte() + hasSettings.ToByte());
 
         // Longest name (e.g. Slot10Manual) has a total length of 0x8C (140) and any leftover for short ones will be cut off.
         var buffer = new byte[CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST + (count * 0x8C)];
@@ -821,9 +821,7 @@ public partial class PlatformMicrosoft : Platform
 
         // Always creating dummy blob data (already created in CopyPlatformExtra() if destination does not exist).
         if (destination.Exists)
-        {
             ExecuteCanCreate(destination);
-        }
     }
 
     #endregion

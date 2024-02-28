@@ -33,10 +33,12 @@ public partial class PlatformPlaystation : Platform
     private const uint MEMORYDAT_OFFSET_DATA_ACCOUNTDATA = 0x20000U;
     private const uint MEMORYDAT_OFFSET_DATA_CONTAINER = 0xE0000U;
 
-    private const string SAVEWIZARD_HEADER = "NOMANSKY";
-    private static readonly byte[] SAVEWIZARD_HEADER_BINARY = SAVEWIZARD_HEADER.GetUTF8Bytes();
-    private const int SAVEWIZARD_VERSION_1 = 1;
+#pragma warning disable IDE0051 // Remove unused private member
+    internal const string SAVEWIZARD_HEADER = "NOMANSKY";
+    internal static readonly byte[] SAVEWIZARD_HEADER_BINARY = SAVEWIZARD_HEADER.GetUTF8Bytes();
+    private const int SAVEWIZARD_VERSION_1 = 1; // not used but for completeness
     private const int SAVEWIZARD_VERSION_2 = 2;
+#pragma warning restore IDE0051
 
     #endregion
 
@@ -416,37 +418,38 @@ public partial class PlatformPlaystation : Platform
     public override void Write(Container container, DateTimeOffset writeTime)
     {
         if (_usesSaveStreaming)
-            base.Write(container, writeTime);
-        else
         {
-            if (!CanUpdate || !container.IsLoaded)
-                return;
+            base.Write(container, writeTime);
+            return;
+        }
 
-            DisableWatcher();
+        if (!CanUpdate || !container.IsLoaded)
+            return;
 
-            // Write memory.dat file if something needs to be updated.
-            if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
+        DisableWatcher();
+
+        // Write memory.dat file if something needs to be updated.
+        if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
+        {
+            if (Settings.WriteAlways || !container.IsSynced)
             {
-                if (Settings.WriteAlways || !container.IsSynced)
-                {
-                    container.Exists = true;
-                    container.IsSynced = true;
+                container.Exists = true;
+                container.IsSynced = true;
 
-                    _ = PrepareData(container); // stored in container.Extra.Bytes and written in WriteMemoryDat()
-                }
-
-                if (Settings.SetLastWriteTime)
-                    _lastWriteTime = container.LastWriteTime = writeTime;
-
-                WriteMemoryDat();
+                _ = PrepareData(container); // stored in container.Extra.Bytes and written in WriteMemoryDat()
             }
 
-            EnableWatcher();
+            if (Settings.SetLastWriteTime)
+                _lastWriteTime = container.LastWriteTime = writeTime;
 
-            // Always refresh in case something above was executed.
-            container.RefreshFileInfo();
-            container.WriteCallback.Invoke();
+            WriteMemoryDat();
         }
+
+        EnableWatcher();
+
+        // Always refresh in case something above was executed.
+        container.RefreshFileInfo();
+        container.WriteCallback.Invoke();
     }
 
     protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)
@@ -717,17 +720,12 @@ public partial class PlatformPlaystation : Platform
                 Destination.Extra = Destination.Extra with
                 {
                     Bytes = CreateData(Destination).ToArray(),
+                    LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now,
                 };
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
 
-        UpdateUserIdentification();
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion
@@ -854,14 +852,12 @@ public partial class PlatformPlaystation : Platform
             return;
         }
 
-        //if (_preparedForTransfer != destinationSlotIndex)
-        //    PrepareTransferDestination(destinationSlotIndex);
+        PrepareTransferDestination(destinationSlotIndex);
 
         if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
-            throw new InvalidOperationException("Cannot transfer as at least one user identification is not complete.");
+            ThrowHelper.ThrowInvalidOperationException("Cannot transfer as at least one user identification is not complete.");
 
-        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(GetSlotContainers(destinationSlotIndex), (Source, Destination) => (Source, Destination)))
-        {
+        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(SaveContainerCollection.Where(i => i.SlotIndex == destinationSlotIndex), (Source, Destination) => (Source, Destination)))
             if (!Source.Exists)
             {
                 Delete(Destination, false);
@@ -869,7 +865,7 @@ public partial class PlatformPlaystation : Platform
             else if (Destination.Exists || !Destination.Exists && CanCreate)
             {
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -885,23 +881,18 @@ public partial class PlatformPlaystation : Platform
                 Destination.SaveVersion = Source.SaveVersion;
 
                 // Update bytes in platform extra as it is what will be written later.
+                // Could also be done in CopyPlatformExtra but here we do not need to override another method.
                 Destination.Extra = Destination.Extra with
                 {
                     Bytes = CreateData(Destination).ToArray(),
+                    LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now,
                 };
 
                 TransferOwnership(Destination, sourceTransferData);
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
-            //else
-            //    continue;
-        }
+
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion

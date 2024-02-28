@@ -99,7 +99,8 @@ internal static partial class GameVersion
 
     private static GameVersionEnum? GetEnumIfAny(JObject jsonObject, string pathIdentifier, GameVersionEnum gameVersion)
     {
-        var result = jsonObject.SelectTokens(Json.GetPaths(pathIdentifier, jsonObject)[0]);
+        // Only relevant for pre-Omega saves and therefore context does not matter.
+        var result = jsonObject.SelectTokens(Json.GetPath(pathIdentifier, jsonObject));
         return result.Any() ? gameVersion : null;
     }
 
@@ -111,7 +112,8 @@ internal static partial class GameVersion
 
     private static GameVersionEnum? GetEnumIfNotNull(JObject jsonObject, string pathIdentifier, GameVersionEnum gameVersion)
     {
-        var result = jsonObject.SelectToken(Json.GetPaths(pathIdentifier, jsonObject)[0]);
+        // Only relevant for pre-Omega saves and therefore context does not matter.
+        var result = jsonObject.SelectToken(Json.GetPath(pathIdentifier, jsonObject));
         return result is not null ? gameVersion : null;
     }
 

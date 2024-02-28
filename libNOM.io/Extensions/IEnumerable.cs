@@ -5,21 +5,6 @@ namespace libNOM.io.Extensions;
 
 public static class IEnumerableExtensions
 {
-    #region typeof(T)
-
-    /// <summary>
-    /// Determines whether a sequence is long enough to be accessed with the specified index.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <param name="index"></param>
-    /// <returns></returns>
-    internal static bool ContainsIndex<T>(this IEnumerable<T> self, int index)
-    {
-        return 0 <= index && index < self.Count();
-    }
-
-    #endregion
-
     #region typeof(RegEx)
 
     /// <summary>
@@ -54,6 +39,21 @@ public static class IEnumerableExtensions
                     return collection;
         }
         return null;
+    }
+
+    #endregion
+
+    #region typeof(T)
+
+    /// <summary>
+    /// Determines whether a sequence is long enough to be accessed with the specified index.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    internal static bool ContainsIndex<T>(this IEnumerable<T> self, int index)
+    {
+        return 0 <= index && index < self.Count();
     }
 
     #endregion

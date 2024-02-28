@@ -1097,10 +1097,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
                 if (write)
-                {
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
 
         UpdateUserIdentification();
@@ -1251,24 +1248,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public TransferData GetSourceTransferData(int sourceSlotIndex)
     {
+        PrepareUserIdentification();
 
-        // If user identification is not complete, load saves until it is.
-        foreach (var container in SaveContainerCollection.Where(i => i.Exists && !i.IsLoaded))
-        {
-            // Faking while-loop by checking first.
-            if (PlatformUserIdentification.IsComplete())
-                break;
-
-            BuildContainerFull(container);
-        }
-
-        var sourceTransferData = new TransferData(GetSlotContainers(sourceSlotIndex), true, [], true, true, true, PlatformUserIdentification);
-
-        //var sourceTransferData = new TransferData
-        //{
-        //    Containers = GetSlotContainers(sourceSlotIndex),
-        //    UserIdentification = PlatformUserIdentification,
-        //};
+        var sourceTransferData = new TransferData(SaveContainerCollection.Where(i => i.SlotIndex == sourceSlotIndex), true, [], true, true, true, PlatformUserIdentification);
 
         foreach (var container in sourceTransferData.Containers)
         {
@@ -1281,62 +1263,37 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             var jsonObject = container.GetJsonObject();
             var usesMapping = jsonObject.UsesMapping();
 
-            // TODO JSONPath
-            var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})]" : $"6f=.F?0[?({{0}})]";
-            var expressions = new[]
+            foreach (var context in EnumExtensions.GetValues<SaveContextQueryEnum>())
             {
-                usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-                usesMapping ? $"@.Owner.UID == '{PlatformUserIdentification.UID}'" : $"@.3?K.K7E == '{PlatformUserIdentification.UID}'",
-            };
-
-            foreach (var persistentPlayerBase in Json.SelectTokensWithIntersection(jsonObject, path, expressions).Cast<JObject>())
-            {
-                var baseName = persistentPlayerBase.GetValue<string>("BASE_NAME");
-                var baseType = persistentPlayerBase.GetValue<string>("BASE_TYPE");
-
-                if (string.IsNullOrEmpty(baseName))
+                var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, context);
+                var expressions = new[]
                 {
-                    if (baseType == PersistentBaseTypesEnum.FreighterBase.ToString())
-                    {
-                        baseName = "Freighter Base";
-                    }
-                    else if (baseType == PersistentBaseTypesEnum.HomePlanetBase.ToString())
-                    {
-                        baseName = "Unnamed Planet Base";
-                    }
-                    else
-                    {
-                        baseName = "Unnamed Base";
-                    }
-                }
+                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
+                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_UID", jsonObject, PlatformUserIdentification.UID),
+                };
+                foreach (var persistentPlayerBase in jsonObject.SelectTokensWithIntersection(path, expressions).Cast<JObject>())
+                {
+                    var name = persistentPlayerBase.GetValue<string>("RELATIV_BASE_NAME");
+                    if (string.IsNullOrEmpty(name))
+                        name = EnumExtensions.Parse<PersistentBaseTypesEnum>(persistentPlayerBase.GetValue<string>("RELATIV_BASE_OWNER")) switch
+                        {
+                            PersistentBaseTypesEnum.FreighterBase => "Freighter Base",
+                            PersistentBaseTypesEnum.HomePlanetBase => "Unnamed Planet Base",
+                            _ => "Unnamed Base",
+                        };
 
-                sourceTransferData.TransferBaseUserDecision[GetBaseIdentifier(persistentPlayerBase)] = new(true, baseName!);
+                    sourceTransferData.TransferBaseUserDecision[GetBaseIdentifier(persistentPlayerBase)] = new(context, name!, true);
+                }
             }
         }
 
         UpdateUserIdentification();
 
-        return sourceTransferData with
-        {
-            UserIdentification = PlatformUserIdentification,
-        };
+        return sourceTransferData with { UserIdentification = PlatformUserIdentification };
     }
 
-    // TODO call from Transfer()
-    /// <summary>
-    /// Ensures that the destination is prepared for the incoming <see cref="Transfer(TransferData, int)"/>.
-    /// Mainly to lookup the user identification.
-    /// </summary>
-    /// <param name="destinationSlotIndex"></param>
-    public void PrepareTransferDestination(int destinationSlotIndex)
+    private void PrepareUserIdentification()
     {
-        // Load destination as they are needed anyway.
-        foreach (var container in GetSlotContainers(destinationSlotIndex))
-        {
-            if (container.Exists && !container.IsLoaded)
-                BuildContainerFull(container);
-        }
-
         // If user identification is not complete, load saves until it is.
         foreach (var container in SaveContainerCollection.Where(i => i.Exists && !i.IsLoaded))
         {
@@ -1346,8 +1303,43 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             BuildContainerFull(container);
         }
+    }
 
-        //_preparedForTransfer = destinationSlotIndex;
+    /// <summary>
+    /// Creates an unique identifier for bases based on its location.
+    /// </summary>
+    /// <param name="jsonObject"></param>
+    /// <returns></returns>
+    private static string GetBaseIdentifier(JObject jsonObject)
+    {
+#if NETSTANDARD2_0
+        var galacticAddress = jsonObject.GetValue<string>("RELATIV_BASE_GALACTIC_ADDRESS")!;
+        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
+#else
+        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("RELATIV_BASE_GALACTIC_ADDRESS");
+        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress[2..], NumberStyles.HexNumber) : long.Parse(galacticAddress);
+#endif
+
+        var positionX = jsonObject.GetValue<int>("RELATIV_BASE_POSITION_0");
+        var positionY = jsonObject.GetValue<int>("RELATIV_BASE_POSITION_1");
+        var positionZ = jsonObject.GetValue<int>("RELATIV_BASE_POSITION_2");
+
+        return $"{galacticInteger}{positionX:+000000;-000000}{positionY:+000000;-000000}{positionZ:+000000;-000000}";
+    }
+
+    /// <summary>
+    /// Ensures that the destination is prepared for the incoming <see cref="Transfer(TransferData, int)"/>.
+    /// Mainly to lookup the user identification.
+    /// </summary>
+    /// <param name="destinationSlotIndex"></param>
+    protected void PrepareTransferDestination(int destinationSlotIndex)
+    {
+        // Load destination as they are needed anyway.
+        foreach (var container in SaveContainerCollection.Where(i => i.SlotIndex == destinationSlotIndex))
+            if (container.Exists && !container.IsLoaded)
+                BuildContainerFull(container);
+
+        PrepareUserIdentification();
     }
 
     public void Transfer(TransferData sourceTransferData, int destinationSlotIndex) => Transfer(sourceTransferData, destinationSlotIndex, true);
@@ -1357,22 +1349,20 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <exception cref="InvalidOperationException"></exception>
     protected virtual void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
     {
-        //if (_preparedForTransfer != destinationSlotIndex)
-        //    PrepareTransferDestination(destinationSlotIndex);
+        PrepareTransferDestination(destinationSlotIndex);
 
         if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
-            throw new InvalidOperationException("Cannot transfer as at least one user identification is not complete.");
+            ThrowHelper.ThrowInvalidOperationException("Cannot transfer as at least one user identification is not complete.");
 
-        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(GetSlotContainers(destinationSlotIndex), (Source, Destination) => (Source, Destination)))
-        {
+        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(SaveContainerCollection.Where(i => i.SlotIndex == destinationSlotIndex), (Source, Destination) => (Source, Destination)))
             if (!Source.Exists)
             {
                 Delete(Destination, write);
             }
-            else if (Destination.Exists || !Destination.Exists && CanCreate)
+            else if (Destination.Exists || (!Destination.Exists && CanCreate))
             {
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -1391,14 +1381,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
                 if (write)
-                {
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
-            //else
-            //    continue;
-        }
     }
 
     /// <summary>
@@ -1411,7 +1395,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         CopyPlatformExtra(destination, source);
 
-        // Reset bytes as from another platform would not be right.
+        // Reset bytes as from another platform it would not be right.
         destination.Extra = destination.Extra with
         {
             Bytes = null,
@@ -1430,30 +1414,33 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         // Change token for Platform.
         jsonObject.SetValue(PlatformArchitecture, "PLATFORM");
 
-        // TODO check both contexts
-
         if (sourceTransferData.TransferDiscovery) // 1.0
-            TransferGeneralOwnership(jsonObject, Json.GetPaths("DISCOVERY_DATA_WITH_UID", jsonObject, sourceTransferData.UserIdentification!.UID)[0]);
+            TransferGeneralOwnership(jsonObject, sourceTransferData, SaveContextQueryEnum.DontCare, "TRANSFER_UID_DISCOVERY");
 
         if (container.IsVersion(GameVersionEnum.Foundation) && sourceTransferData.TransferBase) // 1.1
-            TransferBaseOwnership(jsonObject, sourceTransferData);
+            foreach (var context in EnumExtensions.GetValues<SaveContextQueryEnum>())
+                TransferBaseOwnership(jsonObject, sourceTransferData, context);
 
         if (container.IsVersion351PrismsWithBytebeatAuthor && sourceTransferData.TransferBytebeat) // 3.51
             TransferBytebeatOwnership(jsonObject, sourceTransferData);
 
         if (container.IsVersion360Frontiers && sourceTransferData.TransferSettlement) // 3.6
-            TransferGeneralOwnership(jsonObject, Json.GetPaths("SETTLEMENT_WITH_UID", jsonObject, sourceTransferData.UserIdentification!.UID)[0]);
+            foreach (var context in EnumExtensions.GetValues<SaveContextQueryEnum>())
+                TransferGeneralOwnership(jsonObject, sourceTransferData, context, "TRANSFER_UID_SETTLEMENT");
     }
 
     /// <summary>
     /// Generic method that transfers ownerships according to the specified path.
     /// </summary>
     /// <param name="jsonObject"></param>
-    /// <param name="path"></param>
-    protected void TransferGeneralOwnership(JObject jsonObject, string path)
+    /// <param name="sourceTransferData"></param>
+    /// <param name="context"></param>
+    /// <param name="pathIdentifier"></param>
+    protected void TransferGeneralOwnership(JObject jsonObject, TransferData sourceTransferData, SaveContextQueryEnum context, string pathIdentifier)
     {
-        foreach (var ownership in jsonObject.SelectTokens(path))
-            TransferGeneralOwnership((JObject)(ownership));
+        var path = Json.GetPath(pathIdentifier, jsonObject, context, sourceTransferData.UserIdentification.UID);
+        foreach (var ownership in jsonObject.SelectTokens(path).Cast<JObject>())
+            TransferGeneralOwnership(ownership);
     }
 
     /// <summary>
@@ -1463,12 +1450,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected void TransferGeneralOwnership(JObject jsonObject)
     {
         // Only UID is guaranteed.
-        jsonObject.SetValue(PlatformUserIdentification.UID, "OWNER_UID");
+        jsonObject.SetValue(PlatformUserIdentification.UID, "RELATIV_OWNER_UID");
 
         // Replace LID, PTK, and USN if it is not empty.
-        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.LID, "OWNER_LID");
-        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.USN, "OWNER_USN");
-        SetValueIfNullOrEmpty(jsonObject, PlatformToken, "OWNER_PTK");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.LID, "RELATIV_OWNER_LID");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIV_OWNER_USN");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIV_OWNER_PTK");
     }
 
     /// <summary>
@@ -1476,15 +1463,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferBaseOwnership(JObject jsonObject, TransferData sourceTransferData)
+    /// <param name="context"></param>
+    protected void TransferBaseOwnership(JObject jsonObject, TransferData sourceTransferData, SaveContextQueryEnum context)
     {
-        foreach (var persistentPlayerBase in jsonObject.SelectTokens(Json.GetPaths("PERSISTENT_PLAYER_BASE_ALL", jsonObject)[0]).Cast<JObject>())
-        {
-            var identifier = GetBaseIdentifier(persistentPlayerBase);
-
-            if (sourceTransferData.TransferBaseUserDecision.TryGetValue(identifier, out var userDecision) && userDecision.DoTransfer)
-                TransferGeneralOwnership((JObject)(persistentPlayerBase[Json.GetPaths("BASE_OWNER", jsonObject)[0]]!));
-        }
+        var path = Json.GetPath("PERSISTENT_PLAYER_BASE_ALL", jsonObject, context);
+        foreach (var persistentPlayerBase in jsonObject.SelectTokens(path).Cast<JObject>())
+            if (sourceTransferData.TransferBaseUserDecision.TryGetValue(GetBaseIdentifier(persistentPlayerBase), out var userDecision) && userDecision.DoTransfer)
+                TransferGeneralOwnership(persistentPlayerBase.GetValue<JObject>("RELATIV_BASE_OWNER")!);
     }
 
     /// <summary>
@@ -1494,12 +1479,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="sourceTransferData"></param>
     protected void TransferBytebeatOwnership(JObject jsonObject, TransferData sourceTransferData)
     {
-        foreach (var mySong in jsonObject.SelectTokens(Json.GetPaths("MY_SONGS_WITH_UID", jsonObject, sourceTransferData.UserIdentification!.UID)[0]).Cast<JObject>())
+        var path = Json.GetPath("TRANSFER_UID_BYTEBEAT", jsonObject, sourceTransferData.UserIdentification.UID);
+        foreach (var mySong in jsonObject.SelectTokens(path).Cast<JObject>())
         {
-            // TODO set value w/o jsonObject -> GetPaths returns all -> try and find
-            mySong.SetValue(PlatformUserIdentification.UID, "SONG_AUTHOR_ID");
-            mySong.SetValue(PlatformUserIdentification.USN, "SONG_AUTHOR_USERNAME");
-            mySong.SetValue(PlatformToken, "SONG_AUTHOR_PLATFORM");
+            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.UID, "RELATIV_SONG_AUTHOR_ID");
+            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIV_SONG_AUTHOR_USERNAME");
+            mySong.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIV_SONG_AUTHOR_PLATFORM");
         }
     }
 
@@ -1764,7 +1749,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected static IEnumerable<string> GetUserIdentificationIntersection(JObject jsonObject, string path, params string[] expressions)
     {
-        return (IEnumerable<string>)(Json.SelectTokensWithIntersection(jsonObject, path, expressions).Select(i => i.Value<string>()).Where(j => !string.IsNullOrWhiteSpace(j)));
+        return (IEnumerable<string>)(jsonObject.SelectTokensWithIntersection(path, expressions).Select(i => i.Value<string>()).Where(j => !string.IsNullOrWhiteSpace(j)));
     }
 
     #endregion

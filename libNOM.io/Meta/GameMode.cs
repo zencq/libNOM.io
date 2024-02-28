@@ -61,10 +61,15 @@ internal static partial class GameMode
                 var context = SaveContextQueryEnum.DontCare;
 
                 if (RegexesActiveContext.Match(json)?.ToStringValue() is string value)
-                    context = EnumExtensions.Parse<SaveContextQueryEnum>(value);
+                    context = EnumExtensions.Parse<SaveContextQueryEnum>(value) ?? SaveContextQueryEnum.DontCare;
 
                 // Main is always first and Season second.
-                return (PresetGameModeEnum)(context == SaveContextQueryEnum.Main ? collection[0] : collection[1]).ToInt32Value();
+                return context switch
+                {
+                    SaveContextQueryEnum.Main => (PresetGameModeEnum)(collection[0].ToInt32Value()),
+                    SaveContextQueryEnum.Season => (PresetGameModeEnum)(collection[1].ToInt32Value()),
+                    _ => PresetGameModeEnum.Unspecified,
+                };
             }
             else
                 return (PresetGameModeEnum)(collection[0].ToInt32Value());

@@ -95,9 +95,7 @@ public static class NewtonsoftExtensions
                 jToken = jArray.ContainsIndex(index) ? jToken[index] : null;
             }
             else if (jToken is JObject jObject)
-            {
                 jToken = jObject.Children().ElementAtOrDefault(index);
-            }
 
             if (jToken is JProperty jProperty)
                 jToken = jProperty.Value;
@@ -228,12 +226,38 @@ public static class NewtonsoftExtensions
     /// <param name="jsonObject"></param>
     /// <param name="value"></param>
     /// <param name="pathIdentifier"></param>
-    internal static void SetValueIfNullOrEmpty(this JObject self, JToken value, string pathIdentifier)
+    internal static void SetValueIfNotNullOrEmpty(this JObject self, JToken value, string pathIdentifier)
     {
+        // Only called on relative objects and therefore context does not matter.
         var paths = Json.GetPaths(pathIdentifier, self);
 
         if (!string.IsNullOrEmpty(GetValue<string>(self, paths)))
             SetValue(self, value, paths);
+    }
+
+    #endregion
+
+    #region SelectToken(s)
+
+    /// <summary>
+    /// Selects a collection of elements using multiple JSONPath expression with conjunction.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="path"></param>
+    /// <param name="expressions"></param>
+    /// <returns></returns>
+    internal static IEnumerable<JToken> SelectTokensWithIntersection(this JObject self, string path, params string[] expressions)
+    {
+        if (expressions.Length == 0)
+            return [];
+
+        IEnumerable<JToken>? result = null; // starting with a [] would always be empty
+        foreach (var expression in expressions)
+        {
+            var query = self.SelectTokens(string.Format(path, expression));
+            result = result is null ? query : result.Intersect(query);
+        }
+        return result ?? [];
     }
 
     #endregion

@@ -67,27 +67,27 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether it is possible to switch context between the main/primary save and an active expedition/season.
     /// </summary>
-    public bool CanSwitchContext => IsLoaded && _jsonObject!.ContainsKey(Json.GetPaths("BASE_CONTEXT", _jsonObject)[0]) && _jsonObject!.ContainsKey(Json.GetPaths("EXPEDITION_CONTEXT", _jsonObject!)[0]); // { get; }
+    public bool CanSwitchContext => IsLoaded && _jsonObject!.ContainsKey(Json.GetPath("BASE_CONTEXT", _jsonObject)) && _jsonObject!.ContainsKey(Json.GetPath("EXPEDITION_CONTEXT", _jsonObject!)); // { get; }
 
     /// <summary>
     /// Whether this is a save with an ongoing expedition (<see cref="PresetGameModeEnum.Seasonal"/>).
     /// </summary>
-    public bool HasActiveExpedition => GameMode == PresetGameModeEnum.Seasonal || (IsLoaded && _jsonObject!.ContainsKey(Json.GetPaths("EXPEDITION_CONTEXT", _jsonObject!)[0])); // { get; }
+    public bool HasActiveExpedition => GameMode == PresetGameModeEnum.Seasonal || (IsLoaded && _jsonObject!.ContainsKey(Json.GetPath("EXPEDITION_CONTEXT", _jsonObject!))); // { get; }
 
     /// <summary>
     /// Whether this contains potential user owned bases.
     /// </summary>
-    public bool HasBase => IsLoaded && GetJsonValues<PersistentBaseTypesEnum>("PERSISTENT_PLAYER_BASE_ALL_TYPES").Any(i => i is PersistentBaseTypesEnum.HomePlanetBase or PersistentBaseTypesEnum.FreighterBase); // { get; }
+    public bool HasBase => IsLoaded && GetJsonValues<PersistentBaseTypesEnum>("PERSISTENT_PLAYER_BASE_ALL_TYPES", ActiveContext).Any(i => i is PersistentBaseTypesEnum.HomePlanetBase or PersistentBaseTypesEnum.FreighterBase); // { get; }
 
     /// <summary>
     /// Whether this contains a user owned freighter.
     /// </summary>
-    public bool HasFreighter => IsLoaded && GetJsonValues<double>("FREIGHTER_POSITION")?.Any(i => i != 0.0) == true; // { get; }
+    public bool HasFreighter => IsLoaded && GetJsonValues<double>("FREIGHTER_POSITION", ActiveContext).Any(i => i != 0.0); // { get; }
 
     /// <summary>
     /// Whether this contains a potential user owned settlement.
     /// </summary>
-    public bool HasSettlement => IsLoaded && GetJsonValues<string>("SETTLEMENT_ALL_OWNER_LID")?.Any(i => !string.IsNullOrEmpty(i)) == true; // { get; }
+    public bool HasSettlement => IsLoaded && GetJsonValues<string>("SETTLEMENT_ALL_OWNER_LID", ActiveContext).Any(i => !string.IsNullOrEmpty(i)); // { get; }
 
     /// <summary>
     /// Whether this contains account data and is not a regular save.
