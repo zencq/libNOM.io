@@ -1137,9 +1137,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Delete
 
-    public void Delete(Container container) => Delete(new[] { container }, true);
+    public void Delete(Container container) => Delete([container], true);
 
-    protected void Delete(Container container, bool write) => Delete(new[] { container }, write);
+    protected void Delete(Container container, bool write) => Delete([container], write);
 
     public void Delete(IEnumerable<Container> containers) => Delete(containers, true);
 
@@ -1153,29 +1153,16 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             if (write)
             {
-                if (container.DataFile?.Exists == true)
+                try
                 {
-                    try
-                    {
-                        File.Delete(container.DataFile.FullName);
-                    }
-                    catch (Exception ex) when (ex is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException)
-                    {
-                        // Nothing to do.
-                    }
+                    container.DataFile?.Delete();
                 }
-
-                if (container.MetaFile?.Exists == true)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } // nothing to do
+                try
                 {
-                    try
-                    {
-                        File.Delete(container.MetaFile.FullName);
-                    }
-                    catch (Exception ex) when (ex is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException)
-                    {
-                        // Nothing to do.
-                    }
+                    container.MetaFile?.Delete();
                 }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } // nothing to do
             }
 
             container.Reset();

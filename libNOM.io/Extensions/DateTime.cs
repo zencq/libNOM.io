@@ -4,13 +4,9 @@
 internal static class DateTimeOffsetExtensions
 {
     /// <summary>
-    /// Nullifies the last four digits of the current <see cref="DateTimeOffset"/> object.
+    /// Nullifies the specified number of last digits.
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-    internal static DateTimeOffset ToBlobFileTime(this DateTimeOffset self)
-    {
-        var ticks = self.Ticks % (long)(Math.Pow(10, 4)) * -1; // get last four digits negative
-        return self.AddTicks(ticks);
-    }
+    internal static DateTimeOffset NullifyTicks(this DateTimeOffset self, int digits) => self.Subtract(new TimeSpan((long)(Math.Pow(10, digits))));
 }

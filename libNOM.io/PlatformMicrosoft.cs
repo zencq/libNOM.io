@@ -24,16 +24,14 @@ public partial class PlatformMicrosoft : Platform
     internal override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x118; // 280
 
-    protected const int BLOBCONTAINER_HEADER = 0x4; // 4
-    protected const int BLOBCONTAINER_COUNT = 0x2; // 2
-    protected const int BLOBCONTAINER_IDENTIFIER_LENGTH = 0x80; // 128
-    protected const int BLOBCONTAINER_TOTAL_LENGTH = sizeof(int) + sizeof(int) + BLOBCONTAINER_COUNT * (BLOBCONTAINER_IDENTIFIER_LENGTH + 2 * 0x10); // 328
+    private const int BLOBCONTAINER_HEADER = 0x4; // 4
+    private const int BLOBCONTAINER_COUNT = 0x2; // 2
+    private const int BLOBCONTAINER_IDENTIFIER_LENGTH = 0x80; // 128
+    private const int BLOBCONTAINER_TOTAL_LENGTH = sizeof(int) + sizeof(int) + BLOBCONTAINER_COUNT * (BLOBCONTAINER_IDENTIFIER_LENGTH + 2 * 0x10); // 328
 
-    protected const int CONTAINERSINDEX_HEADER = 0xE; // 14
-    protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
-    protected const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
-
-
+    private const int CONTAINERSINDEX_HEADER = 0xE; // 14
+    private const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
+    private const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
 
     #endregion
 
@@ -540,8 +538,8 @@ public partial class PlatformMicrosoft : Platform
 
             if (Settings.SetLastWriteTime)
             {
-                _lastWriteTime = writeTime;
-                container.LastWriteTime = _lastWriteTime.ToBlobFileTime();
+                _lastWriteTime = writeTime; // global timestamp has full accuracy
+                container.LastWriteTime = _lastWriteTime.NullifyTicks(4);
 
                 container.DataFile?.SetFileTime(container.LastWriteTime);
                 container.MetaFile?.SetFileTime(container.LastWriteTime);
@@ -692,8 +690,8 @@ public partial class PlatformMicrosoft : Platform
     }
 
     private static void AddMicrosoftMeta(BinaryWriter writer, string identifier, PlatformExtra extra)
-            {
-                // Make sure to get the latest data.
+    {
+        // Make sure to get the latest data.
         extra.MicrosoftBlobDataFile?.Refresh();
         extra.MicrosoftBlobMetaFile?.Refresh();
 
@@ -703,9 +701,9 @@ public partial class PlatformMicrosoft : Platform
         writer.Write((int)(extra.MicrosoftSyncState!.Value));
         writer.Write(extra.MicrosoftBlobDirectoryGuid!.Value.ToByteArray());
         writer.Write(extra.LastWriteTime!.Value.ToUniversalTime().ToFileTime());
-                writer.Write((long)(0));
+        writer.Write((long)(0));
         writer.Write((extra.MicrosoftBlobDataFile?.Exists == true ? extra.MicrosoftBlobDataFile!.Length : 0) + (extra.MicrosoftBlobMetaFile?.Exists == true ? extra.MicrosoftBlobMetaFile!.Length : 0));
-            }
+    }
 
     /// <summary>
     /// Adds the length of the specified string and the string itself as unicode to the writer.
@@ -714,13 +712,13 @@ public partial class PlatformMicrosoft : Platform
     /// <param name="identifier"></param>
     /// <param name="count">How many times it should be added.</param>
     private static void AddDynamicText(BinaryWriter writer, string identifier, int count)
-            {
+    {
         for (var i = 0; i < count; i++)
-                {
+        {
             writer.Write(identifier.Length);
             writer.Write(identifier.GetUnicodeBytes());
-                }
-            }
+        }
+    }
 
     #endregion
 
@@ -738,7 +736,7 @@ public partial class PlatformMicrosoft : Platform
     }
 
     private void ExecuteCanCreate(Container Destination)
-            {
+    {
         var directoryGuid = Guid.NewGuid();
         var directory = new DirectoryInfo(Path.Combine(Location!.FullName, directoryGuid.ToPath()));
 
@@ -758,7 +756,7 @@ public partial class PlatformMicrosoft : Platform
         // Prepare blob container file content. Guid of data and meta file will be set while executing Write().
         var buffer = new byte[BLOBCONTAINER_TOTAL_LENGTH];
         using (var writer = new BinaryWriter(new MemoryStream(buffer)))
-                {
+        {
             writer.Write(BLOBCONTAINER_HEADER);
             writer.Write(BLOBCONTAINER_COUNT);
 
@@ -787,23 +785,17 @@ public partial class PlatformMicrosoft : Platform
         {
             if (write)
             {
-                if (container.Extra.MicrosoftBlobDirectory?.Exists == true)
+                try
                 {
-                    try
-                    {
-                        Directory.Delete(container.Extra.MicrosoftBlobDirectory.FullName, true);
-                    }
-                    catch (Exception ex) when (ex is DirectoryNotFoundException or IOException or PathTooLongException or UnauthorizedAccessException)
-                    {
-                        // Nothing to do.
-                    }
+                    container.Extra.MicrosoftBlobDirectory?.Delete();
                 }
+                catch (Exception ex) when (ex is DirectoryNotFoundException or IOException or UnauthorizedAccessException) { } // nothing to do
             }
 
             if (Settings.SetLastWriteTime)
             {
-                _lastWriteTime = DateTimeOffset.Now.LocalDateTime;
-                container.LastWriteTime = _lastWriteTime.ToBlobFileTime();
+                _lastWriteTime = DateTimeOffset.Now.LocalDateTime; // global timestamp has full accuracy
+                container.LastWriteTime = _lastWriteTime.NullifyTicks(4);
             }
 
             container.Reset();
@@ -814,9 +806,7 @@ public partial class PlatformMicrosoft : Platform
         }
 
         if (write)
-        {
             WriteContainersIndex();
-        }
 
         EnableWatcher();
     }

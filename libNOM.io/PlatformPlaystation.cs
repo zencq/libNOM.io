@@ -734,32 +734,29 @@ public partial class PlatformPlaystation : Platform
 
     protected override void Delete(IEnumerable<Container> containers, bool write)
     {
-        Guard.IsTrue(CanDelete);
-
         if (_usesSaveStreaming)
         {
             base.Delete(containers, write);
+            return;
         }
-        else
+
+        Guard.IsTrue(CanDelete);
+
+        DisableWatcher();
+
+        foreach (var container in containers)
         {
-            DisableWatcher();
+            container.Reset();
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_006;
 
-            foreach (var container in containers)
-            {
-                container.Reset();
-                container.IncompatibilityTag = Constants.INCOMPATIBILITY_006;
-
-                // Set afterwards again to make sure it is set to false.
-                container.Exists = false;
-            }
-
-            if (write)
-            {
-                WriteMemoryDat();
-            }
-
-            EnableWatcher();
+            // Set afterwards again to make sure it is set to false.
+            container.Exists = false;
         }
+
+        if (write)
+            WriteMemoryDat();
+
+        EnableWatcher();
     }
 
     #endregion
