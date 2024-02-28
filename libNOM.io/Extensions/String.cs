@@ -1,7 +1,5 @@
 ﻿using System.Text;
 
-using CommunityToolkit.HighPerformance;
-
 namespace libNOM.io.Extensions;
 
 

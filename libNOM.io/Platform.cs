@@ -1009,15 +1009,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
         var path = Path.Combine(Settings.Backup, name);
 
-        Directory.CreateDirectory(Settings.Backup);
+        Directory.CreateDirectory(Settings.Backup); // ensure directory exists
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
             _ = zipArchive.CreateEntryFromFile(container.DataFile.FullName, "data");
             if (container.MetaFile?.Exists == true)
-            {
                 _ = zipArchive.CreateEntryFromFile(container.MetaFile.FullName, "meta");
             }
-        }
 
         // Create new backup container.
         var backup = new Container(container.MetaIndex, this)
@@ -1035,28 +1033,25 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             Delete(outdated);
             foreach (var item in outdated)
-            {
                 container.BackupCollection.Remove(item);
             }
-        }
 
         container.BackupCreatedCallback.Invoke(backup);
     }
 
     public void Restore(Container backup)
     {
+        // Does not make sense without it being an existing backup.
         Guard.IsTrue(backup.Exists);
         Guard.IsTrue(backup.IsBackup);
 
         if (!backup.IsLoaded)
-        {
             LoadBackupContainer(backup);
-        }
 
         if (!backup.IsCompatible)
             ThrowHelper.ThrowInvalidOperationException(backup.IncompatibilityException?.Message ?? backup.IncompatibilityTag ?? $"{backup} is incompatible.");
 
-        var container = GetSaveContainer(backup.CollectionIndex);
+        var container = SaveContainerCollection.First(i => i.CollectionIndex == backup.CollectionIndex);
         Rebuild(container!, backup.GetJsonObject());
 
         // Set IsSynced to false as ProcessContainerData set it to true but it is not compared to the state on disk.
