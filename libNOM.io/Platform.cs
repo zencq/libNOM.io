@@ -7,6 +7,8 @@ using System.IO.Compression;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 
+using DeepCopy;
+
 using LazyCache;
 
 using libNOM.io.Interfaces;
@@ -1063,8 +1065,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public void Copy(Container source, Container destination) => Copy([(Source: source, Destination: destination)], true);
 
-    protected void Copy(Container source, Container destination, bool write) => Copy([(Source: source, Destination: destination)], write);
-
     public void Copy(IEnumerable<(Container Source, Container Destination)> operationData) => Copy(operationData, true);
 
     protected virtual void Copy(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
@@ -1192,9 +1192,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Swap
 
-    public void Swap(Container source, Container destination) => Swap(new[] { (Source: source, Destination: destination) }, true);
-
-    protected void Swap(Container source, Container destination, bool write) => Swap(new[] { (Source: source, Destination: destination) }, write);
+    public void Swap(Container source, Container destination) => Swap([(Source: source, Destination: destination)], true);
 
     public void Swap(IEnumerable<(Container Source, Container Destination)> operationData) => Swap(operationData, true);
 
@@ -1210,7 +1208,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 BuildContainerFull(Destination);
 
             if (!Source.IsCompatible || !Destination.IsCompatible)
-                throw new InvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} / {Destination.IncompatibilityTag}");
+                ThrowHelper.ThrowInvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} >> {Destination.IncompatibilityTag}");
         }
 
         foreach (var (Source, Destination) in operationData)
@@ -1220,31 +1218,28 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 // Source and Destination exists. Swap.
                 if (Destination.Exists)
                 {
-                    // Cache.
-                    var jsonObject = Destination.GetJsonObject();
-                    var writeTime = Destination.LastWriteTime;
+                    // Keep a copy to be able to set Source correctly after Destination is done.
+                    var copy = DeepCopier.Copy(Destination);
 
                     // Write Source to Destination.
                     Destination.SetJsonObject(Source.GetJsonObject());
+                    CopyPlatformExtra(Destination, Source);
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
                     RebuildContainerFull(Destination);
 
                     // Write Destination to Source.
-                    Source.SetJsonObject(jsonObject);
-                    Write(Source, writeTime ?? DateTimeOffset.Now);
+                    Source.SetJsonObject(copy.GetJsonObject());
+                    CopyPlatformExtra(Source, copy);
+                    Write(Source, copy.LastWriteTime ?? DateTimeOffset.Now);
                     RebuildContainerFull(Source);
                 }
                 // Source exists only. Move to Destination.
                 else
-                {
-                    Move(Source, Destination);
-                }
+                    Move(Source, Destination, write);
             }
             // Destination exists only. Move to Source.
             else if (Destination.Exists)
-            {
-                Move(Destination, Source);
-            }
+                Move(Destination, Source, write);
         }
 
         UpdateUserIdentification();

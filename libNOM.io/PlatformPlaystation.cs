@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 
+using DeepCopy;
+
 using libNOM.map;
 
 using Newtonsoft.Json.Linq;
@@ -787,63 +789,57 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveStreaming)
         {
             base.Move(containerOperationData, write);
+            return;
         }
-        else
+
+        // Make sure everything can be swapped.
+        foreach (var (Source, Destination) in containerOperationData.Where(i => i.Source.Exists && i.Destination.Exists))
         {
-            // Make sure everything can be swapped.
-            foreach (var (Source, Destination) in containerOperationData.Where(i => i.Source.Exists && i.Destination.Exists))
-            {
-                if (!Source.IsLoaded)
-                    BuildContainerFull(Source);
+            if (!Source.IsLoaded)
+                BuildContainerFull(Source);
 
-                if (!Destination.IsLoaded)
-                    BuildContainerFull(Destination);
+            if (!Destination.IsLoaded)
+                BuildContainerFull(Destination);
 
-                if (!Source.IsCompatible || !Destination.IsCompatible)
-                    throw new InvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} / {Destination.IncompatibilityTag}");
-            }
-
-            foreach (var (Source, Destination) in containerOperationData)
-            {
-                if (Source.Exists)
-                {
-                    // Source and Destination exists. Swap.
-                    if (Destination.Exists)
-                    {
-                        // Cache.
-                        var jsonObject = Destination.GetJsonObject();
-                        var writeTime = Destination.LastWriteTime;
-
-                        // Write Source to Destination.
-                        Destination.LastWriteTime = Source.LastWriteTime;
-                        Destination.SetJsonObject(Source.GetJsonObject());
-                        RebuildContainerFull(Destination);
-
-                        // Write Destination to Source.
-                        Destination.LastWriteTime = writeTime;
-                        Source.SetJsonObject(jsonObject);
-                        RebuildContainerFull(Source);
-                    }
-                    // Source exists only. Move to Destination.
-                    else
-                    {
-                        Move(Source, Destination, false);
-                    }
-                }
-                // Destination exists only. Move to Source.
-                else if (Destination.Exists)
-                {
-                    Move(Destination, Source, false);
-                }
-            }
-
-            UpdateUserIdentification();
-
-            if (write)
-            {
-                WriteMemoryDat();
-            }
+            if (!Source.IsCompatible || !Destination.IsCompatible)
+                ThrowHelper.ThrowInvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} >> {Destination.IncompatibilityTag}");
         }
+
+        foreach (var (Source, Destination) in containerOperationData)
+        {
+            if (Source.Exists)
+            {
+                // Source and Destination exists. Swap.
+                if (Destination.Exists)
+                {
+                    // Keep a copy to be able to set Source correctly after Destination is done.
+                    var copy = DeepCopier.Copy(Destination);
+
+                    // Write Source to Destination.
+                    Destination.LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now;
+                    Destination.SetJsonObject(Source.GetJsonObject());
+                    CopyPlatformExtra(Destination, Source);
+                    RebuildContainerFull(Destination);
+
+                    // Write Destination to Source.
+                    Destination.LastWriteTime = copy.LastWriteTime ?? DateTimeOffset.Now;
+                    Source.SetJsonObject(copy.GetJsonObject());
+                    CopyPlatformExtra(Source, copy);
+                    RebuildContainerFull(Source);
+                }
+                // Source exists only. Move to Destination.
+                else
+                    Move(Source, Destination, false);
+            }
+            // Destination exists only. Move to Source.
+            else if (Destination.Exists)
+                Move(Destination, Source, false);
+        }
+
+        UpdateUserIdentification();
+
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion
