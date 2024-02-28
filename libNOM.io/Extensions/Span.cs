@@ -1,8 +1,10 @@
-﻿using CommunityToolkit.HighPerformance;
+﻿using System.Runtime.InteropServices;
+using System.Text;
+
+using CommunityToolkit.HighPerformance;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace libNOM.io.Extensions;
 
@@ -105,7 +107,7 @@ internal static class ReadOnlySpanExtensions
 #if !NETSTANDARD2_0
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
 #endif
-    internal static string GetSaveRenamingString(this ReadOnlySpan<byte> self)
+    internal static string GetStringUntilTerminator(this ReadOnlySpan<byte> self)
     {
         return GetString(self.Slice(0, self.IndexOf((byte)(0))));
     }
@@ -152,13 +154,6 @@ internal static class ReadOnlySpanExtensions
 #endif
     }
 
-    internal static int ReadString(this ReadOnlySpan<byte> self, out string result, int start)
-    {
-        var length = self.Cast<int>(start) * 2; // times two as it is UTF-16
-        result = self.Slice(start + sizeof(int), length).Cast<byte, char>().ToString();
-        return sizeof(int) + length;
-    }
-
     internal static int ReadString(this ReadOnlySpan<byte> self, int start, out string result)
     {
         var length = self.Cast<int>(start) * 2; // times two as it is UTF-16
@@ -172,13 +167,7 @@ internal static class ReadOnlySpanExtensions
         return length;
     }
 
-    internal static int ReadString(this ReadOnlySpan<byte> self, out ReadOnlySpan<char> result, int start, int length)
-    {
-        result = self.Slice(start, length).Cast<byte, char>().TrimEnd('\0');
-        return length;
-    }
-
-#endregion
+    #endregion
 }
 
 internal static class SpanExtensions

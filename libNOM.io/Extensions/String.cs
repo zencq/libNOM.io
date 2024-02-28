@@ -10,30 +10,21 @@ internal static class StringExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-    internal static byte[] GetBytesWithTerminator(this string self)
-    {
-        return $"{self}\0".GetUTF8Bytes();
-    }
+    internal static byte[] GetBytesWithTerminator(this string self) => $"{self}\0".GetUTF8Bytes();
 
     /// <summary>
     /// Encodes all the characters in the string into a sequence of bytes in UTF-16 format.
     /// </summary>
     /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding the set of characters.</returns>
-    internal static byte[] GetUnicodeBytes(this string self)
-    {
-        return Encoding.Unicode.GetBytes(self);
-    }
+    internal static byte[] GetUnicodeBytes(this string self) => Encoding.Unicode.GetBytes(self);
 
     /// <summary>
     /// Encodes all the characters in the specified string into a sequence of bytes in UTF-8 format.
     /// </summary>
     /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding the set of characters.</returns>
-    internal static byte[] GetUTF8Bytes(this string self)
-    {
-        return Encoding.UTF8.GetBytes(self);
-    }
+    internal static byte[] GetUTF8Bytes(this string self) => Encoding.UTF8.GetBytes(self);
 
     /// <summary>
     /// Returns a substring of this string as <see cref="Span{T}"/>.
@@ -42,8 +33,5 @@ internal static class StringExtensions
     /// <param name="startIndex"></param>
     /// <param name="length"></param>
     /// <returns></returns>
-    internal static ReadOnlySpan<char> AsSpanSubstring(this string self, int startIndex, int length)
-    {
-        return self.AsSpan().Slice(startIndex, length);
-    }
+    internal static ReadOnlySpan<char> AsSpanSubstring(this string self, int startIndex, int length) => self.AsSpan().Slice(startIndex, length);
 }

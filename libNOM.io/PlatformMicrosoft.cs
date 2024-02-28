@@ -24,14 +24,15 @@ public partial class PlatformMicrosoft : Platform
     internal override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x118; // 280
 
-    protected const int CONTAINERSINDEX_HEADER = 0xE; // 14
-    protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
-    protected const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
-
     protected const int BLOBCONTAINER_HEADER = 0x4; // 4
     protected const int BLOBCONTAINER_COUNT = 0x2; // 2
     protected const int BLOBCONTAINER_IDENTIFIER_LENGTH = 0x80; // 128
     protected const int BLOBCONTAINER_TOTAL_LENGTH = sizeof(int) + sizeof(int) + BLOBCONTAINER_COUNT * (BLOBCONTAINER_IDENTIFIER_LENGTH + 2 * 0x10); // 328
+
+    protected const int CONTAINERSINDEX_HEADER = 0xE; // 14
+    protected const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
+    protected const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
+
 
 
     #endregion
@@ -263,7 +264,7 @@ public partial class PlatformMicrosoft : Platform
         bytes = File.ReadAllBytes(_containersindex.FullName);
 
         if (bytes.Cast<int>(0) is int header && header != CONTAINERSINDEX_HEADER)
-            throw new InvalidDataException($"Wrong header in containers.index file! Expected {CONTAINERSINDEX_HEADER} but got {header}.");
+            ThrowHelper.ThrowInvalidDataException($"Wrong header in containers.index file! Expected {CONTAINERSINDEX_HEADER} but got {header}.");
 
         var offset = 12 + bytes.ReadString(12, out _processIdentifier); // 0, 1
 
@@ -272,7 +273,7 @@ public partial class PlatformMicrosoft : Platform
         offset += 12 + bytes.ReadString(offset + 12, out _accountGuid); // 4, 5
 
         if (bytes.Cast<long>(offset) is long footer && footer != CONTAINERSINDEX_FOOTER)
-            throw new InvalidDataException($"Wrong footer in containers.index file! Expected {CONTAINERSINDEX_FOOTER} but got {footer}.");
+            ThrowHelper.ThrowInvalidDataException($"Wrong footer in containers.index file! Expected {CONTAINERSINDEX_FOOTER} but got {footer}.");
 
         return offset + 8; // 8
     }
@@ -420,12 +421,10 @@ public partial class PlatformMicrosoft : Platform
         // Use more precise Microsoft tags if container does not exist.
         // Result is already empty if so and tags set if none of the rules here apply.
         if (!container.Exists)
-        {
             if (container.Extra.MicrosoftSyncState == MicrosoftBlobSyncStateEnum.Deleted)
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_004;
             else if (container.Extra.MicrosoftBlobDirectory?.Exists != true)
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_005;
-        }
 
         return result;
     }
@@ -469,14 +468,12 @@ public partial class PlatformMicrosoft : Platform
 
         // Extended data since Waypoint.
         if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-        {
             container.Extra = container.Extra with
             {
-                SaveName = disk.Slice(20, 128).GetSaveRenamingString(),
-                SaveSummary = disk.Slice(148, 128).GetSaveRenamingString(),
+                SaveName = disk.Slice(20, 128).GetStringUntilTerminator(),
+                SaveSummary = disk.Slice(148, 128).GetStringUntilTerminator(),
                 DifficultyPreset = disk[276],
             };
-        }
 
         container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
         container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
@@ -729,6 +726,17 @@ public partial class PlatformMicrosoft : Platform
 
     // // File Operation
 
+    #region Copy
+
+    protected override void CopyPlatformExtra(Container destination, Container source)
+    {
+        base.CopyPlatformExtra(destination, source);
+
+        // Creating dummy blob data only necessary if destination does not exist.
+        if (!destination.Exists)
+            ExecuteCanCreate(destination);
+    }
+
     private void ExecuteCanCreate(Container Destination)
             {
         var directoryGuid = Guid.NewGuid();
@@ -763,21 +771,6 @@ public partial class PlatformMicrosoft : Platform
         // Write a dummy file.
         Directory.CreateDirectory(Destination.Extra.MicrosoftBlobDirectory!.FullName);
         File.WriteAllBytes(Destination.Extra.MicrosoftBlobContainerFile!.FullName, buffer);
-    }
-
-
-
-    #region Copy
-
-    protected override void CopyPlatformExtra(Container destination, Container source)
-    {
-        base.CopyPlatformExtra(destination, source);
-
-        // Creating dummy blob data only necessary if destination does not exist.
-        if (!destination.Exists)
-        {
-            ExecuteCanCreate(destination);
-        }
     }
 
     #endregion

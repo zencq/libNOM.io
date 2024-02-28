@@ -186,11 +186,10 @@ public partial class PlatformSteam : Platform
             int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
             int lastIndex = result.Length - 1;
 
+            // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
             for (int i = 0; i < iterations; i++)
-            {
-                // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
                 hash += 0x9E3779B9;
-            }
+
             for (int i = 0; i < iterations; i++)
             {
                 uint current = result[0];
@@ -269,14 +268,12 @@ public partial class PlatformSteam : Platform
 
             // Extended data since Waypoint.
             if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-            {
                 container.Extra = container.Extra with
                 {
-                    SaveName = disk.Slice(88, 128).GetSaveRenamingString(),
-                    SaveSummary = disk.Slice(216, 128).GetSaveRenamingString(),
+                    SaveName = disk.Slice(88, 128).GetStringUntilTerminator(),
+                    SaveSummary = disk.Slice(216, 128).GetStringUntilTerminator(),
                     DifficultyPreset = disk[344],
                 };
-            }
 
             container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
             container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion

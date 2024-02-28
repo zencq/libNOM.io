@@ -685,18 +685,17 @@ public partial class PlatformPlaystation : Platform
         }
 
         foreach (var (Source, Destination) in operationData)
-        {
             if (!Source.Exists)
             {
                 Delete(Destination, false);
             }
-            else if (Destination.Exists || !Destination.Exists && CanCreate)
+            else if (Destination.Exists || (!Destination.Exists && CanCreate))
             {
                 if (!Source.IsLoaded)
                     BuildContainerFull(Source);
 
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -712,6 +711,7 @@ public partial class PlatformPlaystation : Platform
                 Destination.SaveVersion = Source.SaveVersion;
 
                 // Update bytes in platform extra as it is what will be written later.
+                // Could also be done in CopyPlatformExtra but here we do not need to override another method.
                 Destination.Extra = Destination.Extra with
                 {
                     Bytes = CreateData(Destination).ToArray(),
@@ -724,9 +724,6 @@ public partial class PlatformPlaystation : Platform
                     RebuildContainerFull(Destination);
                 }
             }
-        }
-        //else
-        //    continue;
 
         UpdateUserIdentification();
     }

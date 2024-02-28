@@ -793,9 +793,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         // In case LastWriteTime is written inside meta set it before writing.
         if (Settings.SetLastWriteTime)
-        {
             container.LastWriteTime = writeTime;
-        }
 
         if (Settings.WriteAlways || !container.IsSynced)
         {
@@ -1015,7 +1013,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             _ = zipArchive.CreateEntryFromFile(container.DataFile.FullName, "data");
             if (container.MetaFile?.Exists == true)
                 _ = zipArchive.CreateEntryFromFile(container.MetaFile.FullName, "meta");
-            }
+        }
 
         // Create new backup container.
         var backup = new Container(container.MetaIndex, this)
@@ -1034,7 +1032,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             Delete(outdated);
             foreach (var item in outdated)
                 container.BackupCollection.Remove(item);
-            }
+        }
 
         container.BackupCreatedCallback.Invoke(backup);
     }
@@ -1063,16 +1061,15 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Copy
 
-    public void Copy(Container source, Container destination) => Copy(new[] { (Source: source, Destination: destination) }, true);
+    public void Copy(Container source, Container destination) => Copy([(Source: source, Destination: destination)], true);
 
-    protected void Copy(Container source, Container destination, bool write) => Copy(new[] { (Source: source, Destination: destination) }, write);
+    protected void Copy(Container source, Container destination, bool write) => Copy([(Source: source, Destination: destination)], write);
 
     public void Copy(IEnumerable<(Container Source, Container Destination)> operationData) => Copy(operationData, true);
 
     protected virtual void Copy(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
     {
         foreach (var (Source, Destination) in operationData)
-        {
             if (!Source.Exists)
             {
                 Delete(Destination, write);
@@ -1083,7 +1080,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     BuildContainerFull(Source);
 
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -1105,9 +1102,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     RebuildContainerFull(Destination);
                 }
             }
-            //else
-            //    continue;
-        }
 
         UpdateUserIdentification();
     }

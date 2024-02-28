@@ -560,7 +560,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Setter
 
-    // TODO reset extra
     public void SetJsonObject(JObject? value)
     {
         // No ThrowHelperIsLoaded as setting this will determine the result.

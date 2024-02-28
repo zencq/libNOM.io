@@ -167,8 +167,8 @@ public partial class PlatformSwitch : Platform
             {
                 container.Extra = container.Extra with
                 {
-                    SaveName = disk.Slice(40, 128).GetSaveRenamingString(),
-                    SaveSummary = disk.Slice(168, 128).GetSaveRenamingString(),
+                    SaveName = disk.Slice(40, 128).GetStringUntilTerminator(),
+                    SaveSummary = disk.Slice(168, 128).GetStringUntilTerminator(),
                     DifficultyPreset = disk[296],
                 };
             }
