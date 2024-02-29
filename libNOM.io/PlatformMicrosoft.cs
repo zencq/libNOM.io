@@ -103,7 +103,7 @@ public partial class PlatformMicrosoft : Platform
             return [];
 
         // Cache previous timestamp.
-        var lastWriteTicks = _lastWriteTime.UtcTicks.GetBlobTicks();
+        var lastWriteTicks = _lastWriteTime.NullifyTicks(4).UtcTicks;
 
         // Refresh will also update _lastWriteTime.
         RefreshContainerCollection();
@@ -855,9 +855,7 @@ public partial class PlatformMicrosoft : Platform
         {
             container.SetWatcherChange(changeType);
             if (container.IsSynced)
-            {
                 OnWatcherDecision(container, true);
-            }
         }
     }
 
@@ -878,23 +876,11 @@ public partial class PlatformMicrosoft : Platform
             {
                 if (contains)
                 {
-                    if (AccountContainer.Exists)
-                    {
-                        // Set all properties that would be set in CreateContainer().
-                        AccountContainer.DataFile = extra!.MicrosoftBlobDataFile;
-                        AccountContainer.MetaFile = extra!.MicrosoftBlobMetaFile;
-                        AccountContainer.Extra = extra;
-                    }
-                    else
-                    {
-                        AccountContainer = CreateContainer(metaIndex, extra);
-                    }
+                    AccountContainer = GetRefreshedContainer(AccountContainer, extra!);
                     RebuildContainerFull(AccountContainer);
                 }
                 else
-                {
                     AccountContainer.Reset();
-                }
             }
             else if (metaIndex == 1)
             {
@@ -907,37 +893,38 @@ public partial class PlatformMicrosoft : Platform
 
                 if (contains)
                 {
-                    if (container.Exists)
-                    {
-                        // Set all properties that would be set in CreateContainer().
-                        container.DataFile = extra!.MicrosoftBlobDataFile;
-                        container.MetaFile = extra!.MicrosoftBlobMetaFile;
-                        container.Extra = extra;
-                    }
-                    else
-                    {
-                        container = SaveContainerCollection[collectionIndex] = CreateContainer(metaIndex, extra);
-                    }
+                    container = SaveContainerCollection[collectionIndex] = GetRefreshedContainer(container, extra!);
 
-                    // Only build full if container was already loaded.
-                    if (Settings.LoadingStrategy < LoadingStrategyEnum.Full && !container.IsLoaded)
+                    // Only rebuild full if container was already loaded and not synced (to not overwrite pending watcher changes).
+                    if (container.IsLoaded)
                     {
-                        RebuildContainerHollow(container);
-                    }
-                    else
-                    {
-                        // Do not rebuild if not synced (to not overwrite pending watcher changes).
                         if (container.IsSynced)
                             RebuildContainerFull(container);
                     }
+                    else
+                        RebuildContainerHollow(container);
+
                     GenerateBackupCollection(container);
                 }
                 else
-                {
                     container.Reset();
-                }
             }
         }
+    }
+
+    private Container GetRefreshedContainer(Container container, PlatformExtra extra)
+    {
+        if (container.Exists)
+        {
+            // Set all properties that would be set in CreateContainer().
+            container.DataFile = extra!.MicrosoftBlobDataFile;
+            container.MetaFile = extra!.MicrosoftBlobMetaFile;
+            container.Extra = extra;
+
+            return container;
+        }
+
+        return CreateContainer(container.MetaIndex, extra); // even a container shell has the MetaIndex set
     }
 
     #endregion

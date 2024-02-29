@@ -177,7 +177,10 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name) => SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
+    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name)
+    {
+        return SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
+    }
 
     #endregion
 
@@ -1518,16 +1521,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected void OnWatcherEvent(object source, FileSystemEventArgs e)
     {
         // Workaround to update the value and keep the immediate eviction.
-        var contains = _cache.TryGetValue(e.Name, out Lazy<WatcherChangeTypes> lazyType);
-        if (contains)
+        if (_cache.TryGetValue(e.Name, out Lazy<WatcherChangeTypes> lazyType))
         {
             _cache.Remove(e.Name);
             _cache.GetOrAdd(e.Name, () => (lazyType.Value | e.ChangeType), _options);
         }
         else
-        {
             _cache.GetOrAdd(e.Name, () => (e.ChangeType), _options);
-        }
     }
 
     /// <summary>
@@ -1599,9 +1599,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             container.SetWatcherChange(changeType);
             if (container.IsSynced)
-            {
                 OnWatcherDecision(container, true);
-            }
         }
     }
 
@@ -1617,9 +1615,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             container.RefreshFileInfo();
         }
         else
-        {
             container.IsSynced = false;
-        }
+
         container.ResolveWatcherChange();
 
         // Invoke as it was written but from the outside.

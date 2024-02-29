@@ -110,7 +110,7 @@ public partial class PlatformPlaystation : Platform
             return [];
 
         // Cache previous timestamp.
-        var lastWriteTicks = _lastWriteTime!.Value.UtcTicks.GetBlobTicks();
+        var lastWriteTicks = _lastWriteTime!.NullifyTicks(4)!.Value.UtcTicks;
 
         // Refresh will also update _lastWriteTime.
         RefreshContainerCollection();
@@ -907,10 +907,9 @@ public partial class PlatformPlaystation : Platform
     private void RefreshContainerCollection()
     {
         for (var metaIndex = 0; metaIndex < Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL; metaIndex++)
-        {
             if (metaIndex == 0)
             {
-                // Reset bytes as trigger to read the file again.
+                // Reset bytes to trigger to read the file again.
                 AccountContainer.Extra = new PlatformExtra
                 {
                     MetaFormat = MetaFormatEnum.Unknown,
@@ -930,19 +929,17 @@ public partial class PlatformPlaystation : Platform
                     Bytes = null,
                 };
 
-                // Only build full if container was already loaded.
-                if (Settings.LoadingStrategy < LoadingStrategyEnum.Full && !container.IsLoaded)
+                // Only rebuild full if container was already loaded and not synced (to not overwrite pending watcher changes).
+                if (container.IsLoaded)
                 {
-                    RebuildContainerHollow(container);
-                }
-                else
-                {
-                    // Do not rebuild if not synced (to not overwrite pending watcher changes).
                     if (container.IsSynced)
                         RebuildContainerFull(container);
                 }
+                else
+                    RebuildContainerHollow(container);
+
+                GenerateBackupCollection(container);
             }
-        }
     }
 
     #endregion
