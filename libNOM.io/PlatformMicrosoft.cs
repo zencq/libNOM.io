@@ -354,7 +354,7 @@ public partial class PlatformMicrosoft : Platform
             {
                 offset += bytes.ReadString(offset, BLOBCONTAINER_IDENTIFIER_LENGTH, out var blobIdentifier);
 
-                // Second Guid is the one to use as the first one is propably the current name in the cloud.
+                // Second Guid is the one to use as the first one is probably the current name in the cloud.
                 var blobFile = extra.MicrosoftBlobDirectory!.GetBlobFileInfo(bytes.GetGuid(offset + 16));
                 var blobSyncGuid = bytes.GetGuid(offset);
 
@@ -845,7 +845,7 @@ public partial class PlatformMicrosoft : Platform
         if (reason is not EvictionReason.Expired and not EvictionReason.TokenExpired)
             return;
 
-        // Choose what actually happend based on the combined change types combinations listed at the beginning of this method.
+        // Choose what actually happened based on the combined change types combinations listed at the beginning of this method.
         var changeType = (WatcherChangeTypes)(value) switch
         {
             WatcherChangeTypes.Deleted | WatcherChangeTypes.Created => WatcherChangeTypes.Changed, // game
@@ -941,53 +941,35 @@ public partial class PlatformMicrosoft : Platform
         return base.GetUserIdentification(jsonObject, key);
     }
 
-    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
     {
         if (_accountId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.OWS.UID == '{_accountId}'" : $"@.ksu.K7E == '{_accountId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByBase(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _accountId),
+        ];
     }
 
-    protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
     {
         if (_accountId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-            usesMapping ? $"@.Owner.UID == '{_accountId}'" : $"@.3?K.K7E == '{_accountId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _accountId),
+        ];
     }
 
-    protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
     {
         if (_accountId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.Owner.UID == '{_accountId}'" : $"@.3?K.K7E == '{_accountId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _accountId),
+        ];
     }
 
     #endregion

@@ -80,70 +80,50 @@ public class PlatformGog : PlatformSteam
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        if (key is "UID" && _userId is not null)
-            return _userId;
-
-        if (key is "USN" && _username is not null)
-            return _username;
-
-        var result = base.GetUserIdentification(jsonObject, key);
-        if (!string.IsNullOrEmpty(result))
-            return result;
+        // Base call not as default as _userId and _username can also be null.
+        var result = key switch
+        {
+            "UID" => _userId,
+            "USN" => _username,
+            _ => null,
+        } ?? base.GetUserIdentification(jsonObject, key);
 
         // Fallback as it was the default for a long time and could not be changed.
-        if (key is "USN")
-            return "Explorer";
+        if (key == "USN" && string.IsNullOrEmpty(result))
+            result = "Explorer";
 
-        return result;
+        return result ?? string.Empty;
     }
 
-    protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
     {
         if (_userId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-            usesMapping ? $"@.Owner.UID == '{_userId}'" : $"@.3?K.K7E == '{_userId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByBase(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
+        ];
     }
 
-    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
     {
         if (_userId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.OWS.UID == '{_userId}'" : $"@.ksu.K7E == '{_userId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
+        ];
     }
 
-    protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
     {
         if (_userId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.Owner.UID == '{_userId}'" : $"@.3?K.K7E == '{_userId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
+        ];
     }
 
     #endregion

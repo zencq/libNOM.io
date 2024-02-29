@@ -182,7 +182,7 @@ public static class NewtonsoftExtensions
     /// <param name="self"></param>
     /// <param name="value"></param>
     /// <param name="indices"></param>
-    /// <returns>Whether setting the value was successfull.</returns>
+    /// <returns>Whether setting the value was successful.</returns>
     /// <exception cref="ArgumentException" />
     /// <exception cref="InvalidOperationException" />
     public static bool SetValue(this JObject self, JToken value, ReadOnlySpan<int> indices)
@@ -205,7 +205,7 @@ public static class NewtonsoftExtensions
     /// <param name="value"></param>
     /// <param name="pathIdentifier"></param>
     /// <param name="context"></param>
-    /// <returns>Whether setting the value was successfull.</returns>
+    /// <returns>Whether setting the value was successful.</returns>
     public static bool SetValue(this JObject self, JToken value, string pathIdentifier, SaveContextQueryEnum context) => SetValue(self, value, Json.GetPaths(pathIdentifier, self, context));
 
     private static bool SetValue(this JObject self, JToken value, IEnumerable<string> paths)

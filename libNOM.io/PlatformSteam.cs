@@ -395,71 +395,53 @@ public partial class PlatformSteam : Platform
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        if (key is "LID" or "UID" && _steamId is not null)
-            return _steamId;
-
-        var result = base.GetUserIdentification(jsonObject, key);
-        if (!string.IsNullOrEmpty(result))
-            return result;
+        // Base call not as default as _steamId can also be null.
+        var result = key switch
+        {
+            "LID" or "UID " => _steamId,
+            _ => null,
+        } ?? base.GetUserIdentification(jsonObject, key);
 
         // Get via API only if not found in-file.
-        if (key is "USN" && _steamId is not null && Settings.UseExternalSourcesForUserIdentification)
-            return GetUserIdentificationBySteam() ?? string.Empty;
+        if (key == "USN" && string.IsNullOrEmpty(result) && Settings.UseExternalSourcesForUserIdentification && _steamId is not null)
+            result = GetUserIdentificationBySteam();
 
-        return result;
+        return result ?? string.Empty;
     }
 
-    protected override IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
     {
         if (_steamId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.OWS.UID == '{_steamId}'" : $"@.ksu.K7E == '{_steamId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByBase(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
+        ];
     }
 
-    protected override IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
     {
         if (_steamId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-            usesMapping ? $"@.Owner.UID == '{_steamId}'" : $"@.3?K.K7E == '{_steamId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
+        ];
     }
 
-    protected override IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
     {
         if (_steamId is null)
-            return base.GetUserIdentificationByBase(jsonObject, key);
-
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.Owner.UID == '{_steamId}'" : $"@.3?K.K7E == '{_steamId}'", // only with specified value
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
+        return
+        [
+            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
+        ];
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the USN by calling the Steam Web-API.
+    /// Gets the <see cref="UserIdentification"/> information for the USN by calling the Steam Web-API.
     /// </summary>
     /// <returns></returns>
     private string? GetUserIdentificationBySteam()

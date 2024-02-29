@@ -83,7 +83,6 @@ public static class IEnumerableExtensions
     internal static string? MostCommon(this IEnumerable<string?> self)
     {
         self = self.Where(i => !string.IsNullOrWhiteSpace(i));
-
         if (!self.Any())
             return null;
 

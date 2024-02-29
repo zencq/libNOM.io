@@ -109,7 +109,7 @@ public interface IPlatform
 
     /// <summary>
     /// Gets all possible <see cref="Container"/> with save data, that then can be filtered further.
-    /// Here are some exmaples:
+    /// Here are some examples:
     /// <code>Where(i => i.Exists)</code> to get those that are actually exist.
     /// <code>Where(i => i.IsLoaded)</code> to get those that are actually loaded.
     /// <code>Where(i => i.SlotIndex == slotIndex)</code> to get those of the specified slot.

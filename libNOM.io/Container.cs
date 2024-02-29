@@ -582,7 +582,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     public void SetJsonValue(JToken value, ReadOnlySpan<int> indices)
     {
         ThrowHelperIsLoaded();
-        // If setting the value was successfull, it is now unsynced.
+        // If setting the value was successful, it is now unsynced.
         IsSynced = !_jsonObject!.SetValue(value, indices);
     }
 
@@ -591,7 +591,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     public void SetJsonValue(JToken value, string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
-        // If setting the value was successfull, it is now unsynced.
+        // If setting the value was successful, it is now unsynced.
         IsSynced = !_jsonObject!.SetValue(value, pathIdentifier, context);
     }
 

@@ -1271,14 +1271,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, context);
                 var expressions = new[]
                 {
-                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_UID", jsonObject, PlatformUserIdentification.UID),
+                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
+                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_UID", jsonObject, PlatformUserIdentification.UID),
                 };
                 foreach (var persistentPlayerBase in jsonObject.SelectTokensWithIntersection(path, expressions).Cast<JObject>())
                 {
-                    var name = persistentPlayerBase.GetValue<string>("RELATIV_BASE_NAME");
+                    var name = persistentPlayerBase.GetValue<string>("RELATIVE_BASE_NAME");
                     if (string.IsNullOrEmpty(name))
-                        name = EnumExtensions.Parse<PersistentBaseTypesEnum>(persistentPlayerBase.GetValue<string>("RELATIV_BASE_OWNER")) switch
+                        name = EnumExtensions.Parse<PersistentBaseTypesEnum>(persistentPlayerBase.GetValue<string>("RELATIVE_BASE_OWNER")) switch
                         {
                             PersistentBaseTypesEnum.FreighterBase => "Freighter Base",
                             PersistentBaseTypesEnum.HomePlanetBase => "Unnamed Planet Base",
@@ -1316,16 +1316,16 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     private static string GetBaseIdentifier(JObject jsonObject)
     {
 #if NETSTANDARD2_0
-        var galacticAddress = jsonObject.GetValue<string>("RELATIV_BASE_GALACTIC_ADDRESS")!;
+        var galacticAddress = jsonObject.GetValue<string>("RELATIVE_BASE_GALACTIC_ADDRESS")!;
         var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
 #else
-        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("RELATIV_BASE_GALACTIC_ADDRESS");
+        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("RELATIVE_BASE_GALACTIC_ADDRESS");
         var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress[2..], NumberStyles.HexNumber) : long.Parse(galacticAddress);
 #endif
 
-        var positionX = jsonObject.GetValue<int>("RELATIV_BASE_POSITION_0");
-        var positionY = jsonObject.GetValue<int>("RELATIV_BASE_POSITION_1");
-        var positionZ = jsonObject.GetValue<int>("RELATIV_BASE_POSITION_2");
+        var positionX = jsonObject.GetValue<int>("RELATIVE_BASE_POSITION_0");
+        var positionY = jsonObject.GetValue<int>("RELATIVE_BASE_POSITION_1");
+        var positionZ = jsonObject.GetValue<int>("RELATIVE_BASE_POSITION_2");
 
         return $"{galacticInteger}{positionX:+000000;-000000}{positionY:+000000;-000000}{positionZ:+000000;-000000}";
     }
@@ -1453,12 +1453,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected void TransferGeneralOwnership(JObject jsonObject)
     {
         // Only UID is guaranteed.
-        jsonObject.SetValue(PlatformUserIdentification.UID, "RELATIV_OWNER_UID");
+        jsonObject.SetValue(PlatformUserIdentification.UID, "RELATIVE_OWNER_UID");
 
         // Replace LID, PTK, and USN if it is not empty.
-        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.LID, "RELATIV_OWNER_LID");
-        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIV_OWNER_USN");
-        jsonObject.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIV_OWNER_PTK");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.LID, "RELATIVE_OWNER_LID");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIVE_OWNER_USN");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIVE_OWNER_PTK");
     }
 
     /// <summary>
@@ -1472,7 +1472,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var path = Json.GetPath("PERSISTENT_PLAYER_BASE_ALL", jsonObject, context);
         foreach (var persistentPlayerBase in jsonObject.SelectTokens(path).Cast<JObject>())
             if (sourceTransferData.TransferBaseUserDecision.TryGetValue(GetBaseIdentifier(persistentPlayerBase), out var userDecision) && userDecision.DoTransfer)
-                TransferGeneralOwnership(persistentPlayerBase.GetValue<JObject>("RELATIV_BASE_OWNER")!);
+                TransferGeneralOwnership(persistentPlayerBase.GetValue<JObject>("RELATIVE_BASE_OWNER")!);
     }
 
     /// <summary>
@@ -1485,9 +1485,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var path = Json.GetPath("TRANSFER_UID_BYTEBEAT", jsonObject, sourceTransferData.UserIdentification.UID);
         foreach (var mySong in jsonObject.SelectTokens(path).Cast<JObject>())
         {
-            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.UID, "RELATIV_SONG_AUTHOR_ID");
-            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIV_SONG_AUTHOR_USERNAME");
-            mySong.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIV_SONG_AUTHOR_PLATFORM");
+            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.UID, "RELATIVE_SONG_AUTHOR_ID");
+            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIVE_SONG_AUTHOR_USERNAME");
+            mySong.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIVE_SONG_AUTHOR_PLATFORM");
         }
     }
 
@@ -1587,7 +1587,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (reason is not EvictionReason.Expired and not EvictionReason.TokenExpired)
             return;
 
-        // Choose what actually happend based on the combined change types combinations listed at the beginning of this method.
+        // Choose what actually happened based on the combined change types combinations listed at the beginning of this method.
         var changeType = (WatcherChangeTypes)(value) switch
         {
             WatcherChangeTypes.Renamed => WatcherChangeTypes.Created, // Save Streaming
@@ -1630,7 +1630,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     #region UserIdentification
 
     /// <summary>
-    /// Updates the <see cref="UserIdentificationData"/> with data from all loaded containers.
+    /// Updates the <see cref="UserIdentification"/> with data from all loaded containers.
     /// </summary>
     protected void UpdateUserIdentification()
     {
@@ -1641,7 +1641,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> for this platform.
+    /// Gets the <see cref="UserIdentification"/> for this platform.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
@@ -1657,18 +1657,19 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key.
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
     protected virtual string GetUserIdentification(JObject jsonObject, string key)
     {
+        // Utilize GetPath() to get the right obfuscation state of the key.
         key = key switch
         {
-            "LID" => Json.GetPaths("OWNER_LID", jsonObject)[0],
-            "UID" => Json.GetPaths("OWNER_UID", jsonObject)[0],
-            "USN" => Json.GetPaths("OWNER_USN", jsonObject)[0],
+            "LID" => Json.GetPath("RELATIVE_OWNER_LID", jsonObject),
+            "UID" => Json.GetPath("RELATIVE_OWNER_UID", jsonObject),
+            "USN" => Json.GetPath("RELATIVE_OWNER_USN", jsonObject),
             _ => string.Empty,
         };
         if (string.IsNullOrEmpty(key))
@@ -1679,26 +1680,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from discoveries.
-    /// </summary>
-    /// <param name="jsonObject"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    protected virtual IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
-    {
-        // TODO check {{0}}
-        var path = Json.GetPaths("DISCOVERY_DATA_OWNERSHIP", jsonObject, key)[0];
-        var expressions = new[]
-        {
-            Json.GetPaths("DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken)[0],
-            Json.GetPaths("DISCOVERY_DATA_OWNERSHIP_EXPRESSION_LID", jsonObject)[0],
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
-    }
-
-    /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from bases.
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key from bases.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
@@ -1706,35 +1688,68 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
     protected virtual IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
     {
-        // TODO check {{0}}
-        var path = Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, key)[0];
-        var expressions = new[]
-        {
-            Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase)[0],
-            Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken)[0],
-            Json.GetPaths("PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_LID", jsonObject)[0],
-        };
+        // TODO both context
+        var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, key);
+        var expressions = GetIntersectionExpressionsByBase(jsonObject);
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
     }
 
+    protected virtual string[] GetIntersectionExpressionsByBase(JObject jsonObject)
+    {
+        return
+        [
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
+        ];
+    }
+
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from settlements.
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key from discoveries.
+    /// </summary>
+    /// <param name="jsonObject"></param>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    protected virtual IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    {
+        var path = Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP", jsonObject, key);
+        var expressions = GetIntersectionExpressionsByDiscovery(jsonObject);
+
+        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+    }
+
+    protected virtual string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
+    {
+        return
+        [
+            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
+            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
+        ];
+    }
+
+    /// <summary>
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key from settlements.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
     protected virtual IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
-        // TODO check {{0}}
-        var path = Json.GetPaths("SETTLEMENT_OWNERSHIP", jsonObject, key)[0];
-        var expressions = new[]
-        {
-            Json.GetPaths("SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken)[0],
-            Json.GetPaths("SETTLEMENT_OWNERSHIP_EXPRESSION_LID", jsonObject)[0],
-        };
+        // TODO both context
+        var path = Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP", jsonObject, key);
+        var expressions = GetIntersectionExpressionsBySettlement(jsonObject);
 
         return GetUserIdentificationIntersection(jsonObject, path, expressions);
+    }
+
+    protected virtual string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
+    {
+        return
+        [
+            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
+            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
+        ];
     }
 
     /// <summary>

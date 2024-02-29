@@ -122,7 +122,7 @@ internal static partial class GameVersion
     #region Get Version by JSON Indicator
 
     // GAME_VERSION_430 (PlayerStateData.SeasonData.Stages[*].Milestones[*].GreyIfCantStart) is only used in actual expedition saves.
-    // This uses actually VersionEnum.Mac but it made most of the preperation for Singularity and therefore we already use this here.
+    // This uses actually VersionEnum.Mac but it made most of the preparation for Singularity and therefore we already use this here.
     private static GameVersionEnum? GetSingularity(JObject jsonObject) => GetEnumIfNotNull(jsonObject, "GAME_VERSION_425", GameVersionEnum.Singularity);
     private static GameVersionEnum? GetSingularity(string json) => GetEnumIfContains(json, "XEk", "SeasonStartMusicOverride", GameVersionEnum.Singularity);
 

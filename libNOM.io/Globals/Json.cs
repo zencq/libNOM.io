@@ -73,7 +73,7 @@ internal static partial class Json
     /// <param name="identifier">Identifier for the desired JSONPath.</param>
     /// <param name="jsonObject">JSON object to determine obfuscation state and save format.</param>
     /// <param name="context">Context the path should be build with.</param>
-    /// <param name="interpolations">Additional interpolations to insert into the path if neccessary.</param>
+    /// <param name="interpolations">Additional interpolations to insert into the path if necessary.</param>
     /// <returns></returns>
     /// <exception cref="KeyNotFoundException"></exception>
     internal static string[] GetPaths(string identifier, JObject? jsonObject, SaveContextQueryEnum context, params object?[] interpolations) => GetPaths(identifier, jsonObject, context).Select(i => string.Format(i, interpolations)).ToArray();
