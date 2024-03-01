@@ -568,7 +568,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var results = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version, string SaveName, string SaveSummary)[]
         {
             (0, true, false, PresetGameModeEnum.Creative, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris"), // 1Auto // for some reason SaveVersion has still the old format
-            (1, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4140, GameVersionEnum.Waypoint, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris"), // 1Manual
+            (1, true, false, PresetGameModeEnum.Creative, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4140, GameVersionEnum.Waypoint, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris"), // 1Manual
             (2, true, false, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.Polestar, 4139, GameVersionEnum.Endurance, "", ""), // 2Auto
             (6, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Emergence, "", ""), // 4Auto
             (7, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4124, GameVersionEnum.LivingShip, "", ""), // 4Manual

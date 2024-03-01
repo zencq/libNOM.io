@@ -112,7 +112,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// Whether this is older than the lowest supported version.
     /// </summary>
-    public bool IsOld => IsSave && GameVersion < Constants.LOWEST_SUPPORTED_VERSION; // { get; }
+    public bool IsOld => Exists && IsSave && GameVersion < Constants.LOWEST_SUPPORTED_VERSION; // { get; }
 
     /// <summary>
     /// Whether this is an actual save and not something else like account data.
@@ -261,38 +261,25 @@ public class Container : IComparable<Container>, IEquatable<Container>
         {
             Extra = Extra with { DifficultyPreset = (uint)(value) };
 
-            if (IsVersion400Waypoint)
+            if (IsLoaded && GameMode < PresetGameModeEnum.Seasonal)
             {
-                if (GameMode < PresetGameModeEnum.Seasonal)
+                if (IsVersion400Waypoint)
+                    Meta.DifficultyPreset.Set(this, value switch
+                    {
+                        DifficultyPresetTypeEnum.Creative => Constants.DIFFICULTY_PRESET_CREATIVE,
+                        DifficultyPresetTypeEnum.Relaxed => Constants.DIFFICULTY_PRESET_RELAXED,
+                        DifficultyPresetTypeEnum.Survival => Constants.DIFFICULTY_PRESET_SURVIVAL,
+                        DifficultyPresetTypeEnum.Permadeath => Constants.DIFFICULTY_PRESET_PERMADEATH,
+                        _ => Constants.DIFFICULTY_PRESET_NORMAL,
+                    });
+
+                GameMode = value switch
                 {
-                    if (value == DifficultyPresetTypeEnum.Permadeath)
-                    {
-                        GameMode = PresetGameModeEnum.Permadeath;
-                        Meta.DifficultyPreset.Set(this, Constants.DIFFICULTY_PRESET_PERMADEATH);
-                    }
-                    else if (value < DifficultyPresetTypeEnum.Permadeath)
-                    {
-                        GameMode = PresetGameModeEnum.Normal;
-                        Meta.DifficultyPreset.Set(this, value switch
-                        {
-                            DifficultyPresetTypeEnum.Creative => Constants.DIFFICULTY_PRESET_CREATIVE,
-                            DifficultyPresetTypeEnum.Relaxed => Constants.DIFFICULTY_PRESET_RELAXED,
-                            DifficultyPresetTypeEnum.Survival => Constants.DIFFICULTY_PRESET_SURVIVAL,
-                            _ => Constants.DIFFICULTY_PRESET_NORMAL,
-                        });
-                    }
-                }
-            }
-            else
-            {
-                if (GameMode < PresetGameModeEnum.Seasonal)
-                    GameMode = value switch
-                    {
-                        DifficultyPresetTypeEnum.Creative => PresetGameModeEnum.Creative,
-                        DifficultyPresetTypeEnum.Survival => PresetGameModeEnum.Survival,
-                        DifficultyPresetTypeEnum.Permadeath => PresetGameModeEnum.Permadeath,
-                        _ => PresetGameModeEnum.Normal,
-                    };
+                    DifficultyPresetTypeEnum.Creative => PresetGameModeEnum.Creative,
+                    DifficultyPresetTypeEnum.Survival => PresetGameModeEnum.Survival,
+                    DifficultyPresetTypeEnum.Permadeath => PresetGameModeEnum.Permadeath,
+                    _ => PresetGameModeEnum.Normal,
+                };
             }
         }
     }

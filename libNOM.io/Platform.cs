@@ -1293,7 +1293,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 {
                     var name = persistentPlayerBase.GetValue<string>("RELATIVE_BASE_NAME");
                     if (string.IsNullOrEmpty(name))
-                        name = EnumExtensions.Parse<PersistentBaseTypesEnum>(persistentPlayerBase.GetValue<string>("RELATIVE_BASE_OWNER")) switch
+                        name = EnumExtensions.Parse<PersistentBaseTypesEnum>(persistentPlayerBase.GetValue<string>("RELATIVE_BASE_TYPE")) switch
                         {
                             PersistentBaseTypesEnum.FreighterBase => "Freighter Base",
                             PersistentBaseTypesEnum.HomePlanetBase => "Unnamed Planet Base",
@@ -1395,6 +1395,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 // Additional properties required to properly rebuild the container.
                 Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
+                Destination.UserIdentification = PlatformUserIdentification; // update to match new platform
 
                 TransferOwnership(Destination, sourceTransferData);
 
@@ -1693,6 +1694,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         // ByBase is most reliable due to the BaseType, then BySettlement is second as it is still something you own, and ByDiscovery as last resort which can be a mess.
         return GetUserIdentificationByBase(jsonObject, key).MostCommon() ?? GetUserIdentificationBySettlement(jsonObject, key).MostCommon() ?? GetUserIdentificationByDiscovery(jsonObject, key).MostCommon() ?? string.Empty;
+        return GetUserIdentificationByBase(jsonObject, key) ?? GetUserIdentificationBySettlement(jsonObject, key) ?? GetUserIdentificationByDiscovery(jsonObject, key) ?? string.Empty;
     }
 
     /// <summary>
