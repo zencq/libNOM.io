@@ -1,4 +1,5 @@
 ﻿using libNOM.io.Interfaces;
+
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
@@ -102,11 +103,6 @@ public class PlatformCollection : IEnumerable<IPlatform>
             tasks.AddRange(TryAddDirectory<PlatformGog>());
             tasks.AddRange(TryAddDirectory<PlatformMicrosoft>());
         }
-        // Not yet available.
-        //else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
-        //{
-        //    tasks.AddRange(TryAddDirectory<PlatformApple>());
-        //}
 
         Task.WaitAll([.. tasks]);
     }
@@ -119,7 +115,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// Analysis a single file and loads it.
     /// </summary>
     /// <param name="path"></param>
-    /// <returns>A pre-loaded Container.</returns>
+    /// <returns>A pre-loaded <see cref="Container"/> if no incompatibilities.</returns>
 #if !NETSTANDARD2_0
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
 #endif
@@ -128,10 +124,14 @@ public class PlatformCollection : IEnumerable<IPlatform>
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return null;
 
-        ReadOnlySpan<byte> bytes = File.ReadAllBytes(path);
         FileInfo? meta = null;
-        int metaIndex, possibleIndex = metaIndex = Constants.OFFSET_INDEX;
         Platform? platform = null;
+
+        ReadOnlySpan<byte> bytes = File.ReadAllBytes(path);
+        var data = new FileInfo(path);
+        var directory = data.Directory!.FullName;
+        var fullpath = Path.GetFullPath(path);
+        int metaIndex, possibleIndex = metaIndex = Constants.OFFSET_INDEX;
 
         // Convert header with different lengths.
         var headerInteger = bytes.Cast<uint>(0);
@@ -144,7 +144,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         if (headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (headerInteger == Constants.SAVE_STREAMING_HEADER && headerString0xA0.Contains("PS4|Final")))
         {
             // Only for files in the save streaming format.
-            if (PlatformPlaystation.ANCHOR_FILE_REGEX[0].IsMatch(Path.GetFileName(path)))
+            if (Directory.GetFiles(directory, PlatformPlaystation.ANCHOR_FILE_PATTERN[0]).Any(fullpath.Equals))
             {
                 platform = new PlatformPlaystation(headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER);
                 meta = new(path);
@@ -153,15 +153,16 @@ public class PlatformCollection : IEnumerable<IPlatform>
             }
         }
         // StartsWith for uncompressed saves and plaintext JSON.
-        else if (headerInteger == Constants.SAVE_STREAMING_HEADER || headerString0x20.StartsWith("{\"F2P\":") || headerString0x20.StartsWith("{\"Version\":"))
+        else if (headerInteger == Constants.SAVE_STREAMING_HEADER || headerString0x20.Contains("{\"F2P\":") || headerString0x20.Contains("{\"Version\":"))
         {
-            if (headerString0x20.Contains("NX1|Final"))
+            if (headerString0xA0.Contains("NX1|Final"))
             {
                 platform = new PlatformSwitch();
 
                 // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
-                if (PlatformSwitch.ANCHOR_FILE_REGEX[1].IsMatch(Path.GetFileName(path)))
+                if (Directory.GetFiles(directory, PlatformSwitch.ANCHOR_FILE_PATTERN[1]).Any(fullpath.Equals))
                 {
+                    meta = new(Path.Combine(directory, data.Name.Replace("savedata", "manifest")));
                     metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit)));
                     possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 31
                 }
@@ -171,10 +172,11 @@ public class PlatformCollection : IEnumerable<IPlatform>
                 platform = new PlatformSteam();
 
                 // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
-                if (PlatformSteam.ANCHOR_FILE_REGEX[0].IsMatch(Path.GetFileName(path)))
+                if (Directory.GetFiles(directory, PlatformSteam.ANCHOR_FILE_PATTERN[0]).Any(fullpath.Equals))
                 {
                     var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit));
 
+                    meta = new(Path.Combine(directory, $"mf_{data.Name}"));
                     metaIndex = string.IsNullOrEmpty(stringValue) ? Constants.OFFSET_INDEX : (System.Convert.ToInt32(stringValue) + 1); // metaIndex = 3 is save2.hg
                     possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 31
                 }
@@ -203,11 +205,11 @@ public class PlatformCollection : IEnumerable<IPlatform>
         // Create container and load it before returning it.
         var container = new Container(metaIndex, platform)
         {
-            DataFile = new FileInfo(path),
+            DataFile = data,
             MetaFile = meta,
         };
         platform.Load(container);
-        return container.IsLoaded ? container : null;
+        return container;
     }
 
     /// <summary>
@@ -348,7 +350,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
             Type _ when typeofT == typeof(PlatformGog) => GetAccountsInPath(PlatformGog.PATH, PlatformGog.ACCOUNT_PATTERN),
             Type _ when typeofT == typeof(PlatformMicrosoft) => GetAccountsInPath(PlatformMicrosoft.PATH, PlatformMicrosoft.ACCOUNT_PATTERN),
             Type _ when typeofT == typeof(PlatformSteam) => GetAccountsInPath(PlatformSteam.PATH, PlatformSteam.ACCOUNT_PATTERN),
-            _ => Enumerable.Empty<DirectoryInfo>(),
+            _ => [],
         };
     }
 

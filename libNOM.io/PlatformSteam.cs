@@ -4,8 +4,6 @@ using System.Text;
 
 using CommunityToolkit.HighPerformance;
 
-using DeepCopy;
-
 using libNOM.io.Services;
 
 using Newtonsoft.Json.Linq;
@@ -180,7 +178,7 @@ public partial class PlatformSteam : Platform
             ReadOnlySpan<uint> key = [(((uint)(entry) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
 
             // DeepCopy as value would be changed otherwise and casting again does not work.
-            Span<uint> result = DeepCopier.Copy(value);
+            Span<uint> result = Common.DeepCopy(value);
 
             uint hash = 0;
             int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
@@ -277,6 +275,7 @@ public partial class PlatformSteam : Platform
 
             container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
             container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
+            container.GameVersion = GameVersionEnum.Unknown; // reset to get the 100% accurate result later
         }
 
         // Size is save to write always.

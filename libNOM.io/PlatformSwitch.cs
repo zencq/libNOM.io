@@ -175,6 +175,7 @@ public partial class PlatformSwitch : Platform
 
             container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
             container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
+            container.GameVersion = GameVersionEnum.Unknown; // reset to get the 100% accurate result later
         }
     }
 

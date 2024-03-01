@@ -7,8 +7,6 @@ namespace libNOM.io.Globals;
 
 internal static partial class Json
 {
-    #region JSONPath
-
     /// <summary>
     /// Returns all JSONPath expressions for the specified identifier.
     /// </summary>
@@ -77,6 +75,4 @@ internal static partial class Json
     /// <returns></returns>
     /// <exception cref="KeyNotFoundException"></exception>
     internal static string[] GetPaths(string identifier, JObject? jsonObject, SaveContextQueryEnum context, params object?[] interpolations) => GetPaths(identifier, jsonObject, context).Select(i => string.Format(i, interpolations)).ToArray();
-
-    #endregion
 }

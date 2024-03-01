@@ -91,27 +91,29 @@ public static class Constants
         { "DIFFICULTY_BASE_AUTO_POWER", [ "6f=.LyC.:fe.uo4", "PlayerStateData.DifficultyState.Settings.BaseAutoPower", "{0}.6f=.LyC.:fe.uo4", "{0}.PlayerStateData.DifficultyState.Settings.BaseAutoPower" ] },
         { "DIFFICULTY_REPUTATION_GAIN", [ "6f=.LyC.:fe.vo>.S@3", "PlayerStateData.DifficultyState.Settings.ReputationGain.ReputationGainDifficulty", "{0}.6f=.LyC.:fe.vo>.S@3", "{0}.PlayerStateData.DifficultyState.Settings.ReputationGain.ReputationGainDifficulty" ] },
         { "FREIGHTER_POSITION", [ "6f=.lpm[*]", "PlayerStateData.FreighterMatrixPos[*]", "{0}.6f=.lpm[*]", "{0}.PlayerStateData.FreighterMatrixPos[*]" ] },
-        { "PERSISTENT_PLAYER_BASE_ALL", [ "6f=.F?0[*]", "PlayerStateData.PersistentPlayerBases[*]", "{0}.6f=.F?0[*]", "{0}.PlayerStateData.PersistentPlayerBases[*]"] },
         { "PERSISTENT_PLAYER_BASE_ALL_TYPES", [ "6f=.F?0[*].peI.DPp", "PlayerStateData.PersistentPlayerBases[*].BaseType.PersistentBaseTypes", "{0}.6f=.F?0[*].peI.DPp", "{0}.PlayerStateData.PersistentPlayerBases[*].BaseType.PersistentBaseTypes"] },
         { "SAVE_SUMMARY", ["6f=.n:R", "PlayerStateData.SaveSummary", "{0}.6f=.n:R", "{0}.PlayerStateData.SaveSummary"] },
         { "SETTLEMENT_ALL_OWNER_LID", [ "6f=.GQA[*].3?K.f5Q", "PlayerStateData.SettlementStatesV2[*].Owner.LID", "{0}.6f=.GQA[*].3?K.f5Q", "{0}.PlayerStateData.SettlementStatesV2[*].Owner.LID"] },
+        { "TRANSFER_UID_BASE", [ "6f=.F?0[*]", "PlayerStateData.PersistentPlayerBases[*]", "{0}.6f=.F?0[*]", "{0}.PlayerStateData.PersistentPlayerBases[*]"] },
         { "TRANSFER_UID_SETTLEMENT", [ "6f=.GQA..[?(@.K7E == '{0}')]", "PlayerStateData.SettlementStatesV2..[?(@.UID == '{0}')]", "{0}.6f=.GQA..[?(@.K7E == '{{0}}')]", "{0}.PlayerStateData.SettlementStatesV2..[?(@.UID == '{{0}}')]"] },
 
         // intersection expressions
 
-        { "INTERSECTION_DISCOVERY_DATA_OWNERSHIP", [ "fDu.ETO.OsQ.?fB[?({{0}})].ksu.{0}", "DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{0}" ] },
+        { "INTERSECTION_DISCOVERY_DATA_OWNERSHIP_KEY", [ "fDu.ETO.OsQ.?fB[?({{0}})].ksu.{0}", "DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{0}" ] },
         { "INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", [ "@.ksu.K7E == '{0}'", "@.OWS.UID == '{0}'"] },
         { "INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", [ "@.ksu.D6b == '' || @.ksu.D6b == '{0}'", "@.OWS.PTK == '' || @.OWS.PTK == '{0}'" ] }, // only with valid platform
         { "INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_WITH_LID", [ "@.ksu.f5Q != ''", "@.OWS.LID != ''" ] },
 
-        { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", [ "6f=.F?0[?({{0}})].3?K.{0}", "PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{0}", "{0}.6f=.F?0[?({{{{0}}}})].3?K.{{0}}", "{0}.PlayerStateData.PersistentPlayerBases[?({{{{0}}}})].Owner.{{0}}" ] },
+        { "INTERSECTION_PERSISTENT_PLAYER_BASE_FOR_TRANSFER", [ "6f=.F?0[?({0})]", "PlayerStateData.PersistentPlayerBases[?({0})]", "{0}.6f=.F?0[?({{0}})]", "{0}.PlayerStateData.PersistentPlayerBases[?({{0}})]" ] },
+        
+        { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_KEY", [ "6f=.F?0[?({{0}})].3?K.{0}", "PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{0}", "{0}.6f=.F?0[?({{{{0}}}})].3?K.{{0}}", "{0}.PlayerStateData.PersistentPlayerBases[?({{{{0}}}})].Owner.{{0}}" ] },
         { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", [ "@.3?K.D6b == '' || @.3?K.D6b == '{0}'", "@.Owner.PTK == '' || @.Owner.PTK == '{0}'" ] },
         { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", [ "@.3?K.K7E == '{0}'", "@.Owner.UID == '{0}'"] },
-        { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", [ "@.peI.DPp == '{0}' || @.peI.DPp == '{1}'", "@.BaseType.PersistentBaseTypes == '{0}' || @.BaseType.PersistentBaseTypes == '{1}'" ] },
+        { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", [ $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'"] },
         { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_LID", [ "@.3?K.f5Q != ''", "@.Owner.LID != ''" ] },
         { "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_UID", [ "@.3?K.K7E != ''", "@.Owner.UID != ''" ] },
 
-        { "INTERSECTION_SETTLEMENT_OWNERSHIP", [ "6f=.GQA[?({{0}})].3?K.{0}", "PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{0}", "{0}.6f=.GQA[?({{{{0}}}})].3?K.{{0}}", "{0}.PlayerStateData.SettlementStatesV2[?({{{{0}}}})].Owner.{{0}}"] },
+        { "INTERSECTION_SETTLEMENT_OWNERSHIP_KEY", [ "6f=.GQA[?({{0}})].3?K.{0}", "PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{0}", "{0}.6f=.GQA[?({{{{0}}}})].3?K.{{0}}", "{0}.PlayerStateData.SettlementStatesV2[?({{{{0}}}})].Owner.{{0}}"] },
         { "INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", [ "@.3?K.K7E == '{0}'", "@.Owner.UID == '{0}'"] },
         { "INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", [ "@.3?K.D6b == '{0}'", "@.Owner.PTK == '{0}'" ] },
         { "INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", [ "@.3?K.f5Q != ''", "@.Owner.LID != ''" ] },
@@ -124,6 +126,7 @@ public static class Constants
         { "RELATIVE_BASE_POSITION_0", [ "wMC[0]", "Position[0]" ] },
         { "RELATIVE_BASE_POSITION_1", [ "wMC[1]", "Position[1]" ] },
         { "RELATIVE_BASE_POSITION_2", [ "wMC[2]", "Position[2]" ] },
+        { "RELATIVE_BASE_TYPE", [ "peI.DPp", "BaseType.PersistentBaseTypes"] },
         { "RELATIVE_OWNER_LID", [ "f5Q", "LID" ] },
         { "RELATIVE_OWNER_PTK", [ "D6b", "PTK" ] },
         { "RELATIVE_OWNER_UID", [ "K7E", "UID" ] },

@@ -1,7 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
 
-using DeepCopy;
-
 using libNOM.map;
 
 using Newtonsoft.Json;
@@ -56,8 +54,8 @@ public static class NewtonsoftExtensions
 
         if (obfuscate)
         {
-            jsonObject = DeepCopier.Copy(self);
-            Mapping.Obfuscate(jsonObject!);
+            jsonObject = Common.DeepCopy(self);
+            Mapping.Obfuscate(jsonObject);
         }
 
         var settings = new JsonSerializerSettings { Formatting = indent ? Formatting.Indented : Formatting.None };
@@ -145,30 +143,8 @@ public static class NewtonsoftExtensions
     private static IEnumerable<T> GetValues<T>(this JObject self, IEnumerable<string> paths)
     {
         foreach (var path in paths)
-        {
-            var jTokens = self.SelectTokens(path);
-            if (jTokens.Any())
-            {
-                var type = typeof(T);
-
-                if (type.IsSubclassOf(typeof(JToken)) || type == typeof(JToken))
-                    return jTokens.Cast<T>();
-
-                if (type.IsEnum)
-                {
-                    // integer
-                    if (jTokens.First().Value<int?>() is not null)
-                        return jTokens.Select(i => (T)(object)(i.Value<int>()));
-
-                    // string
-                    if (jTokens.First().Value<string>() is not null)
-                        return jTokens.Select(i => i.Value<string>()).Where(j => j is not null).Select(k => (T)(Enum.Parse(type, k!)));
-                }
-                else
-                    return (IEnumerable<T>)(jTokens.Select(i => i.Value<T>()).Where(j => j is not null));
-            }
-        }
-        return [];
+            foreach (var jToken in self.SelectTokens(path).Select(ConvertToken<T>).Where(i => i is not null))
+                yield return jToken!;
     }
 
     #endregion
@@ -246,18 +222,18 @@ public static class NewtonsoftExtensions
     /// <param name="path"></param>
     /// <param name="expressions"></param>
     /// <returns></returns>
-    internal static IEnumerable<JToken> SelectTokensWithIntersection(this JObject self, string path, params string[] expressions)
+    internal static IEnumerable<T> SelectTokensWithIntersection<T>(this JObject self, IEnumerable<string> paths)
     {
-        if (expressions.Length == 0)
-            return [];
-
         IEnumerable<JToken>? result = null; // starting with a [] would always be empty
-        foreach (var expression in expressions)
+        foreach (var path in paths)
         {
-            var query = self.SelectTokens(string.Format(path, expression));
-            result = result is null ? query : result.Intersect(query);
+            var query = self.SelectTokens(path);
+            if (query.Any())
+                result = result is null ? query : result.Intersect(query);
         }
-        return result ?? [];
+        if (result is not null)
+            foreach (var value in result.Select(ConvertToken<T>).Where(i => i is not null))
+                yield return value!;
     }
 
     #endregion

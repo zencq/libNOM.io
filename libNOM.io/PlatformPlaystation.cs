@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 
-using DeepCopy;
-
 using libNOM.map;
 
 using Newtonsoft.Json.Linq;
@@ -811,7 +809,7 @@ public partial class PlatformPlaystation : Platform
                 if (Destination.Exists)
                 {
                     // Keep a copy to be able to set Source correctly after Destination is done.
-                    var copy = DeepCopier.Copy(Destination);
+                    var copy = Common.DeepCopy(Destination);
 
                     // Write Source to Destination.
                     Destination.LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now;
@@ -880,6 +878,7 @@ public partial class PlatformPlaystation : Platform
                 // Additional properties required to properly rebuild the container.
                 Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
+                Destination.UserIdentification = PlatformUserIdentification; // update to match new platform
 
                 // Update bytes in platform extra as it is what will be written later.
                 // Could also be done in CopyPlatformExtra but here we do not need to override another method.

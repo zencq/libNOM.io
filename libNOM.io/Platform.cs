@@ -7,8 +7,6 @@ using System.IO.Compression;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
 
-using DeepCopy;
-
 using LazyCache;
 
 using libNOM.io.Interfaces;
@@ -1236,7 +1234,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 if (Destination.Exists)
                 {
                     // Keep a copy to be able to set Source correctly after Destination is done.
-                    var copy = DeepCopier.Copy(Destination);
+                    var copy = Common.DeepCopy(Destination);
 
                     // Write Source to Destination.
                     Destination.SetJsonObject(Source.GetJsonObject());
@@ -1281,17 +1279,17 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 BuildContainerFull(container);
 
             var jsonObject = container.GetJsonObject();
-            var usesMapping = jsonObject.UsesMapping();
+
+                var expressions = new[]
+                {
+                Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject),
+                Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, PlatformUserIdentification.UID),
+                };
 
             foreach (var context in GetContexts(jsonObject))
             {
-                var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, context);
-                var expressions = new[]
-                {
-                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-                    Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_UID", jsonObject, PlatformUserIdentification.UID),
-                };
-                foreach (var persistentPlayerBase in jsonObject.SelectTokensWithIntersection(path, expressions).Cast<JObject>())
+                var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_FOR_TRANSFER", jsonObject, context);
+                foreach (var persistentPlayerBase in jsonObject.SelectTokensWithIntersection<JObject>(expressions.Select(i => string.Format(path, i))))
                 {
                     var name = persistentPlayerBase.GetValue<string>("RELATIVE_BASE_NAME");
                     if (string.IsNullOrEmpty(name))
@@ -1487,7 +1485,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="context"></param>
     protected void TransferBaseOwnership(JObject jsonObject, TransferData sourceTransferData, SaveContextQueryEnum context)
     {
-        var path = Json.GetPath("PERSISTENT_PLAYER_BASE_ALL", jsonObject, context);
+        var path = Json.GetPath("TRANSFER_UID_BASE", jsonObject, context);
         foreach (var persistentPlayerBase in jsonObject.SelectTokens(path).Cast<JObject>())
             if (sourceTransferData.TransferBaseUserDecision.TryGetValue(GetBaseIdentifier(persistentPlayerBase), out var userDecision) && userDecision.DoTransfer)
                 TransferGeneralOwnership(persistentPlayerBase.GetValue<JObject>("RELATIVE_BASE_OWNER")!);
@@ -1711,11 +1709,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         foreach (var context in GetContexts(jsonObject))
         {
-            var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, context, key);
+            var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_KEY", jsonObject, context, key);
             result.AddRange(expressions.Select(i => string.Format(path, i)));
     }
 
-        return GetUserIdentificationIntersection(jsonObject, result).MostCommon();
+        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
 
     protected virtual string[] GetIntersectionExpressionsByBase(JObject jsonObject)
@@ -1736,10 +1734,10 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual string? GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
-        var path = Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP", jsonObject, key);
+        var path = Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_KEY", jsonObject, key);
         var result = GetIntersectionExpressionsByDiscovery(jsonObject).Select(i => string.Format(path, i));
 
-        return GetUserIdentificationIntersection(jsonObject, result).MostCommon();
+        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
 
     protected virtual string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
@@ -1764,11 +1762,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         foreach (var context in GetContexts(jsonObject))
         {
-            var path = Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP", jsonObject, context, key);
+            var path = Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_KEY", jsonObject, context, key);
             result.AddRange(expressions.Select(i => string.Format(path, i)));
         }
 
-        return GetUserIdentificationIntersection(jsonObject, result).MostCommon();
+        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
 
     protected virtual string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
@@ -1778,18 +1776,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
             Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
         ];
-    }
-
-    /// <summary>
-    /// Intersects the result of the specified expressions.
-    /// </summary>
-    /// <param name="jsonObject"></param>
-    /// <param name="path"></param>
-    /// <param name="expressions"></param>
-    /// <returns></returns>
-    protected static IEnumerable<string> GetUserIdentificationIntersection(JObject jsonObject, string path, params string[] expressions)
-    {
-        return (IEnumerable<string>)(jsonObject.SelectTokensWithIntersection(path, expressions).Select(i => i.Value<string>()).Where(j => !string.IsNullOrWhiteSpace(j)));
     }
 
     #endregion

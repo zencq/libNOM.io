@@ -313,12 +313,12 @@ public partial class PlatformMicrosoft : Platform
 
         // Ignore if already marked as deleted.
         if (extra.MicrosoftBlobDirectory.Exists && extra.MicrosoftSyncState != MicrosoftBlobSyncStateEnum.Deleted)
-            PlatformMicrosoft.ParseBlobContainer(extra);
+            extra = ParseBlobContainer(extra);
 
         return offset + 45; // 15, 16, 17, 18, 19, 20
     }
 
-    private static void ParseBlobContainer(PlatformExtra extra)
+    private static PlatformExtra ParseBlobContainer(PlatformExtra extra)
     {
         /**
          0. HEADER (4)                      (  4)
@@ -406,6 +406,8 @@ public partial class PlatformMicrosoft : Platform
             {
                 MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Deleted,
             };
+
+        return extra;
     }
 
     #endregion
@@ -475,6 +477,7 @@ public partial class PlatformMicrosoft : Platform
 
         container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
         container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
+        container.GameVersion = GameVersionEnum.Unknown; // reset to get the 100% accurate result later
     }
 
     protected override ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)
