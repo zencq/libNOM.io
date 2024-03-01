@@ -82,16 +82,13 @@ public static class IEnumerableExtensions
     /// <seealso href="https://stackoverflow.com/a/39599083"/>
     internal static string? MostCommon(this IEnumerable<string?> self)
     {
-        self = self.Where(i => !string.IsNullOrWhiteSpace(i));
-        if (!self.Any())
-            return null;
-
-        var groups = self.GroupBy(i => i);
-        if (!groups.Any())
-            return null;
-
-        var max = groups.Max(i => i.Count());
-        return groups.First(i => i.Count() == max).Key;
+        var groups = self.Where(i => !string.IsNullOrEmpty(i)).GroupBy(j => j);
+        if (groups.Any())
+        {
+            var maxCount = groups.Max(i => i.Count());
+            return groups.First(i => i.Count() == maxCount).Key;
+        }
+        return null;
     }
 
     #endregion

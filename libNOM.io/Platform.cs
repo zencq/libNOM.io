@@ -182,6 +182,23 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         return SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
     }
 
+    // private //
+
+    private static IEnumerable<SaveContextQueryEnum> GetContexts(JObject jsonObject)
+    {
+        // Check first whether there can be context keys.
+        if (Constants.JSONPATH["ACTIVE_CONTEXT"].Any(jsonObject.ContainsKey))
+        {
+            // Then return all contexts that are in the specified JSON.
+            if (Constants.JSONPATH["BASE_CONTEXT"].Any(jsonObject.ContainsKey))
+                yield return SaveContextQueryEnum.Main;
+            if (Constants.JSONPATH["EXPEDITION_CONTEXT"].Any(jsonObject.ContainsKey))
+                yield return SaveContextQueryEnum.Season;
+        }
+        else
+            yield return SaveContextQueryEnum.DontCare;
+    }
+
     #endregion
 
     #region Setter
@@ -1266,7 +1283,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             var jsonObject = container.GetJsonObject();
             var usesMapping = jsonObject.UsesMapping();
 
-            foreach (var context in EnumExtensions.GetValues<SaveContextQueryEnum>())
+            foreach (var context in GetContexts(jsonObject))
             {
                 var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, context);
                 var expressions = new[]
@@ -1367,6 +1384,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 if (!Source.IsCompatible)
                     ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
+                Destination.SetPlatform(this);
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
 
@@ -1421,14 +1439,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             TransferGeneralOwnership(jsonObject, sourceTransferData, SaveContextQueryEnum.DontCare, "TRANSFER_UID_DISCOVERY");
 
         if (container.IsVersion(GameVersionEnum.Foundation) && sourceTransferData.TransferBase) // 1.1
-            foreach (var context in EnumExtensions.GetValues<SaveContextQueryEnum>())
+            foreach (var context in GetContexts(jsonObject))
                 TransferBaseOwnership(jsonObject, sourceTransferData, context);
 
         if (container.IsVersion351PrismsWithBytebeatAuthor && sourceTransferData.TransferBytebeat) // 3.51
             TransferBytebeatOwnership(jsonObject, sourceTransferData);
 
         if (container.IsVersion360Frontiers && sourceTransferData.TransferSettlement) // 3.6
-            foreach (var context in EnumExtensions.GetValues<SaveContextQueryEnum>())
+            foreach (var context in GetContexts(jsonObject))
                 TransferGeneralOwnership(jsonObject, sourceTransferData, context, "TRANSFER_UID_SETTLEMENT");
     }
 
@@ -1686,13 +1704,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="key"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
-    protected virtual IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected virtual string? GetUserIdentificationByBase(JObject jsonObject, string key)
     {
-        // TODO both context
-        var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, key);
         var expressions = GetIntersectionExpressionsByBase(jsonObject);
+        var result = new List<string>();
 
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+        foreach (var context in GetContexts(jsonObject))
+        {
+            var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP", jsonObject, context, key);
+            result.AddRange(expressions.Select(i => string.Format(path, i)));
+    }
+
+        return GetUserIdentificationIntersection(jsonObject, result).MostCommon();
     }
 
     protected virtual string[] GetIntersectionExpressionsByBase(JObject jsonObject)
@@ -1711,12 +1734,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
+    protected virtual string? GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
         var path = Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP", jsonObject, key);
-        var expressions = GetIntersectionExpressionsByDiscovery(jsonObject);
+        var result = GetIntersectionExpressionsByDiscovery(jsonObject).Select(i => string.Format(path, i));
 
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+        return GetUserIdentificationIntersection(jsonObject, result).MostCommon();
     }
 
     protected virtual string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
@@ -1734,13 +1757,18 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected virtual string? GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
-        // TODO both context
-        var path = Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP", jsonObject, key);
         var expressions = GetIntersectionExpressionsBySettlement(jsonObject);
+        var result = new List<string>();
 
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+        foreach (var context in GetContexts(jsonObject))
+        {
+            var path = Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP", jsonObject, context, key);
+            result.AddRange(expressions.Select(i => string.Format(path, i)));
+        }
+
+        return GetUserIdentificationIntersection(jsonObject, result).MostCommon();
     }
 
     protected virtual string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)

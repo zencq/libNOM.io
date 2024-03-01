@@ -269,16 +269,19 @@ public static class NewtonsoftExtensions
         var type = typeof(T);
 
         if (type.IsSubclassOf(typeof(JToken)) || type == typeof(JToken))
-            return self.Cast<T>().FirstOrDefault();
+            if (self is T subclassOfJToken)
+                return subclassOfJToken;
+            else
+                return default;
 
         if (type.IsEnum)
         {
             // integer
-            if (self.Value<int?>() is int intValue)
+            if (self.Type == JTokenType.Integer && self.Value<int>() is int intValue)
                 return (T)(object)(intValue); // https://stackoverflow.com/a/10387134
 
             // string
-            if (self.Value<string>() is string stringValue)
+            if (self.Type == JTokenType.String && self.Value<string>() is string stringValue)
                 return (T)(Enum.Parse(type, stringValue));
         }
         else

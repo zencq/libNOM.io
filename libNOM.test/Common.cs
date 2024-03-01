@@ -1,6 +1,10 @@
-﻿using Ionic.Zip;
+﻿using System.Text;
+
+using Ionic.Zip;
+
+using libNOM.io;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Text;
 
 namespace libNOM.test;
 
@@ -17,10 +21,10 @@ public class CommonTestInitializeCleanup
 
     protected const int OFFSET_INDEX = 2;
 
-    protected static readonly int[] MUSICVOLUME_INDICES = new[] { 1, 7 };
+    protected static readonly int[] MUSICVOLUME_INDICES = [1, 7];
     protected const string MUSICVOLUME_JSON_PATH = "UserSettingsData.MusicVolume";
     protected const int MUSICVOLUME_NEW_AMOUNT = 100;
-    protected static readonly int[] UNITS_INDICES = new[] { 2, 48 };
+    protected static readonly int[] UNITS_INDICES = [2, 48];
     protected const string UNITS_JSON_PATH = "PlayerStateData.Units";
     protected const int UNITS_NEW_AMOUNT = 29070100;
 
@@ -125,42 +129,58 @@ public class CommonTestInitializeCleanup
             Copy(directory.FullName, Path.Combine(destination, directory.Name));
     }
 
-    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetGuid(IEnumerable{byte})"/>
-    /// <see cref="libNOM.io.Extensions.GuidExtensions.ToPath(Guid)"/>
-    protected static string GetGuid(IEnumerable<byte> source)
-    {
-        return new Guid(source.ToArray()).ToString("N").ToUpper();
-    }
-
     protected static T GetPrivateFieldOrProperty<T>(object obj, string name)
     {
         return (T)(new PrivateObject(obj).GetFieldOrProperty(name));
     }
 
-    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
-    protected static uint[] GetUInt32(byte[] source)
-    {
-        var result = new uint[source.Length / sizeof(uint)];
-        Buffer.BlockCopy(source, 0, result, 0, source.Length);
+    // alias for frequently used
 
-        return result;
+    protected static string GetGuid(IEnumerable<byte> source)
+    {
+        return new Guid(source.ToArray()).ToString("N").ToUpper();
     }
 
-    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
+    protected static IEnumerable<Container> GetExistingContainers(Platform platform)
+    {
+        return platform.GetSaveContainers().Where(i => i.Exists);
+    }
+
+    protected static IEnumerable<Container> GetLoadedContainers(Platform platform)
+    {
+        return platform.GetSaveContainers().Where(i => i.IsLoaded);
+    }
+
+    protected static Container GetOneSaveContainer(Platform platform, int collectionIndex)
+    {
+        return platform.GetSaveContainers().First(i => i.CollectionIndex == collectionIndex);
+    }
+
     protected static string GetString(IEnumerable<byte> source)
     {
         return Encoding.UTF8.GetString(source.ToArray());
     }
 
-    /// <see cref="libNOM.io.Extensions.IEnumerableExtensions.GetUInt32(IEnumerable{byte})"/>
     protected static string GetUnicode(IEnumerable<byte> source)
     {
         return Encoding.Unicode.GetString(source.ToArray());
     }
 
+    protected static IEnumerable<Container> GetWatcherChangeContainers(Platform platform)
+    {
+        return platform.GetSaveContainers().Where(i => i.HasWatcherChange);
+    }
+
     protected static string[] ReadUserIdentification(string path)
     {
         return File.ReadAllLines(Path.Combine(path, "UserIdentification.txt"));
+    }
+
+    protected static uint[] ToUInt32(byte[] source)
+    {
+        var result = new uint[source.Length / sizeof(uint)];
+        Buffer.BlockCopy(source, 0, result, 0, source.Length);
+        return result;
     }
 
     #endregion

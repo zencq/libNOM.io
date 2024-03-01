@@ -218,12 +218,12 @@ public partial class PlatformMicrosoft : Platform
     /// <exception cref="InvalidDataException"/>
     private Dictionary<int, PlatformExtra> ParseContainersIndex()
     {
-        var offset = ParseGlobalIndex(out ReadOnlySpan<byte> bytes);
+        var offset = ParseGlobalIndex(out var bytes);
         Dictionary<int, PlatformExtra> result = [];
 
         for (var i = 0; i < bytes.Cast<long>(4); i++) // container count
         {
-            var offset2 = ParseBlobContainerIndex(bytes, offset, out var saveIdentifier, out var extra);
+            offset = ParseBlobContainerIndex(bytes, offset, out var saveIdentifier, out var extra);
 
             // Store collected data for further processing.
             if (saveIdentifier.StartsWith("Slot"))

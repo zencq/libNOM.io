@@ -1,10 +1,13 @@
-﻿using CommunityToolkit.Diagnostics;
+﻿using System.Text;
+
+using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
+
 using libNOM.io;
-using libNOM.io.Data;
 using libNOM.io.Enums;
+using libNOM.io.Models;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Text;
 
 namespace libNOM.test;
 
@@ -34,7 +37,7 @@ public class SteamTest : CommonTestInitializeCleanup
         uint hash = 0;
         int iterations = meta.Length / sizeof(uint) == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
         uint[] key = GetKey(container);
-        uint[] value = GetUInt32(meta);
+        uint[] value = ToUInt32(meta);
 
         int lastIndex = value.Length - 1;
 
@@ -79,7 +82,7 @@ public class SteamTest : CommonTestInitializeCleanup
     {
         uint index = (uint)(container.MetaIndex == 0 ? 1 : container.MetaIndex) ^ 0x1422CB8C;
         uint indexRotated = (index << 13) | (index >> (32 - 13));
-        uint[] key = GetUInt32(Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG"));
+        uint[] key = ToUInt32(Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG"));
 
         key[0] = (indexRotated * 5) + 0xE6546B64;
 
@@ -169,7 +172,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Assert
         Assert.IsTrue(platform.HasAccountData);
-        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
         Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
         Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
         Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
@@ -177,7 +180,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < results.Length; i++)
         {
-            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var container = GetOneSaveContainer(platform, results[i].CollectionIndex);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(results[i].Exists, container.Exists);
@@ -222,7 +225,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Assert
         Assert.IsFalse(platform.HasAccountData);
-        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
         Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
         Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
         Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
@@ -230,7 +233,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < results.Length; i++)
         {
-            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var container = GetOneSaveContainer(platform, results[i].CollectionIndex);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(results[i].Exists, container.Exists);
@@ -268,7 +271,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Assert
         Assert.IsTrue(platform.HasAccountData);
-        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
         Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
         Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
         Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
@@ -276,7 +279,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < results.Length; i++)
         {
-            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var container = GetOneSaveContainer(platform, results[i].CollectionIndex);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(results[i].Exists, container.Exists);
@@ -311,7 +314,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Assert
         Assert.IsFalse(platform.HasAccountData);
-        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
         Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
         Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
         Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
@@ -319,7 +322,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < results.Length; i++)
         {
-            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var container = GetOneSaveContainer(platform, results[i].CollectionIndex);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(results[i].Exists, container.Exists);
@@ -359,7 +362,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Assert
         Assert.IsFalse(platform.HasAccountData);
-        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
         Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
         Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
         Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
@@ -367,7 +370,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < results.Length; i++)
         {
-            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var container = GetOneSaveContainer(platform, results[i].CollectionIndex);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(results[i].Exists, container.Exists);
@@ -409,7 +412,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Assert
         Assert.IsTrue(platform.HasAccountData);
-        Assert.AreEqual(results.Length, platform.GetExistingContainers().Count());
+        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
         Assert.AreEqual(userIdentification[0], platform.PlatformUserIdentification.LID);
         Assert.AreEqual(userIdentification[1], platform.PlatformUserIdentification.UID);
         Assert.AreEqual(userIdentification[2], platform.PlatformUserIdentification.USN);
@@ -417,7 +420,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < results.Length; i++)
         {
-            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var container = GetOneSaveContainer(platform, results[i].CollectionIndex);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(results[i].Exists, container.Exists);
@@ -444,7 +447,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0)!;
+        var containerA = GetOneSaveContainer(platformA, 0);
         var metaA = DecryptMeta(containerA);
 
         containerA.WriteCallback += () =>
@@ -461,7 +464,7 @@ public class SteamTest : CommonTestInitializeCleanup
         (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0)!;
+        var containerB = GetOneSaveContainer(platformB, 0);
         var metaB = DecryptMeta(containerB);
 
         platformB.Load(containerB);
@@ -496,7 +499,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0)!;
+        var containerA = GetOneSaveContainer(platformA, 0);
         var metaA = DecryptMeta(containerA);
         var priectA = new PrivateObject(containerA);
 
@@ -514,7 +517,7 @@ public class SteamTest : CommonTestInitializeCleanup
         (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0)!;
+        var containerB = GetOneSaveContainer(platformB, 0);
         var metaB = DecryptMeta(containerB);
         var priectB = new PrivateObject(containerB);
 
@@ -558,7 +561,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0)!;
+        var containerA = GetOneSaveContainer(platformA, 0);
         var metaA = DecryptMeta(containerA);
         var priectA = new PrivateObject(containerA);
 
@@ -576,7 +579,7 @@ public class SteamTest : CommonTestInitializeCleanup
         (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0)!;
+        var containerB = GetOneSaveContainer(platformB, 0);
         var metaB = DecryptMeta(containerB);
         var priectB = new PrivateObject(containerB);
 
@@ -728,7 +731,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0)!;
+        var containerA = GetOneSaveContainer(platformA, 0);
 
         containerA.WriteCallback += () =>
         {
@@ -744,7 +747,7 @@ public class SteamTest : CommonTestInitializeCleanup
         (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0)!;
+        var containerB = GetOneSaveContainer(platformB, 0);
 
         platformB.Load(containerB);
         (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
@@ -776,7 +779,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0)!;
+        var containerA = GetOneSaveContainer(platformA, 0);
 
         containerA.WriteCallback += () =>
         {
@@ -792,7 +795,7 @@ public class SteamTest : CommonTestInitializeCleanup
         var lengthSet = containerA.DataFile!.Length;
 
         var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0)!;
+        var containerB = GetOneSaveContainer(platformB, 0);
 
         platformB.Load(containerB);
         containerB.DataFile!.Refresh();
@@ -822,7 +825,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0)!;
+        var containerA = GetOneSaveContainer(platformA, 0);
 
         containerA.WriteCallback += () =>
         {
@@ -838,7 +841,7 @@ public class SteamTest : CommonTestInitializeCleanup
         var lengthSet = containerA.DataFile!.Length;
 
         var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0)!;
+        var containerB = GetOneSaveContainer(platformB, 0);
 
         platformB.Load(containerB);
         containerB.DataFile!.Refresh();
@@ -867,13 +870,13 @@ public class SteamTest : CommonTestInitializeCleanup
         var bytes = File.ReadAllBytes(pathWatching);
 
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
 
         platform.Load(container);
 
         File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers1 = platform.GetWatcherContainers();
+        var watchers1 = GetWatcherChangeContainers(platform);
         var count1 = watchers1.Count();
         var synced1 = container.IsSynced;
 
@@ -882,7 +885,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers2 = platform.GetWatcherContainers();
+        var watchers2 = GetWatcherChangeContainers(platform);
         var count2 = watchers2.Count();
         var synced3 = container.IsSynced;
 
@@ -893,7 +896,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers3 = platform.GetWatcherContainers();
+        var watchers3 = GetWatcherChangeContainers(platform);
         var count3 = watchers3.Count();
         var synced5 = container.IsSynced;
 
@@ -934,12 +937,12 @@ public class SteamTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var container0 = platform.GetSaveContainer(0)!; // 1Auto
-        var container2 = platform.GetSaveContainer(2)!; // 2Auto
-        var container3 = platform.GetSaveContainer(3)!; // 2Manual
-        var container4 = platform.GetSaveContainer(4)!; // 3Auto
-        var container7 = platform.GetSaveContainer(7)!; // 4Manual (!Exists)
-        var container9 = platform.GetSaveContainer(9)!; // 5Manual (!Exists)
+        var container0 = GetOneSaveContainer(platform, 0); // 1Auto
+        var container2 = GetOneSaveContainer(platform, 2); // 2Auto
+        var container3 = GetOneSaveContainer(platform, 3); // 2Manual
+        var container4 = GetOneSaveContainer(platform, 4); // 3Auto
+        var container7 = GetOneSaveContainer(platform, 7); // 4Manual (!Exists)
+        var container9 = GetOneSaveContainer(platform, 9); // 5Manual (!Exists)
 
         platform.Copy(container0, container2); // 1Auto -> 2Auto (overwrite)
         platform.Copy(container3, container7); // 2Manual -> 4Manual (create)
@@ -983,8 +986,8 @@ public class SteamTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var container0 = platform.GetSaveContainer(0)!; // 1Auto
-        var container1 = platform.GetSaveContainer(1)!; // 1Manual
+        var container0 = GetOneSaveContainer(platform, 0); // 1Auto
+        var container1 = GetOneSaveContainer(platform, 1); // 1Manual
 
         platform.Delete(container0);
         platform.Delete(container1);
@@ -1010,12 +1013,12 @@ public class SteamTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var container0 = platform.GetSaveContainer(0)!; // 1Auto
-        var container1 = platform.GetSaveContainer(1)!; // 1Manual
-        var container2 = platform.GetSaveContainer(2)!; // 2Auto
-        var container4 = platform.GetSaveContainer(4)!; // 3Auto
-        var container8 = platform.GetSaveContainer(8)!; // 5Auto
-        var container9 = platform.GetSaveContainer(9)!; // 5Manual
+        var container0 = GetOneSaveContainer(platform, 0); // 1Auto
+        var container1 = GetOneSaveContainer(platform, 1); // 1Manual
+        var container2 = GetOneSaveContainer(platform, 2); // 2Auto
+        var container4 = GetOneSaveContainer(platform, 4); // 3Auto
+        var container8 = GetOneSaveContainer(platform, 8); // 5Auto
+        var container9 = GetOneSaveContainer(platform, 9); // 5Manual
 
         var priect1 = new PrivateObject(container1);
         var priect4 = new PrivateObject(container4);
@@ -1087,25 +1090,23 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformGog = new PlatformGog(pathGog, settings);
-        var transfer = platformGog.PrepareTransferSource(1);
+        var transfer = platformGog.GetSourceTransferData(1);
 
         var platform = new PlatformSteam(path, settings);
-        platform.PrepareTransferDestination(2);
-        platform.PrepareTransferDestination(3);
 
         platform.Transfer(transfer, 2); // overwrite
-        var container4 = platform.GetSaveContainer(4)!;
+        var container4 = GetOneSaveContainer(platform, 4);
         var priect4 = new PrivateObject(container4);
-        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+        var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
 
         platform.Transfer(transfer, 3); // create
-        var container6 = platform.GetSaveContainer(6)!;
+        var container6 = GetOneSaveContainer(platform, 6);
         var priect6 = new PrivateObject(container6);
-        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+        var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
 
         // Assert
         AssertAllAreEqual(1, transfer.TransferBaseUserDecision.Count);
-        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+        Assert.AreEqual(8, GetExistingContainers(platform).Count()); // + 1 + 2
 
         AssertAllAreEqual(userIdentificationGog[0], platformGog.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
         AssertAllAreEqual(userIdentificationGog[1], platformGog.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
@@ -1119,7 +1120,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < resultsGog.Length; i++)
         {
-            var container = platform.GetSaveContainer(resultsGog[i].CollectionIndex + offset)!;
+            var container = GetOneSaveContainer(platform, resultsGog[i].CollectionIndex + offset);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(resultsGog[i].Exists, container.Exists);
@@ -1155,25 +1156,23 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformMicrosoft = new PlatformMicrosoft(pathMicrosoft, settings);
-        var transfer = platformMicrosoft.PrepareTransferSource(1);
+        var transfer = platformMicrosoft.GetSourceTransferData(1);
 
         var platform = new PlatformSteam(path, settings);
-        platform.PrepareTransferDestination(2);
-        platform.PrepareTransferDestination(3);
 
         platform.Transfer(transfer, 2); // overwrite
-        var container4 = platform.GetSaveContainer(4)!;
+        var container4 = GetOneSaveContainer(platform, 4);
         var priect4 = new PrivateObject(container4);
-        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+        var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
 
         platform.Transfer(transfer, 3); // create
-        var container6 = platform.GetSaveContainer(6)!;
+        var container6 = GetOneSaveContainer(platform, 6);
         var priect6 = new PrivateObject(container6);
-        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+        var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
 
         // Assert
         AssertAllAreEqual(8, transfer.TransferBaseUserDecision.Count);
-        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+        Assert.AreEqual(8, GetExistingContainers(platform).Count()); // + 1 + 2
 
         AssertAllAreEqual(userIdentificationMicrosoft[0], platformMicrosoft.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
         AssertAllAreEqual(userIdentificationMicrosoft[1], platformMicrosoft.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
@@ -1185,7 +1184,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < resultsMicrosoft.Length; i++)
         {
-            var container = platform.GetSaveContainer(resultsMicrosoft[i].CollectionIndex + offset)!;
+            var container = GetOneSaveContainer(platform, resultsMicrosoft[i].CollectionIndex + offset);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(resultsMicrosoft[i].Exists, container.Exists);
@@ -1221,25 +1220,23 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
-        var transfer = platformPlaystation.PrepareTransferSource(1);
+        var transfer = platformPlaystation.GetSourceTransferData(1);
 
         var platform = new PlatformSteam(path, settings);
-        platform.PrepareTransferDestination(2);
-        platform.PrepareTransferDestination(3);
 
         platform.Transfer(transfer, 2); // overwrite
-        var container4 = platform.GetSaveContainer(4)!;
+        var container4 = GetOneSaveContainer(platform, 4);
         var priect4 = new PrivateObject(container4);
-        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+        var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
 
         platform.Transfer(transfer, 3); // create
-        var container6 = platform.GetSaveContainer(6)!;
+        var container6 = GetOneSaveContainer(platform, 6);
         var priect6 = new PrivateObject(container6);
-        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+        var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
 
         // Assert
         AssertAllAreEqual(24, transfer.TransferBaseUserDecision.Count);
-        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+        Assert.AreEqual(8, GetExistingContainers(platform).Count()); // + 1 + 2
 
         AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
         AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
@@ -1253,7 +1250,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < resultsPlaystation.Length; i++)
         {
-            var container = platform.GetSaveContainer(resultsPlaystation[i].CollectionIndex + offset)!;
+            var container = GetOneSaveContainer(platform, resultsPlaystation[i].CollectionIndex + offset);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
@@ -1289,25 +1286,23 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
-        var transfer = platformPlaystation.PrepareTransferSource(1);
+        var transfer = platformPlaystation.GetSourceTransferData(1);
 
         var platform = new PlatformSteam(path, settings);
-        platform.PrepareTransferDestination(2);
-        platform.PrepareTransferDestination(3);
 
         platform.Transfer(transfer, 2); // overwrite
-        var container4 = platform.GetSaveContainer(4)!;
+        var container4 = GetOneSaveContainer(platform, 4);
         var priect4 = new PrivateObject(container4);
-        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+        var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
 
         platform.Transfer(transfer, 3); // create
-        var container6 = platform.GetSaveContainer(6)!;
+        var container6 = GetOneSaveContainer(platform, 6);
         var priect6 = new PrivateObject(container6);
-        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+        var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
 
         // Assert
         AssertAllAreEqual(4, transfer.TransferBaseUserDecision.Count);
-        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+        Assert.AreEqual(8, GetExistingContainers(platform).Count()); // + 1 + 2
 
         AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
         AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
@@ -1321,7 +1316,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < resultsPlaystation.Length; i++)
         {
-            var container = platform.GetSaveContainer(resultsPlaystation[i].CollectionIndex + offset)!;
+            var container = GetOneSaveContainer(platform, resultsPlaystation[i].CollectionIndex + offset);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
@@ -1357,25 +1352,23 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformSteam = new PlatformSteam(pathSteam, settings);
-        var transfer = platformSteam.PrepareTransferSource(3);
+        var transfer = platformSteam.GetSourceTransferData(3);
 
         var platform = new PlatformSteam(path, settings);
-        platform.PrepareTransferDestination(2);
-        platform.PrepareTransferDestination(3);
 
         platform.Transfer(transfer, 2); // overwrite
-        var container4 = platform.GetSaveContainer(4)!;
+        var container4 = GetOneSaveContainer(platform, 4);
         var priect4 = new PrivateObject(container4);
-        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+        var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
 
         platform.Transfer(transfer, 3); // create
-        var container6 = platform.GetSaveContainer(6)!;
+        var container6 = GetOneSaveContainer(platform, 6);
         var priect6 = new PrivateObject(container6);
-        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+        var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
 
         // Assert
         AssertAllAreEqual(1, transfer.TransferBaseUserDecision.Count);
-        Assert.AreEqual(8, platform.GetExistingContainers().Count()); // + 1 + 2
+        Assert.AreEqual(8, GetExistingContainers(platform).Count()); // + 1 + 2
 
         AssertAllAreEqual(userIdentificationSteam[0], platformSteam.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
         AssertAllAreEqual(userIdentificationSteam[1], platformSteam.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
@@ -1389,7 +1382,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < resultsSteam.Length; i++)
         {
-            var container = platform.GetSaveContainer(resultsSteam[i].CollectionIndex + offset)!;
+            var container = GetOneSaveContainer(platform, resultsSteam[i].CollectionIndex + offset);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(resultsSteam[i].Exists, container.Exists);
@@ -1426,25 +1419,23 @@ public class SteamTest : CommonTestInitializeCleanup
 
         // Act
         var platformSwitch = new PlatformSwitch(pathSwitch, settings);
-        var transfer = platformSwitch.PrepareTransferSource(1);
+        var transfer = platformSwitch.GetSourceTransferData(1);
 
         var platform = new PlatformSteam(path, settings);
-        platform.PrepareTransferDestination(2);
-        platform.PrepareTransferDestination(3);
 
         platform.Transfer(transfer, 2); // overwrite
-        var container4 = platform.GetSaveContainer(4)!;
+        var container4 = GetOneSaveContainer(platform, 4);
         var priect4 = new PrivateObject(container4);
-        var userIdentification4 = (UserIdentificationData)(priect4.GetFieldOrProperty("UserIdentification"));
+        var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
 
         platform.Transfer(transfer, 3); // create
-        var container6 = platform.GetSaveContainer(6)!;
+        var container6 = GetOneSaveContainer(platform, 6);
         var priect6 = new PrivateObject(container6);
-        var userIdentification6 = (UserIdentificationData)(priect6.GetFieldOrProperty("UserIdentification"));
+        var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
 
         // Assert
         AssertAllAreEqual(0, transfer.TransferBaseUserDecision.Count);
-        Assert.AreEqual(6, platform.GetExistingContainers().Count()); // + 1
+        Assert.AreEqual(6, GetExistingContainers(platform).Count()); // + 1
 
         AssertAllAreEqual(userIdentificationSwitch[0], platformSwitch.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
         AssertAllAreEqual(userIdentificationSwitch[1], platformSwitch.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
@@ -1458,7 +1449,7 @@ public class SteamTest : CommonTestInitializeCleanup
 
         for (var i = 0; i < resultsSwitch.Length; i++)
         {
-            var container = platform.GetSaveContainer(resultsSwitch[i].CollectionIndex + offset)!;
+            var container = GetOneSaveContainer(platform, resultsSwitch[i].CollectionIndex + offset);
             var priect = new PrivateObject(container);
 
             Assert.AreEqual(resultsSwitch[i].Exists, container.Exists);

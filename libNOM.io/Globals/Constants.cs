@@ -93,6 +93,7 @@ public static class Constants
         { "FREIGHTER_POSITION", [ "6f=.lpm[*]", "PlayerStateData.FreighterMatrixPos[*]", "{0}.6f=.lpm[*]", "{0}.PlayerStateData.FreighterMatrixPos[*]" ] },
         { "PERSISTENT_PLAYER_BASE_ALL", [ "6f=.F?0[*]", "PlayerStateData.PersistentPlayerBases[*]", "{0}.6f=.F?0[*]", "{0}.PlayerStateData.PersistentPlayerBases[*]"] },
         { "PERSISTENT_PLAYER_BASE_ALL_TYPES", [ "6f=.F?0[*].peI.DPp", "PlayerStateData.PersistentPlayerBases[*].BaseType.PersistentBaseTypes", "{0}.6f=.F?0[*].peI.DPp", "{0}.PlayerStateData.PersistentPlayerBases[*].BaseType.PersistentBaseTypes"] },
+        { "SAVE_SUMMARY", ["6f=.n:R", "PlayerStateData.SaveSummary", "{0}.6f=.n:R", "{0}.PlayerStateData.SaveSummary"] },
         { "SETTLEMENT_ALL_OWNER_LID", [ "6f=.GQA[*].3?K.f5Q", "PlayerStateData.SettlementStatesV2[*].Owner.LID", "{0}.6f=.GQA[*].3?K.f5Q", "{0}.PlayerStateData.SettlementStatesV2[*].Owner.LID"] },
         { "TRANSFER_UID_SETTLEMENT", [ "6f=.GQA..[?(@.K7E == '{0}')]", "PlayerStateData.SettlementStatesV2..[?(@.UID == '{0}')]", "{0}.6f=.GQA..[?(@.K7E == '{{0}}')]", "{0}.PlayerStateData.SettlementStatesV2..[?(@.UID == '{{0}}')]"] },
 

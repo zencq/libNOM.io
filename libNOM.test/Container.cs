@@ -1,6 +1,8 @@
 ﻿using libNOM.io;
 using libNOM.io.Enums;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Newtonsoft.Json.Linq;
 
 namespace libNOM.test;
@@ -10,10 +12,10 @@ namespace libNOM.test;
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
 public class ContainerTest : CommonTestInitializeCleanup
 {
-    protected static readonly int[] GALACTICADDRESS_INDICES = new[] { 2, 0, 1 };
+    protected static readonly int[] GALACTICADDRESS_INDICES = [2, 0, 1];
     protected const string GALACTICADDRESS_JSON_PATH = "PlayerStateData.UniverseAddress.GalacticAddress";
 
-    protected static readonly int[] VALIDSLOTINDICES_INDICES = new[] { 2, 3, 1 };
+    protected static readonly int[] VALIDSLOTINDICES_INDICES = [2, 3, 1];
     protected const string VALIDSLOTINDICES_JSON_PATH = "PlayerStateData.Inventory.ValidSlotIndices";
 
     [TestMethod]
@@ -29,7 +31,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
         var pattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
 
         container.BackupCreatedCallback += (backup) =>
@@ -48,7 +50,7 @@ public class ContainerTest : CommonTestInitializeCleanup
         var backups2Container = container.BackupCollection.Count;
         var backups2File = Directory.GetFiles(settings.Backup, pattern).Length;
 
-        var backups2ContainerNew = new PlatformSteam(path, settings).GetSaveContainer(0)!.BackupCollection.Count;
+        var backups2ContainerNew = GetOneSaveContainer(new PlatformSteam(path, settings), 0).BackupCollection.Count;
         var backups2FileAfter = Directory.GetFiles(settings.Backup, pattern).Length;
 
         // Assert
@@ -75,7 +77,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
         container.BackupRestoredCallback += () =>
         {
             backupRestoredCallback = true;
@@ -105,7 +107,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
 
         platform.Load(container);
         var units1 = container.GetJsonValue<int>(UNITS_JSON_PATH);
@@ -132,7 +134,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
 
         platform.Load(container);
         var units1 = container.GetJsonValue<int>(UNITS_INDICES);
@@ -158,7 +160,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(16)!;
+        var container = GetOneSaveContainer(platform, 16);
 
         var name0 = container.SaveName;
 
@@ -195,7 +197,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
 
         platform.Load(container);
         var galacticAddress_A1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSON_PATH)!);
@@ -235,7 +237,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
 
         platform.Load(container);
         var validSlotIndices_A1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSON_PATH)!);

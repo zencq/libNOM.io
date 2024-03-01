@@ -1,5 +1,6 @@
 ﻿using libNOM.io;
 using libNOM.io.Enums;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace libNOM.test;
@@ -22,10 +23,10 @@ public class GameModeTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
+        var normal = GetOneSaveContainer(platform, 4); // 5.hg // 3Auto
+        var creative = GetOneSaveContainer(platform, 14); // 15.hg // 8Auto
+        var survival = GetOneSaveContainer(platform, 8); // 9.hg // 5Auto
+        var permadeath = GetOneSaveContainer(platform, 12); // 13.hg // 7Auto
 
         // Assert
         Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));
@@ -52,10 +53,10 @@ public class GameModeTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
+        var normal = GetOneSaveContainer(platform, 4); // 5.hg // 3Auto
+        var creative = GetOneSaveContainer(platform, 14); // 15.hg // 8Auto
+        var survival = GetOneSaveContainer(platform, 8); // 9.hg // 5Auto
+        var permadeath = GetOneSaveContainer(platform, 12); // 13.hg // 7Auto
 
         // Assert
         Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));
@@ -82,12 +83,12 @@ public class GameModeTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var normal = platform.GetSaveContainer(16)!; // 17.hg // 9Auto
-        var creative = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var survival = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-        var relaxed = platform.GetSaveContainer(18)!; // 19.hg // 10Auto
-        var permadeath = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var seasonal = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
+        var normal = GetOneSaveContainer(platform, 16); // 17.hg // 9Auto
+        var creative = GetOneSaveContainer(platform, 4); // 5.hg // 3Auto
+        var survival = GetOneSaveContainer(platform, 12); // 13.hg // 7Auto
+        var relaxed = GetOneSaveContainer(platform, 18); // 19.hg // 10Auto
+        var permadeath = GetOneSaveContainer(platform, 14); // 15.hg // 8Auto
+        var seasonal = GetOneSaveContainer(platform, 8); // 9.hg // 5Auto
 
         // Assert
         Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));
@@ -118,12 +119,12 @@ public class GameModeTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var normal = platform.GetSaveContainer(16)!; // 17.hg // 9Auto
-        var creative = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var survival = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-        var relaxed = platform.GetSaveContainer(18)!; // 19.hg // 10Auto
-        var permadeath = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var seasonal = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
+        var normal = GetOneSaveContainer(platform, 16); // 17.hg // 9Auto
+        var creative = GetOneSaveContainer(platform, 4); // 5.hg // 3Auto
+        var survival = GetOneSaveContainer(platform, 12); // 13.hg // 7Auto
+        var relaxed = GetOneSaveContainer(platform, 18); // 19.hg // 10Auto
+        var permadeath = GetOneSaveContainer(platform, 14); // 15.hg // 8Auto
+        var seasonal = GetOneSaveContainer(platform, 8); // 9.hg // 5Auto
 
         // Assert
         Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));

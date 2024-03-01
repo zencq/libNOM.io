@@ -250,7 +250,13 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     public DifficultyPresetTypeEnum GameDifficulty // { get; set; }
     {
-        get => (DifficultyPresetTypeEnum)(Extra.DifficultyPreset);
+        get
+        {
+            if (Extra.DifficultyPreset == 0)
+                Extra = Extra with { DifficultyPreset = (uint)(Meta.DifficultyPreset.Get(this, _jsonObject)) };
+
+            return (DifficultyPresetTypeEnum)(Extra.DifficultyPreset);
+        }
         set
         {
             Extra = Extra with { DifficultyPreset = (uint)(value) };
@@ -383,7 +389,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
         get
         {
             if (Extra.BaseVersion == 0)
-                Extra = Extra with { BaseVersion = BaseVersion - (((int)(GameMode) + ((int)(Season) * Constants.OFFSET_SEASON)) * Constants.OFFSET_GAMEMODE) };
+                Extra = Extra with { BaseVersion = SaveVersion - (((int)(GameMode) + ((int)(Season) * Constants.OFFSET_SEASON)) * Constants.OFFSET_GAMEMODE) };
 
             return Extra.BaseVersion;
         }
@@ -560,6 +566,8 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Setter
 
+    // public //
+
     public void SetJsonObject(JObject? value)
     {
         // No ThrowHelperIsLoaded as setting this will determine the result.
@@ -599,6 +607,13 @@ public class Container : IComparable<Container>, IEquatable<Container>
     {
         HasWatcherChange = true;
         WatcherChangeType = changeType;
+    }
+
+    // internal //
+
+    internal void SetPlatform(Platform platform)
+    {
+        _platform = platform;
     }
 
     #endregion

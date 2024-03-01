@@ -398,7 +398,8 @@ public partial class PlatformSteam : Platform
         // Base call not as default as _steamId can also be null.
         var result = key switch
         {
-            "LID" or "UID " => _steamId,
+            "LID" => _steamId,
+            "UID" => _steamId,
             _ => null,
         } ?? base.GetUserIdentification(jsonObject, key);
 
