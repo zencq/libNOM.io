@@ -1693,7 +1693,6 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return string.Empty;
 
         // ByBase is most reliable due to the BaseType, then BySettlement is second as it is still something you own, and ByDiscovery as last resort which can be a mess.
-        return GetUserIdentificationByBase(jsonObject, key).MostCommon() ?? GetUserIdentificationBySettlement(jsonObject, key).MostCommon() ?? GetUserIdentificationByDiscovery(jsonObject, key).MostCommon() ?? string.Empty;
         return GetUserIdentificationByBase(jsonObject, key) ?? GetUserIdentificationBySettlement(jsonObject, key) ?? GetUserIdentificationByDiscovery(jsonObject, key) ?? string.Empty;
     }
 
