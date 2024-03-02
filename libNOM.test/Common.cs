@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-using Ionic.Zip;
+using Aspose.Zip;
 
 using libNOM.io;
 
@@ -200,12 +200,11 @@ public class CommonTestInitializeCleanup
 
         if (!Directory.Exists(template))
         {
-            using var zipArchive = new ZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip")
+            using var zipArchive = new Archive($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new ArchiveLoadOptions()
             {
-                Encryption = EncryptionAlgorithm.WinZipAes256,
-                Password = Properties.Resources.TESTSUITE_PASSWORD,
-            };
-            zipArchive.ExtractAll(template, ExtractExistingFileAction.DoNotOverwrite);
+                DecryptionPassword = Properties.Resources.TESTSUITE_PASSWORD,
+            });
+            zipArchive.ExtractToDirectory(template);
         }
         if (!Directory.Exists(working))
         {
@@ -216,7 +215,8 @@ public class CommonTestInitializeCleanup
     [TestCleanup]
     public void DirectoryCleanup()
     {
-        Directory.Delete(nameof(Properties.Resources.TESTSUITE_ARCHIVE), true);
+        if (Directory.Exists(nameof(Properties.Resources.TESTSUITE_ARCHIVE)))
+            Directory.Delete(nameof(Properties.Resources.TESTSUITE_ARCHIVE), true);
 
         if (Directory.Exists("backup"))
             Directory.Delete("backup", true);
