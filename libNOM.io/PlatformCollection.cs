@@ -153,7 +153,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
             }
         }
         // StartsWith for uncompressed saves and plaintext JSON.
-        else if (headerInteger == Constants.SAVE_STREAMING_HEADER || headerString0x20.Contains("{\"F2P\":") || headerString0x20.Contains("{\"Version\":"))
+        else if (headerInteger == Constants.SAVE_STREAMING_HEADER || headerString0x20.StartsWith("{\"F2P\":") || headerString0x20.StartsWith("{\"Version\":"))
         {
             if (headerString0xA0.Contains("NX1|Final"))
             {

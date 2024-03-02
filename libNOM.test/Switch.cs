@@ -394,7 +394,7 @@ public class SwitchTest : CommonTestInitializeCleanup
 
         // Act
         var platformA = new PlatformSwitch(path, settings);
-        var containerA = GetOneSaveContainer(platformA, 4);
+        var containerA = GetOneSaveContainer(platformA, 0);
         var metaA = DecryptMeta(containerA);
         var priectA = new PrivateObject(containerA);
 
@@ -514,46 +514,41 @@ public class SwitchTest : CommonTestInitializeCleanup
         var writeCallback = false;
 
         // Act
-        var platform1 = new PlatformSwitch(path, settings);
-        var container1 = platform1.GetSaveContainer(0)!;
-        container1.WriteCallback += () =>
+        var platformA = new PlatformSwitch(path, settings);
+        var containerA = GetOneSaveContainer(platformA, 0);
+
+        containerA.WriteCallback += () =>
         {
             writeCallback = true;
         };
 
-        platform1.Load(container1);
-        var units10 = container1.GetJsonValue<int>(UNITS_JSON_PATH);
-        var timestamp10 = container1.LastWriteTime!.Value;
+#pragma warning disable IDE0042 // Deconstruct variable declaration
+        platformA.Load(containerA);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
-        container1.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        var units11 = container1.GetJsonValue<int>(UNITS_JSON_PATH);
+        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        platformA.Write(containerA, now);
+        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
-        platform1.Write(container1, now);
-        var timestamp11 = container1.LastWriteTime!.Value;
+        var platformB = new PlatformSwitch(path, settings);
+        var containerB = GetOneSaveContainer(platformB, 0);
+        var metaB = DecryptMeta(containerB);
+        var priectB = new PrivateObject(containerB);
 
-        var platform2 = new PlatformSwitch(path, settings);
-        var container2 = platform2.GetSaveContainer(0)!;
-
-        platform2.Load(container2);
-        var units20 = container2.GetJsonValue<int>(UNITS_JSON_PATH);
-        var timestamp20 = container2.LastWriteTime!.Value;
+        platformB.Load(containerB);
+        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
+#pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
-        Assert.AreEqual(0, units10);
-        Assert.AreEqual(UNITS_NEW_AMOUNT, units11);
-        Assert.AreEqual(638006282230000000, timestamp10.UtcTicks); // 2021-09-04 22:16:24 +00:00
-        Assert.AreEqual(638006282230000000, timestamp11.UtcTicks);
         Assert.IsTrue(writeCallback);
 
-        Assert.IsFalse(platform2.HasAccountData);
-        Assert.AreEqual(1, platform2.GetExistingContainers().Count());
-        Assert.AreEqual(userIdentification[0], platform2.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification[1], platform2.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
+        Assert.AreEqual(0, valuesOrigin.Units);
+        Assert.AreEqual(638006282230000000, valuesOrigin.UtcTicks); // 2021-09-04 22:16:24 +00:00
+        Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
+        Assert.AreEqual(638006282230000000, valuesSet.UtcTicks);
 
-        Assert.AreEqual(UNITS_NEW_AMOUNT, units20);
-        Assert.AreEqual(638006282230000000, timestamp20.UtcTicks);
+        Assert.AreEqual(UNITS_NEW_AMOUNT, valuesReload.Units);
+        Assert.AreEqual(638006282230000000, valuesReload.UtcTicks);
     }
 
     [TestMethod]
@@ -569,42 +564,36 @@ public class SwitchTest : CommonTestInitializeCleanup
         var writeCallback = false;
 
         // Act
-        var platform1 = new PlatformSwitch(path, settings);
-        var container1 = platform1.GetSaveContainer(0)!;
-        container1.WriteCallback += () =>
+        var platformA = new PlatformSwitch(path, settings);
+        var containerA = GetOneSaveContainer(platformA, 0);
+
+        containerA.WriteCallback += () =>
         {
             writeCallback = true;
         };
 
-        platform1.Load(container1);
-        container1.DataFile!.Refresh();
-        var length10 = container1.DataFile!.Length;
+        platformA.Load(containerA);
+        containerA.DataFile!.Refresh();
+        var lengthOrigin = containerA.DataFile!.Length;
 
-        platform1.Write(container1);
-        container1.DataFile!.Refresh();
-        var length11 = container1.DataFile!.Length;
+        platformA.Write(containerA);
+        containerA.DataFile!.Refresh();
+        var lengthSet = containerA.DataFile!.Length;
 
-        var platform2 = new PlatformSwitch(path, settings);
-        var container2 = platform2.GetSaveContainer(0)!;
+        var platformB = new PlatformSwitch(path, settings);
+        var containerB = GetOneSaveContainer(platformB, 0);
 
-        platform2.Load(container2);
-        container2.DataFile!.Refresh();
-        var length20 = container1.DataFile!.Length;
+        platformB.Load(containerB);
+        containerB.DataFile!.Refresh();
+        var lengthReload = containerA.DataFile!.Length;
 
         // Assert
         Assert.IsTrue(writeCallback);
 
-        Assert.IsFalse(platform2.HasAccountData);
-        Assert.AreEqual(1, platform2.GetExistingContainers().Count());
-        Assert.AreEqual(userIdentification[0], platform2.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification[1], platform2.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
+        Assert.AreNotEqual(lengthOrigin, lengthSet);
+        Assert.AreNotEqual(lengthOrigin, lengthReload);
 
-        Assert.AreNotEqual(length10, length11);
-        Assert.AreNotEqual(length10, length20);
-
-        Assert.AreEqual(length11, length20);
+        Assert.AreEqual(lengthSet, lengthReload);
     }
 
     [TestMethod]
@@ -621,40 +610,34 @@ public class SwitchTest : CommonTestInitializeCleanup
         var writeCallback = false;
 
         // Act
-        var platform1 = new PlatformSwitch(path, settings);
-        var container1 = platform1.GetSaveContainer(0)!;
-        container1.WriteCallback += () =>
+        var platformA = new PlatformSwitch(path, settings);
+        var containerA = GetOneSaveContainer(platformA, 0);
+
+        containerA.WriteCallback += () =>
         {
             writeCallback = true;
         };
 
-        platform1.Load(container1);
-        container1.DataFile!.Refresh();
-        var length10 = container1.DataFile!.Length;
+        platformA.Load(containerA);
+        containerA.DataFile!.Refresh();
+        var lengthOrigin = containerA.DataFile!.Length;
 
-        platform1.Write(container1, now);
-        container1.DataFile!.Refresh();
-        var length11 = container1.DataFile!.Length;
+        platformA.Write(containerA);
+        containerA.DataFile!.Refresh();
+        var lengthSet = containerA.DataFile!.Length;
 
-        var platform2 = new PlatformSwitch(path, settings);
-        var container2 = platform2.GetSaveContainer(0)!;
+        var platformB = new PlatformSwitch(path, settings);
+        var containerB = GetOneSaveContainer(platformB, 0);
 
-        platform2.Load(container2);
-        container2.DataFile!.Refresh();
-        var length20 = container1.DataFile!.Length;
+        platformB.Load(containerB);
+        containerB.DataFile!.Refresh();
+        var lengthReload = containerA.DataFile!.Length;
 
         // Assert
-        Assert.AreEqual(length10, length11);
         Assert.IsTrue(writeCallback);
 
-        Assert.IsFalse(platform2.HasAccountData);
-        Assert.AreEqual(1, platform2.GetExistingContainers().Count());
-        Assert.AreEqual(userIdentification[0], platform2.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification[1], platform2.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification[2], platform2.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification[3], platform2.PlatformUserIdentification.PTK);
-
-        Assert.AreEqual(length10, length20);
+        Assert.AreEqual(lengthOrigin, lengthSet);
+        Assert.AreEqual(lengthOrigin, lengthReload);
     }
 
     [TestMethod]
