@@ -27,8 +27,6 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     protected const int META_LENGTH_TOTAL_VANILLA = 0x18 / sizeof(uint); // 6
     protected const int META_LENGTH_TOTAL_WAYPOINT = 0x118 / sizeof(uint); // 70
 
-    protected const int TICK_DIVISOR = 10000;
-
     #endregion
 
     #region containers.index
@@ -656,7 +654,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     public void T10_Write_Default_ContainersIndex()
     {
         var now = DateTimeOffset.UtcNow;
-        var nowTicks = now.UtcTicks / TICK_DIVISOR;
+        var nowTicks = NullifyTicks(now).UtcTicks;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
         var settings = new PlatformSettings
         {
@@ -681,14 +679,14 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
         platformA.Write(containerA, now);
-        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformMicrosoft(path, settings);
         var containerB = platformB.GetAccountContainer()!;
         var containersIndexB = File.ReadAllBytes(Path.Combine(path, "containers.index"));
 
         platformB.Load(containerB);
-        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
 #pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
@@ -709,7 +707,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     public void T11_Write_Default()
     {
         var now = DateTimeOffset.UtcNow;
-        var nowTicks = now.UtcTicks / TICK_DIVISOR;
+        var nowTicks = NullifyTicks(now).UtcTicks;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
         var settings = new PlatformSettings
         {
@@ -731,11 +729,11 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
 #pragma warning disable IDE0042 // Deconstruct variable declaration
         platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
         platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformMicrosoft(path, settings);
         var containerB = GetOneSaveContainer(platformB, 0);
@@ -743,14 +741,14 @@ public class MicrosoftTest : CommonTestInitializeCleanup
         var priectB = new PrivateObject(containerB);
 
         platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
 #pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(1504909789, valuesOrigin.Units);
-        Assert.AreEqual(63812676344462, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
+        Assert.AreEqual(638126763444620000, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
         Assert.AreEqual(nowTicks, valuesSet.UtcTicks);
 
@@ -778,7 +776,7 @@ public class MicrosoftTest : CommonTestInitializeCleanup
     public void T12_Write_Default_Account()
     {
         var now = DateTimeOffset.UtcNow;
-        var nowTicks = now.UtcTicks / TICK_DIVISOR;
+        var nowTicks = NullifyTicks(now).UtcTicks;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
         var settings = new PlatformSettings
         {
@@ -803,14 +801,14 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
         containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
         platformA.Write(containerA, now);
-        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformMicrosoft(path, settings);
         var containerB = platformB.GetAccountContainer()!;
         var metaB = DecryptMeta(containerB);
 
         platformB.Load(containerB);
-        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
 #pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
@@ -851,29 +849,29 @@ public class MicrosoftTest : CommonTestInitializeCleanup
 
 #pragma warning disable IDE0042 // Deconstruct variable declaration
         platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
         platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformMicrosoft(path, settings);
         var containerB = GetOneSaveContainer(platformB, 0);
 
         platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks / TICK_DIVISOR);
+        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
 #pragma warning restore IDE0042 // Deconstruct variable declaration
 
         // Assert
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(1504909789, valuesOrigin.Units);
-        Assert.AreEqual(63812676344462, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
+        Assert.AreEqual(638126763444620000, valuesOrigin.UtcTicks); // 2023-02-22 15:25:44 +00:00
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesSet.Units);
-        Assert.AreEqual(63812676344462, valuesSet.UtcTicks);
+        Assert.AreEqual(638126763444620000, valuesSet.UtcTicks);
 
         Assert.AreEqual(UNITS_NEW_AMOUNT, valuesReload.Units);
-        Assert.AreEqual(63812676344462, valuesReload.UtcTicks);
+        Assert.AreEqual(638126763444620000, valuesReload.UtcTicks);
     }
 
     [TestMethod]

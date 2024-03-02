@@ -155,8 +155,10 @@ public class SteamTest : CommonTestInitializeCleanup
             (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, GameVersionEnum.Fractal, "Playground", "Within Rigonn-Enve Outpost"), // 2Manual
             (6, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony"), // 4Auto
             (7, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony"), // 4Manual
+            (8, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4147, GameVersionEnum.Omega, "Omega Permadeath", "Auf dem Planeten (Treeph)"), // 5Auto
             (10, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "", "On Planet (Ekios)"), // 6Auto
             (11, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "", "On Planet (Ekios)"), // 6Manual
+            (12, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Relaxed, SeasonEnum.None, 4147, GameVersionEnum.Omega, "Omega Relax", "Auf dem Planeten (Joyo 86/Y2)"), // 7Auto
             (22, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "Collector", "Aboard the Space Anomaly"), // 12Auto
             (23, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4142, GameVersionEnum.WaypointWithSuperchargedSlots, "Collector", "Aboard the Space Anomaly"), // 12Manual
         };
@@ -346,9 +348,9 @@ public class SteamTest : CommonTestInitializeCleanup
             (15, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, GameVersionEnum.Echoes, "The Cartographers Redux", "Aboard the Space Anomaly"), // 8Manual
             (16, true, false, true, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.VoyagersRedux, 4146, GameVersionEnum.Echoes, "Voyagers Redux", "On freighter (DSE-6 Ariasaku)"), // 9Auto
             (17, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, GameVersionEnum.Echoes, "Voyagers Redux", "On freighter (DSE-6 Ariasaku)"), // 9Manual
-            (20, true, false, true, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.OmegaExperimental, 4147, GameVersionEnum.Omega, "Omega", "Aboard the Space Anomaly"), // 11Auto
-            (21, true, false, true, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.OmegaExperimental, 4147, GameVersionEnum.Omega, "Omega", "Aboard the Space Anomaly"), // 11Manual
-            (22, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4147, GameVersionEnum.Omega, "", "Aboard the Space Anomaly"), // 12Auto
+            (20, true, false, true, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.OmegaExperimental, 4147, GameVersionEnum.Omega, "Omega", "Aboard the Space Anomaly"), // 11Auto
+            (21, true, false, true, PresetGameModeEnum.Seasonal, DifficultyPresetTypeEnum.Normal, SeasonEnum.OmegaExperimental, 4147, GameVersionEnum.Omega, "Omega", "Aboard the Space Anomaly"), // 11Manual
+            (22, true, false, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4147, GameVersionEnum.Omega, "", "Aboard the Space Anomaly"), // 12Auto
         };
         var settings = new PlatformSettings
         {

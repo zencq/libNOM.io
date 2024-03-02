@@ -10,7 +10,8 @@ internal static class DateTimeOffsetExtensions
     /// <returns></returns>
     internal static DateTimeOffset NullifyTicks(this DateTimeOffset self, int digits)
     {
-        return self.Subtract(new TimeSpan((long)(Math.Pow(10, digits))));
+        var ticks = self.Ticks % (long)(Math.Pow(10, digits)); // get last four digits
+        return self.Subtract(new TimeSpan(ticks));
     }
 
     internal static DateTimeOffset? NullifyTicks(this DateTimeOffset? self, int digits) => self?.NullifyTicks(digits);

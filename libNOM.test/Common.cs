@@ -24,6 +24,7 @@ public class CommonTestInitializeCleanup
     protected static readonly int[] MUSICVOLUME_INDICES = [1, 7];
     protected const string MUSICVOLUME_JSON_PATH = "UserSettingsData.MusicVolume";
     protected const int MUSICVOLUME_NEW_AMOUNT = 100;
+    protected const long TICK_DIVISOR = 10000;
     protected static readonly int[] UNITS_INDICES = [2, 48];
     protected const string UNITS_JSON_PATH = "PlayerStateData.Units";
     protected const int UNITS_NEW_AMOUNT = 29070100;
@@ -169,6 +170,12 @@ public class CommonTestInitializeCleanup
     protected static IEnumerable<Container> GetWatcherChangeContainers(Platform platform)
     {
         return platform.GetSaveContainers().Where(i => i.HasWatcherChange);
+    }
+
+    internal static DateTimeOffset NullifyTicks(DateTimeOffset timestamp)
+    {
+        var ticks = timestamp.Ticks % TICK_DIVISOR; // get last four digits
+        return timestamp.Subtract(new TimeSpan(ticks));
     }
 
     protected static string[] ReadUserIdentification(string path)

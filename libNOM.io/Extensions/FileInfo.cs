@@ -37,7 +37,6 @@ internal static class FileInfoExtensions
     /// <param name="bytes"></param>
     internal static void WriteAllBytes(this FileInfo self, ReadOnlySpan<byte> bytes)
     {
-        if (self.Exists)
-            File.WriteAllBytes(self.FullName, bytes.ToArray());
+        File.WriteAllBytes(self.FullName, bytes.ToArray());
     }
 }

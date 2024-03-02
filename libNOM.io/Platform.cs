@@ -765,7 +765,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     private static void ProcessContainerData(Container container, string json, bool force)
     {
         // Values relevant for AccountData first.
-        if (container.SaveVersion == 0 || force)
+        if (container.SaveVersion <= 0 || force)
             container.SaveVersion = Meta.SaveVersion.Get(json);
 
         // Then all independent values.
@@ -779,7 +779,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (container.GameMode == PresetGameModeEnum.Seasonal && container.Season == SeasonEnum.None || force)
             container.Season = Meta.Season.Get(json); // needs GameMode
 
-        if (container.BaseVersion == 0 || force)
+        if (container.BaseVersion <= 0 || force)
             container.BaseVersion = Meta.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
 
         if (container.GameVersion == GameVersionEnum.Unknown)

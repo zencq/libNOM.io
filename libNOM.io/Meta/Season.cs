@@ -43,15 +43,17 @@ internal static partial class Season
         if (jsonObject is null)
             return SeasonEnum.None;
 
-        return SeasonIdToEnum(jsonObject.GetValue<int>("SEASON_ID"));
+        // SEASON_ID works in most case, SEASON_ID_LEGACY was only used for the first few
+        var id = jsonObject.GetValue<int?>("SEASON_ID", SaveContextQueryEnum.Season) ?? jsonObject.GetValue<int?>("SEASON_ID_LEGACY") ?? 0;
+        return SeasonIdToEnum(id);
     }
 
     /// <inheritdoc cref="Get(JObject?)"/>
     /// <param name="json"></param>
     internal static SeasonEnum Get(string? json)
     {
-        if (Regexes.Match(json)?.ToInt32Value() is int value)
-            return SeasonIdToEnum(value);
+        if (Regexes.Match(json)?.ToInt32Value() is int id)
+            return SeasonIdToEnum(id);
 
         return SeasonEnum.None;
     }

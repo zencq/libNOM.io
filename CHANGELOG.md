@@ -15,11 +15,13 @@ All notable changes to this project will be documented in this file. It uses the
     * New property CanSwitchContext to indicated whether it is possible to switch between primary save and expedition
 * Omega Expedition
 ### Changed
+* `GetSaveContainers` replaces all previous SaveContainer getter
 * Bump CommunityToolkit.Diagnostics from 8.2.1 to 8.2.2
 * Bump CommunityToolkit.HighPerformance from 8.2.1 to 8.2.2
 * Bump libNOM.map from 0.9.2 to 0.10.0
 ### Deprecated
 ### Removed
+* `GetMaximumSlots` but you can still get it with `GetSaveContainers().Count() / 2`
 ### Fixed
 * If JObject is set in a Container, ensure it will be stored with the configured obfuscation
 ### Security

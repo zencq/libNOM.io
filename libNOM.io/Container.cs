@@ -375,7 +375,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     {
         get
         {
-            if (Extra.BaseVersion == 0)
+            if (Extra.BaseVersion <= 0)
                 Extra = Extra with { BaseVersion = SaveVersion - (((int)(GameMode) + ((int)(Season) * Constants.OFFSET_SEASON)) * Constants.OFFSET_GAMEMODE) };
 
             return Extra.BaseVersion;
@@ -430,7 +430,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
     {
         get
         {
-            if (_saveVersion == -1)
+            if (_saveVersion <= 0)
                 _saveVersion = _jsonObject?.GetValue<int>("VERSION") ?? -1;
 
             return _saveVersion;

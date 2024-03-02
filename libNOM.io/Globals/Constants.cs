@@ -59,6 +59,7 @@ public static class Constants
         { "PLATFORM", [ "8>q", "Platform" ] },
         { "SAVE_NAME", [ "6f=.Pk4", "PlayerStateData.SaveName", "<h0.Pk4", "CommonStateData.SaveName" ] },
         { "SEASON_ID", [ "6f=.Rol.gou", "PlayerStateData.SeasonData.SeasonId", "<h0.Rol.gou", "CommonStateData.SeasonData.SeasonId" ] },
+        { "SEASON_ID_LEGACY", [ "6f=.TFZ.gou", "PlayerStateData.SeasonalData.SeasonId" ] },
         { "TOTAL_PLAY_TIME", [ "6f=.Lg8", "PlayerStateData.TotalPlayTime", "<h0.Lg8", "CommonStateData.TotalPlayTime" ] },
         { "TRANSFER_UID_BYTEBEAT", [ "6f=.8iI.ON4[?(@.m7b == '{0}')]", "PlayerStateData.ByteBeatLibrary.MySongs[?(@.AuthorOnlineID == '{0}')]", "<h0.8iI.ON4[?(@.m7b == '{0}')]", "CommonStateData.ByteBeatLibrary.MySongs[?(@.AuthorOnlineID == '{0}')]" ] },
         { "TRANSFER_UID_DISCOVERY", [ "fDu.ETO.OsQ.?fB..[?(@.K7E == '{0}')]", "DiscoveryManagerData.DiscoveryData-v1.Store.Record..[?(@.UID == '{0}')]" ] },
