@@ -1,4 +1,8 @@
-﻿namespace libNOM.io.Globals;
+﻿using System.Reflection;
+
+using CommunityToolkit.Diagnostics;
+
+namespace libNOM.io.Globals;
 
 
 public static class Convert
@@ -44,7 +48,7 @@ public static class Convert
 
         // ...so just throw an exception if container is null.
         if (container?.IsCompatible != true)
-            throw new InvalidOperationException("The specified file does not contain valid data.");
+            ThrowHelper.ThrowInvalidOperationException("The specified file does not contain valid data.");
 
         ToJson(container, path, indented, deobfuscated);
     }
@@ -85,12 +89,12 @@ public static class Convert
     public static void ToJson(Container container, string? path, bool indented, bool deobfuscated)
     {
         if (string.IsNullOrWhiteSpace(path))
-        {
             path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
-        }
+
+        var name = container.DataFile?.Name ?? Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "libNOM.io";
 
         var result = container.GetJsonObject().GetString(indented, !deobfuscated); // throws InvalidOperationException if not loaded
-        var file = Path.Combine(path, $"{container.DataFile?.Name ?? ("libNOM.io.JSON")}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json");
+        var file = Path.Combine(path, $"{name}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json");
 
         File.WriteAllText(file, result);
     }
@@ -125,7 +129,9 @@ public static class Convert
     /// <exception cref="InvalidDataException"></exception>
     public static void ToSaveFile(string file, string? path, PlatformEnum targetPlatform)
     {
-        Platform? platform = targetPlatform switch
+        // Method contains all relevant checks so just throw an exception if container is null.
+        var container = GetContainer(file) ?? throw new InvalidDataException("Unable to read input file.");
+        Platform platform = targetPlatform switch
         {
             PlatformEnum.Gog => new PlatformGog(),
             PlatformEnum.Microsoft => new PlatformMicrosoft(),
@@ -135,19 +141,18 @@ public static class Convert
             _ => throw new InvalidDataException("The specified output platform is not yet supported."),
         };
 
-        // Method contains all relevant checks so just throw an exception if container is null.
-        var container = GetContainer(file) ?? throw new InvalidDataException("Unable to read input file.");
-
         if (string.IsNullOrWhiteSpace(path))
-        {
             path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
-        }
+
         var name = $"{container.DataFile?.Name ?? ("libNOM.io")}.{platform}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}";
 
         // Set new files the converted content will be written to.
         container.DataFile = new FileInfo(Path.Combine(path, $"{name}.data"));
         container.MetaFile = new FileInfo(Path.Combine(path, $"{name}.meta"));
-        container.Exists = true;
+        container.Exists = true; // fake it be able to create the data
+        container.IsSynced = true;
+
+        container.SetPlatform(platform); // necessary to be able to prepare the files correctly
 
         platform.JustWrite(container);
     }
@@ -169,10 +174,7 @@ public static class Convert
         {
             container = PlatformCollection.AnalyzeFile(input!);
         }
-        catch
-        {
-            // Nothing to do.
-        }
+        catch { } // use fallback below
         if (container is null && File.Exists(input))
         {
             ReadOnlySpan<byte> bytes;
@@ -182,8 +184,7 @@ public static class Convert
             }
             catch
             {
-                // Nothing we can do anymore.
-                return null;
+                return null; // nothing we can do anymore
             }
 
             container = new Container(-1, null!) { DataFile = new(input) };
