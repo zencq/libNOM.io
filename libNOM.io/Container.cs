@@ -3,6 +3,7 @@
 using CommunityToolkit.Diagnostics;
 
 using libNOM.io.Delegates;
+using libNOM.io.Interfaces;
 using libNOM.map;
 
 using Newtonsoft.Json.Linq;
@@ -13,7 +14,7 @@ namespace libNOM.io;
 /// <summary>
 /// Holds all information about a single save.
 /// </summary>
-public class Container : IComparable<Container>, IEquatable<Container>
+public class Container : IContainer
 {
     #region Field
 
@@ -29,29 +30,14 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     // public //
 
-    /// <summary>
-    /// List of related backups.
-    /// </summary>
     public ObservableCollection<Container> BackupCollection { get; } = [];
 
-    /// <summary>
-    /// Identifier of the save containing the slot number and save type.
-    /// </summary>
     public string Identifier { get; }
 
-    /// <summary>
-    /// If the incompatibility was caused by an unexpected exception, it stored here.
-    /// </summary>
     public Exception? IncompatibilityException { get; internal set; }
 
-    /// <summary>
-    /// A tag with information why this save is incompatible. To see what reasons are available have a look at <see cref="Globals.Constants"/>.INCOMPATIBILITY_\d{3}.
-    /// </summary>
     public string? IncompatibilityTag { get; internal set; }
 
-    /// <summary>
-    /// List of unknown keys collected during deobfuscation.
-    /// </summary>
     public HashSet<string> UnknownKeys { get; set; } = [];
 
     // internal //
@@ -64,64 +50,28 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Flags
 
-    /// <summary>
-    /// Whether it is possible to switch context between the main/primary save and an active expedition/season.
-    /// </summary>
     public bool CanSwitchContext => IsLoaded && _jsonObject!.ContainsKey(Json.GetPath("BASE_CONTEXT", _jsonObject)) && _jsonObject!.ContainsKey(Json.GetPath("EXPEDITION_CONTEXT", _jsonObject!)); // { get; }
 
-    /// <summary>
-    /// Whether this is a save with an ongoing expedition (<see cref="PresetGameModeEnum.Seasonal"/>).
-    /// </summary>
     public bool HasActiveExpedition => GameMode == PresetGameModeEnum.Seasonal || (IsLoaded && _jsonObject!.ContainsKey(Json.GetPath("EXPEDITION_CONTEXT", _jsonObject!))); // { get; }
 
-    /// <summary>
-    /// Whether this contains potential user owned bases.
-    /// </summary>
     public bool HasBase => IsLoaded && GetJsonValues<PersistentBaseTypesEnum>("PERSISTENT_PLAYER_BASE_ALL_TYPES", ActiveContext).Distinct().Any(i => i is PersistentBaseTypesEnum.HomePlanetBase or PersistentBaseTypesEnum.FreighterBase); // { get; }
 
-    /// <summary>
-    /// Whether this contains a user owned freighter.
-    /// </summary>
     public bool HasFreighter => IsLoaded && GetJsonValues<double>("FREIGHTER_POSITION", ActiveContext).Any(i => i != 0.0); // { get; }
 
-    /// <summary>
-    /// Whether this contains a potential user owned settlement.
-    /// </summary>
     public bool HasSettlement => IsLoaded && GetJsonValues<string>("SETTLEMENT_ALL_OWNER_LID", ActiveContext).Any(i => !string.IsNullOrEmpty(i)); // { get; }
 
-    /// <summary>
-    /// Whether this contains account data and is not a regular save.
-    /// </summary>
     public bool IsAccount => PersistentStorageSlot == StoragePersistentSlotEnum.AccountData; // { get; }
 
-    /// <summary>
-    /// Whether this is a backup.
-    /// </summary>
     public bool IsBackup { get; internal set; }
 
-    /// <summary>
-    /// Whether this was correctly loaded and no exception or an other reason occurred while loading that made it incompatible.
-    /// </summary>
     public bool IsCompatible => Exists && string.IsNullOrEmpty(IncompatibilityTag); // { get; }
 
-    /// <summary>
-    /// Whether this contains loaded JSON data and is ready to use.
-    /// </summary>
     public bool IsLoaded => IsCompatible && _jsonObject is not null; // { get; }
 
-    /// <summary>
-    /// Whether this is older than the lowest supported version.
-    /// </summary>
     public bool IsOld => Exists && IsSave && GameVersion < Constants.LOWEST_SUPPORTED_VERSION; // { get; }
 
-    /// <summary>
-    /// Whether this is an actual save and not something else like account data.
-    /// </summary>
     public bool IsSave => PersistentStorageSlot >= StoragePersistentSlotEnum.PlayerState1; // { get; }
 
-    /// <summary>
-    /// Whether this is identical to the data on the drive.
-    /// </summary>
     public bool IsSynced { get; set; } = true;
 
     public bool IsVersion211BeyondWithVehicleCam => IsVersion(GameVersionEnum.BeyondWithVehicleCam); // { get; }
@@ -216,19 +166,10 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Index
 
-    /// <summary>
-    /// Starts at 0 for PlayerState1, AccountData will be -2.
-    /// </summary>
     public int CollectionIndex { get; }
 
-    /// <summary>
-    /// Starts at 0 for AccountData, PlayerState1 will be 2.
-    /// </summary>
     public int MetaIndex { get; }
 
-    /// <summary>
-    /// Starts at 0 for PlayerState1 and PlayerState2, AccountData will be -1.
-    /// </summary>
     public int SlotIndex { get; }
 
     #endregion
@@ -248,7 +189,7 @@ public class Container : IComparable<Container>, IEquatable<Container>
         }
     }
 
-    public DifficultyPresetTypeEnum GameDifficulty // { get; set; }
+    public DifficultyPresetTypeEnum Difficulty // { get; set; }
     {
         get
         {
@@ -454,95 +395,44 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     #region Getter
 
-    /// <summary>
-    /// Gets the entire JSON object.
-    /// </summary>
-    /// <returns></returns>
     public JObject GetJsonObject()
     {
         ThrowHelperIsLoaded();
         return _jsonObject!;
     }
 
-    /// <inheritdoc cref="GetJsonToken(string, SaveContextQueryEnum)"/>
-    /// <summary>
-    /// Gets a JSON element that matches the JSONPath expression.
-    /// For saves from Omega and up this will use the active context if the path goes there and you use "{0}.PlayerStateData" in the expression.
-    /// </summary>
     public JToken? GetJsonToken(string pathIdentifier) => GetJsonToken(pathIdentifier, ActiveContext);
 
-    /// <summary>
-    /// Gets a JSON element that matches the JSONPath expression.
-    /// For saves from Omega and up this will use the specified context if the path goes there and you use "{0}.PlayerStateData" in the expression.
-    /// </summary>
-    /// <param name="pathIdentifier">A JSONPath expressions.</param>
-    /// <param name="context"></param>
-    /// <returns></returns>
     public JToken? GetJsonToken(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
         return _jsonObject!.GetValue<JToken>(pathIdentifier, context);
     }
 
-    /// <inheritdoc cref="GetJsonTokens(string, SaveContextQueryEnum)"/>
-    /// <summary>
-    /// Gets a collection of JSON elements that matches the JSONPath expression.
-    /// For saves from Omega and up this will use the active context if the path goes there and you use "{0}.PlayerStateData" in the expression.
-    /// </summary>
     public IEnumerable<JToken> GetJsonTokens(string pathIdentifier) => GetJsonTokens(pathIdentifier, ActiveContext);
 
-    /// <summary>
-    /// Gets a collection of JSON elements that matches the JSONPath expression.
-    /// For saves from Omega and up this will use the specified context if the path goes there and you use "{0}.PlayerStateData" in the expression.
-    /// </summary>
-    /// <param name="pathIdentifier">A JSONPath expressions.</param>
-    /// <param name="context"></param>
-    /// <returns></returns>
     public IEnumerable<JToken> GetJsonTokens(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
         return _jsonObject!.GetValues<JToken>(pathIdentifier, context);
     }
 
-    /// <summary>
-    /// Gets the value of the JSON element that matches the path of indices.
-    /// Except the last one, each index in the entire path must point to either a JArray or a JObject.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="indices"></param>
-    /// <returns>The value at the end of the path of indices.</returns>
     public T? GetJsonValue<T>(ReadOnlySpan<int> indices)
     {
         ThrowHelperIsLoaded();
         return _jsonObject!.GetValue<T>(indices);
     }
 
-    /// <inheritdoc cref="GetJsonValue{T}(string, SaveContextQueryEnum)"/>
     public T? GetJsonValue<T>(string pathIdentifier) => GetJsonValue<T>(pathIdentifier, ActiveContext);
 
-    /// <summary>
-    /// Gets the actual value of the JSON element that matches the JSONPath expression.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="pathIdentifier">A JSONPath expressions.</param>
-    /// <param name="context"></param>
-    /// <returns></returns>
     public T? GetJsonValue<T>(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
         return _jsonObject!.GetValue<T>(pathIdentifier, context);
     }
 
-    /// <inheritdoc cref="GetJsonValue{T}(string, SaveContextQueryEnum)"/>
     public IEnumerable<T?> GetJsonValues<T>(string pathIdentifier) => GetJsonValues<T>(pathIdentifier, ActiveContext);
 
-    /// <summary>
-    /// Gets the actual values of all JSON elements that matches the JSONPath expression.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="pathIdentifier">A JSONPath expressions.</param>
-    /// <param name="context">A JSONPath expressions.</param>
-    /// <returns></returns>
     public IEnumerable<T?> GetJsonValues<T>(string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
@@ -723,11 +613,6 @@ public class Container : IComparable<Container>, IEquatable<Container>
 
     // public //
 
-    /// <summary>
-    /// Whether the save is up-to-date to the specified version of the game.
-    /// </summary>
-    /// <param name="versionEnum"></param>
-    /// <returns></returns>
     public bool IsVersion(GameVersionEnum versionEnum)
     {
         return GameVersion >= versionEnum;
@@ -756,22 +641,22 @@ public class Container : IComparable<Container>, IEquatable<Container>
     }
 
     /// <summary>
-    /// Resets the container to the default state except for properties set in ctor.
+    /// Resets the container to the default state except for properties set in ctor (except Extra).
     /// </summary>
     internal void Reset()
     {
+        _gameVersion = GameVersionEnum.Unknown;
         _exists = null;
         _jsonObject = null;
+        _saveVersion = -1;
 
         BackupCollection.Clear();
+        Extra = new();
+        IsSynced = true;
         UserIdentification = null;
         UnknownKeys.Clear();
 
         ClearIncompatibility();
-
-        Extra = new();
-        IsSynced = true;
-
         RefreshFileInfo();
         ResolveWatcherChange();
     }

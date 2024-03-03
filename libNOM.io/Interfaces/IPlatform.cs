@@ -108,6 +108,13 @@ public interface IPlatform
     public Container? GetAccountContainer();
 
     /// <summary>
+    /// Gets a specific <see cref="Container"/> with save data.
+    /// </summary>
+    /// <param name="index">The ColletionIndex of the save to get.</param>
+    /// <returns></returns>
+    public Container? GetSaveContainer(int index);
+
+    /// <summary>
     /// Gets all possible <see cref="Container"/> with save data, that then can be filtered further.
     /// Here are some examples:
     /// <code>Where(i => i.Exists)</code> to get those that are actually exist.

@@ -192,7 +192,7 @@ public class CollectionTest : CommonTestInitializeCleanup
         Assert.AreEqual(result.Exists, container.Exists);
         Assert.AreEqual(result.IsOld, container.IsOld);
         Assert.AreEqual(result.GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(result.GameDifficulty, container.GameDifficulty);
+        Assert.AreEqual(result.GameDifficulty, container.Difficulty);
         Assert.AreEqual(result.Season, container.Season);
         Assert.AreEqual(result.BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(result.Version, container.GameVersion);
@@ -215,7 +215,7 @@ public class CollectionTest : CommonTestInitializeCleanup
         Assert.AreEqual(result.Exists, container.Exists);
         Assert.AreEqual(result.IsOld, container.IsOld);
         Assert.AreEqual(result.GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(result.GameDifficulty, container.GameDifficulty);
+        Assert.AreEqual(result.GameDifficulty, container.Difficulty);
         Assert.AreEqual(result.Season, container.Season);
         Assert.AreEqual(result.BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(result.Version, container.GameVersion);
@@ -252,7 +252,7 @@ public class CollectionTest : CommonTestInitializeCleanup
         Assert.AreEqual(result.Exists, container.Exists);
         Assert.AreEqual(result.IsOld, container.IsOld);
         Assert.AreEqual(result.GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(result.GameDifficulty, container.GameDifficulty);
+        Assert.AreEqual(result.GameDifficulty, container.Difficulty);
         Assert.AreEqual(result.Season, container.Season);
         Assert.AreEqual(result.BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(result.Version, container.GameVersion);
@@ -278,7 +278,7 @@ public class CollectionTest : CommonTestInitializeCleanup
         Assert.AreEqual(result.Exists, container.Exists);
         Assert.AreEqual(result.IsOld, container.IsOld);
         Assert.AreEqual(result.GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(result.GameDifficulty, container.GameDifficulty);
+        Assert.AreEqual(result.GameDifficulty, container.Difficulty);
         Assert.AreEqual(result.Season, container.Season);
         Assert.AreEqual(result.BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(result.Version, container.GameVersion);
@@ -304,7 +304,7 @@ public class CollectionTest : CommonTestInitializeCleanup
         Assert.AreEqual(result.Exists, container.Exists);
         Assert.AreEqual(result.IsOld, container.IsOld);
         Assert.AreEqual(result.GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(result.GameDifficulty, container.GameDifficulty);
+        Assert.AreEqual(result.GameDifficulty, container.Difficulty);
         Assert.AreEqual(result.Season, container.Season);
         Assert.AreEqual(result.BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(result.Version, container.GameVersion);

@@ -84,7 +84,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
             Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(results[i].SeasonEnum, container.Season);
             Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
@@ -125,7 +125,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
             Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(results[i].SeasonEnum, container.Season);
             Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
@@ -166,7 +166,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
             Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(results[i].SeasonEnum, container.Season);
             Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
@@ -209,7 +209,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
             Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(results[i].SeasonEnum, container.Season);
             Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
@@ -253,7 +253,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(results[i].Exists, container.Exists);
             Assert.AreEqual(results[i].IsOld, container.IsOld);
             Assert.AreEqual(results[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(results[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(results[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(results[i].SeasonEnum, container.Season);
             Assert.AreEqual(results[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(results[i].GameVersionEnum, container.GameVersion);
@@ -443,7 +443,7 @@ public class SwitchTest : CommonTestInitializeCleanup
         AssertAllAreEqual(63873, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[7], metaB[7]);
         AssertAllAreEqual("", containerA.SaveName, containerB.SaveName, GetString(bytesA.Skip(40).TakeWhile(i => i != 0)), GetString(bytesB.Skip(40).TakeWhile(i => i != 0)));
         AssertAllAreEqual("登上Inzadg球体", containerA.SaveSummary, containerB.SaveSummary, GetString(bytesA.Skip(168).TakeWhile(i => i != 0)), GetString(bytesB.Skip(168).TakeWhile(i => i != 0)));
-        AssertAllAreEqual((byte)(DifficultyPresetTypeEnum.Custom), (byte)(containerA.GameDifficulty), (byte)(containerB.GameDifficulty), bytesA[296], bytesB[296]);
+        AssertAllAreEqual((byte)(DifficultyPresetTypeEnum.Custom), (byte)(containerA.Difficulty), (byte)(containerB.Difficulty), bytesA[296], bytesB[296]);
     }
 
     [TestMethod]
@@ -739,7 +739,7 @@ public class SwitchTest : CommonTestInitializeCleanup
 
         Assert.IsTrue(container2.Exists);
         Assert.AreEqual((PresetGameModeEnum)(priect0.GetFieldOrProperty("GameMode")), (PresetGameModeEnum)(priect2.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(container0.GameDifficulty, container2.GameDifficulty);
+        Assert.AreEqual(container0.Difficulty, container2.Difficulty);
         Assert.AreEqual(container0.Season, container2.Season);
         Assert.AreEqual((int)(priect0.GetFieldOrProperty("BaseVersion")), (int)(priect2.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(container0.GameVersion, container2.GameVersion);
@@ -747,7 +747,7 @@ public class SwitchTest : CommonTestInitializeCleanup
 
         Assert.IsTrue(container1.Exists);
         Assert.AreEqual((PresetGameModeEnum)(priect0.GetFieldOrProperty("GameMode")), (PresetGameModeEnum)(priect1.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(container0.GameDifficulty, container1.GameDifficulty);
+        Assert.AreEqual(container0.Difficulty, container1.Difficulty);
         Assert.AreEqual(container0.Season, container1.Season);
         Assert.AreEqual((int)(priect0.GetFieldOrProperty("BaseVersion")), (int)(priect1.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(container0.GameVersion, container1.GameVersion);
@@ -802,7 +802,7 @@ public class SwitchTest : CommonTestInitializeCleanup
         var priect4 = new PrivateObject(container4);
 
         var gameModeEnum2 = (PresetGameModeEnum)(priect2.GetFieldOrProperty("GameMode"));
-        var gameDifficultyEnum2 = container2.GameDifficulty;
+        var gameDifficultyEnum2 = container2.Difficulty;
         var seasonEnum2 = container2.Season;
         var baseVersion2 = (int)(priect2.GetFieldOrProperty("BaseVersion"));
         var versionEnum2 = container2.GameVersion;
@@ -813,7 +813,7 @@ public class SwitchTest : CommonTestInitializeCleanup
         platform.Move(container1, container0); // delete
 
         var gameModeEnum4 = (PresetGameModeEnum)(priect4.GetFieldOrProperty("GameMode"));
-        var gameDifficultyEnum4 = container4.GameDifficulty;
+        var gameDifficultyEnum4 = container4.Difficulty;
         var seasonEnum4 = container4.Season;
         var baseVersion4 = (int)(priect4.GetFieldOrProperty("BaseVersion"));
         var versionEnum4 = container4.GameVersion;
@@ -826,7 +826,7 @@ public class SwitchTest : CommonTestInitializeCleanup
 
         Assert.IsFalse(container2.Exists); Assert.IsTrue(container5.Exists);
         Assert.AreEqual(gameModeEnum2, (PresetGameModeEnum)(priect5.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(gameDifficultyEnum2, container5.GameDifficulty);
+        Assert.AreEqual(gameDifficultyEnum2, container5.Difficulty);
         Assert.AreEqual(seasonEnum2, container5.Season);
         Assert.AreEqual(baseVersion2, (int)(priect5.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(versionEnum2, container5.GameVersion);
@@ -839,7 +839,7 @@ public class SwitchTest : CommonTestInitializeCleanup
 
         Assert.IsFalse(container4.Exists); Assert.IsTrue(container9.Exists);
         Assert.AreEqual(gameModeEnum4, (PresetGameModeEnum)(priect9.GetFieldOrProperty("GameMode")));
-        Assert.AreEqual(gameDifficultyEnum4, container9.GameDifficulty);
+        Assert.AreEqual(gameDifficultyEnum4, container9.Difficulty);
         Assert.AreEqual(seasonEnum4, container9.Season);
         Assert.AreEqual(baseVersion4, (int)(priect9.GetFieldOrProperty("BaseVersion")));
         Assert.AreEqual(versionEnum4, container9.GameVersion);
@@ -905,7 +905,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(resultsGog[i].Exists, container.Exists);
             Assert.AreEqual(resultsGog[i].IsOld, container.IsOld);
             Assert.AreEqual(resultsGog[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(resultsGog[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsGog[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(resultsGog[i].Season, container.Season);
             Assert.AreEqual(resultsGog[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(resultsGog[i].Version, container.GameVersion);
@@ -969,7 +969,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(resultsMicrosoft[i].Exists, container.Exists);
             Assert.AreEqual(resultsMicrosoft[i].IsOld, container.IsOld);
             Assert.AreEqual(resultsMicrosoft[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(resultsMicrosoft[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsMicrosoft[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(resultsMicrosoft[i].Season, container.Season);
             Assert.AreEqual(resultsMicrosoft[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(resultsMicrosoft[i].Version, container.GameVersion);
@@ -1035,7 +1035,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
             Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
             Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
             Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
@@ -1101,7 +1101,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
             Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
             Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
             Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
@@ -1167,7 +1167,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(resultsSteam[i].Exists, container.Exists);
             Assert.AreEqual(resultsSteam[i].IsOld, container.IsOld);
             Assert.AreEqual(resultsSteam[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(resultsSteam[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsSteam[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(resultsSteam[i].Season, container.Season);
             Assert.AreEqual(resultsSteam[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(resultsSteam[i].Version, container.GameVersion);
@@ -1232,7 +1232,7 @@ public class SwitchTest : CommonTestInitializeCleanup
             Assert.AreEqual(resultsSwitch[i].Exists, container.Exists);
             Assert.AreEqual(resultsSwitch[i].IsOld, container.IsOld);
             Assert.AreEqual(resultsSwitch[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-            Assert.AreEqual(resultsSwitch[i].GameDifficulty, container.GameDifficulty);
+            Assert.AreEqual(resultsSwitch[i].GameDifficulty, container.Difficulty);
             Assert.AreEqual(resultsSwitch[i].Season, container.Season);
             Assert.AreEqual(resultsSwitch[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
             Assert.AreEqual(resultsSwitch[i].Version, container.GameVersion);

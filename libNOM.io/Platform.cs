@@ -151,6 +151,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public Container GetAccountContainer() => AccountContainer;
 
+    public Container? GetSaveContainer(int collectionIndex) => SaveContainerCollection.FirstOrDefault(i => i.CollectionIndex == collectionIndex);
+
     public IEnumerable<Container> GetSaveContainers() => SaveContainerCollection;
 
     // protected //
@@ -785,8 +787,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (container.GameVersion == GameVersionEnum.Unknown)
             container.GameVersion = Meta.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
 
-        if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-            container.GameDifficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
+        if (container.Difficulty == DifficultyPresetTypeEnum.Invalid || force)
+            container.Difficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
 
         if (container.IsVersion400Waypoint) // needs GameVersion
         {
@@ -973,7 +975,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
 
             writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2), SeekOrigin.Begin);
-            writer.Write((byte)(container.GameDifficulty)); // 1
+            writer.Write((byte)(container.Difficulty)); // 1
         }
     }
 

@@ -34,10 +34,10 @@ public class GameModeTest : CommonTestInitializeCleanup
         Assert.AreEqual(PresetGameModeEnum.Survival, GetPrivateFieldOrProperty<PresetGameModeEnum>(survival, "GameMode"));
         Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
 
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.Difficulty);
     }
 
     [TestMethod]
@@ -64,10 +64,10 @@ public class GameModeTest : CommonTestInitializeCleanup
         Assert.AreEqual(PresetGameModeEnum.Survival, GetPrivateFieldOrProperty<PresetGameModeEnum>(survival, "GameMode"));
         Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
 
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.Difficulty);
     }
 
     [TestMethod]
@@ -98,12 +98,12 @@ public class GameModeTest : CommonTestInitializeCleanup
         Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
         Assert.AreEqual(PresetGameModeEnum.Seasonal, GetPrivateFieldOrProperty<PresetGameModeEnum>(seasonal, "GameMode"));
 
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Relaxed, relaxed.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, seasonal.GameDifficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Relaxed, relaxed.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, seasonal.Difficulty);
     }
 
     [TestMethod]
@@ -134,11 +134,11 @@ public class GameModeTest : CommonTestInitializeCleanup
         Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
         Assert.AreEqual(PresetGameModeEnum.Seasonal, GetPrivateFieldOrProperty<PresetGameModeEnum>(seasonal, "GameMode"));
 
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Relaxed, relaxed.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, seasonal.GameDifficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Relaxed, relaxed.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, seasonal.Difficulty);
     }
 }
