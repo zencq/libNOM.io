@@ -1,10 +1,11 @@
 ﻿using System.Text;
 
-using Aspose.Zip;
-
 using libNOM.io;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using SharpCompress.Archives;
+using SharpCompress.Common;
 
 namespace libNOM.test;
 
@@ -200,11 +201,59 @@ public class CommonTestInitializeCleanup
 
         if (!Directory.Exists(template))
         {
-            using var zipArchive = new Archive($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new ArchiveLoadOptions()
+            //using SharpCompress.Archives;
+            //using SharpCompress.Common;
+            Directory.CreateDirectory(template);
+            using var zipArchive = ArchiveFactory.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
             {
-                DecryptionPassword = Properties.Resources.TESTSUITE_PASSWORD,
+                Password = Properties.Resources.TESTSUITE_PASSWORD,
             });
-            zipArchive.ExtractToDirectory(template);
+            foreach (var entry in zipArchive.Entries)
+            {
+                if (entry.IsDirectory)
+                    continue;
+
+                entry.WriteToDirectory(template, new ExtractionOptions
+                {
+                    ExtractFullPath = true,
+                    Overwrite = true,
+                });
+            }
+
+            //using ICSharpCode.SharpZipLib.Zip;
+            //using var zipArchive = new ZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip")
+            //{
+            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
+            //};
+            //foreach (ZipEntry entry in zipArchive)
+            //    if (entry.IsFile)
+            //    {
+            //        string outputFile = Path.Combine(template, entry.Name);
+
+            //        Directory.CreateDirectory(Path.GetDirectoryName(outputFile)!);
+
+            //        using var input = zipArchive.GetInputStream(entry);
+            //        using var output = File.Create(outputFile);
+            //        var buffer = new byte[4096];
+            //        int bytesRead;
+            //        while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            //            output.Write(buffer, 0, bytesRead);
+            //    }
+
+            //using Aspose.Zip;
+            //using var zipArchive = new Archive($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new ArchiveLoadOptions()
+            //{
+            //    DecryptionPassword = Properties.Resources.TESTSUITE_PASSWORD,
+            //});
+            //zipArchive.ExtractToDirectory(template);
+
+            //using Ionic.Zip;
+            //using var zipArchive = new ZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip")
+            //{
+            //    Encryption = EncryptionAlgorithm.WinZipAes256,
+            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
+            //};
+            //zipArchive.ExtractAll(template, ExtractExistingFileAction.DoNotOverwrite);
         }
         if (!Directory.Exists(working))
         {
