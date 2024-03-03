@@ -201,64 +201,37 @@ public class CommonTestInitializeCleanup
 
         if (!Directory.Exists(template))
         {
-            //using SharpCompress.Archives;
-            //using SharpCompress.Common;
             Directory.CreateDirectory(template);
             using var zipArchive = ArchiveFactory.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
             {
                 Password = Properties.Resources.TESTSUITE_PASSWORD,
             });
             foreach (var entry in zipArchive.Entries)
-            {
-                if (entry.IsDirectory)
-                    continue;
-
-                entry.WriteToDirectory(template, new ExtractionOptions
+                if (!entry.IsDirectory)
                 {
-                    ExtractFullPath = true,
-                    Overwrite = true,
-                });
-            }
+                    entry.WriteToDirectory(template, new ExtractionOptions
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true,
+                        PreserveFileTime = false, // do not use for the reason below
+                    });
+                    // The entry has not always the correct LastModifiedTime (can be 1 hour off due to daylight saving time).
+                    if (entry.LastModifiedTime.HasValue)
+                    {
+                        var hours = 0;
 
-            //using ICSharpCode.SharpZipLib.Zip;
-            //using var zipArchive = new ZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip")
-            //{
-            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
-            //};
-            //foreach (ZipEntry entry in zipArchive)
-            //    if (entry.IsFile)
-            //    {
-            //        string outputFile = Path.Combine(template, entry.Name);
+                        if (entry.LastModifiedTime!.Value.IsDaylightSavingTime() && !DateTime.Now.IsDaylightSavingTime())
+                            hours = +1;
 
-            //        Directory.CreateDirectory(Path.GetDirectoryName(outputFile)!);
+                        if (!entry.LastModifiedTime!.Value.IsDaylightSavingTime() && DateTime.Now.IsDaylightSavingTime())
+                            hours = -1;
 
-            //        using var input = zipArchive.GetInputStream(entry);
-            //        using var output = File.Create(outputFile);
-            //        var buffer = new byte[4096];
-            //        int bytesRead;
-            //        while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
-            //            output.Write(buffer, 0, bytesRead);
-            //    }
-
-            //using Aspose.Zip;
-            //using var zipArchive = new Archive($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new ArchiveLoadOptions()
-            //{
-            //    DecryptionPassword = Properties.Resources.TESTSUITE_PASSWORD,
-            //});
-            //zipArchive.ExtractToDirectory(template);
-
-            //using Ionic.Zip;
-            //using var zipArchive = new ZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip")
-            //{
-            //    Encryption = EncryptionAlgorithm.WinZipAes256,
-            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
-            //};
-            //zipArchive.ExtractAll(template, ExtractExistingFileAction.DoNotOverwrite);
+                        File.SetLastWriteTimeUtc(Path.Combine(template, entry.Key), entry.LastModifiedTime.Value.Add(new TimeSpan(hours, 0, 0)).ToUniversalTime());
+                    }
+                }
         }
         if (!Directory.Exists(working))
-        {
             Copy(template, working);
-        }
     }
 
     [TestCleanup]

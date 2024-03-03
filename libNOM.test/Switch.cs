@@ -369,7 +369,7 @@ public class SwitchTest : CommonTestInitializeCleanup
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(80, valuesOrigin.MusicVolume);
-        Assert.AreEqual(1665085531, valuesOrigin.UnixSeconds); // 2022-10-06 19:45:31 +00:00
+        Assert.AreEqual(1665085532, valuesOrigin.UnixSeconds); // 2022-10-06 19:45:32 +00:00
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
         Assert.AreEqual(nowUnix, valuesSet.UnixSeconds);
 
@@ -489,7 +489,7 @@ public class SwitchTest : CommonTestInitializeCleanup
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(80, valuesOrigin.MusicVolume);
-        Assert.AreEqual(1694247283, valuesOrigin.UnixSeconds); // 2023-09-09 08:14:43 +00:00
+        Assert.AreEqual(1694247284, valuesOrigin.UnixSeconds); // 2023-09-09 08:14:44 +00:00
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
         Assert.AreEqual(nowUnix, valuesSet.UnixSeconds);
 

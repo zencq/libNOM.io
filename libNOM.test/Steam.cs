@@ -708,7 +708,7 @@ public class SteamTest : CommonTestInitializeCleanup
         Assert.IsTrue(writeCallback);
 
         Assert.AreEqual(80, valuesOrigin.MusicVolume);
-        Assert.AreEqual(638263807910000000, valuesOrigin.UtcTicks); // 2023-07-22 15:12:32 +00:00
+        Assert.AreEqual(638263807920000000, valuesOrigin.UtcTicks); // 2023-07-22 08:13:12 +00:00
         Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
         Assert.AreEqual(now.UtcTicks, valuesSet.UtcTicks);
 
