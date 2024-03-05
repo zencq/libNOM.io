@@ -1,4 +1,4 @@
-﻿namespace libNOM.io.Enums;
+﻿namespace libNOM.test.Helper;
 
 
 /// <summary>

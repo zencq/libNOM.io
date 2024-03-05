@@ -8,7 +8,7 @@ namespace libNOM.test;
 
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class SettingsTest : CommonTestInitializeCleanup
+public class SettingsTest : CommonTestClass
 {
     [TestMethod]
     public void LoadingStrategyHollow()

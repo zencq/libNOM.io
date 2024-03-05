@@ -8,7 +8,7 @@ namespace libNOM.test;
 
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class GameModeTest : CommonTestInitializeCleanup
+public class GameModeTest : CommonTestClass
 {
     [TestMethod]
     public void T01_VanillaHollow()

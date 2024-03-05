@@ -7,7 +7,7 @@ namespace libNOM.test;
 
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class CollectionTest : CommonTestInitializeCleanup
+public class CollectionTest : CommonTestClass
 {
     [TestMethod]
     public void T01_BuildCollection_Gog()

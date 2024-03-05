@@ -11,7 +11,7 @@ namespace libNOM.test;
 /// </summary>
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class GogTest : CommonTestInitializeCleanup
+public class GogTest : CommonTestClass
 {
     [TestMethod]
     public void T01_Read_DefaultUser()

@@ -70,15 +70,10 @@ public class PlatformCollection : IEnumerable<IPlatform>
     public IEnumerator<IPlatform> GetEnumerator()
     {
         foreach (var pair in _collection)
-        {
             yield return pair.Value;
-        }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     #endregion
 

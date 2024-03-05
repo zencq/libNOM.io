@@ -230,7 +230,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         // Ensure mapping is updated in the containers.
         if (Settings.UseMapping != oldMapping)
-            foreach (var container in SaveContainerCollection)
+            foreach (var container in SaveContainerCollection.Where(i => i.IsLoaded))
                 container.SetJsonObject(container.GetJsonObject());
     }
 

@@ -8,7 +8,7 @@ namespace libNOM.test;
 
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class ConvertTest : CommonTestInitializeCleanup
+public class ConvertTest : CommonTestClass
 {
     [TestMethod]
     public void T01_ToJson()

@@ -3,6 +3,11 @@
 // https://github.com/microsoft/testfx/issues/366#issuecomment-580147403
 
 #pragma warning disable CA1507 // Use nameof to express symbol names
+#if NET8_0_OR_GREATER
+#pragma warning disable CA1510 // Use ArgumentNullException throw helper
+#pragma warning disable CA1861 // Avoid constant arrays as arguments
+#pragma warning disable CA1870 // Use a cached 'SearchValues' instance
+#endif
 
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 #pragma warning disable CS8601 // Possible null reference assignment.
@@ -16,15 +21,14 @@
 #pragma warning disable IDE0016 // Use 'throw' expression
 #pragma warning disable IDE0018 // Inline variable declaration
 #pragma warning disable IDE0019 // Use pattern matching
+#pragma warning disable IDE0028 // Use collection initializers or expressions
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable IDE0059 // Unnecessary assignment of a value
 #pragma warning disable IDE0060 // Remove unused parameter
 #pragma warning disable IDE0074 // Use compound assignment
-#pragma warning disable IDE0090 // Use 'new(...)'
 #pragma warning disable IDE0270 // Use coalesce expression
+#pragma warning disable IDE0300 // Use collection expression for array
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;

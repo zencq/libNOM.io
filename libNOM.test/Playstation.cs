@@ -15,7 +15,7 @@ namespace libNOM.test;
 // Do not use System.Range for simplicity of the file and performace is not critical.
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class PlaystationTest : CommonTestInitializeCleanup
+public class PlaystationTest : CommonTestClass
 {
     #region Constant
 
