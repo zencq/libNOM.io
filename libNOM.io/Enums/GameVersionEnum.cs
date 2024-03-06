@@ -55,4 +55,6 @@ public enum GameVersionEnum : uint
     Singularity = 430,
     Echoes = 440,
     Omega = 450,
+    [Description(nameof(Omega))]
+    OmegaWithV2 = 452,
 }

@@ -134,6 +134,8 @@ public class Container : IContainer
 
     public bool IsVersion450Omega => IsVersion(GameVersionEnum.Omega); // { get; }
 
+    public bool IsVersion452OmegaWithV2 => IsVersion(GameVersionEnum.OmegaWithV2); // { get; }
+
     #endregion
 
     #region FileInfo

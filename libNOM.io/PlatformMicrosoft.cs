@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Text;
 
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
@@ -30,8 +31,12 @@ public partial class PlatformMicrosoft : Platform
     private const int BLOBCONTAINER_TOTAL_LENGTH = sizeof(int) + sizeof(int) + BLOBCONTAINER_COUNT * (BLOBCONTAINER_IDENTIFIER_LENGTH + 2 * 0x10); // 328
 
     private const int CONTAINERSINDEX_HEADER = 0xE; // 14
-    private const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268435456
+    private const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268.435.456
     private const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
+
+    internal static readonly byte[] SAVE_V2_HEADER = [.. Encoding.ASCII.GetBytes("HGSAVEV2"), 0x00];
+    internal const int SAVE_V2_HEADER_PARTIAL_LENGTH = 0x8; // 8
+    internal const int SAVE_V2_CHUNK_MAX_LENGTH = 0x100000; // 1.048.576
 
     #endregion
 
@@ -475,15 +480,36 @@ public partial class PlatformMicrosoft : Platform
                 DifficultyPreset = disk[276],
             };
 
-        container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough
+        container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough to calculate SaveVersion
         container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
         container.GameVersion = GameVersionEnum.Unknown; // reset to get the 100% accurate result later
     }
 
     protected override ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)
     {
-        _ = LZ4.Decode(data, out var target, (int)(container.Extra.SizeDecompressed));
-        return target;
+        if (container.IsAccount || !data.StartsWith(SAVE_V2_HEADER)) // single chunk compression for Account and before Omega 4.52
+        {
+            _ = LZ4.Decode(data, out var target, (int)(container.Extra.SizeDecompressed));
+            return target;
+        }
+
+        // New format is similar to the save streaming introduced with Frontiers.
+        var offset = SAVE_V2_HEADER.Length;
+        ReadOnlySpan<byte> result = [];
+
+        while (offset < data.Length)
+        {
+            var chunkHeader = data.Slice(offset, SAVE_V2_HEADER_PARTIAL_LENGTH).Cast<byte, uint>();
+            var sizeCompressed = (int)(chunkHeader[1]);
+
+            offset += SAVE_V2_HEADER_PARTIAL_LENGTH;
+            _ = LZ4.Decode(data.Slice(offset, sizeCompressed), out var target, (int)(chunkHeader[0]));
+            offset += sizeCompressed;
+
+            result = result.Concat(target);
+        }
+
+        return result;
     }
 
     protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
@@ -561,8 +587,35 @@ public partial class PlatformMicrosoft : Platform
 
     protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)
     {
-        _ = LZ4.Encode(data, out var target);
-        return target;
+        if (!container.IsSave || !container.IsVersion452OmegaWithV2)
+        {
+            _ = LZ4.Encode(data, out var target);
+            return target;
+        }
+
+        // New format is similar to the save streaming introduced with Frontiers.
+        var position = 0;
+        ReadOnlySpan<byte> result = SAVE_V2_HEADER;
+
+        while (position < data.Length)
+        {
+            var maxLength = data.Length - position;
+
+            // The tailing \0 needs to compressed separately and must not be part of the actual JSON chunks.
+            var source = data.Slice(position, Math.Min(SAVE_V2_CHUNK_MAX_LENGTH, maxLength == 1 ? 1 : maxLength - 1));
+            _ = LZ4.Encode(source, out var target);
+            position += source.Length;
+
+            var chunkHeader = new ReadOnlySpan<uint>(
+            [
+                (uint)(source.Length),
+                (uint)(target.Length),
+            ]);
+
+            result = result.Concat(chunkHeader.Cast<uint, byte>()).Concat(target);
+        }
+
+        return result;
     }
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)

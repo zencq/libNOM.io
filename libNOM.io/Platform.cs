@@ -891,7 +891,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             var source = data.Slice(position, Math.Min(Constants.SAVE_STREAMING_CHUNK_MAX_LENGTH, data.Length - position));
             _ = LZ4.Encode(source, out var target);
-            position += Constants.SAVE_STREAMING_CHUNK_MAX_LENGTH;
+            position += source.Length;
 
             var chunkHeader = new ReadOnlySpan<uint>(
             [

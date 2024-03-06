@@ -2,9 +2,9 @@
 
 
 /// <summary>
-/// Specifies the possible formats a save file can have.
+/// Specifies the possible structures a save file can have.
 /// </summary>
-internal enum SaveFormatEnum : uint
+internal enum SaveStructureEnum : uint
 {
     Unknown,
     Vanilla,

@@ -2,7 +2,6 @@
 
 using libNOM.io;
 using libNOM.io.Interfaces;
-using libNOM.io.Models;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

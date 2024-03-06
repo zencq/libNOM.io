@@ -40,7 +40,7 @@ internal static partial class Json
         if (paths[0] == identifier || jsonObject?.IsRoot() != true) // without root it is not possible to determine obfuscation state and save format reliable
             return paths;
 
-        var format = Constants.JSONPATH["ACTIVE_CONTEXT"].Any(jsonObject.ContainsKey) ? SaveFormatEnum.Omega : SaveFormatEnum.Vanilla;
+        var format = Constants.JSONPATH["ACTIVE_CONTEXT"].Any(jsonObject.ContainsKey) ? SaveStructureEnum.Omega : SaveStructureEnum.Vanilla;
         var contextKey = (jsonObject.UsesMapping() ? Constants.JSONPATH_CONTEXT_PLAINTEXT : Constants.JSONPATH_CONTEXT_OBFUSCATED)[(int)(context)];
         var index = ((int)(format) - 1) * 2 + jsonObject.UsesMapping().ToByte(); // 2 obfuscation states per save format
 
