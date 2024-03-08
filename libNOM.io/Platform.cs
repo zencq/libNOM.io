@@ -723,7 +723,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             jsonObject = binary.GetJson();
         }
-        catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
+        catch (Exception ex) when (ex is ArgumentOutOfRangeException or JsonReaderException or JsonSerializationException)
         {
             container.IncompatibilityException = ex;
             container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;

@@ -264,7 +264,7 @@ public partial class PlatformMicrosoft : Platform
          7. ACCOUNT IDENTIFIER              ( 72) (UTF-16)
          8. FOOTER (268435456)              (  8)
         */
-        bytes = File.ReadAllBytes(_containersindex.FullName);
+        bytes = _containersindex.ReadAllBytes();
 
         if (bytes.Cast<int>(0) is int header && header != CONTAINERSINDEX_HEADER)
             ThrowHelper.ThrowInvalidDataException($"Wrong header in containers.index file! Expected {CONTAINERSINDEX_HEADER} but got {header}.");
@@ -349,7 +349,7 @@ public partial class PlatformMicrosoft : Platform
         // Start with the presumably newest one.
         foreach (var blobContainer in files.OrderByDescending(i => i.Extension))
         {
-            ReadOnlySpan<byte> bytes = File.ReadAllBytes(blobContainer.FullName);
+            ReadOnlySpan<byte> bytes = blobContainer.ReadAllBytes();
             var offset = 8; // start after header
 
             if (bytes.Length != BLOBCONTAINER_TOTAL_LENGTH || bytes.Cast<int>(0) != BLOBCONTAINER_HEADER)
