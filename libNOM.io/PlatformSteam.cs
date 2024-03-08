@@ -19,7 +19,7 @@ public partial class PlatformSteam : Platform
 
     internal const string ACCOUNT_PATTERN = "st_76561198*";
 
-    internal static readonly string[] ANCHOR_FILE_PATTERN = ["save*.hg"];
+    internal static readonly string[] ANCHOR_FILE_PATTERN = ["save??.hg"];
 
     internal static readonly string PATH = ((Func<string>)(() =>
     {

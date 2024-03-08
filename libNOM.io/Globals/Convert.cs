@@ -106,10 +106,11 @@ public static class Convert
     // public //
 
     /// <summary>
-    /// Converts the specified file to a <see cref="Container"/>.
+    /// Converts the specified file to a <see cref="Container"/> for the specified platform.
     /// </summary>
     /// <param name="file"></param>
-    public static Container? ToSaveContainer(string? file) => GetContainer(file);
+    /// <param name="platform"></param>
+    public static Container? ToSaveContainer(string? file, Platform platform) => GetContainer(file, platform);
 
     /// <summary>
     /// Converts an input file to a save of the specified platform.
@@ -117,20 +118,18 @@ public static class Convert
     /// </summary>
     /// <param name="file"></param>
     /// <param name="targetPlatform"></param>
-    public static void ToSaveFile(string file, PlatformEnum targetPlatform) => ToSaveFile(file, null, targetPlatform);
+    public static void ToSaveFile(string file, PlatformEnum targetPlatform) => ToSaveFile(file, targetPlatform, null);
 
     /// <summary>
     /// Converts an input file to a save of the specified platform.
     /// The result will be in the specified output path or next to the specified input file if the path is invalid.
     /// </summary>
     /// <param name="file"></param>
-    /// <param name="path"></param>
     /// <param name="targetPlatform"></param>
+    /// <param name="path"></param>
     /// <exception cref="InvalidDataException"></exception>
-    public static void ToSaveFile(string file, string? path, PlatformEnum targetPlatform)
+    public static void ToSaveFile(string file, PlatformEnum targetPlatform, string? path)
     {
-        // Method contains all relevant checks so just throw an exception if container is null.
-        var container = GetContainer(file) ?? throw new InvalidDataException("Unable to read input file.");
         Platform platform = targetPlatform switch
         {
             PlatformEnum.Gog => new PlatformGog(),
@@ -140,6 +139,9 @@ public static class Convert
             PlatformEnum.Switch => new PlatformSwitch(),
             _ => throw new InvalidDataException("The specified output platform is not yet supported."),
         };
+
+        // Method contains all relevant checks so just throw an exception if container is null.
+        var container = GetContainer(file, platform) ?? throw new InvalidDataException("Unable to read input file.");
 
         if (string.IsNullOrWhiteSpace(path))
             path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
@@ -152,7 +154,6 @@ public static class Convert
         container.Exists = true; // fake it be able to create the data
         container.IsSynced = true;
 
-        container.SetPlatform(platform); // necessary to be able to prepare the files correctly
 
         platform.JustWrite(container);
     }
@@ -164,7 +165,7 @@ public static class Convert
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    private static Container? GetContainer(string? input)
+    private static Container? GetContainer(string? input, Platform? platform)
     {
         if (string.IsNullOrWhiteSpace(input))
             return null;
@@ -174,21 +175,24 @@ public static class Convert
         {
             container = PlatformCollection.AnalyzeFile(input!);
         }
-        catch { } // use fallback below
+        catch (Exception ex) when (ex is OverflowException) { } // use fallback below
         if (container is null && File.Exists(input))
         {
-            ReadOnlySpan<byte> bytes;
+            container = new Container(-1, platform!) { DataFile = new(input) };
             try
             {
-                bytes = File.ReadAllBytes(input);
+                // Try original save files first.
+                ReadOnlySpan<byte> bytes = File.ReadAllBytes(input);
+                container.SetJsonObject(bytes.GetJson());
             }
-            catch
+            catch (Exception ex) when (ex is ArgumentOutOfRangeException) { }
+            try
             {
-                return null; // nothing we can do anymore
+                // If it is a plaintext JSON file, the first try above fails.
+                var text = File.ReadAllText(input);
+                container.SetJsonObject(text.GetJson());
             }
-
-            container = new Container(-1, null!) { DataFile = new(input) };
-            container.SetJsonObject(bytes.GetJson());
+            catch { }
             if (!container.IsLoaded) // no valid JSON in specified file
                 return null;
         }

@@ -21,7 +21,7 @@ public class Container : IContainer
     private bool? _exists;
     private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
     private JObject? _jsonObject;
-    private Platform _platform;
+    private Platform? _platform;
     private int _saveVersion = -1;
 
     #endregion
@@ -363,7 +363,7 @@ public class Container : IContainer
         set => Extra = Extra with { MetaFormat = value };
     }
 
-    internal int MetaSize => MetaFormat switch // { get; }
+    internal int MetaSize => _platform is null ? -1 : MetaFormat switch // { get; }
     {
         MetaFormatEnum.Waypoint => _platform.META_LENGTH_TOTAL_WAYPOINT,
         _ => _platform.META_LENGTH_TOTAL_VANILLA,
@@ -455,7 +455,7 @@ public class Container : IContainer
         IsSynced = false;
 
         // Make sure the data are always in the format that was set in the settings.
-        if (_jsonObject is not null) // happens when the container is unloaded
+        if (_jsonObject is not null && _platform is not null) // happens when the container is unloaded
             if (_platform.Settings.UseMapping)
             {
                 UnknownKeys = Mapping.Deobfuscate(_jsonObject);

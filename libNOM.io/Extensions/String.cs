@@ -1,5 +1,8 @@
 ﻿using System.Text;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace libNOM.io.Extensions;
 
 
@@ -11,6 +14,13 @@ internal static class StringExtensions
     /// <param name="self"></param>
     /// <returns></returns>
     internal static byte[] GetBytesWithTerminator(this string self) => $"{self}\0".GetUTF8Bytes();
+
+    /// <summary>
+    /// Deserializes a JSON string to an object.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static JObject? GetJson(this string self) => JsonConvert.DeserializeObject(self) is JObject jsonObject ? jsonObject : null;
 
     /// <summary>
     /// Encodes all the characters in the string into a sequence of bytes in UTF-16 format.

@@ -12,7 +12,7 @@ public partial class PlatformPlaystation : Platform
 {
     #region Constant
 
-    internal static readonly string[] ANCHOR_FILE_PATTERN = ["savedata*.hg", "memory*.dat"];
+    internal static readonly string[] ANCHOR_FILE_PATTERN = ["savedata??.hg", "memory.dat"];
 
     protected override int COUNT_SAVE_SLOTS => _usesSaveStreaming ? base.COUNT_SAVE_SLOTS : 5;
 
