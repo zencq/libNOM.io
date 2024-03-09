@@ -1,7 +1,10 @@
 ﻿using System.Text;
 
+using CommunityToolkit.Diagnostics;
+
 using libNOM.io;
 using libNOM.io.Interfaces;
+using libNOM.io.Models;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -237,21 +240,35 @@ public abstract class CommonTestClass
         Assert.AreEqual(resultA.TotalPlayTime, resultB.TotalPlayTime);
     }
 
+    protected static void AssertCommonSourceTransferData(UserIdentification userIdentification, IPlatform platform, TransferData transfer)
+    {
+        AssertAllAreEqual(userIdentification.LID!, platform.PlatformUserIdentification.LID, transfer.UserIdentification.LID);
+        AssertAllAreEqual(userIdentification.UID!, platform.PlatformUserIdentification.UID, transfer.UserIdentification.UID);
+        AssertAllAreEqual(userIdentification.USN!, platform.PlatformUserIdentification.USN, transfer.UserIdentification.USN);
+        AssertAllAreEqual(userIdentification.PTK!, platform.PlatformUserIdentification.PTK, transfer.UserIdentification.PTK);
+    }
+
     protected static void AssertCommonTransfer(ReadResults[] results, UserIdentification userIdentification, IPlatform platform, int offset)
     {
+        Assert.AreEqual(userIdentification.LID!, platform.PlatformUserIdentification.LID);
+        Assert.AreEqual(userIdentification.UID!, platform.PlatformUserIdentification.UID);
+        Assert.AreEqual(userIdentification.USN!, platform.PlatformUserIdentification.USN);
+        Assert.AreEqual(userIdentification.PTK!, platform.PlatformUserIdentification.PTK);
+
         for (var i = 0; i <= 2; i += 2)
             for (var j = 0; j < results.Length; j++)
             {
                 var collectionIndex = results[j].CollectionIndex + offset + i;
                 var container = platform.GetSaveContainer(collectionIndex)!;
+                Guard.IsNotNull(container);
                 var expected = results[j];
 
                 var priect = new PrivateObject(container);
 
-                AssertAllAreEqual(userIdentification.LID!, platform.PlatformUserIdentification.LID, GetUserIdentification(container).LID);
-                AssertAllAreEqual(userIdentification.UID!, platform.PlatformUserIdentification.UID, GetUserIdentification(container).UID);
-                AssertAllAreEqual(userIdentification.USN!, platform.PlatformUserIdentification.USN, GetUserIdentification(container).USN);
-                AssertAllAreEqual(userIdentification.PTK!, platform.PlatformUserIdentification.PTK, GetUserIdentification(container).PTK);
+                Assert.AreEqual(userIdentification.LID!, GetUserIdentification(container).LID);
+                Assert.AreEqual(userIdentification.UID!, GetUserIdentification(container).UID);
+                Assert.AreEqual(userIdentification.USN!, GetUserIdentification(container).USN);
+                Assert.AreEqual(userIdentification.PTK!, GetUserIdentification(container).PTK);
 
                 Assert.AreEqual(collectionIndex, container.CollectionIndex);
 
