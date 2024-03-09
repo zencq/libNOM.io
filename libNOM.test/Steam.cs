@@ -167,6 +167,7 @@ public class SteamTest : CommonTestClass
     public void T01_Read_76561198042453834()
     {
         // Arrange
+        var expectAccountData = true;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
         var results = new ReadResults[]
         {
@@ -197,16 +198,15 @@ public class SteamTest : CommonTestClass
         var userIdentification = ReadUserIdentification(path);
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
         // Assert
-        AssertCommonRead(results, expectAccountData: true, userIdentification, platform);
+        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
     public void T02_Read_76561198043217184()
     {
         // Arrange
+        var expectAccountData = false;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
         var results = new ReadResults[]
         {
@@ -233,16 +233,15 @@ public class SteamTest : CommonTestClass
         var userIdentification = ReadUserIdentification(path);
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
         // Assert
-        AssertCommonRead(results, expectAccountData: false, userIdentification, platform);
+        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
     public void T03_Read_76561198371877533()
     {
         // Arrange
+        var expectAccountData = true;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
         var results = new ReadResults[]
         {
@@ -262,16 +261,15 @@ public class SteamTest : CommonTestClass
         var userIdentification = ReadUserIdentification(path);
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
         // Assert
-        AssertCommonRead(results, expectAccountData: true, userIdentification, platform);
+        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
     public void T04_Read_76561198093556678()
     {
         // Arrange
+        var expectAccountData = false;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198093556678");
         var results = new ReadResults[]
         {
@@ -286,16 +284,15 @@ public class SteamTest : CommonTestClass
         var userIdentification = ReadUserIdentification(path);
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
         // Assert
-        AssertCommonRead(results, expectAccountData: false, userIdentification, platform);
+        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
     public void T05_Read_76561199278291995()
     {
         // Arrange
+        var expectAccountData = false;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561199278291995");
         var results = new ReadResults[]
         {
@@ -318,10 +315,8 @@ public class SteamTest : CommonTestClass
         var userIdentification = ReadUserIdentification(path);
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
         // Assert
-        AssertCommonRead(results, expectAccountData: false, userIdentification, platform);
+        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
     }
 
     /// <summary>
@@ -331,6 +326,7 @@ public class SteamTest : CommonTestClass
     public void T06_Read_NoAccountInDirectory()
     {
         // Arrange
+        var expectAccountData = true;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "something");
         var results = new ReadResults[]
         {
@@ -350,257 +346,104 @@ public class SteamTest : CommonTestClass
         var userIdentification = ReadUserIdentification(path);
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
         // Assert
-        AssertCommonRead(results, expectAccountData: true, userIdentification, platform);
+        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
     public void T10_Write_Default_0x7D1()
     {
         // Arrange
-        var now = DateTimeOffset.UtcNow;
+        var containerIndex = 0;
+        var originUnits = -123571; // 4.294.843.725
+        var originUtcTicks = 637376113620000000; // 2020-10-06 20:02:42 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
-        var results = new WriteResults(0, 4125, (ushort)(PresetGameModeEnum.Unspecified), (ushort)(SeasonEnum.None), 0, "", "", (byte)(DifficultyPresetTypeEnum.Invalid));
+        var results = new WriteResults(uint.MaxValue, 4125, (ushort)(PresetGameModeEnum.Unspecified), (ushort)(SeasonEnum.None), 0, "", "", (byte)(DifficultyPresetTypeEnum.Invalid));
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             UseMapping = true,
         };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-        var metaA = DecryptMeta(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-        var metaB = DecryptMeta(containerB);
-
-        platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        AssertCommonWriteValues(-123571, 637376113620000000, valuesOrigin); // 4.294.843.725 // 2020-10-06 20:02:42 +00:00
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesSet);
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesReload);
-
-        AssertCommonMeta(containerA, metaA, metaB);
-        AssertSpecificMeta(results, containerA, containerB, metaA, metaB);
+        TestCommonWriteDefaultSave<PlatformSteam>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]
-    public void T11_Write_Default_0x7D2_Frontiers()
+    public void T11_Write_Default_0x7D2_Frontiers_Account()
     {
         // Arrange
-        var now = DateTimeOffset.UtcNow;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var results = new WriteResults(0, 4135, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 94164, "", "", (byte)(DifficultyPresetTypeEnum.Normal));
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
-        var writeCallback = false;
-
-        // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-        var metaA = DecryptMeta(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-        var metaB = DecryptMeta(containerB);
-
-        platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-
-        // Assert
-        Assert.IsTrue(writeCallback);
-
-        AssertCommonWriteValues(-1221111157, 637663905840000000, valuesOrigin); // 3.073.856.139 // 2021-09-04 22:16:24 +00:00
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesSet);
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesReload);
-
-        AssertCommonMeta(containerA, metaA, metaB);
-        AssertSpecificMeta(results, containerA, containerB, metaA, metaB);
-    }
-
-    [TestMethod]
-    public void T12_Write_Default_0x7D2_Frontiers_Account()
-    {
-        // Arrange
-        var now = DateTimeOffset.UtcNow;
+        var originMusicVolume = 80; // 80
+        var originUtcTicks = 637663896760000000; // 2021-09-04 22:01:16 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             UseMapping = true,
         };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetAccountContainer();
-        var metaA = DecryptMeta(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        (int MusicVolume, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
-        platformA.Write(containerA, now);
-        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetAccountContainer();
-        var metaB = DecryptMeta(containerB);
-
-        platformB.Load(containerB);
-        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        AssertCommonWriteValues(80, 637663896760000000, valuesOrigin); // 80 // 2021-09-04 22:01:16 +00:00
-        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesSet);
-        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesReload);
-
-        AssertCommonMeta(containerA, metaA, metaB);
+        TestCommonWriteDefaultAccount<PlatformSteam>(path, settings, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
     }
 
     [TestMethod]
-    public void T13_Write_Default_0x7D2_Waypoint()
+    public void T12_Write_Default_0x7D2_Frontiers()
     {
         // Arrange
-        var now = DateTimeOffset.UtcNow;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
-        var results = new WriteResults(0, 4145, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1253526, "Iteration 1", "Aboard the Space Anomaly", (byte)(DifficultyPresetTypeEnum.Custom));
+        var containerIndex = 0;
+        var originUnits = -1221111157; // 3.073.856.139
+        var originUtcTicks = 637663905840000000; // 2021-09-04 22:16:24 +00:00
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var results = new WriteResults(uint.MaxValue, 4135, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 94164, "", "", (byte)(DifficultyPresetTypeEnum.Normal));
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             UseMapping = true,
         };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-        var metaA = DecryptMeta(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-        var metaB = DecryptMeta(containerB);
-
-        platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        AssertCommonWriteValues(1199342306, 638234536920000000, valuesOrigin); // 1.199.342.306 // 2023-06-27 09:08:12 +00:00
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesSet);
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesReload);
-
-        AssertCommonMeta(containerA, metaA, metaB);
-        AssertSpecificMeta(results, containerA, containerB, metaA, metaB);
+        TestCommonWriteDefaultSave<PlatformSteam>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]
-    public void T14_Write_Default_0x7D2_Waypoint_Account()
+    public void T13_Write_Default_0x7D2_Waypoint_Account()
     {
         // Arrange
-        var now = DateTimeOffset.UtcNow;
+        var originMusicVolume = 80; // 80 
+        var originUtcTicks = 638263807910000000; // 2023-07-31 06:13:11 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
             UseMapping = true,
         };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetAccountContainer();
-        var metaA = DecryptMeta(containerA);
+        // Assert
+        TestCommonWriteDefaultAccount<PlatformSteam>(path, settings, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+    }
 
-        containerA.WriteCallback += () =>
+    [TestMethod]
+    public void T14_Write_Default_0x7D2_Waypoint()
+    {
+        // Arrange
+        var containerIndex = 0;
+        var originUnits = 1199342306; // 1.199.342.306
+        var originUtcTicks = 638234536920000000; // 2023-06-27 09:08:12 +00:00
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var results = new WriteResults(uint.MaxValue, 4145, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1253526, "Iteration 1", "Aboard the Space Anomaly", (byte)(DifficultyPresetTypeEnum.Custom));
+        var settings = new PlatformSettings
         {
-            writeCallback = true;
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+            UseMapping = true,
         };
 
-        platformA.Load(containerA);
-        (int MusicVolume, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
-        platformA.Write(containerA, now);
-        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetAccountContainer()!;
-        var metaB = DecryptMeta(containerB);
-
-        platformB.Load(containerB);
-        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-
+        // Act
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        AssertCommonWriteValues(80, 638263807920000000, valuesOrigin); // 80 // 2023-07-22 08:13:12 +00:00
-        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesSet);
-        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesReload);
-
-        AssertCommonMeta(containerA, metaA, metaB);
+        TestCommonWriteDefaultSave<PlatformSteam>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]

@@ -47,7 +47,7 @@ public abstract class CommonTestClass
 
     #region Assert
 
-    protected static void AssertCommonRead(ReadResults[] results, bool expectAccountData, UserIdentification userIdentification, IPlatform? platform)
+    protected static void AssertCommonRead(ReadResults[] results, IPlatform? platform, bool expectAccountData, UserIdentification userIdentification)
     {
         ArgumentNullException.ThrowIfNull(platform, nameof(platform));
 
@@ -395,6 +395,105 @@ public abstract class CommonTestClass
     {
         return platform.GetSaveContainers().Where(i => i.HasWatcherChange);
     }
+
+    #endregion
+
+    #region Test
+
+    protected static void TestCommonRead<TPlatform>(string path, PlatformSettings settings, ReadResults[] results, bool expectAccountData, UserIdentification userIdentification) where TPlatform : IPlatform
+    {
+        // Act
+        var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings));
+
+        // Assert
+        AssertCommonRead(results, platform, expectAccountData, userIdentification);
+    }
+
+    protected static void TestCommonWriteDefaultSave<TPlatform>(string path, PlatformSettings settings, int containerIndex, int originUnits, long originUtcTicks, WriteResults results, Func<Container, uint[]> DecryptMeta, Action<Container, uint[], uint[]> AssertCommonMeta, Action<WriteResults, Container, Container, uint[], uint[]> AssertSpecificMeta) where TPlatform : IPlatform
+    {
+        // Arrange
+        var now = DateTimeOffset.UtcNow;
+        var writeCallback = false;
+
+        // Act
+        var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+        var containerA = platformA.GetSaveContainer(containerIndex);
+        Guard.IsNotNull(containerA);
+        var metaA = DecryptMeta(containerA);
+
+        containerA.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
+
+        platformA.Load(containerA);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+
+        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        platformA.Write(containerA, now);
+        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+
+        var platformB = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+        var containerB = platformB.GetSaveContainer(containerIndex);
+        Guard.IsNotNull(containerB);
+        var metaB = DecryptMeta(containerB);
+
+        platformB.Load(containerB);
+        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
+
+        // Assert
+        Assert.IsTrue(writeCallback);
+
+        AssertCommonWriteValues(originUnits, originUtcTicks, valuesOrigin);
+        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesSet);
+        AssertCommonWriteValues(UNITS_NEW_AMOUNT, now.UtcTicks, valuesReload);
+
+        AssertCommonMeta(containerA, metaA, metaB);
+        AssertSpecificMeta(results, containerA, containerB, metaA, metaB);
+    }
+
+    protected static void TestCommonWriteDefaultAccount<TPlatform>(string path, PlatformSettings settings, int originMusicVolume, long originUtcTicks, Func<Container, uint[]> DecryptMeta, Action<Container, uint[], uint[]> AssertCommonMeta) where TPlatform : IPlatform
+    {
+        // Arrange
+        var now = DateTimeOffset.UtcNow;
+        var writeCallback = false;
+
+        // Act
+        var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+        var containerA = platformA.GetAccountContainer();
+        Guard.IsNotNull(containerA);
+        var metaA = DecryptMeta(containerA);
+
+        containerA.WriteCallback += () =>
+        {
+            writeCallback = true;
+        };
+
+        platformA.Load(containerA);
+        (int MusicVolume, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+
+        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
+        platformA.Write(containerA, now);
+        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+
+        var platformB = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+        var containerB = platformB.GetAccountContainer();
+        Guard.IsNotNull(containerB);
+        var metaB = DecryptMeta(containerB);
+
+        platformB.Load(containerB);
+        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
+
+        // Assert
+        Assert.IsTrue(writeCallback);
+
+        AssertCommonWriteValues(originMusicVolume, originUtcTicks, valuesOrigin);
+        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesSet);
+        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesReload);
+
+        AssertCommonMeta(containerA, metaA, metaB);
+    }
+
 
     #endregion
 
