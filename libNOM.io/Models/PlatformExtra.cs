@@ -29,10 +29,10 @@ internal record class PlatformExtra
     // Switch
     internal uint SizeDecompressed { get; set; }
 
-    // Microsoft = Meta + Data (compressed)
-    // Steam = Data (compressed)
-    // Playstation = Data (compressed)
-    // Switch = Data (compressed)
+    // Microsoft
+    // Steam
+    // Playstation
+    // Switch
     internal uint SizeDisk { get; set; }
 
     // Microsoft

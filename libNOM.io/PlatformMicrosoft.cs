@@ -263,6 +263,7 @@ public partial class PlatformMicrosoft : Platform
          6. ACCOUNT IDENTIFIER LENGTH (36)  (  4)
          7. ACCOUNT IDENTIFIER              ( 72) (UTF-16)
          8. FOOTER (268435456)              (  8)
+                                            (200)
         */
         bytes = _containersindex.ReadAllBytes();
 
@@ -334,6 +335,7 @@ public partial class PlatformMicrosoft : Platform
          5. META BLOB IDENTIFIER            ( 80) (UTF-16)
          6. META FILE CLOUD                 ( 16) (GUID)
          7. META FILE LOCAL                 ( 16) (GUID)
+                                            (328)
         */
 
         var blobContainerIndex = extra.MicrosoftBlobContainerFile!;
@@ -439,22 +441,24 @@ public partial class PlatformMicrosoft : Platform
 #endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
-        //  0. BASE VERSION         (  4)
-        //  1. GAME MODE            (  2)
-        //  1. SEASON               (  2)
-        //  2. TOTAL PLAY TIME      (  4)
-        //  3. EMPTY                (  4)
-        //  4. DECOMPRESSED SIZE    (  4)
+        /**
+          0. BASE VERSION                   (  4)
+          1. GAME MODE                      (  2)
+          1. SEASON                         (  2)
+          2. TOTAL PLAY TIME                (  4)
+          3. EMPTY                          (  4)
+          4. DECOMPRESSED SIZE              (  4) // before Omega 4.52
+          4. COMPRESSED SIZE                (  4) // since Omega 4.52
 
-        //  5. EMPTY                (  4)
-        //                          ( 24)
+          5. EMPTY                          (  4)
+                                            ( 24)
 
-        //  5. SAVE NAME            (128) // may contain additional junk data after null terminator
-        // 37. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
-        // 69. DIFFICULTY PRESET    (  1)
-        // 69. EMPTY                (  3) // may contain additional junk data
-        //                          (280)
-
+          5. SAVE NAME                      (128) // may contain additional junk data after null terminator
+         37. SAVE SUMMARY                   (128) // may contain additional junk data after null terminator
+         69. DIFFICULTY PRESET              (  1)
+         69. EMPTY                          (  3) // may contain additional junk data
+                                            (280)
+        */
         if (disk.IsEmpty())
             return;
 
@@ -464,7 +468,6 @@ public partial class PlatformMicrosoft : Platform
             MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
             Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
             Size = (uint)(disk.Length),
-            SizeDecompressed = decompressed[4],
             BaseVersion = (int)(decompressed[0]),
             GameMode = disk.Cast<ushort>(4),
             Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
@@ -478,6 +481,18 @@ public partial class PlatformMicrosoft : Platform
                 SaveName = disk.Slice(20, 128).GetStringUntilTerminator(),
                 SaveSummary = disk.Slice(148, 128).GetStringUntilTerminator(),
                 DifficultyPreset = disk[276],
+            };
+
+        // As data has a save streaming like format since Omega 4.52, the disk size now stored.
+        if (Meta.GameVersion.Get(container.Extra.BaseVersion) < GameVersionEnum.OmegaWithV2)
+            container.Extra = container.Extra with
+            {
+                SizeDecompressed = decompressed[4],
+            };
+        else
+            container.Extra = container.Extra with
+            {
+                SizeDisk = decompressed[4],
             };
 
         container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough to calculate SaveVersion
@@ -510,15 +525,6 @@ public partial class PlatformMicrosoft : Platform
         }
 
         return result;
-    }
-
-    protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
-    {
-        // Removed SizeDisk as it is the sum of data and meta for this platform.
-        container.Extra = container.Extra with
-        {
-            SizeDecompressed = (uint)(decompressed.Length),
-        };
     }
 
     #endregion
@@ -643,7 +649,7 @@ public partial class PlatformMicrosoft : Platform
             // Skip EMPTY.
             writer.Seek(0x4, SeekOrigin.Current); // 4
 
-            writer.Write(container.Extra.SizeDecompressed); // 4
+            writer.Write(container.IsVersion452OmegaWithV2 ? container.Extra.SizeDisk : container.Extra.SizeDecompressed); // 4
 
             // Insert trailing bytes and the extended Waypoint data.
             AddWaypointMeta(writer, container); // Extra.Bytes is 260 or 4
