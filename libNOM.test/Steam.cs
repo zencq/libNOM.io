@@ -190,16 +190,11 @@ public class SteamTest : CommonTestClass
             new(22, "Slot12Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4142, 4654, GameVersionEnum.WaypointWithSuperchargedSlots, "Collector", "Aboard the Space Anomaly", 12049),
             new(23, "Slot12Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4142, 4654, GameVersionEnum.WaypointWithSuperchargedSlots, "Collector", "Aboard the Space Anomaly", 12048),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-            UseExternalSourcesForUserIdentification = false,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -225,16 +220,11 @@ public class SteamTest : CommonTestClass
             new(8, "Slot5Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4125, 4637, GameVersionEnum.ExoMech, "", "", 250803),
             new(9, "Slot5Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4125, 4637, GameVersionEnum.ExoMech, "", "", 250955),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-            UseExternalSourcesForUserIdentification = false,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -253,16 +243,11 @@ public class SteamTest : CommonTestClass
 
             new(4, "Slot3Auto", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Pioneers, 4129, 7201, GameVersionEnum.Expeditions, "", "", 6237),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-            UseExternalSourcesForUserIdentification = false,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -276,16 +261,11 @@ public class SteamTest : CommonTestClass
             new(26, "Slot14Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4147, 4659, GameVersionEnum.Omega, "", "Within Test Base Terrain Edits", 12462),
             new(27, "Slot14Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4147, 4659, GameVersionEnum.Omega, "", "Aboard the Space Anomaly", 12521),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-            UseExternalSourcesForUserIdentification = false,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -307,16 +287,11 @@ public class SteamTest : CommonTestClass
 
             new(22, "Slot12Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4147, 4659, GameVersionEnum.Omega, "", "Aboard the Space Anomaly", 42148),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-            UseExternalSourcesForUserIdentification = false,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
     }
 
     /// <summary>
@@ -338,16 +313,11 @@ public class SteamTest : CommonTestClass
 
             new(4, "Slot3Auto", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Pioneers, 4129, 7201, GameVersionEnum.Expeditions, "", "", 6237),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-            UseExternalSourcesForUserIdentification = false,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSteam>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -359,15 +329,10 @@ public class SteamTest : CommonTestClass
         var originUtcTicks = 637376113620000000; // 2020-10-06 20:02:42 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
         var results = new WriteResults(uint.MaxValue, 4125, (ushort)(PresetGameModeEnum.Unspecified), (ushort)(SeasonEnum.None), 0, "", "", (byte)(DifficultyPresetTypeEnum.Invalid));
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultSave<PlatformSteam>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+        TestCommonWriteDefaultSave<PlatformSteam>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]
@@ -377,15 +342,10 @@ public class SteamTest : CommonTestClass
         var originMusicVolume = 80; // 80
         var originUtcTicks = 637663896760000000; // 2021-09-04 22:01:16 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultAccount<PlatformSteam>(path, settings, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+        TestCommonWriteDefaultAccount<PlatformSteam>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
     }
 
     [TestMethod]
@@ -397,33 +357,23 @@ public class SteamTest : CommonTestClass
         var originUtcTicks = 637663905840000000; // 2021-09-04 22:16:24 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
         var results = new WriteResults(uint.MaxValue, 4135, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 94164, "", "", (byte)(DifficultyPresetTypeEnum.Normal));
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultSave<PlatformSteam>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+        TestCommonWriteDefaultSave<PlatformSteam>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]
     public void T13_Write_Default_0x7D2_Waypoint_Account()
     {
         // Arrange
-        var originMusicVolume = 80; // 80 
+        var originMusicVolume = 80; // 80
         var originUtcTicks = 638263807910000000; // 2023-07-31 06:13:11 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultAccount<PlatformSteam>(path, settings, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+        TestCommonWriteDefaultAccount<PlatformSteam>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
     }
 
     [TestMethod]
@@ -435,224 +385,58 @@ public class SteamTest : CommonTestClass
         var originUtcTicks = 638234536920000000; // 2023-06-27 09:08:12 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
         var results = new WriteResults(uint.MaxValue, 4145, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1253526, "Iteration 1", "Aboard the Space Anomaly", (byte)(DifficultyPresetTypeEnum.Custom));
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultSave<PlatformSteam>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+        TestCommonWriteDefaultSave<PlatformSteam>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]
     public void T15_Write_SetLastWriteTime_False()
     {
         // Arrange
-        var now = DateTimeOffset.UtcNow;
+        var containerIndex = 0;
+        var originUnits = -1221111157; // 3.073.856.139
+        var originUtcTicks = 637663905840000000; // 2021-09-04 22:16:24 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            SetLastWriteTime = false,
-            UseMapping = true,
-        };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-
-        platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        AssertCommonWriteValues(-1221111157, 637663905840000000, valuesOrigin); // 3.073.856.139 // 2021-09-04 22:16:24 +00:00
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, 637663905840000000, valuesSet);
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, 637663905840000000, valuesReload);
+        TestCommonWriteSetLastWriteTimeFalse<PlatformSteam>(path, containerIndex, originUnits, originUtcTicks);
     }
 
     [TestMethod]
-    public void T16_Write_WriteAlways_True()
+    public void T16_Write_WriteAlways_False()
     {
+        var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            WriteAlways = true,
-        };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        containerA.DataFile!.Refresh();
-        var lengthOrigin = containerA.DataFile!.Length;
-
-        platformA.Write(containerA);
-        containerA.DataFile!.Refresh();
-        var lengthSet = containerA.DataFile!.Length;
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-
-        platformB.Load(containerB);
-        containerB.DataFile!.Refresh();
-        var lengthReload = containerA.DataFile!.Length;
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        Assert.AreNotEqual(lengthOrigin, lengthSet);
-        Assert.AreNotEqual(lengthOrigin, lengthReload);
-
-        Assert.AreEqual(lengthSet, lengthReload);
+        TestCommonWriteWriteAlwaysFalse<PlatformSteam>(path, containerIndex);
     }
 
     [TestMethod]
-    public void T17_Write_WriteAlways_False()
+    public void T17_Write_WriteAlways_True()
     {
-        var now = DateTimeOffset.UtcNow;
+        var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-            WriteAlways = false,
-        };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSteam(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        containerA.DataFile!.Refresh();
-        var lengthOrigin = containerA.DataFile!.Length;
-
-        platformA.Write(containerA, now);
-        containerA.DataFile!.Refresh();
-        var lengthSet = containerA.DataFile!.Length;
-
-        var platformB = new PlatformSteam(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-
-        platformB.Load(containerB);
-        containerB.DataFile!.Refresh();
-        var lengthReload = containerA.DataFile!.Length;
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        Assert.AreEqual(lengthOrigin, lengthSet);
-        Assert.AreEqual(lengthOrigin, lengthReload); // then lengthSet and lengthReload AreEqual too
+        TestCommonWriteWriteAlwaysTrue<PlatformSteam>(path, containerIndex);
     }
 
     [TestMethod]
     public void T20_FileSystemWatcher()
     {
+        var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
         var pathWatching = Path.Combine(path, "save.hg");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-            Watcher = true,
-        };
 
         // Act
-        var bytes = File.ReadAllBytes(pathWatching);
-
-        var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0);
-        Guard.IsNotNull(container);
-
-        platform.Load(container);
-
-        File.WriteAllBytes(pathWatching, bytes);
-        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers1 = GetWatcherChangeContainers(platform);
-        var count1 = watchers1.Count();
-        var synced1 = container.IsSynced;
-
-        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        var synced2 = container.IsSynced;
-
-        File.WriteAllBytes(pathWatching, bytes);
-        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers2 = GetWatcherChangeContainers(platform);
-        var count2 = watchers2.Count();
-        var synced3 = container.IsSynced;
-
-        var watcherContainer2 = watchers2.FirstOrDefault();
-        Guard.IsNotNull(watcherContainer2);
-        platform.OnWatcherDecision(watcherContainer2, false);
-        var synced4 = container.IsSynced;
-
-        File.WriteAllBytes(pathWatching, bytes);
-        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers3 = GetWatcherChangeContainers(platform);
-        var count3 = watchers3.Count();
-        var synced5 = container.IsSynced;
-
-        var watcherContainer3 = watchers3.FirstOrDefault();
-        Guard.IsNotNull(watcherContainer3);
-        platform.OnWatcherDecision(watcherContainer3, true);
-        var synced6 = container.IsSynced;
-
         // Assert
-        Assert.AreEqual(0, count1);
-        Assert.IsTrue(synced1);
-
-        Assert.IsFalse(synced2);
-
-        Assert.AreEqual(1, count2);
-        Assert.IsFalse(synced3);
-
-        Assert.AreEqual(container, watcherContainer2);
-        Assert.IsFalse(synced4);
-
-        Assert.AreEqual(1, count3);
-        Assert.IsFalse(synced5);
-
-        Assert.AreEqual(container, watcherContainer3);
-        Assert.IsTrue(synced6);
+        TestCommonFileSystemWatcher<PlatformSteam>(path, pathWatching, containerIndex);
     }
 
     [TestMethod]

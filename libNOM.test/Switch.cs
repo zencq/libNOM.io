@@ -77,15 +77,11 @@ public class SwitchTest : CommonTestClass
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4139, 5163, GameVersionEnum.Endurance, "", "", 18),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSwitch>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSwitch>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -98,15 +94,11 @@ public class SwitchTest : CommonTestClass
         {
             new(0, "Slot1Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4139, 4651, GameVersionEnum.Endurance, "", "", 12655),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSwitch>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSwitch>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -119,15 +111,11 @@ public class SwitchTest : CommonTestClass
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4139, 4651, GameVersionEnum.Endurance, "", "", 640),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSwitch>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSwitch>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -144,15 +132,11 @@ public class SwitchTest : CommonTestClass
 
             new(4, "Slot3Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4139, 5163, GameVersionEnum.Endurance, "", "", 51),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSwitch>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSwitch>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
@@ -169,294 +153,115 @@ public class SwitchTest : CommonTestClass
             new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4145, 4657, GameVersionEnum.Singularity, "", "登上太空异象", 88),
             new(3, "Slot2Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4145, 4657, GameVersionEnum.Singularity, "", "登上太空异象", 82),
         };
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonRead<PlatformSwitch>(path, settings, results, expectAccountData, userIdentification);
+        TestCommonRead<PlatformSwitch>(path, results, expectAccountData, userIdentification);
     }
 
     [TestMethod]
     public void T10_Write_Default_0x7D2_Frontiers_Account()
     {
+        // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638006823230000000; // 2022-10-06 19:45:32 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultAccount<PlatformSwitch>(path, settings, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+        TestCommonWriteDefaultAccount<PlatformSwitch>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
     }
 
     [TestMethod]
     public void T11_Write_Default_0x7D2_Frontiers()
     {
+        // Arrange
         var containerIndex = 4;
         var originUnits = 0; // 0
         var originUtcTicks = 638006823360000000; // 2022-10-06 19:45:36 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
         var results = new WriteResults(6, 4139, (ushort)(PresetGameModeEnum.Creative), (ushort)(SeasonEnum.None), 51, "", "", (byte)(DifficultyPresetTypeEnum.Normal));
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultSave<PlatformSwitch>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+        TestCommonWriteDefaultSave<PlatformSwitch>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]
     public void T12_Write_Default_0x7D2_Waypoint_Account()
     {
+        // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638298440830000000; // 2023-09-09 08:14:43 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultAccount<PlatformSwitch>(path, settings, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+        TestCommonWriteDefaultAccount<PlatformSwitch>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
     }
 
     [TestMethod]
     public void T13_Write_Default_0x7D2_Waypoint()
     {
+        // Arrange
         var containerIndex = 0;
         var originUnits = 1000356262; // 1.000.356.262
         var originUtcTicks = 638093635960000000; // 2023-01-15 07:13:16 +00:00 (from meta)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
         var results = new WriteResults(2, 4145, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 63873, "", "登上Inzadg球体", (byte)(DifficultyPresetTypeEnum.Custom));
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-        };
 
         // Act
         // Assert
-        TestCommonWriteDefaultSave<PlatformSwitch>(path, settings, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+        TestCommonWriteDefaultSave<PlatformSwitch>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
     }
 
     [TestMethod]
     public void T14_Write_SetLastWriteTime_False()
     {
-        var now = DateTimeOffset.UtcNow;
+        // Arrange
+        var containerIndex = 0;
+        var originUnits = 0; // 0
+        var originUtcTicks = 638006282230000000; // 2022-10-06 04:43:43 +00:00 (from meta)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            SetLastWriteTime = false,
-            UseMapping = true,
-        };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSwitch(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
-
-        var platformB = new PlatformSwitch(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-
-        platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        AssertCommonWriteValues(0, 638006282230000000, valuesOrigin); // 0 // 2022-10-06 04:43:43
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, 638006282230000000, valuesSet);
-        AssertCommonWriteValues(UNITS_NEW_AMOUNT, 638006282230000000, valuesReload);
+        TestCommonWriteSetLastWriteTimeFalse<PlatformSwitch>(path, containerIndex, originUnits, originUtcTicks);
     }
 
     [TestMethod]
-    public void T15_Write_WriteAlways_True()
+    public void T15_Write_WriteAlways_False()
     {
+        var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            WriteAlways = true,
-        };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSwitch(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        containerA.DataFile!.Refresh();
-        var lengthOrigin = containerA.DataFile!.Length;
-
-        platformA.Write(containerA);
-        containerA.DataFile!.Refresh();
-        var lengthSet = containerA.DataFile!.Length;
-
-        var platformB = new PlatformSwitch(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-
-        platformB.Load(containerB);
-        containerB.DataFile!.Refresh();
-        var lengthReload = containerA.DataFile!.Length;
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        Assert.AreNotEqual(lengthOrigin, lengthSet);
-        Assert.AreNotEqual(lengthOrigin, lengthReload);
-
-        Assert.AreEqual(lengthSet, lengthReload);
+        TestCommonWriteWriteAlwaysTrue<PlatformSwitch>(path, containerIndex);
     }
 
     [TestMethod]
-    public void T16_Write_WriteAlways_False()
+    public void T16_Write_WriteAlways_True()
     {
-        var now = DateTimeOffset.UtcNow;
+        var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            WriteAlways = false,
-        };
-        var writeCallback = false;
 
         // Act
-        var platformA = new PlatformSwitch(path, settings);
-        var containerA = platformA.GetSaveContainer(0);
-        Guard.IsNotNull(containerA);
-
-        containerA.WriteCallback += () =>
-        {
-            writeCallback = true;
-        };
-
-        platformA.Load(containerA);
-        containerA.DataFile!.Refresh();
-        var lengthOrigin = containerA.DataFile!.Length;
-
-        platformA.Write(containerA);
-        containerA.DataFile!.Refresh();
-        var lengthSet = containerA.DataFile!.Length;
-
-        var platformB = new PlatformSwitch(path, settings);
-        var containerB = platformB.GetSaveContainer(0);
-        Guard.IsNotNull(containerB);
-
-        platformB.Load(containerB);
-        containerB.DataFile!.Refresh();
-        var lengthReload = containerA.DataFile!.Length;
-
         // Assert
-        Assert.IsTrue(writeCallback);
-
-        Assert.AreEqual(lengthOrigin, lengthSet);
-        Assert.AreEqual(lengthOrigin, lengthReload); // then lengthSet and lengthReload AreEqual too
+        TestCommonWriteWriteAlwaysTrue<PlatformSwitch>(path, containerIndex);
     }
 
     [TestMethod]
     public void T20_FileSystemWatcher()
     {
+        var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
         var pathWatching = Path.Combine(path, "manifest02.hg");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-            UseMapping = true,
-            Watcher = true,
-        };
 
         // Act
-        var bytes = File.ReadAllBytes(pathWatching);
-
-        var platform = new PlatformSwitch(path, settings);
-        var container = platform.GetSaveContainer(0);
-        Guard.IsNotNull(container);
-
-        platform.Load(container);
-
-        File.WriteAllBytes(pathWatching, bytes);
-        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers1 = GetWatcherChangeContainers(platform);
-        var count1 = watchers1.Count();
-        var synced1 = container.IsSynced;
-
-        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        var synced2 = container.IsSynced;
-
-        File.WriteAllBytes(pathWatching, bytes);
-        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers2 = GetWatcherChangeContainers(platform);
-        var count2 = watchers2.Count();
-        var synced3 = container.IsSynced;
-
-        var watcherContainer2 = watchers2.FirstOrDefault();
-        Guard.IsNotNull(watcherContainer2);
-        platform.OnWatcherDecision(watcherContainer2, false);
-        var synced4 = container.IsSynced;
-
-        File.WriteAllBytes(pathWatching, bytes);
-        Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
-        var watchers3 = GetWatcherChangeContainers(platform);
-        var count3 = watchers3.Count();
-        var synced5 = container.IsSynced;
-
-        var watcherContainer3 = watchers3.FirstOrDefault();
-        Guard.IsNotNull(watcherContainer3);
-        platform.OnWatcherDecision(watcherContainer3, true);
-        var synced6 = container.IsSynced;
-
         // Assert
-        Assert.AreEqual(0, count1);
-        Assert.IsTrue(synced1);
-
-        Assert.IsFalse(synced2);
-
-        Assert.AreEqual(1, count2);
-        Assert.IsFalse(synced3);
-
-        Assert.AreEqual(container, watcherContainer2);
-        Assert.IsFalse(synced4);
-
-        Assert.AreEqual(1, count3);
-        Assert.IsFalse(synced5);
-
-        Assert.AreEqual(container, watcherContainer3);
-        Assert.IsTrue(synced6);
+        TestCommonFileSystemWatcher<PlatformSwitch>(path, pathWatching, containerIndex);
     }
 
     [TestMethod]
