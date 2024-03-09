@@ -2,6 +2,7 @@
 
 
 public record class WriteResults(
+    uint MetaIndex,
     uint BaseVersion,
     ushort GameMode, // PresetGameModeEnum
     ushort Season, // SeasonEnum

@@ -47,13 +47,13 @@ public abstract class CommonTestClass
 
     #region Assert
 
-    protected static void AssertCommonRead(ReadResults[] results, bool expectedAccountData, UserIdentification userIdentification, IPlatform? platform)
+    protected static void AssertCommonRead(ReadResults[] results, bool expectAccountData, UserIdentification userIdentification, IPlatform? platform)
     {
         ArgumentNullException.ThrowIfNull(platform, nameof(platform));
 
         Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
 
-        if (expectedAccountData)
+        if (expectAccountData)
             Assert.IsTrue(platform.HasAccountData);
         else
             Assert.IsFalse(platform.HasAccountData);
@@ -62,7 +62,6 @@ public abstract class CommonTestClass
         Assert.AreEqual(userIdentification.UID, platform.PlatformUserIdentification.UID);
         Assert.AreEqual(userIdentification.USN, platform.PlatformUserIdentification.USN);
         Assert.AreEqual(userIdentification.PTK, platform.PlatformUserIdentification.PTK);
-
 
         for (var i = 0; i < results.Length; i++)
         {
