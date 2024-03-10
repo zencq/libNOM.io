@@ -62,30 +62,30 @@ public class GogTest : CommonTestClass
         TestCommonFileOperationTransfer<PlatformGog, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog, offset);
     }
 
-    //[TestMethod]
-    //public void T11_TransferFromMicrosoft()
-    //{
-    //    // Arrange
-    //    var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
-    //    var resultsMicrosoft = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
-    //    };
-    //    var slotMicrosoft = 1; // get Slot2
-    //    var userDecisionsMicrosoft = 8;
-    //    var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
+    [TestMethod]
+    public void T11_TransferFromMicrosoft()
+    {
+        // Arrange
+        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var resultsMicrosoft = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 419023),
+        };
+        var slotMicrosoft = 1; // get Slot2
+        var userDecisionsMicrosoft = 8;
+        var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
-    //    var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-    //    var offset = 4;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
-    //    var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
-    //    var userIdentification = ReadUserIdentification(path);
+        var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
+        var offset = 4;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
+        var userIdentification = ReadUserIdentification(path);
 
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformGog, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
-    //}
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformGog, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
+    }
 
     //[TestMethod]
     //public void T12_TransferFromPlaystation_0x7D1()

@@ -445,6 +445,7 @@ public abstract class CommonTestClass
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
+        var tag = typeof(TPlatform) == typeof(PlatformMicrosoft) ? libNOM.io.Globals.Constants.INCOMPATIBILITY_004 : libNOM.io.Globals.Constants.INCOMPATIBILITY_006;
 
         // Act
         var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
@@ -462,7 +463,7 @@ public abstract class CommonTestClass
         foreach (var container in containers)
         {
             Assert.IsFalse(container.Exists);
-            Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container.IncompatibilityTag);
+            Assert.AreEqual(tag, container.IncompatibilityTag);
         }
     }
 
@@ -475,6 +476,7 @@ public abstract class CommonTestClass
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
+        var tag = typeof(TPlatform) == typeof(PlatformMicrosoft) ? libNOM.io.Globals.Constants.INCOMPATIBILITY_004 : libNOM.io.Globals.Constants.INCOMPATIBILITY_006;
 
         // Act
         var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
@@ -504,8 +506,8 @@ public abstract class CommonTestClass
 
         Assert.IsFalse(containers[delete[0]].Exists);
         Assert.IsFalse(containers[delete[1]].Exists);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, containers[delete[0]].IncompatibilityTag);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, containers[delete[1]].IncompatibilityTag);
+        Assert.AreEqual(tag, containers[delete[0]].IncompatibilityTag);
+        Assert.AreEqual(tag, containers[delete[1]].IncompatibilityTag);
 
         Assert.IsFalse(containers[create[0]].Exists);
         Assert.IsTrue(containers[create[1]].Exists);

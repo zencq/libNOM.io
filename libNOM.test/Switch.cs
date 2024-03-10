@@ -267,9 +267,9 @@ public class SwitchTest : CommonTestClass
     public void T30_Copy()
     {
         // Arrange
+        var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var copyCreate = new[] { 0, 1 }; // 1Auto -> 1Manual (create)
         var copyDelete = new[] { 6, 4 }; // 4Auto -> 3Auto (delete)
-        var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
 
         // Act
@@ -294,9 +294,9 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var moveCopy = new[] { 4, 5 }; // 3Auto -> 3Manual
-        var moveCreate = new[] { 4, 9 }; // 3Auto -> 5Manual (create)
-        var moveDelete = new[] { 1, 0 }; // 1Manual -> 1Auto (delete)
         var moveOverwrite = new[] { 2, 5 }; // 2Auto -> 3Manual (overwrite)
+        var moveDelete = new[] { 1, 0 }; // 1Manual -> 1Auto (delete)
+        var moveCreate = new[] { 4, 9 }; // 3Auto -> 5Manual (create)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
 
         // Act
@@ -329,30 +329,30 @@ public class SwitchTest : CommonTestClass
         TestCommonFileOperationTransfer<PlatformSwitch, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog, offset);
     }
 
-    //[TestMethod]
-    //public void T41_TransferFromMicrosoft()
-    //{
-    //    // Arrange
-    //    var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
-    //    var resultsMicrosoft = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
-    //    };
-    //    var slotMicrosoft = 1; // get Slot2
-    //    var userDecisionsMicrosoft = 8;
-    //    var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
+    [TestMethod]
+    public void T41_TransferFromMicrosoft()
+    {
+        // Arrange
+        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var resultsMicrosoft = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 419023),
+        };
+        var slotMicrosoft = 1; // get Slot2
+        var userDecisionsMicrosoft = 8;
+        var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
-    //    var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-    //    var offset = 2;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
-    //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userIdentification = ReadUserIdentification(path);
+        var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
+        var userIdentification = ReadUserIdentification(path);
 
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformSwitch, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
-    //}
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformSwitch, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
+    }
 
     //[TestMethod]
     //public void T42_TransferFromPlaystation_0x7D1()
