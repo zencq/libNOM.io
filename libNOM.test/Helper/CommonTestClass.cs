@@ -48,116 +48,6 @@ public abstract class CommonTestClass
 
     #region Assert
 
-    protected static void AssertCommonRead(ReadResults[] results, IPlatform? platform, bool expectAccountData, UserIdentification userIdentification)
-    {
-        ArgumentNullException.ThrowIfNull(platform, nameof(platform));
-
-        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
-
-        if (expectAccountData)
-            Assert.IsTrue(platform.HasAccountData);
-        else
-            Assert.IsFalse(platform.HasAccountData);
-
-        Assert.AreEqual(userIdentification.LID, platform.PlatformUserIdentification.LID);
-        Assert.AreEqual(userIdentification.UID, platform.PlatformUserIdentification.UID);
-        Assert.AreEqual(userIdentification.USN, platform.PlatformUserIdentification.USN);
-        Assert.AreEqual(userIdentification.PTK, platform.PlatformUserIdentification.PTK);
-
-        for (var i = 0; i < results.Length; i++)
-        {
-            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
-            var expected = results[i];
-
-            var priect = new PrivateObject(container);
-
-            if (!object.Equals(expected.CollectionIndex, container.CollectionIndex))
-                Console.WriteLine(nameof(expected.CollectionIndex));
-
-            if (!object.Equals(expected.Identifier, container.Identifier))
-                Console.WriteLine(nameof(expected.Identifier));
-
-            if (!object.Equals(expected.Exists, container.Exists))
-                Console.WriteLine(nameof(expected.Exists));
-
-            if (!object.Equals(expected.IsCompatible, container.IsCompatible))
-                Console.WriteLine(nameof(expected.IsCompatible));
-
-            if (!object.Equals(expected.IsOld, container.IsOld))
-                Console.WriteLine(nameof(expected.IsOld));
-
-            if (!object.Equals(expected.HasBase, container.HasBase))
-                Console.WriteLine(nameof(expected.HasBase));
-
-            if (!object.Equals(expected.HasFreighter, container.HasFreighter))
-                Console.WriteLine(nameof(expected.HasFreighter));
-
-            if (!object.Equals(expected.HasSettlement, container.HasSettlement))
-                Console.WriteLine(nameof(expected.HasSettlement));
-
-            if (!object.Equals(expected.HasActiveExpedition, container.HasActiveExpedition))
-                Console.WriteLine(nameof(expected.HasActiveExpedition));
-
-            if (!object.Equals(expected.CanSwitchContext, container.CanSwitchContext))
-                Console.WriteLine(nameof(expected.CanSwitchContext));
-
-            if (!object.Equals(expected.ActiveContext, container.ActiveContext))
-                Console.WriteLine(nameof(expected.ActiveContext));
-
-            var gameMode = priect.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString();
-            if (!object.Equals(expected.GameMode, gameMode))
-                Console.WriteLine(nameof(expected.GameMode));
-
-            if (!object.Equals(expected.Difficulty, container.Difficulty))
-                Console.WriteLine(nameof(expected.Difficulty));
-
-            if (!object.Equals(expected.Season, container.Season))
-                Console.WriteLine(nameof(expected.Season));
-
-            var baseVersion = (int)(priect.GetFieldOrProperty(nameof(ReadResults.BaseVersion)));
-            if (!object.Equals(expected.BaseVersion, baseVersion))
-                Console.WriteLine(nameof(expected.BaseVersion));
-
-            var saveVersion = (int)(priect.GetFieldOrProperty(nameof(ReadResults.SaveVersion)));
-            if (!object.Equals(expected.SaveVersion, saveVersion))
-                Console.WriteLine(nameof(expected.SaveVersion));
-
-            if (!object.Equals(expected.SaveName, container.SaveName))
-                Console.WriteLine(nameof(expected.SaveName));
-
-            if (!object.Equals(expected.SaveSummary, container.SaveSummary))
-                Console.WriteLine(nameof(expected.SaveSummary));
-
-            if (!object.Equals(expected.TotalPlayTime, container.TotalPlayTime))
-                Console.WriteLine(nameof(expected.TotalPlayTime));
-
-            // TODO should always 0
-            if (container.UnknownKeys.Any())
-                Console.WriteLine(nameof(container.UnknownKeys));
-
-            //Assert.AreEqual(expected.CollectionIndex, container.CollectionIndex);
-            //Assert.AreEqual(expected.Identifier, container.Identifier);
-            //Assert.AreEqual(expected.Exists, container.Exists);
-            //Assert.AreEqual(expected.IsCompatible, container.IsCompatible);
-            //Assert.AreEqual(expected.IsOld, container.IsOld);
-            //Assert.AreEqual(expected.HasBase, container.HasBase);
-            //Assert.AreEqual(expected.HasFreighter, container.HasFreighter);
-            //Assert.AreEqual(expected.HasSettlement, container.HasSettlement);
-            //Assert.AreEqual(expected.HasActiveExpedition, container.HasActiveExpedition);
-            //Assert.AreEqual(expected.CanSwitchContext, container.CanSwitchContext);
-            //Assert.AreEqual(expected.ActiveContext, container.ActiveContext);
-            //Assert.AreEqual(expected.GameMode, priect.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
-            //Assert.AreEqual(expected.Difficulty, container.Difficulty);
-            //Assert.AreEqual(expected.Season, container.Season);
-            //Assert.AreEqual(expected.BaseVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
-            //Assert.AreEqual(expected.SaveVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
-            //Assert.AreEqual(expected.SaveName, container.SaveName);
-            //Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
-            //Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
-            //Assert.IsFalse(container.UnknownKeys.Any(), $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
-        }
-    }
-
     protected static void AssertAllAreEqual(IEnumerable<byte> expected, params IEnumerable<byte>[] actual)
     {
         foreach (var value in actual)
@@ -238,6 +128,52 @@ public abstract class CommonTestClass
         Assert.AreEqual(resultA.BaseVersion, resultB.BaseVersion);
         Assert.AreEqual(resultA.GameVersion, resultB.GameVersion);
         Assert.AreEqual(resultA.TotalPlayTime, resultB.TotalPlayTime);
+    }
+
+    protected static void AssertCommonRead(ReadResults[] results, IPlatform? platform, bool expectAccountData, UserIdentification userIdentification)
+    {
+        ArgumentNullException.ThrowIfNull(platform, nameof(platform));
+
+        Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
+
+        if (expectAccountData)
+            Assert.IsTrue(platform.HasAccountData);
+        else
+            Assert.IsFalse(platform.HasAccountData);
+
+        Assert.AreEqual(userIdentification.LID, platform.PlatformUserIdentification.LID);
+        Assert.AreEqual(userIdentification.UID, platform.PlatformUserIdentification.UID);
+        Assert.AreEqual(userIdentification.USN, platform.PlatformUserIdentification.USN);
+        Assert.AreEqual(userIdentification.PTK, platform.PlatformUserIdentification.PTK);
+
+        for (var i = 0; i < results.Length; i++)
+        {
+            var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
+            var expected = results[i];
+
+            var priect = new PrivateObject(container);
+
+            Assert.AreEqual(expected.CollectionIndex, container.CollectionIndex);
+            Assert.AreEqual(expected.Identifier, container.Identifier);
+            Assert.AreEqual(expected.Exists, container.Exists);
+            Assert.AreEqual(expected.IsCompatible, container.IsCompatible);
+            Assert.AreEqual(expected.IsOld, container.IsOld);
+            Assert.AreEqual(expected.HasBase, container.HasBase);
+            Assert.AreEqual(expected.HasFreighter, container.HasFreighter);
+            Assert.AreEqual(expected.HasSettlement, container.HasSettlement);
+            Assert.AreEqual(expected.HasActiveExpedition, container.HasActiveExpedition);
+            Assert.AreEqual(expected.CanSwitchContext, container.CanSwitchContext);
+            Assert.AreEqual(expected.ActiveContext, container.ActiveContext);
+            Assert.AreEqual(expected.GameMode, priect.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
+            Assert.AreEqual(expected.Difficulty, container.Difficulty);
+            Assert.AreEqual(expected.Season, container.Season);
+            Assert.AreEqual(expected.BaseVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
+            Assert.AreEqual(expected.SaveVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
+            Assert.AreEqual(expected.SaveName, container.SaveName);
+            Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
+            Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
+            Assert.IsFalse(container.UnknownKeys.Any(), $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+        }
     }
 
     protected static void AssertCommonSourceTransferData(UserIdentification userIdentification, IPlatform platform, TransferData transfer)
@@ -488,13 +424,14 @@ public abstract class CommonTestClass
                 var container = platform.GetSaveContainer(i);
                 Guard.IsNotNull(container);
                 containers.Add(i, container);
-
-                if (i == overwrite[0] || i == create[0])
-                    results.Add(i, GetFileOperationResults(containers[i]));
             }
 
         if (copy.Any())
             platform.Copy(containers[copy[0]], containers[copy[1]]);
+
+        // After copy to get proper data.
+        foreach (var (containerIndex, container) in containers.Where(i => i.Key == overwrite[0] || i.Key == create[0]))
+            results.Add(containerIndex, GetFileOperationResults(container));
 
         platform.Move(containers[overwrite[0]], containers[overwrite[1]]); // overwrite
         platform.Move(containers[delete[0]], containers[delete[1]]); // delete
@@ -551,7 +488,7 @@ public abstract class CommonTestClass
             Watcher = true,
         };
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(UNITS_JSONPATH_KEY, UNITS_JSONPATH);
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
 
         // Act
         var bytes = File.ReadAllBytes(pathWatching);
@@ -686,7 +623,7 @@ public abstract class CommonTestClass
         };
         var writeCallback = false;
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(UNITS_JSONPATH_KEY, UNITS_JSONPATH);
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
 
         // Act
         var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
@@ -736,7 +673,7 @@ public abstract class CommonTestClass
         };
         var writeCallback = false;
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(UNITS_JSONPATH_KEY, UNITS_JSONPATH);
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
 
         // Act
         var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
@@ -776,6 +713,7 @@ public abstract class CommonTestClass
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
+            SetLastWriteTime = false, // no interfering
             WriteAlways = false,
         };
         var writeCallback = false;
@@ -819,6 +757,7 @@ public abstract class CommonTestClass
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
+            SetLastWriteTime = false, // no interfering
             WriteAlways = true,
         };
         var writeCallback = false;

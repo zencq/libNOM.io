@@ -12,7 +12,7 @@ namespace libNOM.test;
 public class GogTest : CommonTestClass
 {
     [TestMethod]
-    public void T01_Read_DefaultUser()
+    public void T101_Read_DefaultUser()
     {
         // Arrange
         var expectAccountData = false;
@@ -38,7 +38,7 @@ public class GogTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T10_TransferFromGog()
+    public void T200_TransferFromGog()
     {
         // Arrange
         var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
@@ -63,7 +63,7 @@ public class GogTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T11_TransferFromMicrosoft()
+    public void T201_TransferFromMicrosoft()
     {
         // Arrange
         var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
@@ -87,58 +87,58 @@ public class GogTest : CommonTestClass
         TestCommonFileOperationTransfer<PlatformGog, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
     }
 
-    //[TestMethod]
-    //public void T12_TransferFromPlaystation_0x7D1()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Manual
-    //    };
-    //    var slotPlaystation = 1; // get Slot2
-    //    var userDecisionsPlaystation = 24;
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+    [TestMethod]
+    public void T202_TransferFromPlaystation_0x7D1()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598818),
+        };
+        var slotPlaystation = 1; // get Slot2
+        var userDecisionsPlaystation = 24;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
-    //    var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-    //    var offset = 4;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
-    //    var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
-    //    var userIdentification = ReadUserIdentification(path);
+        var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
+        var offset = 4;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
+        var userIdentification = ReadUserIdentification(path);
 
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
-    //}
-
-    //[TestMethod]
-    //public void T13_TransferFromPlaystation_0x7D2()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
-    //    };
-    //    var slotPlaystation = 1; // get Slot2
-    //    var userDecisionsPlaystation = 4;
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
-
-    //    var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-    //    var offset = 4;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
-    //    var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
-    //    var userIdentification = ReadUserIdentification(path);
-
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
-    //}
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+    }
 
     [TestMethod]
-    public void T14_TransferFromSteam()
+    public void T203_TransferFromPlaystation_0x7D2()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101604),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101653),
+        };
+        var slotPlaystation = 1; // get Slot2
+        var userDecisionsPlaystation = 4;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+
+        var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
+        var offset = 4;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+    }
+
+    [TestMethod]
+    public void T204_TransferFromSteam()
     {
         // Arrange
         var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -163,7 +163,7 @@ public class GogTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T15_TransferFromSwitch()
+    public void T205_TransferFromSwitch()
     {
         // Arrange
         var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");

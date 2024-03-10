@@ -356,7 +356,7 @@ public partial class PlatformPlaystation : Platform
         using var reader = new BinaryReader(File.Open(container.DataFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.Read));
 
         reader.BaseStream.Seek(container.Extra.PlaystationOffset!.Value, SeekOrigin.Begin);
-        var data = reader.ReadBytes((int)(reader.BaseStream.Length)); // read till end of stream as size from meta might not be correct
+        var data = reader.ReadBytes((int)(container.Extra.Size));
 
         // Store raw bytes as the block size is dynamic and moves if SaveWizard is used. Therefore the entire file needs to be rebuild.
         if (!_usesSaveStreaming)

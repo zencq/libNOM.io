@@ -26,6 +26,55 @@ public class MicrosoftTest : CommonTestClass
 
     #endregion
 
+    #region Meta
+
+    private static uint[] DecryptMeta(Container container)
+    {
+        byte[] meta = File.ReadAllBytes(container.MetaFile!.FullName);
+        return ToUInt32(meta);
+    }
+
+    private static void AssertCommonMeta(Container container, uint[] metaA, uint[] metaB)
+    {
+        Assert.AreEqual(metaA.Length, metaB.Length);
+
+        if (metaA.Length == META_LENGTH_TOTAL_VANILLA || metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
+        {
+            if (container.IsAccount)
+            {
+                AssertAllAreEqual(1, metaA[0], metaB[0]);
+                AssertAllZero(metaA.Skip(1).Take(3), metaB.Skip(1).Take(3));
+                AssertAllNotZero(metaA[4], metaB[4]);
+            }
+
+            Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
+        }
+        else
+            throw new AssertFailedException();
+    }
+
+    private static void AssertSpecificMeta(WriteResults results, Container containerA, Container containerB, uint[] metaA, uint[] metaB)
+    {
+        var bytesA = metaA.AsSpan().AsBytes().ToArray();
+        var bytesB = metaB.AsSpan().AsBytes().ToArray();
+        var priectA = new PrivateObject(containerA);
+        var priectB = new PrivateObject(containerB);
+
+        AssertAllAreEqual(results.BaseVersion, (uint)(int)(priectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(priectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[0], metaB[0]);
+        AssertAllAreEqual(results.GameMode, (ushort)(priectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(priectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 4), BitConverter.ToInt16(bytesB, 4));
+        AssertAllAreEqual(results.Season, (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 6), BitConverter.ToUInt16(bytesA, 6));
+        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[2], metaB[2]);
+
+        if (results.BaseVersion < 4140) // Waypoint
+            return;
+
+        AssertAllAreEqual(results.SaveName, containerA.SaveName, containerB.SaveName, GetString(bytesA.Skip(20).TakeWhile(i => i != 0)), GetString(bytesB.Skip(20).TakeWhile(i => i != 0)));
+        AssertAllAreEqual(results.SaveSummary, containerA.SaveSummary, containerB.SaveSummary, GetString(bytesA.Skip(148).TakeWhile(i => i != 0)), GetString(bytesB.Skip(148).TakeWhile(i => i != 0)));
+        AssertAllAreEqual(results.Difficulty, (byte)(containerA.Difficulty), (byte)(containerB.Difficulty), bytesA[276], bytesB[276]);
+    }
+
+    #endregion
+
     #region containers.index
 
     /// <see cref="PlatformMicrosoft.ParseContainersIndex()"/>
@@ -248,55 +297,6 @@ public class MicrosoftTest : CommonTestClass
 
     #endregion
 
-    #region Meta
-
-    private static uint[] DecryptMeta(Container container)
-    {
-        byte[] meta = File.ReadAllBytes(container.MetaFile!.FullName);
-        return ToUInt32(meta);
-    }
-
-    private static void AssertCommonMeta(Container container, uint[] metaA, uint[] metaB)
-    {
-        Assert.AreEqual(metaA.Length, metaB.Length);
-
-        if (metaA.Length == META_LENGTH_TOTAL_VANILLA || metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
-        {
-            if (container.IsAccount)
-            {
-                AssertAllAreEqual(1, metaA[0], metaB[0]);
-                AssertAllZero(metaA.Skip(1).Take(3), metaB.Skip(1).Take(3));
-                AssertAllNotZero(metaA[4], metaB[4]);
-            }
-
-            Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
-        }
-        else
-            throw new AssertFailedException();
-    }
-
-    private static void AssertSpecificMeta(WriteResults results, Container containerA, Container containerB, uint[] metaA, uint[] metaB)
-    {
-        var bytesA = metaA.AsSpan().AsBytes().ToArray();
-        var bytesB = metaB.AsSpan().AsBytes().ToArray();
-        var priectA = new PrivateObject(containerA);
-        var priectB = new PrivateObject(containerB);
-
-        AssertAllAreEqual(results.BaseVersion, (uint)(int)(priectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(priectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[0], metaB[0]);
-        AssertAllAreEqual(results.GameMode, (ushort)(priectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(priectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 4), BitConverter.ToInt16(bytesB, 4));
-        AssertAllAreEqual(results.Season, (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 6), BitConverter.ToUInt16(bytesA, 6));
-        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[2], metaB[2]);
-
-        if (results.BaseVersion < 4140) // Waypoint
-            return;
-
-        AssertAllAreEqual(results.SaveName, containerA.SaveName, containerB.SaveName, GetString(bytesA.Skip(20).TakeWhile(i => i != 0)), GetString(bytesB.Skip(20).TakeWhile(i => i != 0)));
-        AssertAllAreEqual(results.SaveSummary, containerA.SaveSummary, containerB.SaveSummary, GetString(bytesA.Skip(148).TakeWhile(i => i != 0)), GetString(bytesB.Skip(148).TakeWhile(i => i != 0)));
-        AssertAllAreEqual(results.Difficulty, (byte)(containerA.Difficulty), (byte)(containerB.Difficulty), bytesA[276], bytesB[276]);
-    }
-
-    #endregion
-
     [TestMethod]
     public void T101_Read_0009000000C73498()
     {
@@ -468,7 +468,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     /// <summary>
-    /// Same as <see cref="T06_Read_000901FFCAB85905"/>.
+    /// Same as <see cref="T106_Read_000901FFCAB85905"/>.
     /// </summary>
     [TestMethod]
     public void T109_Read_NoAccountInDirectory()
@@ -727,55 +727,55 @@ public class MicrosoftTest : CommonTestClass
         TestCommonFileOperationTransfer<PlatformMicrosoft, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
     }
 
-    //[TestMethod]
-    //public void T402_TransferFromPlaystation_0x7D1()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Manual
-    //    };
-    //    var slotPlaystation = 1; // get Slot2
-    //    var userDecisionsPlaystation = 24;
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+    [TestMethod]
+    public void T402_TransferFromPlaystation_0x7D1()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598818),
+        };
+        var slotPlaystation = 1; // get Slot2
+        var userDecisionsPlaystation = 24;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
-    //    var existingContainersCount = 8; // 6 + 2 (Slot?)
-    //    var offset = 2;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
-    //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userIdentification = ReadUserIdentification(path);
+        var existingContainersCount = 8; // 6 + 2 (Slot?)
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
+        var userIdentification = ReadUserIdentification(path);
 
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformMicrosoft, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
-    //}
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformMicrosoft, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+    }
 
-    //[TestMethod]
-    //public void T403_TransferFromPlaystation_0x7D2()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
-    //    };
-    //    var slotPlaystation = 1; // get Slot2
-    //    var userDecisionsPlaystation = 4;
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+    [TestMethod]
+    public void T403_TransferFromPlaystation_0x7D2()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101604),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101653),
+        };
+        var slotPlaystation = 1; // get Slot2
+        var userDecisionsPlaystation = 4;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
-    //    var existingContainersCount = 8; // 6 + 2 (Slot?)
-    //    var offset = 2;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
-    //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userIdentification = ReadUserIdentification(path);
+        var existingContainersCount = 8; // 6 + 2 (Slot?)
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
+        var userIdentification = ReadUserIdentification(path);
 
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformMicrosoft, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
-    //}
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformMicrosoft, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+    }
 
     [TestMethod]
     public void T404_TransferFromSteam()

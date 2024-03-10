@@ -163,7 +163,7 @@ public class SteamTest : CommonTestClass
     #endregion
 
     [TestMethod]
-    public void T01_Read_76561198042453834()
+    public void T101_Read_76561198042453834()
     {
         // Arrange
         var expectAccountData = true;
@@ -197,7 +197,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T02_Read_76561198043217184()
+    public void T102_Read_76561198043217184()
     {
         // Arrange
         var expectAccountData = false;
@@ -227,7 +227,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T03_Read_76561198371877533()
+    public void T103_Read_76561198371877533()
     {
         // Arrange
         var expectAccountData = true;
@@ -250,7 +250,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T04_Read_76561198093556678()
+    public void T104_Read_76561198093556678()
     {
         // Arrange
         var expectAccountData = false;
@@ -268,7 +268,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T05_Read_76561199278291995()
+    public void T105_Read_76561199278291995()
     {
         // Arrange
         var expectAccountData = false;
@@ -294,10 +294,10 @@ public class SteamTest : CommonTestClass
     }
 
     /// <summary>
-    /// Same as <see cref="T03_Read_76561198371877533"/>.
+    /// Same as <see cref="T103_Read_76561198371877533"/>.
     /// </summary>
     [TestMethod]
-    public void T06_Read_NoAccountInDirectory()
+    public void T106_Read_NoAccountInDirectory()
     {
         // Arrange
         var expectAccountData = true;
@@ -320,7 +320,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T10_Write_Default_0x7D1()
+    public void T200_Write_Default_0x7D1()
     {
         // Arrange
         var containerIndex = 0;
@@ -335,7 +335,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T11_Write_Default_0x7D2_Frontiers_Account()
+    public void T210_Write_Default_0x7D2_Frontiers_Account()
     {
         // Arrange
         var originMusicVolume = 80; // 80
@@ -348,7 +348,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T12_Write_Default_0x7D2_Frontiers()
+    public void T211_Write_Default_0x7D2_Frontiers()
     {
         // Arrange
         var containerIndex = 0;
@@ -363,7 +363,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T13_Write_Default_0x7D2_Waypoint_Account()
+    public void T220_Write_Default_0x7D2_Waypoint_Account()
     {
         // Arrange
         var originMusicVolume = 80; // 80
@@ -376,7 +376,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T14_Write_Default_0x7D2_Waypoint()
+    public void T221_Write_Default_0x7D2_Waypoint()
     {
         // Arrange
         var containerIndex = 0;
@@ -391,7 +391,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T15_Write_SetLastWriteTime_False()
+    public void T230_Write_SetLastWriteTime_False()
     {
         // Arrange
         var containerIndex = 0;
@@ -405,7 +405,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T16_Write_WriteAlways_False()
+    public void T240_Write_WriteAlways_False()
     {
         // Arrange
         var containerIndex = 0;
@@ -417,7 +417,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T17_Write_WriteAlways_True()
+    public void T241_Write_WriteAlways_True()
     {
         // Arrange
         var containerIndex = 0;
@@ -429,7 +429,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T20_FileSystemWatcher()
+    public void T300_FileSystemWatcher()
     {
         // Arrange
         var containerIndex = 0;
@@ -442,7 +442,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T30_Copy()
+    public void T301_Copy()
     {
         // Arrange
         var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
@@ -456,7 +456,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T31_Delete()
+    public void T302_Delete()
     {
         // Arrange
         var deleteDelete = new[] { 0, 1 }; // 1Auto, 1Manual
@@ -468,7 +468,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T32_Move()
+    public void T303_Move()
     {
         // Arrange
         var moveCopy = Array.Empty<int>();
@@ -483,7 +483,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T40_TransferFromGog()
+    public void T400_TransferFromGog()
     {
         // Arrange
         var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
@@ -508,7 +508,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T41_TransferFromMicrosoft()
+    public void T401_TransferFromMicrosoft()
     {
         // Arrange
         var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
@@ -532,58 +532,58 @@ public class SteamTest : CommonTestClass
         TestCommonFileOperationTransfer<PlatformSteam, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
     }
 
-    //[TestMethod]
-    //public void T42_TransferFromPlaystation_0x7D1()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Manual
-    //    };
-    //    var slotPlaystation = 1; // get Slot2
-    //    var userDecisionsPlaystation = 24;
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+    [TestMethod]
+    public void T402_TransferFromPlaystation_0x7D1()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598818),
+        };
+        var slotPlaystation = 1; // get Slot2
+        var userDecisionsPlaystation = 24;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
-    //    var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-    //    var offset = 2;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-    //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userIdentification = ReadUserIdentification(path);
+        var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
+        var userIdentification = ReadUserIdentification(path);
 
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformSteam, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
-    //}
-
-    //[TestMethod]
-    //public void T43_TransferFromPlaystation_0x7D2()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
-    //    };
-    //    var slotPlaystation = 1; // get Slot2
-    //    var userDecisionsPlaystation = 4;
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
-
-    //    var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-    //    var offset = 2;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-    //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userIdentification = ReadUserIdentification(path);
-
-    //    // Act
-    //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformSteam, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
-    //}
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformSteam, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+    }
 
     [TestMethod]
-    public void T44_TransferFromSteam()
+    public void T403_TransferFromPlaystation_0x7D2()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101604),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101653),
+        };
+        var slotPlaystation = 1; // get Slot2
+        var userDecisionsPlaystation = 4;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+
+        var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
+        var offset = 2;
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformSteam, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+    }
+
+    [TestMethod]
+    public void T404_TransferFromSteam()
     {
         // Arrange
         var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
@@ -608,7 +608,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T45_TransferFromSwitch()
+    public void T405_TransferFromSwitch()
     {
         // Arrange
         var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");

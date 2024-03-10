@@ -45,12 +45,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.10.0, )",
-        "resolved": "0.10.0",
-        "contentHash": "YRdNFYpH5PHI4oZsSdWT0QHsocyASu3x8S67SyQ0IhckFO4TFSOkzsqwT3UwE+YxC0O89OdeR5TboKSha4xvcQ==",
+        "requested": "[0.10.1, )",
+        "resolved": "0.10.1",
+        "contentHash": "PfFYwGyOLHro2VWSSupUACtLfOx441ySU9+ypr8xZk1jwIRvzIOxefd7J2UsEKTBRnEPY3UsSTAe/FZH/2FEoQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "9.1.2"
+          "Octokit": "10.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -166,8 +166,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "9.1.2",
-        "contentHash": "YKh5EYi+b2mV8eafANJkkZKKBCpI2MNPeSCTlKLYWqVGktOn/TBc7NZEcViPMSNw6R+glgmbkOetLc6LuNK5qQ=="
+        "resolved": "10.0.0",
+        "contentHash": "PHUXVZwE0C2wW9Slkfvw85YNr+uPvLKDgnmxVOzDds+jsv7TgTW9GiGNs4ENYKx1vHfZuH2/VmUlJ9W6GKfDSA=="
       },
       "System.Buffers": {
         "type": "Transitive",
@@ -233,12 +233,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.10.0, )",
-        "resolved": "0.10.0",
-        "contentHash": "YRdNFYpH5PHI4oZsSdWT0QHsocyASu3x8S67SyQ0IhckFO4TFSOkzsqwT3UwE+YxC0O89OdeR5TboKSha4xvcQ==",
+        "requested": "[0.10.1, )",
+        "resolved": "0.10.1",
+        "contentHash": "PfFYwGyOLHro2VWSSupUACtLfOx441ySU9+ypr8xZk1jwIRvzIOxefd7J2UsEKTBRnEPY3UsSTAe/FZH/2FEoQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "9.1.2"
+          "Octokit": "10.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -324,8 +324,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "9.1.2",
-        "contentHash": "YKh5EYi+b2mV8eafANJkkZKKBCpI2MNPeSCTlKLYWqVGktOn/TBc7NZEcViPMSNw6R+glgmbkOetLc6LuNK5qQ=="
+        "resolved": "10.0.0",
+        "contentHash": "PHUXVZwE0C2wW9Slkfvw85YNr+uPvLKDgnmxVOzDds+jsv7TgTW9GiGNs4ENYKx1vHfZuH2/VmUlJ9W6GKfDSA=="
       },
       "System.Buffers": {
         "type": "Transitive",
@@ -384,12 +384,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.10.0, )",
-        "resolved": "0.10.0",
-        "contentHash": "YRdNFYpH5PHI4oZsSdWT0QHsocyASu3x8S67SyQ0IhckFO4TFSOkzsqwT3UwE+YxC0O89OdeR5TboKSha4xvcQ==",
+        "requested": "[0.10.1, )",
+        "resolved": "0.10.1",
+        "contentHash": "PfFYwGyOLHro2VWSSupUACtLfOx441ySU9+ypr8xZk1jwIRvzIOxefd7J2UsEKTBRnEPY3UsSTAe/FZH/2FEoQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "9.1.2"
+          "Octokit": "10.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -475,8 +475,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "9.1.2",
-        "contentHash": "YKh5EYi+b2mV8eafANJkkZKKBCpI2MNPeSCTlKLYWqVGktOn/TBc7NZEcViPMSNw6R+glgmbkOetLc6LuNK5qQ=="
+        "resolved": "10.0.0",
+        "contentHash": "PHUXVZwE0C2wW9Slkfvw85YNr+uPvLKDgnmxVOzDds+jsv7TgTW9GiGNs4ENYKx1vHfZuH2/VmUlJ9W6GKfDSA=="
       },
       "System.Memory": {
         "type": "Transitive",
@@ -520,12 +520,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.10.0, )",
-        "resolved": "0.10.0",
-        "contentHash": "YRdNFYpH5PHI4oZsSdWT0QHsocyASu3x8S67SyQ0IhckFO4TFSOkzsqwT3UwE+YxC0O89OdeR5TboKSha4xvcQ==",
+        "requested": "[0.10.1, )",
+        "resolved": "0.10.1",
+        "contentHash": "PfFYwGyOLHro2VWSSupUACtLfOx441ySU9+ypr8xZk1jwIRvzIOxefd7J2UsEKTBRnEPY3UsSTAe/FZH/2FEoQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "9.1.2"
+          "Octokit": "10.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -611,8 +611,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "9.1.2",
-        "contentHash": "YKh5EYi+b2mV8eafANJkkZKKBCpI2MNPeSCTlKLYWqVGktOn/TBc7NZEcViPMSNw6R+glgmbkOetLc6LuNK5qQ=="
+        "resolved": "10.0.0",
+        "contentHash": "PHUXVZwE0C2wW9Slkfvw85YNr+uPvLKDgnmxVOzDds+jsv7TgTW9GiGNs4ENYKx1vHfZuH2/VmUlJ9W6GKfDSA=="
       },
       "System.Memory": {
         "type": "Transitive",
@@ -656,12 +656,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.10.0, )",
-        "resolved": "0.10.0",
-        "contentHash": "YRdNFYpH5PHI4oZsSdWT0QHsocyASu3x8S67SyQ0IhckFO4TFSOkzsqwT3UwE+YxC0O89OdeR5TboKSha4xvcQ==",
+        "requested": "[0.10.1, )",
+        "resolved": "0.10.1",
+        "contentHash": "PfFYwGyOLHro2VWSSupUACtLfOx441ySU9+ypr8xZk1jwIRvzIOxefd7J2UsEKTBRnEPY3UsSTAe/FZH/2FEoQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "9.1.2"
+          "Octokit": "10.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -747,8 +747,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "9.1.2",
-        "contentHash": "YKh5EYi+b2mV8eafANJkkZKKBCpI2MNPeSCTlKLYWqVGktOn/TBc7NZEcViPMSNw6R+glgmbkOetLc6LuNK5qQ=="
+        "resolved": "10.0.0",
+        "contentHash": "PHUXVZwE0C2wW9Slkfvw85YNr+uPvLKDgnmxVOzDds+jsv7TgTW9GiGNs4ENYKx1vHfZuH2/VmUlJ9W6GKfDSA=="
       },
       "System.Memory": {
         "type": "Transitive",

@@ -149,7 +149,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     // public //
 
-    public Container GetAccountContainer() => AccountContainer;
+    public Container? GetAccountContainer() => AccountContainer;
 
     public Container? GetSaveContainer(int collectionIndex) => SaveContainerCollection.FirstOrDefault(i => i.CollectionIndex == collectionIndex);
 
