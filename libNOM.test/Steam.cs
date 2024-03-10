@@ -443,123 +443,41 @@ public class SteamTest : CommonTestClass
     public void T30_Copy()
     {
         // Arrange
+        var copyCreate = new[] { 3, 7 }; // 2Manual -> 4Manual (create)
+        var copyDelete = new[] { 9, 4 }; // 5Manual -> 3Auto (delete)
+        var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
-        var container0 = platform.GetSaveContainer(0); // 1Auto
-        var container2 = platform.GetSaveContainer(2); // 2Auto
-        var container3 = platform.GetSaveContainer(3); // 2Manual
-        var container4 = platform.GetSaveContainer(4); // 3Auto
-        var container7 = platform.GetSaveContainer(7); // 4Manual (!Exists)
-        var container9 = platform.GetSaveContainer(9); // 5Manual (!Exists)
-
-        Guard.IsNotNull(container0);
-        Guard.IsNotNull(container2);
-        Guard.IsNotNull(container3);
-        Guard.IsNotNull(container4);
-        Guard.IsNotNull(container7);
-        Guard.IsNotNull(container9);
-
-        platform.Copy(container0, container2); // 1Auto -> 2Auto (overwrite)
-        platform.Copy(container3, container7); // 2Manual -> 4Manual (create)
-        platform.Copy(container9, container4); // 5Manual -> 3Auto (delete)
-
         // Assert
-        Assert.IsTrue(container0.Exists);
-        Assert.IsTrue(container2.Exists);
-        AssertCommonFileOperation(GetFileOperationResults(container0), GetFileOperationResults(container2));
-
-        Assert.IsTrue(container3.Exists);
-        Assert.IsTrue(container7.Exists);
-        AssertCommonFileOperation(GetFileOperationResults(container3), GetFileOperationResults(container7));
-
-        Assert.IsFalse(container9.Exists);
-        Assert.IsFalse(container4.Exists);
+        TestCommonFileOperationCopy<PlatformSteam>(path, copyOverwrite, copyCreate, copyDelete);
     }
 
     [TestMethod]
     public void T31_Delete()
     {
         // Arrange
+        var deleteDelete = new[] { 0, 1 }; // 1Auto, 1Manual
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
-        var container0 = platform.GetSaveContainer(0); // 1Auto
-        var container1 = platform.GetSaveContainer(1); // 1Manual
-
-        Guard.IsNotNull(container0);
-        Guard.IsNotNull(container1);
-
-        platform.Delete(container0);
-        platform.Delete(container1);
-
         // Assert
-        Assert.IsFalse(container0.Exists);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container0.IncompatibilityTag);
-
-        Assert.IsFalse(container1.Exists);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container1.IncompatibilityTag);
+        TestCommonFileOperationDelete<PlatformSteam>(path, deleteDelete);
     }
 
     [TestMethod]
     public void T32_Move()
     {
         // Arrange
+        var moveCopy = Array.Empty<int>();
+        var moveCreate = new[] { 4, 9 }; // 3Auto -> 5Manual (create)
+        var moveDelete = new[] { 8, 2 }; // 5Auto -> 2Auto (delete)
+        var moveOverwrite = new[] { 1, 0 }; // 1Manual -> 1Auto (overwrite)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
-        var container0 = platform.GetSaveContainer(0); // 1Auto
-        var container1 = platform.GetSaveContainer(1); // 1Manual
-        var container2 = platform.GetSaveContainer(2); // 2Auto
-        var container4 = platform.GetSaveContainer(4); // 3Auto
-        var container8 = platform.GetSaveContainer(8); // 5Auto (!Exists)
-        var container9 = platform.GetSaveContainer(9); // 5Manual (!Exists)
-
-        Guard.IsNotNull(container0);
-        Guard.IsNotNull(container1);
-        Guard.IsNotNull(container2);
-        Guard.IsNotNull(container4);
-        Guard.IsNotNull(container8);
-        Guard.IsNotNull(container9);
-
-        var result1 = GetFileOperationResults(container1);
-        var result4 = GetFileOperationResults(container4);
-
-        platform.Move(container1, container0); // overwrite in same slot
-        platform.Move(container8, container2); // delete
-        platform.Move(container4, container9); // move
-
         // Assert
-        Assert.IsFalse(container1.Exists);
-        Assert.IsTrue(container0.Exists);
-        AssertCommonFileOperation(result1, GetFileOperationResults(container0));
-
-        Assert.IsFalse(container8.Exists);
-        Assert.IsFalse(container2.Exists);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container8.IncompatibilityTag);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container2.IncompatibilityTag);
-
-        Assert.IsFalse(container4.Exists);
-        Assert.IsTrue(container9.Exists);
-        AssertCommonFileOperation(result4, GetFileOperationResults(container9));
+        TestCommonFileOperationMove<PlatformSteam>(path, moveCopy, moveOverwrite, moveDelete, moveCreate);
     }
 
     [TestMethod]

@@ -268,117 +268,41 @@ public class SwitchTest : CommonTestClass
     public void T30_Copy()
     {
         // Arrange
+        var copyCreate = new[] { 0, 1 }; // 1Auto -> 1Manual (create)
+        var copyDelete = new[] { 6, 4 }; // 4Auto -> 3Auto (delete)
+        var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
 
         // Act
-        var platform = new PlatformSwitch(path, settings);
-
-        var container0 = platform.GetSaveContainer(0); // 1Auto
-        var container1 = platform.GetSaveContainer(1); // 1Manual (!Exists)
-        var container2 = platform.GetSaveContainer(2); // 2Auto
-        var container4 = platform.GetSaveContainer(4); // 3Auto
-        var container6 = platform.GetSaveContainer(6); // 4Auto (!Exists)
-
-        Guard.IsNotNull(container0);
-        Guard.IsNotNull(container1);
-        Guard.IsNotNull(container2);
-        Guard.IsNotNull(container4);
-        Guard.IsNotNull(container6);
-
-        platform.Copy(container0, container2); // 1Auto -> 2Auto (overwrite)
-        platform.Copy(container0, container1); // 1Auto -> 1Manual (create)
-        platform.Copy(container6, container4); // 4Auto -> 3Auto (delete)
-
         // Assert
-        Assert.IsTrue(container0.Exists);
-        Assert.IsTrue(container2.Exists);
-        AssertCommonFileOperation(GetFileOperationResults(container0), GetFileOperationResults(container2));
-
-        Assert.IsTrue(container0.Exists);
-        Assert.IsTrue(container1.Exists);
-        AssertCommonFileOperation(GetFileOperationResults(container0), GetFileOperationResults(container1));
-
-        Assert.IsFalse(container6.Exists);
-        Assert.IsFalse(container4.Exists);
+        TestCommonFileOperationCopy<PlatformSwitch>(path, copyOverwrite, copyCreate, copyDelete);
     }
 
     [TestMethod]
     public void T31_Delete()
     {
         // Arrange
+        var deleteDelete = new[] { 0 }; // 1Auto
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
 
         // Act
-        var platform = new PlatformSwitch(path, settings);
-
-        var container0 = platform.GetSaveContainer(0); // 1Auto
-
-        Guard.IsNotNull(container0);
-
-        platform.Delete(container0);
-
         // Assert
-        Assert.IsFalse(container0.Exists);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container0.IncompatibilityTag);
+        TestCommonFileOperationDelete<PlatformSwitch>(path, deleteDelete);
     }
 
     [TestMethod]
     public void T32_Move()
     {
         // Arrange
+        var moveCopy = new[] { 4, 5 }; // 3Auto -> 3Manual
+        var moveCreate = new[] { 4, 9 }; // 3Auto -> 5Manual (create)
+        var moveDelete = new[] { 1, 0 }; // 1Manual -> 1Auto (delete)
+        var moveOverwrite = new[] { 2, 5 }; // 2Auto -> 3Manual (overwrite)
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
 
         // Act
-        var platform = new PlatformSwitch(path, settings);
-
-        var container0 = platform.GetSaveContainer(0); // 1Auto
-        var container1 = platform.GetSaveContainer(1); // 1Manual (!Exists)
-        var container2 = platform.GetSaveContainer(2); // 2Auto
-        var container4 = platform.GetSaveContainer(4); // 3Auto
-        var container5 = platform.GetSaveContainer(5); // 3Manual
-        var container9 = platform.GetSaveContainer(9); // 5Manual (!Exists)
-
-        Guard.IsNotNull(container0);
-        Guard.IsNotNull(container1);
-        Guard.IsNotNull(container2);
-        Guard.IsNotNull(container4);
-        Guard.IsNotNull(container5);
-        Guard.IsNotNull(container9);
-
-        var result2 = GetFileOperationResults(container2);
-        var result4 = GetFileOperationResults(container4);
-
-        platform.Copy(container4, container5);
-
-        platform.Move(container2, container5); // overwrite
-        platform.Move(container1, container0); // delete in same slot
-        platform.Move(container4, container9); // move
-
         // Assert
-        Assert.IsFalse(container2.Exists);
-        Assert.IsTrue(container5.Exists);
-        AssertCommonFileOperation(result2, GetFileOperationResults(container5));
-
-        Assert.IsFalse(container1.Exists);
-        Assert.IsFalse(container0.Exists);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container1.IncompatibilityTag);
-        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container0.IncompatibilityTag);
-
-        Assert.IsFalse(container4.Exists);
-        Assert.IsTrue(container9.Exists);
-        AssertCommonFileOperation(result4, GetFileOperationResults(container9));
+        TestCommonFileOperationMove<PlatformSwitch>(path, moveCopy, moveOverwrite, moveDelete, moveCreate);
     }
 
     [TestMethod]

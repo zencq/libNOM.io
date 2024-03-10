@@ -400,6 +400,118 @@ public abstract class CommonTestClass
 
     #region Test
 
+    protected static void TestCommonFileOperationCopy<TPlatform>(string path, int[] overwrite, int[] create, int[] delete) where TPlatform : IPlatform
+    {
+        // Arrange
+        var containers = new Dictionary<int, Container>();
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+
+        foreach (var i in overwrite.Concat(create).Concat(delete))
+            if (!containers.ContainsKey(i))
+            {
+                var container = platform.GetSaveContainer(i);
+                Guard.IsNotNull(container);
+                containers.Add(i, container);
+            }
+
+        platform.Copy(containers[overwrite[0]], containers[overwrite[1]]); // overwrite
+        platform.Copy(containers[create[0]], containers[create[1]]); // create
+        platform.Copy(containers[delete[0]], containers[delete[1]]); // delete
+
+        // Assert
+        Assert.IsTrue(containers[overwrite[0]].Exists);
+        Assert.IsTrue(containers[overwrite[1]].Exists);
+        AssertCommonFileOperation(GetFileOperationResults(containers[overwrite[0]]), GetFileOperationResults(containers[overwrite[1]]));
+
+        Assert.IsTrue(containers[create[0]].Exists);
+        Assert.IsTrue(containers[create[1]].Exists);
+        AssertCommonFileOperation(GetFileOperationResults(containers[create[0]]), GetFileOperationResults(containers[create[1]]));
+
+        Assert.IsFalse(containers[delete[0]].Exists);
+        Assert.IsFalse(containers[delete[1]].Exists);
+    }
+
+    protected static void TestCommonFileOperationDelete<TPlatform>(string path, int[] delete) where TPlatform : IPlatform
+    {
+        // Arrange
+        var containers = new List<Container>();
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+
+        foreach (var i in delete)
+        {
+            var container = platform.GetSaveContainer(i);
+            Guard.IsNotNull(container);
+            containers.Add(container);
+
+            platform.Delete(container);
+        }
+
+        // Assert
+        foreach (var container in containers)
+        {
+            Assert.IsFalse(container.Exists);
+            Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, container.IncompatibilityTag);
+        }
+    }
+
+    protected static void TestCommonFileOperationMove<TPlatform>(string path, int[] copy, int[] overwrite, int[] delete, int[] create) where TPlatform : IPlatform
+    {
+        // Arrange
+        var containers = new Dictionary<int, Container>();
+        var results = new Dictionary<int, FileOperationResults>();
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+
+        foreach (var i in copy.Concat(overwrite).Concat(create).Concat(delete))
+            if (!containers.ContainsKey(i))
+            {
+                var container = platform.GetSaveContainer(i);
+                Guard.IsNotNull(container);
+                containers.Add(i, container);
+
+                if (i == overwrite[0] || i == create[0])
+                    results.Add(i, GetFileOperationResults(containers[i]));
+            }
+
+        if (copy.Any())
+            platform.Copy(containers[copy[0]], containers[copy[1]]);
+
+        platform.Move(containers[overwrite[0]], containers[overwrite[1]]); // overwrite
+        platform.Move(containers[delete[0]], containers[delete[1]]); // delete
+        platform.Move(containers[create[0]], containers[create[1]]); // create
+
+        // Assert
+        Assert.IsFalse(containers[overwrite[0]].Exists);
+        Assert.IsTrue(containers[overwrite[1]].Exists);
+        AssertCommonFileOperation(results[overwrite[0]], GetFileOperationResults(containers[overwrite[1]]));
+
+        Assert.IsFalse(containers[delete[0]].Exists);
+        Assert.IsFalse(containers[delete[1]].Exists);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, containers[delete[0]].IncompatibilityTag);
+        Assert.AreEqual(libNOM.io.Globals.Constants.INCOMPATIBILITY_006, containers[delete[1]].IncompatibilityTag);
+
+        Assert.IsFalse(containers[create[0]].Exists);
+        Assert.IsTrue(containers[create[1]].Exists);
+        AssertCommonFileOperation(results[create[0]], GetFileOperationResults(containers[create[1]]));
+    }
+
     protected static void TestCommonFileSystemWatcher<TPlatform>(string path, string pathWatching, int containerIndex) where TPlatform : IPlatform
     {
         // Arrange
