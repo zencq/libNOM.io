@@ -512,6 +512,32 @@ public abstract class CommonTestClass
         AssertCommonFileOperation(results[create[0]], GetFileOperationResults(containers[create[1]]));
     }
 
+    protected static void TestCommonFileOperationTransfer<TPlatform, TSource>(string pathSource, string path, UserIdentification userIdentificationSource, UserIdentification userIdentification, int source, int[] transfer, int userDecisionCount, int existingContainersCount, ReadResults[] results, int offset) where TPlatform : IPlatform where TSource : IPlatform
+    {
+        // Arrange
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Full,
+            UseExternalSourcesForUserIdentification = false,
+        };
+
+        // Act
+        var platformSource = (TSource?)(Activator.CreateInstance(typeof(TSource), pathSource, settings))!;
+        var transferSource = platformSource.GetSourceTransferData(source);
+
+        var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+
+        foreach (var i in transfer)
+            platform.Transfer(transferSource, i);
+
+        // Assert
+        Assert.AreEqual(userDecisionCount, transferSource.TransferBaseUserDecision.Count);
+        Assert.AreEqual(existingContainersCount, GetExistingContainers(platform).Count());
+
+        AssertCommonSourceTransferData(userIdentificationSource, platformSource, transferSource);
+        AssertCommonTransfer(results, userIdentification, platform, offset);
+    }
+
     protected static void TestCommonFileSystemWatcher<TPlatform>(string path, string pathWatching, int containerIndex) where TPlatform : IPlatform
     {
         // Arrange
