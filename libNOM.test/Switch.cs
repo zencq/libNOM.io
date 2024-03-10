@@ -67,7 +67,7 @@ public class SwitchTest : CommonTestClass
     #endregion
 
     [TestMethod]
-    public void T01_Read()
+    public void T101_Read()
     {
         // Arrange
         var expectAccountData = false;
@@ -84,7 +84,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T02_Read()
+    public void T102_Read()
     {
         // Arrange
         var expectAccountData = true;
@@ -101,7 +101,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T03_Read()
+    public void T103_Read()
     {
         // Arrange
         var expectAccountData = true;
@@ -118,7 +118,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T04_Read()
+    public void T104_Read()
     {
         // Arrange
         var expectAccountData = true;
@@ -139,7 +139,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T05_Read()
+    public void T105_Read()
     {
         // Arrange
         var expectAccountData = true;
@@ -160,7 +160,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T10_Write_Default_0x7D2_Frontiers_Account()
+    public void T200_Write_Default_0x7D2_Frontiers_Account()
     {
         // Arrange
         var originMusicVolume = 80; // 80
@@ -173,7 +173,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T11_Write_Default_0x7D2_Frontiers()
+    public void T201_Write_Default_0x7D2_Frontiers()
     {
         // Arrange
         var containerIndex = 4;
@@ -188,7 +188,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T12_Write_Default_0x7D2_Waypoint_Account()
+    public void T210_Write_Default_0x7D2_Waypoint_Account()
     {
         // Arrange
         var originMusicVolume = 80; // 80
@@ -201,7 +201,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T13_Write_Default_0x7D2_Waypoint()
+    public void T211_Write_Default_0x7D2_Waypoint()
     {
         // Arrange
         var containerIndex = 0;
@@ -216,7 +216,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T14_Write_SetLastWriteTime_False()
+    public void T220_Write_SetLastWriteTime_False()
     {
         // Arrange
         var containerIndex = 0;
@@ -230,7 +230,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T15_Write_WriteAlways_False()
+    public void T230_Write_WriteAlways_False()
     {
         var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
@@ -241,7 +241,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T16_Write_WriteAlways_True()
+    public void T231_Write_WriteAlways_True()
     {
         var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
@@ -252,7 +252,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T20_FileSystemWatcher()
+    public void T300_FileSystemWatcher()
     {
         var containerIndex = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
@@ -264,7 +264,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T30_Copy()
+    public void T301_Copy()
     {
         // Arrange
         var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
@@ -278,7 +278,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T31_Delete()
+    public void T302_Delete()
     {
         // Arrange
         var deleteDelete = new[] { 0 }; // 1Auto
@@ -290,7 +290,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T32_Move()
+    public void T303_Move()
     {
         // Arrange
         var moveCopy = new[] { 4, 5 }; // 3Auto -> 3Manual
@@ -305,7 +305,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T40_TransferFromGog()
+    public void T400_TransferFromGog()
     {
         // Arrange
         var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
@@ -330,7 +330,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T41_TransferFromMicrosoft()
+    public void T401_TransferFromMicrosoft()
     {
         // Arrange
         var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
@@ -355,7 +355,7 @@ public class SwitchTest : CommonTestClass
     }
 
     //[TestMethod]
-    //public void T42_TransferFromPlaystation_0x7D1()
+    //public void T402_TransferFromPlaystation_0x7D1()
     //{
     //    // Arrange
     //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
@@ -380,7 +380,7 @@ public class SwitchTest : CommonTestClass
     //}
 
     //[TestMethod]
-    //public void T43_TransferFromPlaystation_0x7D2()
+    //public void T403_TransferFromPlaystation_0x7D2()
     //{
     //    // Arrange
     //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
@@ -405,7 +405,7 @@ public class SwitchTest : CommonTestClass
     //}
 
     [TestMethod]
-    public void T44_TransferFromSteam()
+    public void T404_TransferFromSteam()
     {
         // Arrange
         var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -430,7 +430,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T45_TransferFromSwitch()
+    public void T405_TransferFromSwitch()
     {
         // Arrange
         var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");

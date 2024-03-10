@@ -19,7 +19,7 @@ internal static partial class Json
         var upper = identifier.ToUpperInvariant();
 
         if (all.ContainsKey(upper))
-            return Constants.JSONPATH[upper];
+            return all[upper];
 
         return [identifier]; // return original and not upper variant
     }

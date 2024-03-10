@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.HighPerformance;
+﻿using CommunityToolkit.Diagnostics;
+using CommunityToolkit.HighPerformance;
 
 using libNOM.io;
 
@@ -297,7 +298,7 @@ public class MicrosoftTest : CommonTestClass
     #endregion
 
     [TestMethod]
-    public void T01_Read_0009000000C73498()
+    public void T101_Read_0009000000C73498()
     {
         // Arrange
         var expectAccountData = true;
@@ -315,7 +316,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T02_Read_000901F4E735CFAC()
+    public void T102_Read_000901F4E735CFAC()
     {
         // Arrange
         var expectAccountData = true;
@@ -339,7 +340,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T03_Read_000901F8A36808E0()
+    public void T103_Read_000901F8A36808E0()
     {
         // Arrange
         var expectAccountData = true;
@@ -369,7 +370,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T04_Read_000901FB44140B02()
+    public void T104_Read_000901FB44140B02()
     {
         // Arrange
         var expectAccountData = false;
@@ -390,7 +391,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T05_Read_000901FE2C5492FC()
+    public void T105_Read_000901FE2C5492FC()
     {
         // Arrange
         var expectAccountData = false;
@@ -408,7 +409,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T06_Read_000901FFCAB85905()
+    public void T106_Read_000901FFCAB85905()
     {
         // Arrange
         var expectAccountData = false;
@@ -426,7 +427,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T07_Read_00090000025A963A()
+    public void T107_Read_00090000025A963A()
     {
         // Arrange
         var expectAccountData = true;
@@ -449,7 +450,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T08_Read_000900000104066F()
+    public void T108_Read_000900000104066F()
     {
         // Arrange
         var expectAccountData = true;
@@ -470,7 +471,7 @@ public class MicrosoftTest : CommonTestClass
     /// Same as <see cref="T06_Read_000901FFCAB85905"/>.
     /// </summary>
     [TestMethod]
-    public void T09_Read_NoAccountInDirectory()
+    public void T109_Read_NoAccountInDirectory()
     {
         // Arrange
         var expectAccountData = false;
@@ -487,12 +488,16 @@ public class MicrosoftTest : CommonTestClass
         TestCommonRead<PlatformMicrosoft>(path, results, expectAccountData, userIdentification);
     }
 
+    /// <summary>
+    /// Same as <see cref="CommonTestClass.TestCommonWriteDefaultAccount"/> but with asserts.
+    /// </summary>
     [TestMethod]
-    public void T10_Write_Default_ContainersIndex()
+    public void T200_Write_Default_ContainersIndex()
     {
         // Arrange
         var now = DateTimeOffset.UtcNow;
-        var nowTicks = NullifyTicks(now).UtcTicks;
+        var originMusicVolume = 80; // 80
+        var originUtcTicks = 638264331709580000; // 2023-07-31 20:46:10 +00:00
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
         var settings = new PlatformSettings
         {
@@ -503,7 +508,8 @@ public class MicrosoftTest : CommonTestClass
 
         // Act
         var platformA = new PlatformMicrosoft(path, settings);
-        var containerA = platformA.GetAccountContainer()!;
+        var containerA = platformA.GetAccountContainer();
+        Guard.IsNotNull(containerA);
         var containersIndexA = File.ReadAllBytes(Path.Combine(path, "containers.index"));
 
         containerA.WriteCallback += () =>
@@ -511,41 +517,33 @@ public class MicrosoftTest : CommonTestClass
             writeCallback = true;
         };
 
-#pragma warning disable IDE0042 // Deconstruct variable declaration
         platformA.Load(containerA);
-        (int MusicVolume, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int MusicVolume, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSONPATH), containerA.LastWriteTime!.Value.UtcTicks);
 
-        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
+        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSONPATH);
         platformA.Write(containerA, now);
-        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSONPATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = new PlatformMicrosoft(path, settings);
-        var containerB = platformB.GetAccountContainer()!;
+        var containerB = platformB.GetAccountContainer();
+        Guard.IsNotNull(containerB);
         var containersIndexB = File.ReadAllBytes(Path.Combine(path, "containers.index"));
 
         platformB.Load(containerB);
-        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
-#pragma warning restore IDE0042 // Deconstruct variable declaration
+        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSONPATH), containerB.LastWriteTime!.Value.UtcTicks);
 
         // Assert
         Assert.IsTrue(writeCallback);
 
-        Assert.AreEqual(80, valuesOrigin.MusicVolume);
-        Assert.AreEqual(638264331709580000, valuesOrigin.UtcTicks); // 2023-07-31 20:46:10 +00:00
-        Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesSet.MusicVolume);
-        Assert.AreEqual(nowTicks, valuesSet.UtcTicks);
-
-        Assert.AreEqual(MUSICVOLUME_NEW_AMOUNT, valuesReload.MusicVolume);
-        Assert.AreEqual(nowTicks, valuesReload.UtcTicks);
+        AssertCommonWriteValues(originMusicVolume, originUtcTicks, valuesOrigin);
+        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesSet);
+        AssertCommonWriteValues(MUSICVOLUME_NEW_AMOUNT, now.UtcTicks, valuesReload);
 
         AssertContainersIndex(containersIndexA, containersIndexB, now, path);
     }
 
-    /// <summary>
-    /// Same as <see cref="T10_Write_Default_ContainersIndex"/> but with assert for manifest.
-    /// </summary>
     [TestMethod]
-    public void T11_Write_Default_Account()
+    public void T201_Write_Default_Account()
     {
         // Arrange
         var originMusicVolume = 80; // 80
@@ -558,7 +556,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T12_Write_Default()
+    public void T202_Write_Default()
     {
         // Arrange
         var containerIndex = 0;
@@ -573,7 +571,22 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T13_Write_SetLastWriteTime_False()
+    public void T203_Write_Default_V2()
+    {
+        // Arrange
+        var containerIndex = 0;
+        var originUnits = 252495937; // 252.495.937
+        var originUtcTicks = 638452693524090000; // 2023-03-05 21:02:32 +00:00
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
+        var results = new WriteResults(uint.MaxValue, 4149, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 169127, "", "On freighter (Spear of Benevolence)", (byte)(DifficultyPresetTypeEnum.Normal));
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultSave<PlatformMicrosoft>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+    }
+
+    [TestMethod]
+    public void T210_Write_SetLastWriteTime_False()
     {
         // Arrange
         var containerIndex = 0;
@@ -587,7 +600,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T14_Write_WriteAlways_False()
+    public void T220_Write_WriteAlways_False()
     {
         // Arrange
         var containerIndex = 0;
@@ -599,7 +612,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T15_Write_WriteAlways_True()
+    public void T221_Write_WriteAlways_True()
     {
         // Arrange
         var containerIndex = 0;
@@ -611,7 +624,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T20_FileSystemWatcher()
+    public void T300_FileSystemWatcher()
     {
         // Arrange
         var containerIndex = 0;
@@ -624,7 +637,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T30_Copy()
+    public void T301_Copy()
     {
         // Arrange
         var copyOverwrite = new[] { 4, 1 }; // 3Auto -> 1Manual (overwrite)
@@ -638,7 +651,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T31_Delete()
+    public void T302_Delete()
     {
         // Arrange
         var deleteDelete = new[] { 0, 1 }; // 1Auto, 1Manual
@@ -650,7 +663,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T32_Move()
+    public void T303_Move()
     {
         // Arrange
         var moveCopy = new[] { 4, 5 }; // 3Auto -> 3Manual
@@ -665,7 +678,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T40_TransferFromGog()
+    public void T400_TransferFromGog()
     {
         // Arrange
         var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
@@ -690,7 +703,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T41_TransferFromMicrosoft()
+    public void T401_TransferFromMicrosoft()
     {
         // Arrange
         var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
@@ -715,7 +728,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     //[TestMethod]
-    //public void T42_TransferFromPlaystation_0x7D1()
+    //public void T402_TransferFromPlaystation_0x7D1()
     //{
     //    // Arrange
     //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
@@ -740,7 +753,7 @@ public class MicrosoftTest : CommonTestClass
     //}
 
     //[TestMethod]
-    //public void T43_TransferFromPlaystation_0x7D2()
+    //public void T403_TransferFromPlaystation_0x7D2()
     //{
     //    // Arrange
     //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
@@ -765,7 +778,7 @@ public class MicrosoftTest : CommonTestClass
     //}
 
     [TestMethod]
-    public void T44_TransferFromSteam()
+    public void T404_TransferFromSteam()
     {
         // Arrange
         var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -790,7 +803,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T45_TransferFromSwitch()
+    public void T405_TransferFromSwitch()
     {
         // Arrange
         var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");

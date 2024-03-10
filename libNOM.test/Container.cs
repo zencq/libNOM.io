@@ -1,5 +1,6 @@
-﻿using libNOM.io;
-using libNOM.io.Enums;
+﻿using CommunityToolkit.Diagnostics;
+
+using libNOM.io;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -13,10 +14,12 @@ namespace libNOM.test;
 public class ContainerTest : CommonTestClass
 {
     protected static readonly int[] GALACTICADDRESS_INDICES = [2, 0, 1];
-    protected const string GALACTICADDRESS_JSON_PATH = "PlayerStateData.UniverseAddress.GalacticAddress";
+    protected const string GALACTICADDRESS_JSONPATH_KEY = "GALACTICADDRESS";
+    protected static readonly string[] GALACTICADDRESS_JSONPATH = ["", "PlayerStateData.UniverseAddress.GalacticAddress", "", "{0}.PlayerStateData.UniverseAddress.GalacticAddress"];
 
     protected static readonly int[] VALIDSLOTINDICES_INDICES = [2, 3, 1];
-    protected const string VALIDSLOTINDICES_JSON_PATH = "PlayerStateData.Inventory.ValidSlotIndices";
+    protected const string VALIDSLOTINDICES_JSONPATH_KEY = "VALIDSLOTINDICES";
+    protected static readonly string[] VALIDSLOTINDICES_JSONPATH = ["", "PlayerStateData.Inventory.ValidSlotIndices", "", "{0}.PlayerStateData.Inventory.ValidSlotIndices"];
 
     [TestMethod]
     public void T01_Backup()
@@ -78,12 +81,14 @@ public class ContainerTest : CommonTestClass
         // Act
         var platform = new PlatformSteam(path, settings);
         var container = GetOneSaveContainer(platform, 0);
+
         container.BackupRestoredCallback += () =>
         {
             backupRestoredCallback = true;
         };
 
         platform.Backup(container);
+
         var backup = container.BackupCollection.First();
         platform.Restore(backup);
 
@@ -105,19 +110,22 @@ public class ContainerTest : CommonTestClass
             UseMapping = true,
         };
 
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(UNITS_JSONPATH_KEY, UNITS_JSONPATH);
+
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
-        var units1 = container.GetJsonValue<int>(UNITS_JSON_PATH);
+        var units1 = container.GetJsonValue<int>(UNITS_JSONPATH_KEY);
 
-        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        var units2 = container.GetJsonValue<int>(UNITS_JSON_PATH);
+        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSONPATH_KEY);
+        var units2 = container.GetJsonValue<int>(UNITS_JSONPATH_KEY);
 
         // Assert
         Assert.IsFalse(container.IsSynced);
-        Assert.AreEqual(-1221111157, units1); // 3073856139
+        Assert.AreEqual(-1221111157, units1); // 3.073.856.139
         Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
     }
 
@@ -134,7 +142,8 @@ public class ContainerTest : CommonTestClass
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
         var units1 = container.GetJsonValue<int>(UNITS_INDICES);
@@ -144,7 +153,7 @@ public class ContainerTest : CommonTestClass
 
         // Assert
         Assert.IsFalse(container.IsSynced);
-        Assert.AreEqual(-1221111157, units1); // 3073856139
+        Assert.AreEqual(-1221111157, units1); // 3.073.856.139
         Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
     }
 
@@ -160,7 +169,8 @@ public class ContainerTest : CommonTestClass
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 16);
+        var container = platform.GetSaveContainer(16);
+        Guard.IsNotNull(container);
 
         var name0 = container.SaveName;
 
@@ -195,16 +205,19 @@ public class ContainerTest : CommonTestClass
             UseMapping = true,
         };
 
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(GALACTICADDRESS_JSONPATH_KEY, GALACTICADDRESS_JSONPATH);
+
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
-        var galacticAddress_A1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSON_PATH)!);
+        var galacticAddress_A1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSONPATH_KEY)!);
         var galacticAddress_A2 = container.GetJsonValue<JObject>(GALACTICADDRESS_INDICES)!;
 
-        container.SetJsonValue(galacticAddress, GALACTICADDRESS_JSON_PATH);
-        var galacticAddress_B1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSON_PATH)!);
+        container.SetJsonValue(galacticAddress, GALACTICADDRESS_JSONPATH_KEY);
+        var galacticAddress_B1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSONPATH_KEY)!);
         var galacticAddress_B2 = container.GetJsonValue<JObject>(GALACTICADDRESS_INDICES)!;
 
         // Assert
@@ -235,16 +248,19 @@ public class ContainerTest : CommonTestClass
         };
         var validSlotIndices = new JArray { new JObject { { "X", 0 }, { "Y", 0 } } };
 
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(VALIDSLOTINDICES_JSONPATH_KEY, VALIDSLOTINDICES_JSONPATH);
+
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
-        var validSlotIndices_A1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSON_PATH)!);
+        var validSlotIndices_A1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSONPATH_KEY)!);
         var validSlotIndices_A2 = container.GetJsonValue<JArray>(VALIDSLOTINDICES_INDICES)!;
 
-        container.SetJsonValue(validSlotIndices, VALIDSLOTINDICES_JSON_PATH);
-        var validSlotIndices_B1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSON_PATH)!);
+        container.SetJsonValue(validSlotIndices, VALIDSLOTINDICES_JSONPATH_KEY);
+        var validSlotIndices_B1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSONPATH_KEY)!);
         var validSlotIndices_B2 = container.GetJsonValue<JArray>(VALIDSLOTINDICES_INDICES)!;
 
         // Assert

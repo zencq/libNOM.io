@@ -34,11 +34,12 @@ public abstract class CommonTestClass
     protected const uint SAVE_FORMAT_3 = 0x7D2; // 2002
 
     protected static readonly int[] MUSICVOLUME_INDICES = [1, 7];
-    protected const string MUSICVOLUME_JSON_PATH = "UserSettingsData.MusicVolume";
+    protected const string MUSICVOLUME_JSONPATH = "UserSettingsData.MusicVolume";
     protected const int MUSICVOLUME_NEW_AMOUNT = 100;
 
     protected static readonly int[] UNITS_INDICES = [2, 48];
-    protected const string UNITS_JSON_PATH = "PlayerStateData.Units";
+    protected const string UNITS_JSONPATH_KEY = "UNITS";
+    protected static readonly string[] UNITS_JSONPATH = ["", "PlayerStateData.Units", "", "{0}.PlayerStateData.Units"];
     protected const int UNITS_NEW_AMOUNT = 29070100;
 
     #endregion
@@ -258,7 +259,7 @@ public abstract class CommonTestClass
             for (var j = 0; j < results.Length; j++)
             {
                 var collectionIndex = results[j].CollectionIndex + offset + i;
-                var container = platform.GetSaveContainer(collectionIndex)!;
+                var container = platform.GetSaveContainer(collectionIndex);
                 Guard.IsNotNull(container);
                 var expected = results[j];
 
@@ -550,6 +551,8 @@ public abstract class CommonTestClass
             Watcher = true,
         };
 
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(UNITS_JSONPATH_KEY, UNITS_JSONPATH);
+
         // Act
         var bytes = File.ReadAllBytes(pathWatching);
 
@@ -565,7 +568,7 @@ public abstract class CommonTestClass
         var count1 = watchers1.Count();
         var synced1 = container.IsSynced;
 
-        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSONPATH_KEY);
         var synced2 = container.IsSynced;
 
         File.WriteAllBytes(pathWatching, bytes);
@@ -648,11 +651,11 @@ public abstract class CommonTestClass
         };
 
         platformA.Load(containerA);
-        (int MusicVolume, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int MusicVolume, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(MUSICVOLUME_JSONPATH), containerA.LastWriteTime!.Value.UtcTicks);
 
-        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSON_PATH);
+        containerA.SetJsonValue(MUSICVOLUME_NEW_AMOUNT, MUSICVOLUME_JSONPATH);
         platformA.Write(containerA, now);
-        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int MusicVolume, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(MUSICVOLUME_JSONPATH), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
         var containerB = platformB.GetAccountContainer();
@@ -660,7 +663,7 @@ public abstract class CommonTestClass
         var metaB = DecryptMeta(containerB);
 
         platformB.Load(containerB);
-        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
+        (int MusicVolume, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(MUSICVOLUME_JSONPATH), containerB.LastWriteTime!.Value.UtcTicks);
 
         // Assert
         Assert.IsTrue(writeCallback);
@@ -683,6 +686,8 @@ public abstract class CommonTestClass
         };
         var writeCallback = false;
 
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(UNITS_JSONPATH_KEY, UNITS_JSONPATH);
+
         // Act
         var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
         var containerA = platformA.GetSaveContainer(containerIndex);
@@ -695,11 +700,11 @@ public abstract class CommonTestClass
         };
 
         platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSONPATH_KEY), containerA.LastWriteTime!.Value.UtcTicks);
 
-        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSONPATH_KEY);
         platformA.Write(containerA, now);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSONPATH_KEY), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
         var containerB = platformB.GetSaveContainer(containerIndex);
@@ -707,7 +712,7 @@ public abstract class CommonTestClass
         var metaB = DecryptMeta(containerB);
 
         platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSONPATH_KEY), containerB.LastWriteTime!.Value.UtcTicks);
 
         // Assert
         Assert.IsTrue(writeCallback);
@@ -731,6 +736,8 @@ public abstract class CommonTestClass
         };
         var writeCallback = false;
 
+        libNOM.io.Globals.Constants.JSONPATH_EXTENSION.Add(UNITS_JSONPATH_KEY, UNITS_JSONPATH);
+
         // Act
         var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
         var containerA = platformA.GetSaveContainer(containerIndex);
@@ -742,18 +749,18 @@ public abstract class CommonTestClass
         };
 
         platformA.Load(containerA);
-        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesOrigin = (containerA.GetJsonValue<int>(UNITS_JSONPATH_KEY), containerA.LastWriteTime!.Value.UtcTicks);
 
-        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
+        containerA.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSONPATH_KEY);
         platformA.Write(containerA, DateTimeOffset.UtcNow);
-        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSON_PATH), containerA.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesSet = (containerA.GetJsonValue<int>(UNITS_JSONPATH_KEY), containerA.LastWriteTime!.Value.UtcTicks);
 
         var platformB = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
         var containerB = platformB.GetSaveContainer(containerIndex);
         Guard.IsNotNull(containerB);
 
         platformB.Load(containerB);
-        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSON_PATH), containerB.LastWriteTime!.Value.UtcTicks);
+        (int Units, long UtcTicks) valuesReload = (containerB.GetJsonValue<int>(UNITS_JSONPATH_KEY), containerB.LastWriteTime!.Value.UtcTicks);
 
         // Assert
         Assert.IsTrue(writeCallback);
