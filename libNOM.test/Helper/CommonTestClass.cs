@@ -512,7 +512,7 @@ public abstract class CommonTestClass
         AssertCommonFileOperation(results[create[0]], GetFileOperationResults(containers[create[1]]));
     }
 
-    protected static void TestCommonFileOperationTransfer<TPlatform, TSource>(string pathSource, string path, UserIdentification userIdentificationSource, UserIdentification userIdentification, int source, int[] transfer, int userDecisionCount, int existingContainersCount, ReadResults[] results, int offset) where TPlatform : IPlatform where TSource : IPlatform
+    protected static void TestCommonFileOperationTransfer<TPlatform, TSource>(string pathSource, string path, UserIdentification userIdentificationSource, UserIdentification userIdentification, int source, int userDecisionsSource, int[] transfer, int existingContainersCount, ReadResults[] results, int offset) where TPlatform : IPlatform where TSource : IPlatform
     {
         // Arrange
         var settings = new PlatformSettings
@@ -531,7 +531,7 @@ public abstract class CommonTestClass
             platform.Transfer(transferSource, i);
 
         // Assert
-        Assert.AreEqual(userDecisionCount, transferSource.TransferBaseUserDecision.Count);
+        Assert.AreEqual(userDecisionsSource, transferSource.TransferBaseUserDecision.Count);
         Assert.AreEqual(existingContainersCount, GetExistingContainers(platform).Count());
 
         AssertCommonSourceTransferData(userIdentificationSource, platformSource, transferSource);

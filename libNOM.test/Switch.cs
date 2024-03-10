@@ -315,18 +315,18 @@ public class SwitchTest : CommonTestClass
             new(3, "Slot2Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 5048),
         };
         var slotGog = 1; // get Slot2
+        var userDecisionsGog = 1;
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
         var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-        var userDecisionCount = 1;
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformSwitch, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, transfer, userDecisionCount, existingContainersCount, resultsGog, offset);
+        TestCommonFileOperationTransfer<PlatformSwitch, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog, offset);
     }
 
     //[TestMethod]
@@ -340,18 +340,18 @@ public class SwitchTest : CommonTestClass
     //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
     //    };
     //    var slotMicrosoft = 1; // get Slot2
+    //    var userDecisionsMicrosoft = 8;
     //    var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
     //    var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
     //    var offset = 2;
     //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
     //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userDecisionCount = 8;
     //    var userIdentification = ReadUserIdentification(path);
 
     //    // Act
     //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformSwitch, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, transfer, userDecisionCount, existingContainersCount, resultsMicrosoft, offset);
+    //    TestCommonFileOperationTransfer<PlatformSwitch, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
     //}
 
     //[TestMethod]
@@ -365,18 +365,18 @@ public class SwitchTest : CommonTestClass
     //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 2Manual
     //    };
     //    var slotPlaystation = 1; // get Slot2
+    //    var userDecisionsPlaystation = 24;
     //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
     //    var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
     //    var offset = 2;
     //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
     //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userDecisionCount = 24;
     //    var userIdentification = ReadUserIdentification(path);
 
     //    // Act
     //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformSwitch, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, transfer, userDecisionCount, existingContainersCount, resultsPlaystation, offset);
+    //    TestCommonFileOperationTransfer<PlatformSwitch, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
     //}
 
     //[TestMethod]
@@ -390,18 +390,18 @@ public class SwitchTest : CommonTestClass
     //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 2Manual
     //    };
     //    var slotPlaystation = 1; // get Slot2
+    //    var userDecisionsPlaystation = 4;
     //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
     //    var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
     //    var offset = 2;
     //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
     //    var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-    //    var userDecisionCount = 4;
     //    var userIdentification = ReadUserIdentification(path);
 
     //    // Act
     //    // Assert
-    //    TestCommonFileOperationTransfer<PlatformSwitch, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, transfer, userDecisionCount, existingContainersCount, resultsPlaystation, offset);
+    //    TestCommonFileOperationTransfer<PlatformSwitch, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
     //}
 
     [TestMethod]
@@ -415,18 +415,18 @@ public class SwitchTest : CommonTestClass
             new(3, "Slot2Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4127, 5151, GameVersionEnum.Companions, "", "", 4271),
         };
         var slotSteam = 1; // get Slot2
+        var userDecisionsSteam = 2;
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
         var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-        var userDecisionCount = 2;
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformSwitch, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, transfer, userDecisionCount, existingContainersCount, resultsSteam, offset);
+        TestCommonFileOperationTransfer<PlatformSwitch, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, userDecisionsSteam, transfer, existingContainersCount, resultsSteam, offset);
     }
 
     [TestMethod]
@@ -439,17 +439,17 @@ public class SwitchTest : CommonTestClass
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4139, 5163, GameVersionEnum.Endurance, "", "", 18),
         };
         var slotSwitch = 0; // get Slot1
+        var userDecisionsSwitch = 0;
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 4; // 3 + 1 (Slot?)
         var offset = 4;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
-        var userDecisionCount = 0;
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformSwitch, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, transfer, userDecisionCount, existingContainersCount, resultsSwitch, offset);
+        TestCommonFileOperationTransfer<PlatformSwitch, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, userDecisionsSwitch, transfer, existingContainersCount, resultsSwitch, offset);
     }
 }
