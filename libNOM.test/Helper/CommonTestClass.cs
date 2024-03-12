@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
 using SharpCompress.Archives;
-using SharpCompress.Archives.Zip;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 
 namespace libNOM.test.Helper;
@@ -1022,7 +1022,7 @@ public abstract class CommonTestClass
         {
             Directory.CreateDirectory(template);
 
-            using var zipArchive = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
+            using var zipArchive = SevenZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z", new()
             {
                 Password = Properties.Resources.TESTSUITE_PASSWORD,
             });
