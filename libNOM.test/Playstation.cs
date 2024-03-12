@@ -212,7 +212,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "1");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4119, 4631, GameVersionEnum.BeyondWithVehicleCam, "", "", 700345),
@@ -230,7 +230,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "2");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "2");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4119, 4631, GameVersionEnum.BeyondWithVehicleCam, "", "", 245769),
@@ -248,7 +248,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 497116),
@@ -278,7 +278,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "2");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "2");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4126, 4638, GameVersionEnum.Origins, "", "", 1708767),
@@ -296,7 +296,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4126, 4638, GameVersionEnum.Origins, "", "", 868213),
@@ -316,7 +316,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "Homebrew", "1");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4119, 4631, GameVersionEnum.BeyondWithVehicleCam, "", "", 720722),
@@ -334,7 +334,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "1");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4135, 5159, GameVersionEnum.Frontiers, "", "", 26),
@@ -354,7 +354,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "2");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "2");
         var results = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4141, 4653, GameVersionEnum.WaypointWithAgileStat, "1. Haupt", "An Bord von „Sueyuan XI“-Plattform", 385220),
@@ -372,7 +372,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "3");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 868385),
@@ -392,7 +392,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 509021),
@@ -416,7 +416,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "5");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "5");
         var results = new ReadResults[]
         {
             new(11, "Slot6Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4145, 4657, GameVersionEnum.Interceptor, "Singularity", "Aboard Riesid Station Omega", 50613),
@@ -433,7 +433,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "6");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "6");
         var results = new ReadResults[]
         {
             new(9, "Slot5Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, 4658, GameVersionEnum.Interceptor, "Purfex", "On freighter (Normandy SR3)", 2469490),
@@ -450,7 +450,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "7");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "7");
         var results = new ReadResults[]
         {
             new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4146, 4658, GameVersionEnum.Echoes, "Eggsave", "Aboard the Space Anomaly", 23349),
@@ -476,7 +476,7 @@ public class PlaystationTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 979316666; // 979.316.666
         var originUtcTicks = 637367995090000000; // 2020-09-27 10:31:49 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "1");
         var results = new WriteResults(2, uint.MaxValue, ushort.MaxValue, ushort.MaxValue, uint.MaxValue, "", "", byte.MaxValue);
 
         // Act
@@ -500,7 +500,7 @@ public class PlaystationTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 1283166770; // 1.283.166.770
         var originUtcTicks = 637599996160000000; // 2021-06-22 23:00:16 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var results = new WriteResults(2, uint.MaxValue, ushort.MaxValue, ushort.MaxValue, uint.MaxValue, "", "", byte.MaxValue);
 
         // Act
@@ -523,7 +523,7 @@ public class PlaystationTest : CommonTestClass
 
         var originMusicVolume = 80; // 80
         var originUtcTicks = 637772446600000000; // 2022-01-08 13:17:40 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "Homebrew", "1");
 
         // Act
         // Assert
@@ -540,7 +540,7 @@ public class PlaystationTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 1970043489; // 1.970.043.489
         var originUtcTicks = 637772446600000000; // 2022-01-08 13:17:40 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "Homebrew", "1");
         var results = new WriteResults(6, 4139, (ushort)(PresetGameModeEnum.Creative), (ushort)(SeasonEnum.None), 51, "", "", (byte)(DifficultyPresetTypeEnum.Normal));
 
         // Act
@@ -557,7 +557,7 @@ public class PlaystationTest : CommonTestClass
 
         var originMusicVolume = 0; // 0
         var originUtcTicks = 638288037120000000; // 2023-08-28 07:15:12 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "6");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "6");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -594,7 +594,7 @@ public class PlaystationTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 0; // 0
         var originUtcTicks = 637669617960000000; // 2021-09-11 12:56:36 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "1");
         var results = new WriteResults(2, 4135, (ushort)(PresetGameModeEnum.Creative), (ushort)(SeasonEnum.None), 26, "", "", (byte)(DifficultyPresetTypeEnum.Creative));
 
         // Act
@@ -612,7 +612,7 @@ public class PlaystationTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 979316666; // 979.316.666
         var originUtcTicks = 637367995090000000; // 2020-09-27 10:31:49 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "1");
 
         // Act
         // Assert
@@ -627,7 +627,7 @@ public class PlaystationTest : CommonTestClass
         _usesSaveWizard = false;
 
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "1");
 
         // Act
         // Assert
@@ -642,7 +642,7 @@ public class PlaystationTest : CommonTestClass
         _usesSaveWizard = false;
 
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "Homebrew", "1");
 
         // Act
         // Assert
@@ -657,7 +657,7 @@ public class PlaystationTest : CommonTestClass
         _usesSaveWizard = false;
 
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "1");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -709,7 +709,7 @@ public class PlaystationTest : CommonTestClass
         _usesSaveWizard = false;
 
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "Homebrew", "1");
 
         // Act
         // Assert
@@ -724,7 +724,7 @@ public class PlaystationTest : CommonTestClass
         _usesSaveWizard = false;
 
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "1");
         var pathWatching = Path.Combine(path, "memory.dat");
 
         // Act
@@ -740,7 +740,7 @@ public class PlaystationTest : CommonTestClass
         _usesSaveWizard = false;
 
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "Homebrew", "1");
         var pathWatching = Path.Combine(path, "savedata02.hg");
 
         // Act
@@ -755,7 +755,7 @@ public class PlaystationTest : CommonTestClass
         var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var copyCreate = new[] { 0, 4 }; // 1Auto -> 3Auto (create)
         var copyDelete = new[] { 6, 1 }; // 4Auto -> 1Manual (delete)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
 
         // Act
         // Assert
@@ -769,7 +769,7 @@ public class PlaystationTest : CommonTestClass
         var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var copyCreate = new[] { 0, 4 }; // 1Auto -> 3Auto (create)
         var copyDelete = new[] { 6, 1 }; // 4Auto -> 1Manual (delete)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "3");
 
         // Act
         // Assert
@@ -781,7 +781,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var deleteDelete = new[] { 0 }; // 1Auto
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "Homebrew", "1");
 
         // Act
         // Assert
@@ -793,7 +793,7 @@ public class PlaystationTest : CommonTestClass
     {
         // Arrange
         var deleteDelete = new[] { 0 }; // 1Auto
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "Homebrew", "1");
+        var path = GetCombinedPath("Playstation", "0x7D2", "Homebrew", "1");
 
         // Act
         // Assert
@@ -808,7 +808,7 @@ public class PlaystationTest : CommonTestClass
         var moveOverwrite = new[] { 2, 1 }; // 2Auto -> 1Auto (overwrite)
         var moveDelete = new[] { 4, 0 }; // 3Auto -> 1Auto (delete)
         var moveCreate = new[] { 3, 9 }; // 2Manual -> 5Manual (create)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
 
         // Act
         // Assert
@@ -823,7 +823,7 @@ public class PlaystationTest : CommonTestClass
         var moveOverwrite = new[] { 2, 1 }; // 2Auto -> 1Auto (overwrite)
         var moveDelete = new[] { 4, 0 }; // 3Auto -> 1Auto (delete)
         var moveCreate = new[] { 3, 9 }; // 2Manual -> 5Manual (create)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "3");
 
         // Act
         // Assert
@@ -834,7 +834,7 @@ public class PlaystationTest : CommonTestClass
     public void T308_Swap_0x7D1()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var results = new ReadResults[]
         {
             // before swap 7, "Slot4Manual"
@@ -854,7 +854,7 @@ public class PlaystationTest : CommonTestClass
     public void T309_Swap_0x7D2()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "7");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "7");
         var results = new ReadResults[]
         {
             // before swap 3, "Slot2Manual"
@@ -874,7 +874,7 @@ public class PlaystationTest : CommonTestClass
     public void T400_TransferFromGog_To_0x7D1()
     {
         // Arrange
-        var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var pathGog = GetCombinedPath("Gog", "DefaultUser");
         var resultsGog = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 19977),
@@ -885,7 +885,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
@@ -898,7 +898,7 @@ public class PlaystationTest : CommonTestClass
     public void T401_TransferFromGog_To_0x7D2()
     {
         // Arrange
-        var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var pathGog = GetCombinedPath("Gog", "DefaultUser");
         var resultsGog = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 19977),
@@ -909,7 +909,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -922,7 +922,7 @@ public class PlaystationTest : CommonTestClass
     public void T402_TransferFromMicrosoft_To_0x7D1()
     {
         // Arrange
-        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var pathMicrosoft = GetCombinedPath("Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
         var resultsMicrosoft = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
@@ -933,7 +933,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
@@ -946,7 +946,7 @@ public class PlaystationTest : CommonTestClass
     public void T403_TransferFromMicrosoft_To_0x7D2()
     {
         // Arrange
-        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var pathMicrosoft = GetCombinedPath("Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
         var resultsMicrosoft = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
@@ -957,7 +957,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -970,7 +970,7 @@ public class PlaystationTest : CommonTestClass
     public void T404_TransferFromPlaystation_0x7D1_To_0x7D1()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
             new(6, "Slot4Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 773342),
@@ -981,7 +981,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
@@ -994,7 +994,7 @@ public class PlaystationTest : CommonTestClass
     public void T405_TransferFromPlaystation_0x7D1_To_0x7D2()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
             new(8, "Slot5Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4134, 6694, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 11005),
@@ -1005,7 +1005,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -1018,7 +1018,7 @@ public class PlaystationTest : CommonTestClass
     public void T406_TransferFromPlaystation_0x7D2_To_0x7D1()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "1");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4135, 5159, GameVersionEnum.Frontiers, "", "", 26),
@@ -1028,7 +1028,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 4; // 3 + 1 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
@@ -1041,7 +1041,7 @@ public class PlaystationTest : CommonTestClass
     public void T407_TransferFromPlaystation_0x7D2_To_0x7D2()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "2");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "2");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4141, 4653, GameVersionEnum.WaypointWithAgileStat, "1. Haupt", "An Bord von „Sueyuan XI“-Plattform", 385220),
@@ -1052,7 +1052,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -1065,7 +1065,7 @@ public class PlaystationTest : CommonTestClass
     public void T408_TransferFromSteam_To_0x7D1()
     {
         // Arrange
-        var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var pathSteam = GetCombinedPath("Steam", "st_76561198371877533");
         var resultsSteam = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4127, 5151, GameVersionEnum.Companions, "", "", 4765),
@@ -1076,7 +1076,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
@@ -1089,7 +1089,7 @@ public class PlaystationTest : CommonTestClass
     public void T409_TransferFromSteam_To_0x7D2()
     {
         // Arrange
-        var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var pathSteam = GetCombinedPath("Steam", "st_76561198371877533");
         var resultsSteam = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4127, 5151, GameVersionEnum.Companions, "", "", 4765),
@@ -1100,7 +1100,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -1113,7 +1113,7 @@ public class PlaystationTest : CommonTestClass
     public void T410_TransferFromSwitch_To_0x7D1()
     {
         // Arrange
-        var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var pathSwitch = GetCombinedPath("Switch", "4");
         var resultsSwitch = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Survival), DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4139, 5675, GameVersionEnum.Endurance, "", "", 336),
@@ -1123,7 +1123,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 4; // 3 + 1 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
@@ -1136,7 +1136,7 @@ public class PlaystationTest : CommonTestClass
     public void T411_TransferFromSwitch_To_0x7D2()
     {
         // Arrange
-        var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var pathSwitch = GetCombinedPath("Switch", "4");
         var resultsSwitch = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Survival), DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4139, 5675, GameVersionEnum.Endurance, "", "", 336),
@@ -1146,7 +1146,7 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 6; // 6 - 1  (Slot?) + 1 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 

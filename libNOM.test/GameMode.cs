@@ -17,7 +17,7 @@ public class GameModeTest : CommonTestClass
         // 12 // 13.hg // 7Auto
         var containerIndices = new int[] { 4, 14, 8, 12 };
         var loadingStrategy = LoadingStrategyEnum.Hollow;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
+        var path = GetCombinedPath("GameMode", "Vanilla");
 
         // Act
         // Assert
@@ -34,7 +34,7 @@ public class GameModeTest : CommonTestClass
         // 12 // 13.hg // 7Auto
         var containerIndices = new int[] { 4, 14, 8, 12 };
         var loadingStrategy = LoadingStrategyEnum.Full;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
+        var path = GetCombinedPath("GameMode", "Vanilla");
 
         // Act
         // Assert
@@ -53,7 +53,7 @@ public class GameModeTest : CommonTestClass
         //  8 //  9.hg //  5Auto
         var containerIndices = new int[] { 16, 4, 12, 18, 14, 8 };
         var loadingStrategy = LoadingStrategyEnum.Hollow;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
+        var path = GetCombinedPath("GameMode", "Custom");
 
         // Act
         // Assert
@@ -72,7 +72,7 @@ public class GameModeTest : CommonTestClass
         //  8 //  9.hg //  5Auto
         var containerIndices = new int[] { 16, 4, 12, 18, 14, 8 };
         var loadingStrategy = LoadingStrategyEnum.Full;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
+        var path = GetCombinedPath("GameMode", "Custom");
 
         // Act
         // Assert

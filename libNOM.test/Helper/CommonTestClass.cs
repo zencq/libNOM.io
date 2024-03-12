@@ -36,6 +36,9 @@ public abstract class CommonTestClass
     protected static readonly long DELTA_TIMESPAN_SECONDS = (long)(DELTA_TIMESPAN.TotalSeconds);
     protected static readonly long DELTA_TIMESPAN_TICKS = DELTA_TIMESPAN.Ticks;
 
+    protected const string DIRECTORY_TESTSUITE_ARCHIVE = "TESTSUITE_ARCHIVE";
+    protected const string DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE = "TESTSUITE_ARCHIVE_TEMPLATE";
+
     protected const uint SAVE_FORMAT_2 = 0x7D1; // 2001
     protected const uint SAVE_FORMAT_3 = 0x7D2; // 2002
 
@@ -298,15 +301,20 @@ public abstract class CommonTestClass
 
     #region Getter
 
-    protected static FileOperationResults GetFileOperationResults(Container container)
+    protected static string GetCombinedPath(params string[] paths)
     {
-        var priject = new PrivateObject(container);
-        return new(priject.GetFieldOrProperty(nameof(FileOperationResults.GameMode)).ToString()!, container.Difficulty, container.Season, (int)(priject.GetFieldOrProperty(nameof(FileOperationResults.BaseVersion))), container.GameVersion, container.TotalPlayTime);
+        return Path.Combine([DIRECTORY_TESTSUITE_ARCHIVE, ..paths]);
     }
 
     protected static IEnumerable<Container> GetExistingContainers(IPlatform platform)
     {
         return platform.GetSaveContainers().Where(i => i.Exists);
+    }
+
+    protected static FileOperationResults GetFileOperationResults(Container container)
+    {
+        var priject = new PrivateObject(container);
+        return new(priject.GetFieldOrProperty(nameof(FileOperationResults.GameMode)).ToString()!, container.Difficulty, container.Season, (int)(priject.GetFieldOrProperty(nameof(FileOperationResults.BaseVersion))), container.GameVersion, container.TotalPlayTime);
     }
 
     protected static string GetGuid(IEnumerable<byte> source)
@@ -1031,14 +1039,11 @@ public abstract class CommonTestClass
     [TestInitialize]
     public void ExtractArchive()
     {
-        var template = $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_TEMPLATE";
-        var working = nameof(Properties.Resources.TESTSUITE_ARCHIVE);
-
-        if (!Directory.Exists(template))
+        if (!Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE))
         {
-            Directory.CreateDirectory(template);
+            Directory.CreateDirectory(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE);
 
-            foreach (var file in Directory.EnumerateFiles(".", $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_*.zip")) 
+            foreach (var file in Directory.EnumerateFiles(".", $"{DIRECTORY_TESTSUITE_ARCHIVE}_*.zip")) 
             {
                 Console.WriteLine(file);
                 Debug.WriteLine(file);
@@ -1081,7 +1086,7 @@ public abstract class CommonTestClass
                 {
                     Console.WriteLine($"Entry: {entry.Key}");
                     Debug.WriteLine($"Entry: {entry.Key}");
-                    entry.WriteToDirectory(template, new ExtractionOptions
+                    entry.WriteToDirectory(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE, new ExtractionOptions
                     {
                         ExtractFullPath = true,
                         Overwrite = true,
@@ -1137,15 +1142,15 @@ public abstract class CommonTestClass
             //        PreserveFileTime = true,
             //    });
         }
-        if (!Directory.Exists(working))
-            Copy(template, working);
+        if (!Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE))
+            Copy(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE, DIRECTORY_TESTSUITE_ARCHIVE);
     }
 
     [TestCleanup]
     public void DirectoryCleanup()
     {
-        if (Directory.Exists(nameof(Properties.Resources.TESTSUITE_ARCHIVE)))
-            Directory.Delete(nameof(Properties.Resources.TESTSUITE_ARCHIVE), true);
+        if (Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE)
+            Directory.Delete(DIRECTORY_TESTSUITE_ARCHIVE, true);
 
         if (Directory.Exists("backup"))
             Directory.Delete("backup", true);

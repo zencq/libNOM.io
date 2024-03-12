@@ -167,7 +167,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var path = GetCombinedPath("Steam", "st_76561198042453834");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4145, 4657, GameVersionEnum.Singularity, "Iteration 1", "Aboard the Space Anomaly", 1253526),
@@ -201,7 +201,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
+        var path = GetCombinedPath("Steam", "st_76561198043217184");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4125, 4637, GameVersionEnum.ExoMech, "", "", 149345),
@@ -231,7 +231,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 94164),
@@ -254,7 +254,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198093556678");
+        var path = GetCombinedPath("Steam", "st_76561198093556678");
         var results = new ReadResults[]
         {
             new(26, "Slot14Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4147, 4659, GameVersionEnum.Omega, "", "Within Test Base Terrain Edits", 12462),
@@ -272,7 +272,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561199278291995");
+        var path = GetCombinedPath("Steam", "st_76561199278291995");
         var results = new ReadResults[]
         {
             new(14, "Slot8Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, 4658, GameVersionEnum.Echoes, "The Cartographers Redux", "Aboard the Space Anomaly", 17887),
@@ -301,7 +301,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "something");
+        var path = GetCombinedPath("Steam", "something");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 94164),
@@ -326,7 +326,7 @@ public class SteamTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = -123571; // 4.294.843.725
         var originUtcTicks = 637376113620000000; // 2020-10-06 20:02:42 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
+        var path = GetCombinedPath("Steam", "st_76561198043217184");
         var results = new WriteResults(uint.MaxValue, 4125, (ushort)(PresetGameModeEnum.Unspecified), (ushort)(SeasonEnum.None), 0, "", "", (byte)(DifficultyPresetTypeEnum.Invalid));
 
         // Act
@@ -340,7 +340,7 @@ public class SteamTest : CommonTestClass
         // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 637663896760000000; // 2021-09-04 22:01:16 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
 
         // Act
         // Assert
@@ -354,7 +354,7 @@ public class SteamTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = -1221111157; // 3.073.856.139
         var originUtcTicks = 637663905840000000; // 2021-09-04 22:16:24 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var results = new WriteResults(uint.MaxValue, 4135, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 94164, "", "", (byte)(DifficultyPresetTypeEnum.Normal));
 
         // Act
@@ -368,7 +368,7 @@ public class SteamTest : CommonTestClass
         // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638263807910000000; // 2023-07-31 06:13:11 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var path = GetCombinedPath("Steam", "st_76561198042453834");
 
         // Act
         // Assert
@@ -382,7 +382,7 @@ public class SteamTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 1199342306; // 1.199.342.306
         var originUtcTicks = 638234536920000000; // 2023-06-27 09:08:12 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var path = GetCombinedPath("Steam", "st_76561198042453834");
         var results = new WriteResults(uint.MaxValue, 4145, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1253526, "Iteration 1", "Aboard the Space Anomaly", (byte)(DifficultyPresetTypeEnum.Custom));
 
         // Act
@@ -397,7 +397,7 @@ public class SteamTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = -1221111157; // 3.073.856.139
         var originUtcTicks = 637663905840000000; // 2021-09-04 22:16:24 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
 
         // Act
         // Assert
@@ -409,7 +409,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
+        var path = GetCombinedPath("Steam", "st_76561198043217184");
 
         // Act
         // Assert
@@ -421,7 +421,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198043217184");
+        var path = GetCombinedPath("Steam", "st_76561198043217184");
 
         // Act
         // Assert
@@ -433,7 +433,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var pathWatching = Path.Combine(path, "save.hg");
 
         // Act
@@ -448,7 +448,7 @@ public class SteamTest : CommonTestClass
         var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var copyCreate = new[] { 3, 7 }; // 2Manual -> 4Manual (create)
         var copyDelete = new[] { 9, 4 }; // 5Manual -> 3Auto (delete)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
 
         // Act
         // Assert
@@ -460,7 +460,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var deleteDelete = new[] { 0, 1 }; // 1Auto, 1Manual
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
 
         // Act
         // Assert
@@ -475,7 +475,7 @@ public class SteamTest : CommonTestClass
         var moveOverwrite = new[] { 1, 0 }; // 1Manual -> 1Auto (overwrite)
         var moveDelete = new[] { 8, 2 }; // 5Auto -> 2Auto (delete)
         var moveCreate = new[] { 4, 9 }; // 3Auto -> 5Manual (create)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
 
         // Act
         // Assert
@@ -486,7 +486,7 @@ public class SteamTest : CommonTestClass
     public void T304_Swap()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var path = GetCombinedPath("Steam", "st_76561198042453834");
         var results = new ReadResults[]
         {
             // before swap 3, "Slot2Manual"
@@ -506,7 +506,7 @@ public class SteamTest : CommonTestClass
     public void T400_TransferFromGog()
     {
         // Arrange
-        var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var pathGog = GetCombinedPath("Gog", "DefaultUser");
         var resultsGog = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 19977),
@@ -517,7 +517,7 @@ public class SteamTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog)!;
 
         var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path)!;
 
@@ -530,7 +530,7 @@ public class SteamTest : CommonTestClass
     public void T401_TransferFromMicrosoft()
     {
         // Arrange
-        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var pathMicrosoft = GetCombinedPath("Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
         var resultsMicrosoft = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
@@ -541,7 +541,7 @@ public class SteamTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -554,7 +554,7 @@ public class SteamTest : CommonTestClass
     public void T402_TransferFromPlaystation_0x7D1()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
@@ -565,7 +565,7 @@ public class SteamTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -578,7 +578,7 @@ public class SteamTest : CommonTestClass
     public void T403_TransferFromPlaystation_0x7D2()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101604),
@@ -589,7 +589,7 @@ public class SteamTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -602,7 +602,7 @@ public class SteamTest : CommonTestClass
     public void T404_TransferFromSteam()
     {
         // Arrange
-        var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var pathSteam = GetCombinedPath("Steam", "st_76561198042453834");
         var resultsSteam = new ReadResults[]
         {
             new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, 6702, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony", 2961),
@@ -613,7 +613,7 @@ public class SteamTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 8; // 5 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -626,7 +626,7 @@ public class SteamTest : CommonTestClass
     public void T405_TransferFromSwitch()
     {
         // Arrange
-        var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var pathSwitch = GetCombinedPath("Switch", "4");
         var resultsSwitch = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Survival), DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4139, 5675, GameVersionEnum.Endurance, "", "", 336),
@@ -636,7 +636,7 @@ public class SteamTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 6; // 5 + 1 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 

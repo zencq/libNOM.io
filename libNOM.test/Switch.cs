@@ -71,7 +71,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
+        var path = GetCombinedPath("Switch", "1");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4139, 5163, GameVersionEnum.Endurance, "", "", 18),
@@ -88,7 +88,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "2");
+        var path = GetCombinedPath("Switch", "2");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4139, 4651, GameVersionEnum.Endurance, "", "", 12655),
@@ -105,7 +105,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "3");
+        var path = GetCombinedPath("Switch", "3");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4139, 4651, GameVersionEnum.Endurance, "", "", 640),
@@ -122,7 +122,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4139, 4651, GameVersionEnum.Endurance, "", "", 225),
@@ -143,7 +143,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
+        var path = GetCombinedPath("Switch", "5");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4145, 4657, GameVersionEnum.Singularity, "", "登上Inzadg球体", 63873),
@@ -165,7 +165,7 @@ public class SwitchTest : CommonTestClass
         // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638006823230000000; // 2022-10-06 19:45:32 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
 
         // Act
         // Assert
@@ -179,7 +179,7 @@ public class SwitchTest : CommonTestClass
         var containerIndex = 4;
         var originUnits = 0; // 0
         var originUtcTicks = 638006823360000000; // 2022-10-06 19:45:36 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var results = new WriteResults(6, 4139, (ushort)(PresetGameModeEnum.Creative), (ushort)(SeasonEnum.None), 51, "", "", (byte)(DifficultyPresetTypeEnum.Normal));
 
         // Act
@@ -193,7 +193,7 @@ public class SwitchTest : CommonTestClass
         // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638298440830000000; // 2023-09-09 08:14:43 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
+        var path = GetCombinedPath("Switch", "5");
 
         // Act
         // Assert
@@ -207,7 +207,7 @@ public class SwitchTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 1000356262; // 1.000.356.262
         var originUtcTicks = 638093635960000000; // 2023-01-15 07:13:16 +00:00 (from meta)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "5");
+        var path = GetCombinedPath("Switch", "5");
         var results = new WriteResults(2, 4145, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 63873, "", "登上Inzadg球体", (byte)(DifficultyPresetTypeEnum.Custom));
 
         // Act
@@ -222,7 +222,7 @@ public class SwitchTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 0; // 0
         var originUtcTicks = 638006282230000000; // 2022-10-06 04:43:43 +00:00 (from meta)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
+        var path = GetCombinedPath("Switch", "1");
 
         // Act
         // Assert
@@ -233,7 +233,7 @@ public class SwitchTest : CommonTestClass
     public void T230_Write_WriteAlways_False()
     {
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
+        var path = GetCombinedPath("Switch", "1");
 
         // Act
         // Assert
@@ -244,7 +244,7 @@ public class SwitchTest : CommonTestClass
     public void T231_Write_WriteAlways_True()
     {
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
+        var path = GetCombinedPath("Switch", "1");
 
         // Act
         // Assert
@@ -255,7 +255,7 @@ public class SwitchTest : CommonTestClass
     public void T300_FileSystemWatcher()
     {
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
+        var path = GetCombinedPath("Switch", "1");
         var pathWatching = Path.Combine(path, "manifest02.hg");
 
         // Act
@@ -270,7 +270,7 @@ public class SwitchTest : CommonTestClass
         var copyOverwrite = new[] { 0, 2 }; // 1Auto -> 2Auto (overwrite)
         var copyCreate = new[] { 0, 1 }; // 1Auto -> 1Manual (create)
         var copyDelete = new[] { 6, 4 }; // 4Auto -> 3Auto (delete)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
 
         // Act
         // Assert
@@ -282,7 +282,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var deleteDelete = new[] { 0 }; // 1Auto
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
 
         // Act
         // Assert
@@ -297,7 +297,7 @@ public class SwitchTest : CommonTestClass
         var moveOverwrite = new[] { 2, 5 }; // 2Auto -> 3Manual (overwrite)
         var moveDelete = new[] { 1, 0 }; // 1Manual -> 1Auto (delete)
         var moveCreate = new[] { 4, 9 }; // 3Auto -> 5Manual (create)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
 
         // Act
         // Assert
@@ -308,7 +308,7 @@ public class SwitchTest : CommonTestClass
     public void T304_Swap()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var results = new ReadResults[]
         {
             // before swap 2, "Slot2Auto"
@@ -328,7 +328,7 @@ public class SwitchTest : CommonTestClass
     public void T400_TransferFromGog()
     {
         // Arrange
-        var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var pathGog = GetCombinedPath("Gog", "DefaultUser");
         var resultsGog = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 19977),
@@ -339,7 +339,7 @@ public class SwitchTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -352,7 +352,7 @@ public class SwitchTest : CommonTestClass
     public void T401_TransferFromMicrosoft()
     {
         // Arrange
-        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var pathMicrosoft = GetCombinedPath("Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
         var resultsMicrosoft = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
@@ -363,7 +363,7 @@ public class SwitchTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -376,7 +376,7 @@ public class SwitchTest : CommonTestClass
     public void T402_TransferFromPlaystation_0x7D1()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
@@ -387,7 +387,7 @@ public class SwitchTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -400,7 +400,7 @@ public class SwitchTest : CommonTestClass
     public void T403_TransferFromPlaystation_0x7D2()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101604),
@@ -411,7 +411,7 @@ public class SwitchTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -424,7 +424,7 @@ public class SwitchTest : CommonTestClass
     public void T404_TransferFromSteam()
     {
         // Arrange
-        var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var pathSteam = GetCombinedPath("Steam", "st_76561198371877533");
         var resultsSteam = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4127, 5151, GameVersionEnum.Companions, "", "", 4765),
@@ -435,7 +435,7 @@ public class SwitchTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 6; // 3 + 1 (Slot3) + 2 (Slot4)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -448,7 +448,7 @@ public class SwitchTest : CommonTestClass
     public void T405_TransferFromSwitch()
     {
         // Arrange
-        var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "1");
+        var pathSwitch = GetCombinedPath("Switch", "1");
         var resultsSwitch = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4139, 5163, GameVersionEnum.Endurance, "", "", 18),
@@ -458,7 +458,7 @@ public class SwitchTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 4; // 3 + 1 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var path = GetCombinedPath("Switch", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 

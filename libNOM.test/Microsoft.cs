@@ -143,7 +143,7 @@ public class MicrosoftTest : CommonTestClass
         Assert.AreEqual(13712, accountSizeDiskB, 500);
         Assert.AreEqual(13712, BitConverter.ToInt64(containersIndexA, 331));
 
-        var accountBlobA = File.ReadAllBytes(Path.Combine(path.Replace(nameof(Properties.Resources.TESTSUITE_ARCHIVE), $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP"), "8C69E739E59646B995E48ACB5B01E16A", "container.23"));
+        var accountBlobA = File.ReadAllBytes(Path.Combine(path.Replace(DIRECTORY_TESTSUITE_ARCHIVE, DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE), "8C69E739E59646B995E48ACB5B01E16A", "container.23"));
         var accountBlobB = File.ReadAllBytes(Path.Combine(path, "8C69E739E59646B995E48ACB5B01E16A", "container.24"));
 
         // Account Blob Prefix (000 - 003)
@@ -171,8 +171,8 @@ public class MicrosoftTest : CommonTestClass
         Assert.AreNotEqual("2F87BC5994B24BF28F34369C6B0A2C2B", accountBlobMetaNameB);
         Assert.AreEqual("2F87BC5994B24BF28F34369C6B0A2C2B", GetGuid(accountBlobA.Skip(312).Take(16)));
 
-        var accountBlobDataA = new FileInfo(Path.Combine(path.Replace(nameof(Properties.Resources.TESTSUITE_ARCHIVE), $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP"), "8C69E739E59646B995E48ACB5B01E16A", "DB416844920844AE9C1B9693597B9BC0"));
-        var accountBlobMetaA = new FileInfo(Path.Combine(path.Replace(nameof(Properties.Resources.TESTSUITE_ARCHIVE), $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP"), "8C69E739E59646B995E48ACB5B01E16A", "2F87BC5994B24BF28F34369C6B0A2C2B"));
+        var accountBlobDataA = new FileInfo(Path.Combine(path.Replace(DIRECTORY_TESTSUITE_ARCHIVE, DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE), "8C69E739E59646B995E48ACB5B01E16A", "DB416844920844AE9C1B9693597B9BC0"));
+        var accountBlobMetaA = new FileInfo(Path.Combine(path.Replace(DIRECTORY_TESTSUITE_ARCHIVE, DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE), "8C69E739E59646B995E48ACB5B01E16A", "2F87BC5994B24BF28F34369C6B0A2C2B"));
 
         var accountBlobDataB = new FileInfo(Path.Combine(path, "8C69E739E59646B995E48ACB5B01E16A", accountBlobDataNameB));
         var accountBlobMetaB = new FileInfo(Path.Combine(path, "8C69E739E59646B995E48ACB5B01E16A", accountBlobMetaNameB));
@@ -256,7 +256,7 @@ public class MicrosoftTest : CommonTestClass
 
             offset += 8;
 
-            var blobBlobA = File.ReadAllBytes(Path.Combine(path.Replace(nameof(Properties.Resources.TESTSUITE_ARCHIVE), $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP"), blobGuidA, $"container.{blobContainerExtensionA}"));
+            var blobBlobA = File.ReadAllBytes(Path.Combine(path.Replace(DIRECTORY_TESTSUITE_ARCHIVE, DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE), blobGuidA, $"container.{blobContainerExtensionA}"));
             var blobBlobB = File.ReadAllBytes(Path.Combine(path, blobGuidB, $"container.{blobContainerExtensionB}"));
 
             // Blob Blob Prefix (000 - 003)
@@ -284,8 +284,8 @@ public class MicrosoftTest : CommonTestClass
             var blobBlobMetaNameB = GetGuid(blobBlobB.Skip(312).Take(16));
             Assert.AreEqual(blobBlobMetaNameA, blobBlobMetaNameB);
 
-            var blobBlobDataA = new FileInfo(Path.Combine(path.Replace(nameof(Properties.Resources.TESTSUITE_ARCHIVE), $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP"), blobGuidA, blobBlobDataNameA));
-            var blobBlobMetaA = new FileInfo(Path.Combine(path.Replace(nameof(Properties.Resources.TESTSUITE_ARCHIVE), $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP"), blobGuidA, blobBlobMetaNameA));
+            var blobBlobDataA = new FileInfo(Path.Combine(path.Replace(DIRECTORY_TESTSUITE_ARCHIVE, DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE), blobGuidA, blobBlobDataNameA));
+            var blobBlobMetaA = new FileInfo(Path.Combine(path.Replace(DIRECTORY_TESTSUITE_ARCHIVE, DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE), blobGuidA, blobBlobMetaNameA));
 
             var blobBlobDataB = new FileInfo(Path.Combine(path, blobGuidB, blobBlobDataNameB));
             var blobBlobMetaB = new FileInfo(Path.Combine(path, blobGuidB, blobBlobMetaNameB));
@@ -302,7 +302,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
@@ -320,7 +320,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, 4650, GameVersionEnum.Outlaws, "", "", 167579),
@@ -344,7 +344,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, 4655, GameVersionEnum.Fractal, "1. Haupt", "Auf dem Frachter (WF-4 Dawajima)", 635119),
@@ -374,7 +374,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 256522),
@@ -395,7 +395,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FE2C5492FC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901FE2C5492FC_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 64807),
@@ -413,7 +413,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FFCAB85905_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901FFCAB85905_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, 4650, GameVersionEnum.Outlaws, "", "", 240856),
@@ -431,7 +431,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4142, 4654, GameVersionEnum.WaypointWithSuperchargedSlots, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 362), // for some reason SaveVersion has still the old format
@@ -454,7 +454,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithV2, "", "On freighter (Spear of Benevolence)", 169127),
@@ -475,7 +475,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "something");
+        var path = GetCombinedPath("Microsoft", "something");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4138, 4650, GameVersionEnum.Outlaws, "", "", 240856),
@@ -498,7 +498,7 @@ public class MicrosoftTest : CommonTestClass
         var now = DateTimeOffset.UtcNow;
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638264331709580000; // 2023-07-31 20:46:10 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -548,7 +548,7 @@ public class MicrosoftTest : CommonTestClass
         // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638264331709580000; // 2023-07-31 20:46:10 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C");
 
         // Act
         // Assert
@@ -562,7 +562,7 @@ public class MicrosoftTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 1504909789; // 1.504.909.789
         var originUtcTicks = 638126763444620000; // 2023-02-22 15:25:44 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
         var results = new WriteResults(uint.MaxValue, 4143, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 635119, "1. Haupt", "Auf dem Frachter (WF-4 Dawajima)", (byte)(DifficultyPresetTypeEnum.Custom));
 
         // Act
@@ -577,7 +577,7 @@ public class MicrosoftTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 252495937; // 252.495.937
         var originUtcTicks = 638452693524090000; // 2023-03-05 21:02:32 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
         var results = new WriteResults(uint.MaxValue, 4149, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 169127, "", "On freighter (Spear of Benevolence)", (byte)(DifficultyPresetTypeEnum.Normal));
 
         // Act
@@ -592,7 +592,7 @@ public class MicrosoftTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 1504909789; // 1.504.909.789
         var originUtcTicks = 638126763444620000; // 2023-02-22 15:25:44 +00:00
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
 
         // Act
         // Assert
@@ -604,7 +604,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
 
         // Act
         // Assert
@@ -616,7 +616,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
 
         // Act
         // Assert
@@ -628,7 +628,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
         var pathWatching = Path.Combine(path, "containers.index");
 
         // Act
@@ -643,7 +643,7 @@ public class MicrosoftTest : CommonTestClass
         var copyOverwrite = new[] { 4, 1 }; // 3Auto -> 1Manual (overwrite)
         var copyCreate = new[] { 2, 8 }; // 2Auto -> 5Auto (create)
         var copyDelete = new[] { 9, 0 }; // 5Manual -> 1Auto (delete)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
 
         // Act
         // Assert
@@ -655,7 +655,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var deleteDelete = new[] { 0, 1 }; // 1Auto, 1Manual
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
 
         // Act
         // Assert
@@ -670,7 +670,7 @@ public class MicrosoftTest : CommonTestClass
         var moveOverwrite = new[] { 2, 5 }; // 2Auto -> 3Manual (overwrite)
         var moveDelete = new[] { 1, 0 }; // 1Manual -> 1Auto (delete) // 1 is corrupted, therefore 0 gets deleted and then 1 is also deleted after copying.
         var moveCreate = new[] { 4, 9 }; // 3Auto -> 5Manual (create)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901FB44140B02_29070100B936489ABCE8B9AF3980429C");
 
         // Act
         // Assert
@@ -681,7 +681,7 @@ public class MicrosoftTest : CommonTestClass
     public void T304_Swap()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
             // before swap 3, "Slot2Manual"
@@ -701,7 +701,7 @@ public class MicrosoftTest : CommonTestClass
     public void T400_TransferFromGog()
     {
         // Arrange
-        var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var pathGog = GetCombinedPath("Gog", "DefaultUser");
         var resultsGog = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 19977),
@@ -712,7 +712,7 @@ public class MicrosoftTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -725,7 +725,7 @@ public class MicrosoftTest : CommonTestClass
     public void T401_TransferFromMicrosoft()
     {
         // Arrange
-        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var pathMicrosoft = GetCombinedPath("Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
         var resultsMicrosoft = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
@@ -736,7 +736,7 @@ public class MicrosoftTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -749,7 +749,7 @@ public class MicrosoftTest : CommonTestClass
     public void T402_TransferFromPlaystation_0x7D1()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
@@ -760,7 +760,7 @@ public class MicrosoftTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -773,7 +773,7 @@ public class MicrosoftTest : CommonTestClass
     public void T403_TransferFromPlaystation_0x7D2()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101604),
@@ -784,7 +784,7 @@ public class MicrosoftTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -797,7 +797,7 @@ public class MicrosoftTest : CommonTestClass
     public void T404_TransferFromSteam()
     {
         // Arrange
-        var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var pathSteam = GetCombinedPath("Steam", "st_76561198371877533");
         var resultsSteam = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4127, 5151, GameVersionEnum.Companions, "", "", 4765),
@@ -808,7 +808,7 @@ public class MicrosoftTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
@@ -821,7 +821,7 @@ public class MicrosoftTest : CommonTestClass
     public void T405_TransferFromSwitch()
     {
         // Arrange
-        var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var pathSwitch = GetCombinedPath("Switch", "4");
         var resultsSwitch = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Survival), DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4139, 5675, GameVersionEnum.Endurance, "", "", 336),
@@ -831,7 +831,7 @@ public class MicrosoftTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 6; // 6 - 1 (Slot?) + 1 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "000901F4E735CFAC_29070100B936489ABCE8B9AF3980429C");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 

@@ -13,7 +13,7 @@ public class SettingsTest : CommonTestClass
     public void LoadingStrategyHollow()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -31,7 +31,7 @@ public class SettingsTest : CommonTestClass
     public void LoadingStrategyCurrent()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -57,7 +57,7 @@ public class SettingsTest : CommonTestClass
     public void LoadingStrategyPartial()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Partial,
@@ -83,7 +83,7 @@ public class SettingsTest : CommonTestClass
     public void LoadingStrategyFull()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
@@ -101,7 +101,7 @@ public class SettingsTest : CommonTestClass
     public void MaxBackupCount()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -134,7 +134,7 @@ public class SettingsTest : CommonTestClass
     public void UseMapping_True()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -156,7 +156,7 @@ public class SettingsTest : CommonTestClass
     public void UseMapping_False()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,

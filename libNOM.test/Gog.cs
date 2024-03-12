@@ -16,7 +16,7 @@ public class GogTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var path = GetCombinedPath("Gog", "DefaultUser");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, true, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4098, 4610, GameVersionEnum.Unknown, "", "", 110965),
@@ -41,7 +41,7 @@ public class GogTest : CommonTestClass
     public void T200_TransferFromGog()
     {
         // Arrange
-        var pathGog = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var pathGog = GetCombinedPath("Gog", "DefaultUser");
         var resultsGog = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "", "", 19977),
@@ -52,7 +52,7 @@ public class GogTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var path = GetCombinedPath("Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
@@ -65,7 +65,7 @@ public class GogTest : CommonTestClass
     public void T201_TransferFromMicrosoft()
     {
         // Arrange
-        var pathMicrosoft = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
+        var pathMicrosoft = GetCombinedPath("Microsoft", "wgs", "0009000000C73498_29070100B936489ABCE8B9AF3980429C");
         var resultsMicrosoft = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 423841),
@@ -76,7 +76,7 @@ public class GogTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var path = GetCombinedPath("Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
@@ -89,7 +89,7 @@ public class GogTest : CommonTestClass
     public void T202_TransferFromPlaystation_0x7D1()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
@@ -100,7 +100,7 @@ public class GogTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var path = GetCombinedPath("Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
@@ -113,7 +113,7 @@ public class GogTest : CommonTestClass
     public void T203_TransferFromPlaystation_0x7D2()
     {
         // Arrange
-        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var pathPlaystation = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "4");
         var resultsPlaystation = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Frontiers, "", "", 101604),
@@ -124,7 +124,7 @@ public class GogTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var path = GetCombinedPath("Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
@@ -137,7 +137,7 @@ public class GogTest : CommonTestClass
     public void T204_TransferFromSteam()
     {
         // Arrange
-        var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var pathSteam = GetCombinedPath("Steam", "st_76561198371877533");
         var resultsSteam = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4127, 5151, GameVersionEnum.Companions, "", "", 4765),
@@ -148,7 +148,7 @@ public class GogTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var path = GetCombinedPath("Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
@@ -161,7 +161,7 @@ public class GogTest : CommonTestClass
     public void T205_TransferFromSwitch()
     {
         // Arrange
-        var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var pathSwitch = GetCombinedPath("Switch", "4");
         var resultsSwitch = new ReadResults[]
         {
             new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Survival), DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4139, 5675, GameVersionEnum.Endurance, "", "", 336),
@@ -171,7 +171,7 @@ public class GogTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 8; // 7 + 1 (Slot?)
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
+        var path = GetCombinedPath("Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 

@@ -27,7 +27,7 @@ public class ContainerTest : CommonTestClass
     {
         // Arrange
         var backupCreatedCallback = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -73,7 +73,7 @@ public class ContainerTest : CommonTestClass
     {
         // Arrange
         var backupRestoredCallback = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -104,7 +104,7 @@ public class ContainerTest : CommonTestClass
     public void T10_JsonValue_Path()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -134,7 +134,7 @@ public class ContainerTest : CommonTestClass
     public void T11_JsonValue_Digits()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -162,7 +162,7 @@ public class ContainerTest : CommonTestClass
     public void T20_SaveName()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
+        var path = GetCombinedPath("GameMode", "Custom");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -199,7 +199,7 @@ public class ContainerTest : CommonTestClass
             { "SolarSystemIndex", 4 },
             { "PlanetIndex", 4 },
         };
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -241,7 +241,7 @@ public class ContainerTest : CommonTestClass
     public void T31_SetJArray()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
