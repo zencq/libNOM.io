@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 using CommunityToolkit.Diagnostics;
@@ -1040,6 +1041,7 @@ public abstract class CommonTestClass
             foreach (var file in Directory.EnumerateFiles(".", $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_*.zip")) 
             {
                 Console.WriteLine(file);
+                Debug.WriteLine(file);
                 int MAX_SEARCH_LENGTH_FOR_EOCD = 65557;
 
                 var bytes = File.ReadAllBytes(file);
@@ -1051,7 +1053,8 @@ public abstract class CommonTestClass
 
                 // Search in reverse
                 Array.Reverse(seek);
-                Console.WriteLine($"{file}: Reverse: {string.Join("   ", seek[..27].Select(x => x.ToString("X")))}");
+                Console.WriteLine($"{file}: Reverse: {string.Join("   ", seek[..22].Select(x => x.ToString("X2")))}");
+                Debug.WriteLine($"{file}: Reverse: {string.Join("   ", seek[..22].Select(x => x.ToString("X2")))}");
                 // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
                 var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
 
@@ -1060,6 +1063,7 @@ public abstract class CommonTestClass
                     if (IsMatch(seek, pos_from_end, needle))
                     {
                         Console.WriteLine($"{file}: Position: {pos_from_end}");
+                        Debug.WriteLine($"{file}: Position: {pos_from_end}");
                         //-pos_from_end;
                         //stream.Seek(-pos_from_end, SeekOrigin.End);
                         break;
@@ -1068,6 +1072,7 @@ public abstract class CommonTestClass
 
 
                 Console.WriteLine($"{file}: ZipArchive.Open");
+                Debug.WriteLine($"{file}: ZipArchive.Open");
                 using var zipArchive = ZipArchive.Open(file, new()
                 {
                     Password = Properties.Resources.TESTSUITE_PASSWORD,
@@ -1075,6 +1080,7 @@ public abstract class CommonTestClass
                 foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
                 {
                     Console.WriteLine($"Entry: {entry.Key}");
+                    Debug.WriteLine($"Entry: {entry.Key}");
                     entry.WriteToDirectory(template, new ExtractionOptions
                     {
                         ExtractFullPath = true,
