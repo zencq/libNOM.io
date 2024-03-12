@@ -52,14 +52,13 @@ public class GogTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var offset = 4;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformGog, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog, offset);
+        TestCommonFileOperationTransfer<PlatformGog, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog);
     }
 
     [TestMethod]
@@ -77,14 +76,13 @@ public class GogTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var offset = 4;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformGog, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
+        TestCommonFileOperationTransfer<PlatformGog, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft);
     }
 
     [TestMethod]
@@ -102,14 +100,13 @@ public class GogTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var offset = 4;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+        TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation);
     }
 
     [TestMethod]
@@ -127,14 +124,13 @@ public class GogTest : CommonTestClass
         var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var offset = 4;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation, offset);
+        TestCommonFileOperationTransfer<PlatformGog, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation);
     }
 
     [TestMethod]
@@ -152,14 +148,13 @@ public class GogTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 10; // 7 + 1 (Slot4) + 2 (Slot5)
-        var offset = 4;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformGog, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, userDecisionsSteam, transfer, existingContainersCount, resultsSteam, offset);
+        TestCommonFileOperationTransfer<PlatformGog, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, userDecisionsSteam, transfer, existingContainersCount, resultsSteam);
     }
 
     [TestMethod]
@@ -176,13 +171,12 @@ public class GogTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 8; // 7 + 1 (Slot?)
-        var offset = 4;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Gog", "DefaultUser");
         var transfer = new[] { 3, 4 }; // overwrite Slot4 // create Slot5
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformGog, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, userDecisionsSwitch, transfer, existingContainersCount, resultsSwitch, offset);
+        TestCommonFileOperationTransfer<PlatformGog, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, userDecisionsSwitch, transfer, existingContainersCount, resultsSwitch);
     }
 }

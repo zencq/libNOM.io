@@ -265,7 +265,7 @@ public class Container : IContainer
         get
         {
             if (string.IsNullOrEmpty(Extra.SaveSummary))
-                Extra = Extra with { SaveSummary = _jsonObject?.GetValue<string>("SAVE_SUMMARY") ?? string.Empty };
+                Extra = Extra with { SaveSummary = _jsonObject?.GetValue<string>("SAVE_SUMMARY", ActiveContext) ?? string.Empty };
 
             return Extra.SaveSummary;
         }

@@ -172,7 +172,7 @@ public abstract class CommonTestClass
             Assert.AreEqual(expected.SaveName, container.SaveName);
             Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
             Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
-            Assert.IsFalse(container.UnknownKeys.Any(), $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+            Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
         }
     }
 
@@ -225,7 +225,7 @@ public abstract class CommonTestClass
                 Assert.AreEqual(expected.SaveName, container.SaveName);
                 Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
                 Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
-                Assert.IsFalse(container.UnknownKeys.Any(), $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+                Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
             }
     }
 
@@ -426,7 +426,7 @@ public abstract class CommonTestClass
                 containers.Add(i, container);
             }
 
-        if (copy.Any())
+        if (copy.Length != 0)
             platform.Copy(containers[copy[0]], containers[copy[1]]);
 
         // After copy to get proper data.
@@ -452,9 +452,10 @@ public abstract class CommonTestClass
         AssertCommonFileOperation(results[create[0]], GetFileOperationResults(containers[create[1]]));
     }
 
-    protected static void TestCommonFileOperationTransfer<TPlatform, TSource>(string pathSource, string path, UserIdentification userIdentificationSource, UserIdentification userIdentification, int source, int userDecisionsSource, int[] transfer, int existingContainersCount, ReadResults[] results, int offset) where TPlatform : IPlatform where TSource : IPlatform
+    protected static void TestCommonFileOperationTransfer<TPlatform, TSource>(string pathSource, string path, UserIdentification userIdentificationSource, UserIdentification userIdentification, int source, int userDecisionsSource, int[] transfer, int existingContainersCount, ReadResults[] results) where TPlatform : IPlatform where TSource : IPlatform
     {
         // Arrange
+        var offset = (transfer[0] - source) * 2;
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,

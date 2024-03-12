@@ -1,11 +1,8 @@
 ﻿using System.Text;
 
 using CommunityToolkit.Diagnostics;
-using CommunityToolkit.HighPerformance;
 
 using libNOM.io;
-using libNOM.io.Enums;
-using libNOM.io.Models;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -848,14 +845,13 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
-        var offset = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog);
     }
 
     [TestMethod]
@@ -873,14 +869,13 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationGog = ReadUserIdentification(pathGog);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformGog>(pathGog, path, userIdentificationGog, userIdentification, slotGog, userDecisionsGog, transfer, existingContainersCount, resultsGog);
     }
 
     [TestMethod]
@@ -898,14 +893,13 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
-        var offset = 0;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft);
     }
 
     [TestMethod]
@@ -923,283 +917,112 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationMicrosoft = ReadUserIdentification(pathMicrosoft);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformMicrosoft>(pathMicrosoft, path, userIdentificationMicrosoft, userIdentification, slotMicrosoft, userDecisionsMicrosoft, transfer, existingContainersCount, resultsMicrosoft);
     }
 
-    //[TestMethod]
-    //public void T404_TransferFromPlaystation_0x7D1_To_0x7D1()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        new(6, "Slot4Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4647, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 423841),
-    //        new(7, "Slot4Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4124, 4647, GameVersionEnum.LivingShip, "", "", 419023),
-    //    };
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+    [TestMethod]
+    public void T404_TransferFromPlaystation_0x7D1_To_0x7D1()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(6, "Slot4Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 773342),
+            new(7, "Slot4Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4124, 4636, GameVersionEnum.LivingShip, "", "", 771852),
+        };
+        var slotPlaystation = 3; // get Slot4
+        var userDecisionsPlaystation = 8;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
 
-    //    var offset = -4;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
-    //    var settings = new PlatformSettings
-    //    {
-    //        LoadingStrategy = LoadingStrategyEnum.Full,
-    //        UseExternalSourcesForUserIdentification = false,
-    //    };
-    //    var userIdentification = ReadUserIdentification(path);
+        var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
+        var userIdentification = ReadUserIdentification(path);
 
-    //    // Act
-    //    var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
-    //    var transfer = platformPlaystation.GetSourceTransferData(3);
-
-    //    var platform = new PlatformPlaystation(path, settings);
-
-    //    platform.Transfer(transfer, 1); // overwrite
-    //    var container2 = GetOneSaveContainer(platform, 2);
-    //    var priect2 = new PrivateObject(container2);
-    //    var userIdentification2 = (UserIdentification)(priect2.GetFieldOrProperty("UserIdentification"));
-
-    //    platform.Transfer(transfer, 2); // create
-    //    var container4 = GetOneSaveContainer(platform, 4);
-    //    var priect4 = new PrivateObject(container4);
-    //    var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
-
-    //    // Assert
-    //    AssertAllAreEqual(8, transfer.TransferBaseUserDecision.Count);
-    //    Assert.AreEqual(6, GetExistingContainers(platform).Count()); // + 1 + 2
-
-    //    AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[2], platformPlaystation.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[3], platformPlaystation.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
-
-    //    AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification2.LID!, userIdentification4.LID!);
-    //    AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification2.UID!, userIdentification4.UID!);
-    //    AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification2.USN!, userIdentification4.USN!);
-    //    AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification2.PTK!, userIdentification4.PTK!);
-
-    //    for (var i = 0; i < resultsPlaystation.Length; i++)
-    //    {
-    //        var container = GetOneSaveContainer(platform, resultsPlaystation[i].CollectionIndex + offset);
-    //        var priect = new PrivateObject(container);
-
-    //        Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
-    //        Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
-    //        Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-    //        Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.Difficulty);
-    //        Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
-    //        Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
-    //        Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
-    //    }
-    //}
-
-    //[TestMethod]
-    //public void T55_TransferFromPlaystation_0x7D1_To_0x7D2()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (8, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 5Auto
-    //        (9, true, false, PresetGameModeEnum.Permadeath, DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4134, GameVersionEnum.PrismsWithBytebeatAuthor), // 5Manual
-    //    };
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
-
-    //    var offset = -4;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
-    //    var settings = new PlatformSettings
-    //    {
-    //        LoadingStrategy = LoadingStrategyEnum.Full,
-    //        UseExternalSourcesForUserIdentification = false,
-    //    };
-    //    var userIdentification = ReadUserIdentification(path);
-
-    //    // Act
-    //    var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
-    //    var transfer = platformPlaystation.GetSourceTransferData(4);
-
-    //    var platform = new PlatformPlaystation(path, settings);
-
-    //    platform.Transfer(transfer, 2); // overwrite
-    //    var container4 = GetOneSaveContainer(platform, 4);
-    //    var priect4 = new PrivateObject(container4);
-    //    var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
-
-    //    platform.Transfer(transfer, 3); // create
-    //    var container6 = GetOneSaveContainer(platform, 6);
-    //    var priect6 = new PrivateObject(container6);
-    //    var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
-
-    //    // Assert
-    //    AssertAllAreEqual(1, transfer.TransferBaseUserDecision.Count);
-    //    Assert.AreEqual(8, GetExistingContainers(platform).Count()); // + 2
-
-    //    AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[2], platformPlaystation.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[3], platformPlaystation.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
-
-    //    AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification4.LID!, userIdentification6.LID!);
-    //    AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
-    //    AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification4.USN!, userIdentification6.USN!);
-    //    AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
-
-    //    for (var i = 0; i < resultsPlaystation.Length; i++)
-    //    {
-    //        var container = GetOneSaveContainer(platform, resultsPlaystation[i].CollectionIndex + offset);
-    //        var priect = new PrivateObject(container);
-
-    //        Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
-    //        Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
-    //        Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-    //        Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.Difficulty);
-    //        Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
-    //        Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
-    //        Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
-    //    }
-    //}
-
-    //[TestMethod]
-    //public void T56_TransferFromPlaystation_0x7D2_To_0x7D1()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "1");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version)[]
-    //    {
-    //        (0, true, false, PresetGameModeEnum.Creative, DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4135, GameVersionEnum.Frontiers), // 1Auto
-    //    };
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
-
-    //    var offset = 2;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
-    //    var settings = new PlatformSettings
-    //    {
-    //        LoadingStrategy = LoadingStrategyEnum.Full,
-    //        UseExternalSourcesForUserIdentification = false,
-    //    };
-    //    var userIdentification = ReadUserIdentification(path);
-
-    //    // Act
-    //    var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
-    //    var transfer = platformPlaystation.GetSourceTransferData(0);
-
-    //    var platform = new PlatformPlaystation(path, settings);
-
-    //    platform.Transfer(transfer, 1); // overwrite
-    //    var container2 = GetOneSaveContainer(platform, 2);
-    //    var priect2 = new PrivateObject(container2);
-    //    var userIdentification2 = (UserIdentification)(priect2.GetFieldOrProperty("UserIdentification"));
-
-    //    platform.Transfer(transfer, 2); // create
-    //    var container4 = GetOneSaveContainer(platform, 4);
-    //    var priect4 = new PrivateObject(container4);
-    //    var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
-
-    //    // Assert
-    //    AssertAllAreEqual(0, transfer.TransferBaseUserDecision.Count);
-    //    Assert.AreEqual(4, GetExistingContainers(platform).Count()); // + 1
-
-    //    AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[2], platformPlaystation.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[3], platformPlaystation.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
-
-    //    AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification2.LID!, userIdentification4.LID!);
-    //    AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification2.UID!, userIdentification4.UID!);
-    //    AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification2.USN!, userIdentification4.USN!);
-    //    AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification2.PTK!, userIdentification4.PTK!);
-
-    //    for (var i = 0; i < resultsPlaystation.Length; i++)
-    //    {
-    //        var container = GetOneSaveContainer(platform, resultsPlaystation[i].CollectionIndex + offset);
-    //        var priect = new PrivateObject(container);
-
-    //        Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
-    //        Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
-    //        Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-    //        Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.Difficulty);
-    //        Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
-    //        Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
-    //        Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
-    //    }
-    //}
-
-    //[TestMethod]
-    //public void T57_TransferFromPlaystation_0x7D2_To_0x7D2()
-    //{
-    //    // Arrange
-    //    var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "2");
-    //    var resultsPlaystation = new (int CollectionIndex, bool Exists, bool IsOld, PresetGameModeEnum GameMode, DifficultyPresetTypeEnum GameDifficulty, SeasonEnum Season, int BaseVersion, GameVersionEnum Version, string SaveName, string SaveSummary)[]
-    //    {
-    //        (2, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4141, GameVersionEnum.WaypointWithAgileStat, "1. Haupt", "An Bord von „Sueyuan XI“-Plattform"), // 2Auto
-    //        (3, true, false, PresetGameModeEnum.Normal, DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4141, GameVersionEnum.WaypointWithAgileStat, "1. Haupt", "Auf dem Frachter (WF-4 Dawajima)"), // 2Manual
-    //    };
-    //    var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
-
-    //    var offset = 2;
-    //    var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
-    //    var settings = new PlatformSettings
-    //    {
-    //        LoadingStrategy = LoadingStrategyEnum.Full,
-    //        UseExternalSourcesForUserIdentification = false,
-    //    };
-    //    var userIdentification = ReadUserIdentification(path);
-
-    //    // Act
-    //    var platformPlaystation = new PlatformPlaystation(pathPlaystation, settings);
-    //    var transfer = platformPlaystation.GetSourceTransferData(1);
-
-    //    var platform = new PlatformPlaystation(path, settings);
-
-    //    platform.Transfer(transfer, 2); // overwrite
-    //    var container4 = GetOneSaveContainer(platform, 4);
-    //    var priect4 = new PrivateObject(container4);
-    //    var userIdentification4 = (UserIdentification)(priect4.GetFieldOrProperty("UserIdentification"));
-
-    //    platform.Transfer(transfer, 3); // create
-    //    var container6 = GetOneSaveContainer(platform, 6);
-    //    var priect6 = new PrivateObject(container6);
-    //    var userIdentification6 = (UserIdentification)(priect6.GetFieldOrProperty("UserIdentification"));
-
-    //    // Assert
-    //    AssertAllAreEqual(13, transfer.TransferBaseUserDecision.Count);
-    //    Assert.AreEqual(8, GetExistingContainers(platform).Count()); // + 2
-
-    //    AssertAllAreEqual(userIdentificationPlaystation[0], platformPlaystation.PlatformUserIdentification.LID!, transfer.UserIdentification.LID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[1], platformPlaystation.PlatformUserIdentification.UID!, transfer.UserIdentification.UID!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[2], platformPlaystation.PlatformUserIdentification.USN!, transfer.UserIdentification.USN!);
-    //    AssertAllAreEqual(userIdentificationPlaystation[3], platformPlaystation.PlatformUserIdentification.PTK!, transfer.UserIdentification.PTK!);
-
-    //    AssertAllAreEqual(userIdentification[0], platform.PlatformUserIdentification.LID!, userIdentification4.LID!, userIdentification6.LID!);
-    //    AssertAllAreEqual(userIdentification[1], platform.PlatformUserIdentification.UID!, userIdentification4.UID!, userIdentification6.UID!);
-    //    AssertAllAreEqual(userIdentification[2], platform.PlatformUserIdentification.USN!, userIdentification4.USN!, userIdentification6.USN!);
-    //    AssertAllAreEqual(userIdentification[3], platform.PlatformUserIdentification.PTK!, userIdentification4.PTK!, userIdentification6.PTK!);
-
-    //    for (var i = 0; i < resultsPlaystation.Length; i++)
-    //    {
-    //        var container = GetOneSaveContainer(platform, resultsPlaystation[i].CollectionIndex + offset);
-    //        var priect = new PrivateObject(container);
-
-    //        Assert.AreEqual(resultsPlaystation[i].Exists, container.Exists);
-    //        Assert.AreEqual(resultsPlaystation[i].IsOld, container.IsOld);
-    //        Assert.AreEqual(resultsPlaystation[i].GameMode, (PresetGameModeEnum)(priect.GetFieldOrProperty("GameMode")));
-    //        Assert.AreEqual(resultsPlaystation[i].GameDifficulty, container.Difficulty);
-    //        Assert.AreEqual(resultsPlaystation[i].Season, container.Season);
-    //        Assert.AreEqual(resultsPlaystation[i].BaseVersion, (int)(priect.GetFieldOrProperty("BaseVersion")));
-    //        Assert.AreEqual(resultsPlaystation[i].Version, container.GameVersion);
-    //        Assert.AreEqual(resultsPlaystation[i].SaveName, container.SaveName);
-    //        Assert.AreEqual(resultsPlaystation[i].SaveSummary, container.SaveSummary);
-    //    }
-    //}
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation);
+    }
 
     [TestMethod]
-    public void T58_TransferFromSteam_To_0x7D1()
+    public void T405_TransferFromPlaystation_0x7D1_To_0x7D2()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(8, "Slot5Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4134, 6694, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 11005),
+            new(9, "Slot5Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4134, 6694, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 9925),
+        };
+        var slotPlaystation = 4; // get Slot5
+        var userDecisionsPlaystation = 1;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+
+        var existingContainersCount = 8; // 6 + 2 (Slot?)
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation);
+    }
+
+    [TestMethod]
+    public void T406_TransferFromPlaystation_0x7D2_To_0x7D1()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "1");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4135, 5159, GameVersionEnum.Frontiers, "", "", 26),
+        };
+        var slotPlaystation = 0; // get Slot1
+        var userDecisionsPlaystation = 0;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+
+        var existingContainersCount = 4; // 3 + 1 (Slot?)
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
+        var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation);
+    }
+
+    [TestMethod]
+    public void T407_TransferFromPlaystation_0x7D2_To_0x7D2()
+    {
+        // Arrange
+        var pathPlaystation = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "2");
+        var resultsPlaystation = new ReadResults[]
+        {
+            new(2, "Slot2Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4141, 4653, GameVersionEnum.WaypointWithAgileStat, "1. Haupt", "An Bord von „Sueyuan XI“-Plattform", 385220),
+            new(3, "Slot2Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4141, 4653, GameVersionEnum.WaypointWithAgileStat, "1. Haupt", "Auf dem Frachter (WF-4 Dawajima)", 385249),
+        };
+        var slotPlaystation = 1; // get Slot2
+        var userDecisionsPlaystation = 13;
+        var userIdentificationPlaystation = ReadUserIdentification(pathPlaystation);
+
+        var existingContainersCount = 8; // 6 + 2 (Slot?)
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
+        var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformPlaystation>(pathPlaystation, path, userIdentificationPlaystation, userIdentification, slotPlaystation, userDecisionsPlaystation, transfer, existingContainersCount, resultsPlaystation);
+    }
+
+    [TestMethod]
+    public void T408_TransferFromSteam_To_0x7D1()
     {
         // Arrange
         var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -1213,18 +1036,17 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 6; // 3 + 1 (Slot2) + 2 (Slot3)
-        var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, userDecisionsSteam, transfer, existingContainersCount, resultsSteam, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, userDecisionsSteam, transfer, existingContainersCount, resultsSteam);
     }
 
     [TestMethod]
-    public void T59_TransferFromSteam_To_0x7D2()
+    public void T409_TransferFromSteam_To_0x7D2()
     {
         // Arrange
         var pathSteam = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
@@ -1238,18 +1060,17 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSteam = ReadUserIdentification(pathSteam);
 
         var existingContainersCount = 8; // 6 + 2 (Slot?)
-        var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, userDecisionsSteam, transfer, existingContainersCount, resultsSteam, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSteam>(pathSteam, path, userIdentificationSteam, userIdentification, slotSteam, userDecisionsSteam, transfer, existingContainersCount, resultsSteam);
     }
 
     [TestMethod]
-    public void T60_TransferFromSwitch_To_0x7D1()
+    public void T410_TransferFromSwitch_To_0x7D1()
     {
         // Arrange
         var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
@@ -1262,18 +1083,17 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 4; // 3 + 1 (Slot?)
-        var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "3");
         var transfer = new[] { 1, 2 }; // overwrite Slot2 // create Slot3
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, userDecisionsSwitch, transfer, existingContainersCount, resultsSwitch, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, userDecisionsSwitch, transfer, existingContainersCount, resultsSwitch);
     }
 
     [TestMethod]
-    public void T61_TransferFromSwitch_To_0x7D2()
+    public void T411_TransferFromSwitch_To_0x7D2()
     {
         // Arrange
         var pathSwitch = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
@@ -1286,13 +1106,12 @@ public class PlaystationTest : CommonTestClass
         var userIdentificationSwitch = ReadUserIdentification(pathSwitch);
 
         var existingContainersCount = 6; // 6 - 1  (Slot?) + 1 (Slot?)
-        var offset = 2;
         var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "4");
         var transfer = new[] { 2, 3 }; // overwrite Slot3 // create Slot4
         var userIdentification = ReadUserIdentification(path);
 
         // Act
         // Assert
-        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, userDecisionsSwitch, transfer, existingContainersCount, resultsSwitch, offset);
+        TestCommonFileOperationTransfer<PlatformPlaystation, PlatformSwitch>(pathSwitch, path, userIdentificationSwitch, userIdentification, slotSwitch, userDecisionsSwitch, transfer, existingContainersCount, resultsSwitch);
     }
 }
