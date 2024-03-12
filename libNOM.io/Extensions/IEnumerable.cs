@@ -5,6 +5,20 @@ namespace libNOM.io.Extensions;
 
 public static class IEnumerableExtensions
 {
+    #region typeof(Container)
+
+    /// <summary>
+    /// Gets the maximum number of slots based on the <see cref="Container"/> count.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    public static int GetMaximumSlots(this IEnumerable<Container> self)
+    {
+        return self.Count() / 2;
+    }
+
+    #endregion
+
     #region typeof(RegEx)
 
     /// <summary>

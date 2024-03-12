@@ -153,7 +153,7 @@ public static class Convert
         container.MetaFile = new FileInfo(Path.Combine(path, $"{name}.meta"));
         container.Exists = true; // fake it be able to create the data
         container.IsSynced = true;
-
+        container.Platform = platform; // to get the right sizes
 
         platform.JustWrite(container);
     }

@@ -865,7 +865,9 @@ public partial class PlatformPlaystation : Platform
                 if (!Source.IsCompatible)
                     ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
-                Destination.SetPlatform(this);
+                // Needs to be set first to use the correct obfuscation sate.
+                Destination.Platform = this;
+
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
 

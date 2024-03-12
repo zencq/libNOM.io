@@ -21,7 +21,6 @@ public class Container : IContainer
     private bool? _exists;
     private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
     private JObject? _jsonObject;
-    private Platform? _platform;
     private int _saveVersion = -1;
 
     #endregion
@@ -363,10 +362,10 @@ public class Container : IContainer
         set => Extra = Extra with { MetaFormat = value };
     }
 
-    internal int MetaSize => _platform is null ? -1 : MetaFormat switch // { get; }
+    internal int MetaSize => Platform is null ? -1 : MetaFormat switch // { get; }
     {
-        MetaFormatEnum.Waypoint => _platform.META_LENGTH_TOTAL_WAYPOINT,
-        _ => _platform.META_LENGTH_TOTAL_VANILLA,
+        MetaFormatEnum.Waypoint => Platform.META_LENGTH_TOTAL_WAYPOINT,
+        _ => Platform.META_LENGTH_TOTAL_VANILLA,
     };
 
     internal int SaveVersion // { get; set; }
@@ -388,6 +387,8 @@ public class Container : IContainer
     }
 
     internal StoragePersistentSlotEnum PersistentStorageSlot { get; }
+
+    internal Platform? Platform { get; set; }
 
     #endregion
 
@@ -455,8 +456,8 @@ public class Container : IContainer
         IsSynced = false;
 
         // Make sure the data are always in the format that was set in the settings.
-        if (_jsonObject is not null && _platform is not null) // happens when the container is unloaded
-            if (_platform.Settings.UseMapping)
+        if (_jsonObject is not null && Platform is not null) // happens when the container is unloaded
+            if (Platform.Settings.UseMapping)
             {
                 UnknownKeys = Mapping.Deobfuscate(_jsonObject);
             }
@@ -488,13 +489,6 @@ public class Container : IContainer
         WatcherChangeType = changeType;
     }
 
-    // internal //
-
-    internal void SetPlatform(Platform platform)
-    {
-        _platform = platform;
-    }
-
     #endregion
 
     #region Delegate
@@ -515,11 +509,10 @@ public class Container : IContainer
 
     internal Container(int metaIndex, Platform platform, PlatformExtra extra)
     {
-        _platform = platform;
-
         CollectionIndex = metaIndex - Constants.OFFSET_INDEX;
         Extra = extra;
         MetaIndex = metaIndex;
+        Platform = platform;
 
         PersistentStorageSlot = MetaIndex == 0 ? StoragePersistentSlotEnum.AccountData : (StoragePersistentSlotEnum)(MetaIndex);
         SaveType = (SaveTypeEnum)(CollectionIndex % 2);
