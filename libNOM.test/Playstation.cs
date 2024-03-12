@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace libNOM.test;
 
 
-// Do not use System.Range for simplicity of the file and performace is not critical.
+// Do not use System.Range for simplicity of the file and performance is not critical.
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
 public class PlaystationTest : CommonTestClass

@@ -151,7 +151,7 @@ public abstract class CommonTestClass
             var container = platform.GetSaveContainer(results[i].CollectionIndex)!;
             var expected = results[i];
 
-            var priect = new PrivateObject(container);
+            var priject = new PrivateObject(container);
 
             Assert.AreEqual(expected.CollectionIndex, container.CollectionIndex);
             Assert.AreEqual(expected.Identifier, container.Identifier);
@@ -164,11 +164,11 @@ public abstract class CommonTestClass
             Assert.AreEqual(expected.HasActiveExpedition, container.HasActiveExpedition);
             Assert.AreEqual(expected.CanSwitchContext, container.CanSwitchContext);
             Assert.AreEqual(expected.ActiveContext, container.ActiveContext);
-            Assert.AreEqual(expected.GameMode, priect.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
+            Assert.AreEqual(expected.GameMode, priject.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
             Assert.AreEqual(expected.Difficulty, container.Difficulty);
             Assert.AreEqual(expected.Season, container.Season);
-            Assert.AreEqual(expected.BaseVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
-            Assert.AreEqual(expected.SaveVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
+            Assert.AreEqual(expected.BaseVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
+            Assert.AreEqual(expected.SaveVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
             Assert.AreEqual(expected.SaveName, container.SaveName);
             Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
             Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
@@ -199,7 +199,7 @@ public abstract class CommonTestClass
                 Guard.IsNotNull(container);
                 var expected = results[j];
 
-                var priect = new PrivateObject(container);
+                var priject = new PrivateObject(container);
 
                 Assert.AreEqual(userIdentification.LID!, GetUserIdentification(container).LID);
                 Assert.AreEqual(userIdentification.UID!, GetUserIdentification(container).UID);
@@ -217,11 +217,11 @@ public abstract class CommonTestClass
                 Assert.AreEqual(expected.HasActiveExpedition, container.HasActiveExpedition);
                 Assert.AreEqual(expected.CanSwitchContext, container.CanSwitchContext);
                 Assert.AreEqual(expected.ActiveContext, container.ActiveContext);
-                Assert.AreEqual(expected.GameMode, priect.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
+                Assert.AreEqual(expected.GameMode, priject.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
                 Assert.AreEqual(expected.Difficulty, container.Difficulty);
                 Assert.AreEqual(expected.Season, container.Season);
-                Assert.AreEqual(expected.BaseVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
-                Assert.AreEqual(expected.SaveVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
+                Assert.AreEqual(expected.BaseVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
+                Assert.AreEqual(expected.SaveVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
                 Assert.AreEqual(expected.SaveName, container.SaveName);
                 Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
                 Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
@@ -294,8 +294,8 @@ public abstract class CommonTestClass
 
     protected static FileOperationResults GetFileOperationResults(Container container)
     {
-        var priect = new PrivateObject(container);
-        return new(priect.GetFieldOrProperty(nameof(FileOperationResults.GameMode)).ToString()!, container.Difficulty, container.Season, (int)(priect.GetFieldOrProperty(nameof(FileOperationResults.BaseVersion))), container.GameVersion, container.TotalPlayTime);
+        var priject = new PrivateObject(container);
+        return new(priject.GetFieldOrProperty(nameof(FileOperationResults.GameMode)).ToString()!, container.Difficulty, container.Season, (int)(priject.GetFieldOrProperty(nameof(FileOperationResults.BaseVersion))), container.GameVersion, container.TotalPlayTime);
     }
 
     protected static IEnumerable<Container> GetExistingContainers(IPlatform platform)
@@ -341,10 +341,10 @@ public abstract class CommonTestClass
     {
         // Act
         var container = PlatformCollection.AnalyzeFile(path)!;
-        var priect = new PrivateObject(container);
+        var priject = new PrivateObject(container);
 
         // Assert
-        Assert.AreEqual(platformResult.ToString(), priect.GetFieldOrProperty("Platform").ToString());
+        Assert.AreEqual(platformResult.ToString(), priject.GetFieldOrProperty("Platform").ToString());
 
         Assert.AreEqual(results.CollectionIndex, container.CollectionIndex);
         Assert.AreEqual(results.Identifier, container.Identifier);
@@ -357,11 +357,11 @@ public abstract class CommonTestClass
         Assert.AreEqual(results.HasActiveExpedition, container.HasActiveExpedition);
         Assert.AreEqual(results.CanSwitchContext, container.CanSwitchContext);
         Assert.AreEqual(results.ActiveContext, container.ActiveContext);
-        Assert.AreEqual(results.GameMode, priect.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
+        Assert.AreEqual(results.GameMode, priject.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
         Assert.AreEqual(results.Difficulty, container.Difficulty);
         Assert.AreEqual(results.Season, container.Season);
-        Assert.AreEqual(results.BaseVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
-        Assert.AreEqual(results.SaveVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
+        Assert.AreEqual(results.BaseVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
+        Assert.AreEqual(results.SaveVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
         Assert.AreEqual(results.SaveName, container.SaveName);
         Assert.AreEqual(results.SaveSummary, container.SaveSummary);
         Assert.AreEqual(results.TotalPlayTime, container.TotalPlayTime);
@@ -945,13 +945,13 @@ public abstract class CommonTestClass
 
     protected static UserIdentification GetUserIdentification(Container container)
     {
-        var priect = new PrivateObject(new PrivateObject(container).GetFieldOrProperty("UserIdentification"));
+        var priject = new PrivateObject(new PrivateObject(container).GetFieldOrProperty("UserIdentification"));
         return new()
         {
-            LID = priect.GetFieldOrProperty("LID").ToString(),
-            UID = priect.GetFieldOrProperty("UID").ToString(),
-            USN = priect.GetFieldOrProperty("USN").ToString(),
-            PTK = priect.GetFieldOrProperty("PTK").ToString(),
+            LID = priject.GetFieldOrProperty("LID").ToString(),
+            UID = priject.GetFieldOrProperty("UID").ToString(),
+            USN = priject.GetFieldOrProperty("USN").ToString(),
+            PTK = priject.GetFieldOrProperty("PTK").ToString(),
         };
     }
 

@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace libNOM.test;
 
 
-// Do not use System.Range for simplicity of the file and performace is not critical.
+// Do not use System.Range for simplicity of the file and performance is not critical.
 [TestClass]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
 public class SteamTest : CommonTestClass
@@ -144,11 +144,11 @@ public class SteamTest : CommonTestClass
 
         var bytesA = metaA.AsSpan().AsBytes().ToArray();
         var bytesB = metaB.AsSpan().AsBytes().ToArray();
-        var priectA = new PrivateObject(containerA);
-        var priectB = new PrivateObject(containerB);
+        var prijectA = new PrivateObject(containerA);
+        var prijectB = new PrivateObject(containerB);
 
-        AssertAllAreEqual(results.BaseVersion, (uint)(int)(priectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(priectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[17], metaB[17]);
-        AssertAllAreEqual(results.GameMode, (ushort)(priectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(priectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 72), BitConverter.ToInt16(bytesB, 72));
+        AssertAllAreEqual(results.BaseVersion, (uint)(int)(prijectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(prijectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[17], metaB[17]);
+        AssertAllAreEqual(results.GameMode, (ushort)(prijectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(prijectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 72), BitConverter.ToInt16(bytesB, 72));
         AssertAllAreEqual(results.Season, (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 74), BitConverter.ToUInt16(bytesA, 74));
         AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[19], metaB[19]);
 

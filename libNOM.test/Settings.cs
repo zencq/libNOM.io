@@ -1,5 +1,4 @@
 ﻿using libNOM.io;
-using libNOM.io.Enums;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

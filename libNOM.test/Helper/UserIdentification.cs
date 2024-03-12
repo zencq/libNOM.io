@@ -10,5 +10,4 @@ public record class UserIdentification
     public string? USN { get; set; }
 
     public string? PTK { get; set; }
-
 }

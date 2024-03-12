@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// the already existing object of the private class
         /// </summary>
         /// <param name="obj"> object that serves as starting point to reach the private members</param>
-        /// <param name="memberToAccess">the derefrencing string using . that points to the object to be retrived as in m_X.m_Y.m_Z</param>
+        /// <param name="memberToAccess">the dereferencing string using . that points to the object to be retrieved as in m_X.m_Y.m_Z</param>
         public PrivateObject(object obj, string memberToAccess)
         {
             ValidateAccessString(memberToAccess);
@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="assemblyName">Name of the assembly</param>
         /// <param name="typeName">fully qualified name</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(string assemblyName, string typeName, params object[] args)
             : this(assemblyName, typeName, null, args)
         {
@@ -98,7 +98,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="assemblyName">Name of the assembly</param>
         /// <param name="typeName">fully qualified name</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(string assemblyName, string typeName, Type[] parameterTypes, object[] args)
             : this(Type.GetType(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", typeName, assemblyName), false), parameterTypes, args)
         {
@@ -109,7 +109,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// specified type.
         /// </summary>
         /// <param name="type">type of the object to create</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(Type type, params object[] args)
             : this(type, null, args)
         {
@@ -121,7 +121,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="type">type of the object to create</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(Type type, Type[] parameterTypes, object[] args)
         {
             object o;
@@ -224,7 +224,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// returns the hash code of the target object
         /// </summary>
-        /// <returns>int representing hashcode of the target object</returns>
+        /// <returns>int representing hash code of the target object</returns>
         public override int GetHashCode()
         {
             Debug.Assert(this.target != null, "target should not be null.");
@@ -386,7 +386,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 // Fix up the parameter types
                 MethodInfo member = this.originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
 
-                // If the method was not found and type arguments were provided for generic paramaters,
+                // If the method was not found and type arguments were provided for generic parameters,
                 // attempt to look up a generic method.
                 if ((member == null) && (typeArguments != null))
                 {
@@ -434,18 +434,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets the array element using array of subsrcipts for each dimension
+        /// Gets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="indices">the indices of array</param>
-        /// <returns>An arrya of elements.</returns>
+        /// <returns>An array of elements.</returns>
         public object GetArrayElement(string name, params int[] indices)
         {
             return this.GetArrayElement(name, BindToEveryThing, indices);
         }
 
         /// <summary>
-        /// Sets the array element using array of subsrcipts for each dimension
+        /// Sets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="value">Value to set</param>
@@ -456,12 +456,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets the array element using array of subsrcipts for each dimension
+        /// Gets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
         /// <param name="indices">the indices of array</param>
-        /// <returns>An arrya of elements.</returns>
+        /// <returns>An array of elements.</returns>
         public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
         {
             Array arr = (Array)this.InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
@@ -469,7 +469,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Sets the array element using array of subsrcipts for each dimension
+        /// Sets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
@@ -714,7 +714,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Invokes the memeber
+        /// Invokes the member
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional attributes</param>
@@ -780,7 +780,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
         /// <param name="bindingFlags"><see cref="BindingFlags"/> to further filter the method signatures.</param>
         /// <param name="modifiers">Modifiers for parameters.</param>
-        /// <returns>A methodinfo instance.</returns>
+        /// <returns>A MethodInfo instance.</returns>
         private MethodInfo GetGenericMethodFromCache(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags, ParameterModifier[] modifiers)
         {
             Debug.Assert(!string.IsNullOrEmpty(methodName), "Invalid method name.");
@@ -949,7 +949,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Invokes static member
         /// </summary>
         /// <param name="name">Name of the member to InvokeHelper</param>
-        /// <param name="args">Arguements to the invoction</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, params object[] args)
         {
@@ -961,7 +961,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the member to InvokeHelper</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke</param>
-        /// <param name="args">Arguements to the invoction</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, Type[] parameterTypes, object[] args)
         {
@@ -973,7 +973,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the member to InvokeHelper</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke</param>
-        /// <param name="args">Arguements to the invoction</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, Type[] parameterTypes, object[] args, Type[] typeArguments)
@@ -985,7 +985,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Invokes the static method
         /// </summary>
         /// <param name="name">Name of the member</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <param name="culture">Culture</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, object[] args, CultureInfo culture)
@@ -998,7 +998,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <param name="culture">Culture info</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, Type[] parameterTypes, object[] args, CultureInfo culture)
@@ -1011,7 +1011,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional invocation attributes</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, BindingFlags bindingFlags, params object[] args)
         {
@@ -1024,7 +1024,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional invocation attributes</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
         {
@@ -1036,7 +1036,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional invocation attributes</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <param name="culture">Culture</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
@@ -1050,7 +1050,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional invocation attributes</param>
         /// /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <param name="culture">Culture</param>
         /// <returns>Result of invocation</returns>
         public object InvokeStatic(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture)
@@ -1064,7 +1064,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional invocation attributes</param>
         /// /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <param name="culture">Culture</param>
         /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
         /// <returns>Result of invocation</returns>
@@ -1122,7 +1122,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Sets the memeber of the static array
+        /// Sets the member of the static array
         /// </summary>
         /// <param name="name">Name of the array</param>
         /// <param name="value">value to set</param>
@@ -1136,7 +1136,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets the element in satatic array
+        /// Gets the element in static array
         /// </summary>
         /// <param name="name">Name of the array</param>
         /// <param name="bindingFlags">Additional InvokeHelper attributes</param>
@@ -1144,7 +1144,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A one-dimensional array of 32-bit integers that represent the indexes specifying
         /// the position of the element to get. For instance, to access a[10][11] the array would be {10,11}
         /// </param>
-        /// <returns>element at the spcified location</returns>
+        /// <returns>element at the specified location</returns>
         public object GetStaticArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
         {
             Array arr = (Array)this.InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
@@ -1152,7 +1152,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Sets the memeber of the static array
+        /// Sets the member of the static array
         /// </summary>
         /// <param name="name">Name of the array</param>
         /// <param name="bindingFlags">Additional InvokeHelper attributes</param>
@@ -1181,7 +1181,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Sets the static field
         /// </summary>
         /// <param name="name">Name of the field</param>
-        /// <param name="value">Arguement to the invocation</param>
+        /// <param name="value">Argument to the invocation</param>
         public void SetStaticField(string name, object value)
         {
             this.SetStaticField(name, BindToEveryThing, value);
@@ -1203,7 +1203,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the field</param>
         /// <param name="bindingFlags">Additional InvokeHelper attributes</param>
-        /// <param name="value">Arguement to the invocation</param>
+        /// <param name="value">Argument to the invocation</param>
         public void SetStaticField(string name, BindingFlags bindingFlags, object value)
         {
             this.InvokeHelperStatic(name, BindingFlags.SetField | bindingFlags | BindingFlags.Static, new[] { value }, CultureInfo.InvariantCulture);
@@ -1255,7 +1255,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets the static property
         /// </summary>
         /// <param name="name">Name of the field or property</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <returns>The static property.</returns>
         public object GetStaticProperty(string name, params object[] args)
         {
@@ -1370,7 +1370,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional invocation attributes</param>
-        /// <param name="args">Arguements to the invocation</param>
+        /// <param name="args">Arguments to the invocation</param>
         /// <param name="culture">Culture</param>
         /// <returns>Result of invocation</returns>
         private object InvokeHelperStatic(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
@@ -1402,7 +1402,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="m1">Method1</param>
         /// <param name="m2">Method2</param>
-        /// <returns>True if they are similiar.</returns>
+        /// <returns>True if they are similar.</returns>
         internal static bool CompareMethodSigAndName(MethodBase m1, MethodBase m2)
         {
             ParameterInfo[] params1 = m1.GetParameters();
@@ -1446,7 +1446,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Finds most dervied type with the provided information.
+        /// Finds most derived type with the provided information.
         /// </summary>
         /// <param name="match">Candidate matches.</param>
         /// <param name="cMatches">Number of matches.</param>
@@ -1623,10 +1623,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="m1">Method 1</param>
         /// <param name="paramOrder1">Parameter order for Method 1</param>
-        /// <param name="paramArrayType1">Paramter array type.</param>
+        /// <param name="paramArrayType1">Parameter array type.</param>
         /// <param name="m2">Method 2</param>
         /// <param name="paramOrder2">Parameter order for Method 2</param>
-        /// <param name="paramArrayType2">>Paramter array type.</param>
+        /// <param name="paramArrayType2">>Parameter array type.</param>
         /// <param name="types">Types to search in.</param>
         /// <param name="args">Args.</param>
         /// <returns>An int representing the match.</returns>
@@ -1688,10 +1688,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="p1">Method 1</param>
         /// <param name="paramOrder1">Parameter order for Method 1</param>
-        /// <param name="paramArrayType1">Paramter array type.</param>
+        /// <param name="paramArrayType1">Parameter array type.</param>
         /// <param name="p2">Method 2</param>
         /// <param name="paramOrder2">Parameter order for Method 2</param>
-        /// <param name="paramArrayType2">>Paramter array type.</param>
+        /// <param name="paramArrayType2">>Parameter array type.</param>
         /// <param name="types">Types to search in.</param>
         /// <param name="args">Args.</param>
         /// <returns>An int representing the match.</returns>

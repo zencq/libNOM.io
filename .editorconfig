@@ -2,6 +2,7 @@
 root = true
 
 # Spell Checker
+[*]
 spelling_languages = en-us
 spelling_exclusion_path = .\.exclusion.dic
 
