@@ -379,8 +379,8 @@ public class SwitchTest : CommonTestClass
         var pathPlaystation = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "1");
         var resultsPlaystation = new ReadResults[]
         {
-            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598862),
-            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 598818),
+            new(2, "Slot2Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithByteBeatAuthor, "", "", 598862),
+            new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4134, 4646, GameVersionEnum.PrismsWithByteBeatAuthor, "", "", 598818),
         };
         var slotPlaystation = 1; // get Slot2
         var userDecisionsPlaystation = 24;

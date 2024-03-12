@@ -110,7 +110,7 @@ public interface IPlatform
     /// <summary>
     /// Gets a specific <see cref="Container"/> with save data.
     /// </summary>
-    /// <param name="index">The ColletionIndex of the save to get.</param>
+    /// <param name="index">The CollectionIndex of the save to get.</param>
     /// <returns></returns>
     public Container? GetSaveContainer(int index);
 

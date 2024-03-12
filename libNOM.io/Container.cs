@@ -99,7 +99,7 @@ public class Container : IContainer
 
     public bool IsVersion350Prisms => IsVersion(GameVersionEnum.Prisms); // { get; }
 
-    public bool IsVersion351PrismsWithBytebeatAuthor => IsVersion(GameVersionEnum.PrismsWithBytebeatAuthor); // { get; }
+    public bool IsVersion351PrismsWithByteBeatAuthor => IsVersion(GameVersionEnum.PrismsWithByteBeatAuthor); // { get; }
 
     public bool IsVersion360Frontiers => IsVersion(GameVersionEnum.Frontiers); // { get; }
 
@@ -181,7 +181,7 @@ public class Container : IContainer
 
     public SaveContextQueryEnum ActiveContext // { get; set; }
     {
-        get => _jsonObject?.GetValue<SaveContextQueryEnum>("ACTIVE_CONTEXT") ?? SaveContextQueryEnum.DontCare; // DontCare is used for pre-Omega saves
+        get => _jsonObject?.GetValue<SaveContextQueryEnum>("ACTIVE_CONTEXT") ?? SaveContextQueryEnum.DontCare;
         set
         {
             Guard.IsTrue(CanSwitchContext, nameof(CanSwitchContext)); // block switching if only one context

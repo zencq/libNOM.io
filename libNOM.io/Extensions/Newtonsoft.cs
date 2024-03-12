@@ -13,7 +13,7 @@ public static class NewtonsoftExtensions
     #region Flags
 
     /// <summary>
-    /// Wether the specified object is the root object.
+    /// Whether the specified object is the root object.
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>

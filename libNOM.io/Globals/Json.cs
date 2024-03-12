@@ -18,8 +18,8 @@ internal static partial class Json
         var all = Constants.JSONPATH.Concat(Constants.JSONPATH_EXTENSION).ToDictionary(i => i.Key, i => i.Value);
         var upper = identifier.ToUpperInvariant();
 
-        if (all.ContainsKey(upper))
-            return all[upper];
+        if (all.TryGetValue(upper, out var value))
+            return value;
 
         return [identifier]; // return original and not upper variant
     }
@@ -46,7 +46,7 @@ internal static partial class Json
 
         while (index >= 0) // to not store unchanged paths multiple times
         {
-            if (paths.ContainsIndex(index) && !string.IsNullOrEmpty(paths[index])) // skip empty strings for Vanialla save format
+            if (paths.ContainsIndex(index) && !string.IsNullOrEmpty(paths[index])) // skip empty strings for Vanilla save format
                 return string.IsNullOrEmpty(contextKey) ? [paths[index]] : [string.Format(paths[index], contextKey)]; // [] to have a consistent return type
 
             index -= 2; // 2 obfuscation states per save format

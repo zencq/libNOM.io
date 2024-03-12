@@ -8,9 +8,7 @@ internal static class BaseVersion
     /// <summary>
     /// Calculates the base version of a save, based on the in-file version and a specified game mode and season.
     /// </summary>
-    /// <param name="version">Version as specified in-file.</param>
-    /// <param name="mode"></param>
-    /// <param name="season"></param>
+    /// <param name="container"></param>
     /// <returns></returns>
     internal static int Calculate(Container container)
     {

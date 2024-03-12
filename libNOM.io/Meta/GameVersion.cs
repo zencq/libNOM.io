@@ -59,7 +59,7 @@ internal static partial class GameVersion
         >= 4137 => GetSentinelWithVehicleAI(jsonObject) ?? GameVersionEnum.SentinelWithWeaponResource, // 3.84, 3.81
         >= 4136 => GameVersionEnum.Sentinel, // 3.80
         >= 4135 => GetEmergence(jsonObject) ?? GameVersionEnum.Frontiers, // 3.70, 3.60
-        >= 4129 => GetPrismsWithBytebeatAuthor(jsonObject) ?? GetPrisms(jsonObject) ?? GetBeachhead(jsonObject) ?? GameVersionEnum.Expeditions, // 3.51, 3.50, 3.40, 3.30
+        >= 4129 => GetPrismsWithByteBeatAuthor(jsonObject) ?? GetPrisms(jsonObject) ?? GetBeachhead(jsonObject) ?? GameVersionEnum.Expeditions, // 3.51, 3.50, 3.40, 3.30
         >= 4127 => GetCompanions(jsonObject) ?? GameVersionEnum.NextGeneration, // 3.20, 3.10
         >= 4126 => GetOrigins(jsonObject) ?? GetDesolation(jsonObject) ?? GameVersionEnum.Crossplay, // 3.00, 2.60, 2.50
         >= 4125 => GameVersionEnum.ExoMech, // 2.40
@@ -86,7 +86,7 @@ internal static partial class GameVersion
         >= 4137 => GetSentinelWithVehicleAI(json) ?? GameVersionEnum.SentinelWithWeaponResource, // 3.84, 3.81
         >= 4136 => GameVersionEnum.Sentinel, // 3.80
         >= 4135 => GetEmergence(json) ?? GameVersionEnum.Frontiers, // 3.70, 3.60
-        >= 4129 => GetPrismsWithBytebeatAuthor(json) ?? GetPrisms(json) ?? GetBeachhead(json) ?? GameVersionEnum.Expeditions, // 3.51, 3.50, 3.40, 3.30
+        >= 4129 => GetPrismsWithByteBeatAuthor(json) ?? GetPrisms(json) ?? GetBeachhead(json) ?? GameVersionEnum.Expeditions, // 3.51, 3.50, 3.40, 3.30
         >= 4127 => GetCompanions(json) ?? GameVersionEnum.NextGeneration, // 3.20, 3.10
         >= 4126 => GetOrigins(json) ?? GetDesolation(json) ?? GameVersionEnum.Crossplay, // 3.00, 2.60, 2.50
         >= 4125 => GameVersionEnum.ExoMech, // 2.40
@@ -138,8 +138,8 @@ internal static partial class GameVersion
     private static GameVersionEnum? GetEmergence(JObject jsonObject) => GetEnumIfAny(jsonObject, "GAME_VERSION_370", GameVersionEnum.Emergence);
     private static GameVersionEnum? GetEmergence(string json) => GetEnumIfContains(json, "qs?", "SandwormOverrides", GameVersionEnum.Emergence);
 
-    private static GameVersionEnum? GetPrismsWithBytebeatAuthor(JObject jsonObject) => GetEnumIfAny(jsonObject, "GAME_VERSION_351", GameVersionEnum.PrismsWithBytebeatAuthor);
-    private static GameVersionEnum? GetPrismsWithBytebeatAuthor(string json) => GetEnumIfContains(json, "m7b", "AuthorOnlineID", GameVersionEnum.PrismsWithBytebeatAuthor);
+    private static GameVersionEnum? GetPrismsWithByteBeatAuthor(JObject jsonObject) => GetEnumIfAny(jsonObject, "GAME_VERSION_351", GameVersionEnum.PrismsWithByteBeatAuthor);
+    private static GameVersionEnum? GetPrismsWithByteBeatAuthor(string json) => GetEnumIfContains(json, "m7b", "AuthorOnlineID", GameVersionEnum.PrismsWithByteBeatAuthor);
 
     private static GameVersionEnum? GetPrisms(JObject jsonObject) => GetEnumIfNotNull(jsonObject, "GAME_VERSION_350", GameVersionEnum.Prisms);
     private static GameVersionEnum? GetPrisms(string json) => GetEnumIfContains(json, "8iI", "ByteBeatLibrary", GameVersionEnum.Prisms);

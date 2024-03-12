@@ -99,7 +99,7 @@ public partial class PlatformSwitch : Platform
         {
             DataFile = new FileInfo(Path.Combine(Location.FullName, $"savedata{metaIndex:D2}.hg")),
             MetaFile = new FileInfo(Path.Combine(Location.FullName, $"manifest{metaIndex:D2}.hg")),
-            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
+            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="Platform.UpdateContainerWithDataInformation"/>.
             Extra = extra ?? new(),
         };
     }

@@ -26,7 +26,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 {
     #region Constant
 
-    protected virtual int COUNT_SAVE_SLOTS { get; } = 15; // overrideable for compatibility with old PlayStation format
+    protected virtual int COUNT_SAVE_SLOTS { get; } = 15; // overridable for compatibility with old PlayStation format
     private int COUNT_SAVES_PER_SLOT { get; } = 2;
     internal int COUNT_SAVES_TOTAL => COUNT_SAVE_SLOTS * COUNT_SAVES_PER_SLOT; // { get; }
 
@@ -1447,8 +1447,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             foreach (var context in GetContexts(jsonObject))
                 TransferBaseOwnership(jsonObject, sourceTransferData, context);
 
-        if (container.IsVersion351PrismsWithBytebeatAuthor && sourceTransferData.TransferBytebeat) // 3.51
-            TransferBytebeatOwnership(jsonObject, sourceTransferData);
+        if (container.IsVersion351PrismsWithByteBeatAuthor && sourceTransferData.TransferByteBeat) // 3.51
+            TransferByteBeatOwnership(jsonObject, sourceTransferData);
 
         if (container.IsVersion360Frontiers && sourceTransferData.TransferSettlement) // 3.6
             foreach (var context in GetContexts(jsonObject))
@@ -1503,7 +1503,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferBytebeatOwnership(JObject jsonObject, TransferData sourceTransferData)
+    protected void TransferByteBeatOwnership(JObject jsonObject, TransferData sourceTransferData)
     {
         var path = Json.GetPath("TRANSFER_UID_BYTEBEAT", jsonObject, sourceTransferData.UserIdentification.UID);
         foreach (var mySong in jsonObject.SelectTokens(path).Cast<JObject>())

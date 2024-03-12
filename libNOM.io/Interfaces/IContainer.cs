@@ -129,7 +129,7 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion350Prisms { get; }
 
-    public bool IsVersion351PrismsWithBytebeatAuthor { get; }
+    public bool IsVersion351PrismsWithByteBeatAuthor { get; }
 
     public bool IsVersion360Frontiers { get; }
 
@@ -255,7 +255,7 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     public SeasonEnum Season { get; }
 
     /// <summary>
-    /// Total time plaed in seconds.
+    /// Total time played in seconds.
     /// </summary>
     public uint TotalPlayTime { get; set; }
 

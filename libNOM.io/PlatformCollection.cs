@@ -125,7 +125,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         ReadOnlySpan<byte> bytes = File.ReadAllBytes(path);
         var data = new FileInfo(path);
         var directory = data.Directory!.FullName;
-        var fullpath = Path.GetFullPath(path);
+        var fullPath = Path.GetFullPath(path);
         int metaIndex, possibleIndex = metaIndex = Constants.OFFSET_INDEX;
 
         // Convert header with different lengths.
@@ -139,7 +139,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         if (headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (headerInteger == Constants.SAVE_STREAMING_HEADER && headerString0xA0.Contains("PS4|Final")))
         {
             // Only for files in the save streaming format.
-            if (Directory.GetFiles(directory, PlatformPlaystation.ANCHOR_FILE_PATTERN[0]).Any(fullpath.Equals))
+            if (Directory.GetFiles(directory, PlatformPlaystation.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
             {
                 platform = new PlatformPlaystation(headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER);
                 meta = new(path);
@@ -155,7 +155,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
                 platform = new PlatformSwitch();
 
                 // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
-                if (Directory.GetFiles(directory, PlatformSwitch.ANCHOR_FILE_PATTERN[1]).Any(fullpath.Equals))
+                if (Directory.GetFiles(directory, PlatformSwitch.ANCHOR_FILE_PATTERN[1]).Any(fullPath.Equals))
                 {
                     meta = new(Path.Combine(directory, data.Name.Replace("savedata", "manifest")));
                     metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit)));
@@ -167,7 +167,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
                 platform = new PlatformSteam();
 
                 // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
-                if (Directory.GetFiles(directory, PlatformSteam.ANCHOR_FILE_PATTERN[0]).Any(fullpath.Equals))
+                if (Directory.GetFiles(directory, PlatformSteam.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
                 {
                     var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit));
 

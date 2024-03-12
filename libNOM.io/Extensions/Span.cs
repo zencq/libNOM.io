@@ -85,7 +85,7 @@ internal static class ReadOnlySpanExtensions
     /// <returns>The deserialized object from the bytes.</returns>
     internal static JObject? GetJson(this ReadOnlySpan<byte> self)
     {
-        // Account has no proper decompressed size in the initial Fractal update (4.10) and therfore we look for the first.
+        // Account has no proper decompressed size in the initial Fractal update (4.10) and therefore we look for the first.
         // Escaping gone wrong by HG. The backslash is in the file but instead of one of the chars below, still the unescaped control char.
         var json = GetStringUntilTerminator(self).Replace((char)(0x9), 't').Replace((char)(0xA), 'n').Replace((char)(0xD), 'r');
         return json.GetJson();
