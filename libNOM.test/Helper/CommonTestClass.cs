@@ -1023,7 +1023,7 @@ public abstract class CommonTestClass
         {
             Directory.CreateDirectory(template);
 
-            Console.WriteLine($"SevenZipArchive: {SevenZipArchive.IsSevenZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z")}");
+            Console.WriteLine($"SevenZipArchive Is: {SevenZipArchive.IsSevenZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z")}");
             try
             {
                 SevenZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z", new()
@@ -1036,7 +1036,8 @@ public abstract class CommonTestClass
                 Console.WriteLine($"SevenZipArchive Exception: {ex.Message}");
             }
 
-            Console.WriteLine($"ZipArchive: {ZipArchive.IsZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", Properties.Resources.TESTSUITE_PASSWORD)}");
+            Console.WriteLine($"ZipArchive Is 1: {ZipArchive.IsZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", Properties.Resources.TESTSUITE_PASSWORD)}");
+            Console.WriteLine($"ZipArchive Is 2: {ZipArchive.IsZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip")}");
             try
             {
                 ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
@@ -1046,10 +1047,10 @@ public abstract class CommonTestClass
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SevenZipArchive Exception: {ex.Message}");
+                Console.WriteLine($"ZipArchive Exception: {ex.Message}");
             }
 
-            using var zipArchive = SevenZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z", new()
+            using var zipArchive = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
             {
                 Password = Properties.Resources.TESTSUITE_PASSWORD,
             });
