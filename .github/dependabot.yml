@@ -1,6 +1,24 @@
 version: 2
 updates:
-- package-ecosystem: nuget
-  directory: /
-  schedule:
-    interval: daily
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      main-dependencies:
+        exclude-patterns:
+        - "Microsoft.NET.Test.Sdk"
+        - "MSTest.*"
+        - "coverlet.collector"
+        update-types:
+        - "minor"
+        - "patch"
+      test-dependencies:
+        patterns:
+        - "Microsoft.NET.Test.Sdk"
+        - "MSTest.*"
+        - "coverlet.collector"

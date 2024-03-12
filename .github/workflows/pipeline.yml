@@ -34,7 +34,7 @@ jobs:
         run: Get-ChildItem "./libNOM.test/Properties/" -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
         shell: pwsh
       - name: Unit Test
-        run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }} --collect:"XPlat Code Coverage"
+        run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }}
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -86,7 +86,7 @@ jobs:
           echo "There is a version mismatch between git tag (${{ github.ref_name }}) and nupkg version (${{ env.nupkg_version }})!"
           exit 1
       - name: Create
-        uses: softprops/action-gh-release@4634c16e79c963813287e889244c50009e7f0981
+        uses: softprops/action-gh-release@v2
         with:
           body_path: ./.github/changelogs/${{ github.ref_name }}.md
           files: ./libNOM.io/bin/Release/libNOM.io.*nupkg
