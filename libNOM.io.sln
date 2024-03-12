@@ -7,6 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libNOM.io", "libNOM.io\libN
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "libNOM.test", "libNOM.test\libNOM.test.csproj", "{88D38F91-BD66-480E-849E-8C604307E661}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{140D8DB6-4945-44DF-862D-E2E29ADCFA97}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.exclusion.dic = .exclusion.dic
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
