@@ -337,6 +337,73 @@ public abstract class CommonTestClass
 
     #region Test
 
+    protected static void TestCommonAnalyzeFile(string path, ReadResults results, PlatformEnum platformResult)
+    {
+        // Act
+        var container = PlatformCollection.AnalyzeFile(path)!;
+        var priect = new PrivateObject(container);
+
+        // Assert
+        Assert.AreEqual(platformResult.ToString(), priect.GetFieldOrProperty("Platform").ToString());
+
+        Assert.AreEqual(results.CollectionIndex, container.CollectionIndex);
+        Assert.AreEqual(results.Identifier, container.Identifier);
+        Assert.AreEqual(results.Exists, container.Exists);
+        Assert.AreEqual(results.IsCompatible, container.IsCompatible);
+        Assert.AreEqual(results.IsOld, container.IsOld);
+        Assert.AreEqual(results.HasBase, container.HasBase);
+        Assert.AreEqual(results.HasFreighter, container.HasFreighter);
+        Assert.AreEqual(results.HasSettlement, container.HasSettlement);
+        Assert.AreEqual(results.HasActiveExpedition, container.HasActiveExpedition);
+        Assert.AreEqual(results.CanSwitchContext, container.CanSwitchContext);
+        Assert.AreEqual(results.ActiveContext, container.ActiveContext);
+        Assert.AreEqual(results.GameMode, priect.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
+        Assert.AreEqual(results.Difficulty, container.Difficulty);
+        Assert.AreEqual(results.Season, container.Season);
+        Assert.AreEqual(results.BaseVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
+        Assert.AreEqual(results.SaveVersion, (int)(priect.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
+        Assert.AreEqual(results.SaveName, container.SaveName);
+        Assert.AreEqual(results.SaveSummary, container.SaveSummary);
+        Assert.AreEqual(results.TotalPlayTime, container.TotalPlayTime);
+        Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+    }
+
+    protected static void TestCommonAnalyzePath(string path, PlatformEnum platformResult, PlatformEnum? platformPreferred)
+    {
+        // Arrange
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var collection = new PlatformCollection();
+        var countOrigin = collection.Count();
+
+        var platform = collection.AnalyzePath(path, settings, platformPreferred);
+        var countResult = collection.Count();
+
+        // Assert
+        Assert.AreEqual(countOrigin + 1, countResult);
+        Assert.AreEqual(platformResult, platform?.PlatformEnum);
+    }
+
+    protected static void TestCommonBuildCollection(string path, PlatformEnum platformResult, PlatformEnum? platformPreferred)
+    {
+        // Arrange
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var collection = new PlatformCollection(path, settings, platformPreferred);
+        var platform = collection.Get(path);
+
+        // Assert
+        Assert.AreEqual(platformResult, platform.PlatformEnum);
+    }
+
     protected static void TestCommonFileOperationCopy<TPlatform>(string path, int[] overwrite, int[] create, int[] delete) where TPlatform : IPlatform
     {
         // Arrange
@@ -548,6 +615,80 @@ public abstract class CommonTestClass
 
         Assert.AreEqual(container, watcherContainer3);
         Assert.IsTrue(synced6);
+    }
+
+    protected static void TestCommonGameModeCustom(string path, LoadingStrategyEnum loadingStrategy, int[] containerIndices)
+    {
+        // Arrange
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = loadingStrategy,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+
+        var normal = platform.GetSaveContainer(containerIndices[0]);
+        var creative = platform.GetSaveContainer(containerIndices[1]);
+        var survival = platform.GetSaveContainer(containerIndices[2]);
+        var relaxed = platform.GetSaveContainer(containerIndices[3]);
+        var permadeath = platform.GetSaveContainer(containerIndices[4]);
+        var seasonal = platform.GetSaveContainer(containerIndices[5]);
+
+        Guard.IsNotNull(normal);
+        Guard.IsNotNull(creative);
+        Guard.IsNotNull(survival);
+        Guard.IsNotNull(relaxed);
+        Guard.IsNotNull(permadeath);
+        Guard.IsNotNull(seasonal);
+
+        // Assert
+        Assert.AreEqual(nameof(PresetGameModeEnum.Normal), new PrivateObject(normal).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Normal), new PrivateObject(creative).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Normal), new PrivateObject(survival).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Normal), new PrivateObject(relaxed).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Permadeath), new PrivateObject(permadeath).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Seasonal), new PrivateObject(seasonal).GetFieldOrProperty("GameMode").ToString());
+
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Relaxed, relaxed.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, seasonal.Difficulty);
+    }
+
+    protected static void TestCommonGameModeVanilla(string path, LoadingStrategyEnum loadingStrategy, int[] containerIndices)
+    {
+        // Arrange
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = loadingStrategy,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+
+        var normal = platform.GetSaveContainer(containerIndices[0]);
+        var creative = platform.GetSaveContainer(containerIndices[1]);
+        var survival = platform.GetSaveContainer(containerIndices[2]);
+        var permadeath = platform.GetSaveContainer(containerIndices[3]);
+
+        Guard.IsNotNull(normal);
+        Guard.IsNotNull(creative);
+        Guard.IsNotNull(survival);
+        Guard.IsNotNull(permadeath);
+
+        // Assert
+        Assert.AreEqual(nameof(PresetGameModeEnum.Normal), new PrivateObject(normal).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Creative), new PrivateObject(creative).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Survival), new PrivateObject(survival).GetFieldOrProperty("GameMode").ToString());
+        Assert.AreEqual(nameof(PresetGameModeEnum.Permadeath), new PrivateObject(permadeath).GetFieldOrProperty("GameMode").ToString());
+
+        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.Difficulty);
+        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.Difficulty);
     }
 
     protected static void TestCommonRead<TPlatform>(string path, ReadResults[] results, bool expectAccountData, UserIdentification userIdentification) where TPlatform : IPlatform

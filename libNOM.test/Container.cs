@@ -22,7 +22,7 @@ public class ContainerTest : CommonTestClass
     protected static readonly string[] VALIDSLOTINDICES_JSONPATH = ["", "PlayerStateData.Inventory.ValidSlotIndices", "", "{0}.PlayerStateData.Inventory.ValidSlotIndices"];
 
     [TestMethod]
-    public void T01_Backup()
+    public void T00_Backup()
     {
         // Arrange
         var backupCreatedCallback = false;
@@ -68,7 +68,7 @@ public class ContainerTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T02_Restore()
+    public void T01_Restore()
     {
         // Arrange
         var backupRestoredCallback = false;
