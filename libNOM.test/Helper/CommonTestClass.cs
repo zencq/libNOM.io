@@ -1051,7 +1051,7 @@ public abstract class CommonTestClass
 
                 // Search in reverse
                 Array.Reverse(seek);
-
+                Console.WriteLine($"{file}: Reverse: {string.Join("   ", seek[..27].Select(x => x.ToString("X")))}");
                 // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
                 var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
 
@@ -1059,14 +1059,15 @@ public abstract class CommonTestClass
                 {
                     if (IsMatch(seek, pos_from_end, needle))
                     {
-                        Console.WriteLine($"{file}: {pos_from_end}");
+                        Console.WriteLine($"{file}: Position: {pos_from_end}");
                         //-pos_from_end;
                         //stream.Seek(-pos_from_end, SeekOrigin.End);
-                        return;
+                        break;
                     }
                 }
 
 
+                Console.WriteLine($"{file}: ZipArchive.Open");
                 using var zipArchive = ZipArchive.Open(file, new()
                 {
                     Password = Properties.Resources.TESTSUITE_PASSWORD,
