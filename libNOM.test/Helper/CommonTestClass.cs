@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 
 using CommunityToolkit.Diagnostics;
 
@@ -1014,7 +1015,18 @@ public abstract class CommonTestClass
     }
 
     #endregion
+    private static bool IsMatch(byte[] haystack, int position, byte[] needle)
+    {
+        for (var i = 0; i < needle.Length; i++)
+        {
+            if (haystack[position + i] != needle[i])
+            {
+                return false;
+            }
+        }
 
+        return true;
+    }
     [TestInitialize]
     public void ExtractArchive()
     {
@@ -1027,17 +1039,48 @@ public abstract class CommonTestClass
 
             foreach (var file in Directory.EnumerateFiles(".", $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_*.zip")) 
             {
+                Console.WriteLine(file);
+                int MAX_SEARCH_LENGTH_FOR_EOCD = 65557;
+
+                var bytes = File.ReadAllBytes(file);
+
+                var len = bytes.Length < MAX_SEARCH_LENGTH_FOR_EOCD ? (int)bytes.Length : MAX_SEARCH_LENGTH_FOR_EOCD;
+                byte[] needle = { 0x06, 0x05, 0x4b, 0x50 };
+
+                var seek = File.ReadAllBytes(file)[(bytes.Length-len)..];
+
+                // Search in reverse
+                Array.Reverse(seek);
+
+                // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
+                var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
+
+                for (var pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
+                {
+                    if (IsMatch(seek, pos_from_end, needle))
+                    {
+                        Console.WriteLine($"{file}: {pos_from_end}");
+                        //-pos_from_end;
+                        //stream.Seek(-pos_from_end, SeekOrigin.End);
+                        return;
+                    }
+                }
+
+
                 using var zipArchive = ZipArchive.Open(file, new()
                 {
                     Password = Properties.Resources.TESTSUITE_PASSWORD,
                 });
                 foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
+                {
+                    Console.WriteLine($"Entry: {entry.Key}");
                     entry.WriteToDirectory(template, new ExtractionOptions
                     {
                         ExtractFullPath = true,
                         Overwrite = true,
                         PreserveFileTime = true,
                     });
+                }
             }
 
             //using var zipArchive = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
