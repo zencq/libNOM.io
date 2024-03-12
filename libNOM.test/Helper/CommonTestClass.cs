@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 
 namespace libNOM.test.Helper;
@@ -1021,6 +1022,32 @@ public abstract class CommonTestClass
         if (!Directory.Exists(template))
         {
             Directory.CreateDirectory(template);
+
+            Console.WriteLine($"SevenZipArchive: {SevenZipArchive.IsSevenZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z")}");
+            try
+            {
+                SevenZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z", new()
+                {
+                    Password = Properties.Resources.TESTSUITE_PASSWORD,
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SevenZipArchive Exception: {ex.Message}");
+            }
+
+            Console.WriteLine($"ZipArchive: {ZipArchive.IsZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", Properties.Resources.TESTSUITE_PASSWORD)}");
+            try
+            {
+                ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
+                {
+                    Password = Properties.Resources.TESTSUITE_PASSWORD,
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SevenZipArchive Exception: {ex.Message}");
+            }
 
             using var zipArchive = SevenZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z", new()
             {
