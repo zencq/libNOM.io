@@ -6,7 +6,7 @@ namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.7z"), DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_GOG.zip"), DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_MICROSOFT.zip"), DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_PLAYSTATION.zip"), DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip"), DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_SWITCH.zip")]
 public class CollectionTest : CommonTestClass
 {
     [TestMethod]

@@ -65,4 +65,4 @@
 ###############################################################################
 # lfs for the testsuite archive
 ###############################################################################
-libNOM.test/Resources/TESTSUITE_ARCHIVE.* filter=lfs diff=lfs merge=lfs -text
+libNOM.test/Resources/TESTSUITE_ARCHIVE*.* filter=lfs diff=lfs merge=lfs -text

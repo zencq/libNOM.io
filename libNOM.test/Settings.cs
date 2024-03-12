@@ -6,7 +6,7 @@ namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.7z")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip")]
 public class SettingsTest : CommonTestClass
 {
     [TestMethod]

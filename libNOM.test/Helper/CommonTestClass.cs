@@ -10,10 +10,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;
 
+using SharpCompress;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 
 namespace libNOM.test.Helper;
 
@@ -1023,44 +1025,67 @@ public abstract class CommonTestClass
         {
             Directory.CreateDirectory(template);
 
-            Console.WriteLine($"SevenZipArchive Is: {SevenZipArchive.IsSevenZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z")}");
-            try
+            foreach (var file in Directory.EnumerateFiles(".", $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_*.zip")) 
             {
-                SevenZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.7z", new()
+                using var zipArchive = ZipArchive.Open(file, new()
                 {
                     Password = Properties.Resources.TESTSUITE_PASSWORD,
                 });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"SevenZipArchive Exception: {ex.Message}");
-            }
-
-            Console.WriteLine($"ZipArchive Is 1: {ZipArchive.IsZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", Properties.Resources.TESTSUITE_PASSWORD)}");
-            Console.WriteLine($"ZipArchive Is 2: {ZipArchive.IsZipFile($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip")}");
-            try
-            {
-                ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
-                {
-                    Password = Properties.Resources.TESTSUITE_PASSWORD,
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ZipArchive Exception: {ex.Message}");
+                foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
+                    entry.WriteToDirectory(template, new ExtractionOptions
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true,
+                        PreserveFileTime = true,
+                    });
             }
 
-            using var zipArchive = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
-            {
-                Password = Properties.Resources.TESTSUITE_PASSWORD,
-            });
-            foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
-                entry.WriteToDirectory(template, new ExtractionOptions
-                {
-                    ExtractFullPath = true,
-                    Overwrite = true,
-                    PreserveFileTime = true,
-                });
+            //using var zipArchive = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
+            //{
+            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
+            //});
+            //using var reader = zipArchive.ExtractAllEntries();
+            ////reader.WriteAllToDirectory(template, new ExtractionOptions
+            ////{
+            ////    ExtractFullPath = true,
+            ////    //Overwrite = true,
+            ////    PreserveFileTime = true,
+            ////});
+            //var totalItems = zipArchive.Entries.Count;
+            //var currentItem = 0;
+
+            //while (reader.MoveToNextEntry())
+            //{
+            //    currentItem++;
+            //    var target = Path.Combine(template, reader.Entry.Key);
+
+            //    if (!reader.Entry.IsDirectory)
+            //    //{
+            //    //    Directory.CreateDirectory(target);
+            //    //}
+            //    //else
+            //    {
+            //        reader.WriteAllToDirectory(template, new ExtractionOptions
+            //        {
+            //            ExtractFullPath = true,
+            //            Overwrite = true,
+            //            PreserveFileTime = true,
+            //        });
+            //        //reader.WriteEntryToFile(target);
+            //    }
+            //}
+
+            //using var zipArchive2 = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
+            //{
+            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
+            //});
+            //foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
+            //    entry.WriteToDirectory(template, new ExtractionOptions
+            //    {
+            //        ExtractFullPath = true,
+            //        Overwrite = true,
+            //        PreserveFileTime = true,
+            //    });
         }
         if (!Directory.Exists(working))
             Copy(template, working);

@@ -10,7 +10,7 @@ namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.7z")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_GAMEMODE.zip"), DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip")]
 public class ContainerTest : CommonTestClass
 {
     protected static readonly int[] GALACTICADDRESS_INDICES = [2, 0, 1];

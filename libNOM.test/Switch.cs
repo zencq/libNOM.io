@@ -9,7 +9,7 @@ namespace libNOM.test;
 
 // Do not use System.Range for simplicity of the file and performance is not critical.
 [TestClass]
-[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.7z")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_SWITCH.zip")]
 public class SwitchTest : CommonTestClass
 {
     #region Constant
