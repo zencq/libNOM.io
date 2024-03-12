@@ -1149,7 +1149,7 @@ public abstract class CommonTestClass
     [TestCleanup]
     public void DirectoryCleanup()
     {
-        if (Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE)
+        if (Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE))
             Directory.Delete(DIRECTORY_TESTSUITE_ARCHIVE, true);
 
         if (Directory.Exists("backup"))
