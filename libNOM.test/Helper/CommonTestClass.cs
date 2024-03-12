@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
 using CommunityToolkit.Diagnostics;
 
@@ -1016,28 +1017,60 @@ public abstract class CommonTestClass
     {
         var template = $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP";
         var working = nameof(Properties.Resources.TESTSUITE_ARCHIVE);
-
+        
         if (!Directory.Exists(template))
         {
-            Directory.CreateDirectory(template);
-            using var zipArchive = ArchiveFactory.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
+
+            var bytes = File.ReadAllBytes($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip");
+
+            using var archiveStream = new MemoryStream();
+            archiveStream.Write(bytes, 0, bytes.Length);
+            archiveStream.Seek(0, SeekOrigin.Begin);
+
+            var zipArchive = ArchiveFactory.Open(archiveStream, new()
             {
                 Password = Properties.Resources.TESTSUITE_PASSWORD,
             });
-            foreach (var entry in zipArchive.Entries)
-                if (!entry.IsDirectory)
-                {
-                    entry.WriteToDirectory(template, new ExtractionOptions
-                    {
-                        ExtractFullPath = true,
-                        Overwrite = true,
-                        PreserveFileTime = true,
-                    });
-                }
+            foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
+            {
+                var outputPath = Path.Combine(template, entry.Key);
+                Directory.CreateDirectory(Directory.GetParent(outputPath)!.FullName);
+                using var entryStream = new MemoryStream();
+                entry.WriteTo(entryStream);
+                File.WriteAllBytes(outputPath, entryStream.ToArray());
+            }
         }
         if (!Directory.Exists(working))
             Copy(template, working);
     }
+
+    //[TestInitialize]
+    //public void ExtractArchive()
+    //{
+    //    var template = $"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}_ZIP";
+    //    var working = nameof(Properties.Resources.TESTSUITE_ARCHIVE);
+
+    //    if (!Directory.Exists(template))
+    //    {
+    //        Directory.CreateDirectory(template);
+    //        using var zipArchive = ArchiveFactory.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
+    //        {
+    //            Password = Properties.Resources.TESTSUITE_PASSWORD,
+    //        });
+    //        foreach (var entry in zipArchive.Entries)
+    //            if (!entry.IsDirectory)
+    //            {
+    //                entry.WriteToDirectory(template, new ExtractionOptions
+    //                {
+    //                    ExtractFullPath = true,
+    //                    Overwrite = true,
+    //                    PreserveFileTime = true,
+    //                });
+    //            }
+    //    }
+    //    if (!Directory.Exists(working))
+    //        Copy(template, working);
+    //}
 
     [TestCleanup]
     public void DirectoryCleanup()
