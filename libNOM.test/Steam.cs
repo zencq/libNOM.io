@@ -483,6 +483,26 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T304_Swap()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198042453834");
+        var results = new ReadResults[]
+        {
+            // before swap 3, "Slot2Manual"
+            new(8, "Slot5Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, 4655, GameVersionEnum.Fractal, "Playground", "Within Rigonn-Enve Outpost", 919),
+
+            // before swap 8, "Slot5Auto"
+            new(3, "Slot2Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4147, 6707, GameVersionEnum.Omega, "Omega Permadeath", "Auf dem Planeten (Treeph)", 52),
+        };
+        var swapSwap = new[] { 3, 8 }; // 2Manual <-> 5Auto
+
+        // Act
+        // Assert
+        TestCommonFileOperationSwap<PlatformSteam>(path, results, swapSwap);
+    }
+
+    [TestMethod]
     public void T400_TransferFromGog()
     {
         // Arrange

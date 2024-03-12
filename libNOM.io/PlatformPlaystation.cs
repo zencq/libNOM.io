@@ -784,7 +784,7 @@ public partial class PlatformPlaystation : Platform
     {
         if (_usesSaveStreaming)
         {
-            base.Move(containerOperationData, write);
+            base.Swap(containerOperationData, write);
             return;
         }
 
@@ -813,12 +813,14 @@ public partial class PlatformPlaystation : Platform
 
                     // Write Source to Destination.
                     Destination.LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now;
+                    Destination.SaveVersion = Source.SaveVersion;
                     Destination.SetJsonObject(Source.GetJsonObject());
                     CopyPlatformExtra(Destination, Source);
                     RebuildContainerFull(Destination);
 
                     // Write Destination to Source.
-                    Destination.LastWriteTime = copy.LastWriteTime ?? DateTimeOffset.Now;
+                    Source.LastWriteTime = copy.LastWriteTime ?? DateTimeOffset.Now;
+                    Source.SaveVersion = copy.SaveVersion;
                     Source.SetJsonObject(copy.GetJsonObject());
                     CopyPlatformExtra(Source, copy);
                     RebuildContainerFull(Source);

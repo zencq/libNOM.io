@@ -678,6 +678,26 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T304_Swap()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
+        var results = new ReadResults[]
+        {
+            // before swap 3, "Slot2Manual"
+            new(8, "Slot5Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4142, 4654, GameVersionEnum.WaypointWithSuperchargedSlots, "", "An Bord von „Otfolk“-Station Majoris", 29748),
+
+            // before swap 8, "Slot5Auto"
+            new(3, "Slot2Manual", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Utopia, 4143, 1121327, GameVersionEnum.Fractal, "Utopia", "An Bord von „Pivogarde III“-Zentrum", 14155),
+        };
+        var swapSwap = new[] { 3, 8 }; // 2Manual <-> 5Auto
+
+        // Act
+        // Assert
+        TestCommonFileOperationSwap<PlatformMicrosoft>(path, results, swapSwap);
+    }
+
+    [TestMethod]
     public void T400_TransferFromGog()
     {
         // Arrange

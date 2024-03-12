@@ -306,7 +306,7 @@ internal static partial class DifficultyPreset
         ];
 
         foreach (var value in settings)
-            if (json.Contains(value.AsSpan(), StringComparison.OrdinalIgnoreCase))
+            if (!json.Contains(value.AsSpan(), StringComparison.OrdinalIgnoreCase))
                 return false;
 
         // All values are there, therefore it matches the preset.

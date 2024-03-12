@@ -305,6 +305,26 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T304_Swap()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Switch", "4");
+        var results = new ReadResults[]
+        {
+            // before swap 2, "Slot2Auto"
+            new(4, "Slot3Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Survival), DifficultyPresetTypeEnum.Survival, SeasonEnum.None, 4139, 5675, GameVersionEnum.Endurance, "", "", 336),
+
+            // before swap 4, "Slot3Auto"
+            new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Creative), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4139, 5163, GameVersionEnum.Endurance, "", "", 51),
+        };
+        var swapSwap = new[] { 2, 4 }; // 2Auto <-> 3Auto
+
+        // Act
+        // Assert
+        TestCommonFileOperationSwap<PlatformSwitch>(path, results, swapSwap);
+    }
+
+    [TestMethod]
     public void T400_TransferFromGog()
     {
         // Arrange

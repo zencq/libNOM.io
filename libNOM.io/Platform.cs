@@ -1239,12 +1239,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     var copy = Common.DeepCopy(Destination);
 
                     // Write Source to Destination.
+                    Destination.SaveVersion = Source.SaveVersion;
                     Destination.SetJsonObject(Source.GetJsonObject());
                     CopyPlatformExtra(Destination, Source);
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
                     RebuildContainerFull(Destination);
 
                     // Write Destination to Source.
+                    Source.SaveVersion = copy.SaveVersion;
                     Source.SetJsonObject(copy.GetJsonObject());
                     CopyPlatformExtra(Source, copy);
                     Write(Source, copy.LastWriteTime ?? DateTimeOffset.Now);

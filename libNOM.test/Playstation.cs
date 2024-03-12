@@ -831,6 +831,46 @@ public class PlaystationTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T308_Swap_0x7D1()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D1", "SaveWizard", "1");
+        var results = new ReadResults[]
+        {
+            // before swap 7, "Slot4Manual"
+            new(8, "Slot5Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4124, 4636, GameVersionEnum.LivingShip, "", "", 771852),
+
+            // before swap 8, "Slot5Auto"
+            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4134, 6694, GameVersionEnum.PrismsWithBytebeatAuthor, "", "", 11005),
+        };
+        var swapSwap = new[] { 7, 8 }; // 4Manual <-> 5Auto
+
+        // Act
+        // Assert
+        TestCommonFileOperationSwap<PlatformPlaystation>(path, results, swapSwap);
+    }
+
+    [TestMethod]
+    public void T309_Swap_0x7D2()
+    {
+        // Arrange
+        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Playstation", "0x7D2", "SaveWizard", "7");
+        var results = new ReadResults[]
+        {
+            // before swap 3, "Slot2Manual"
+            new(10, "Slot6Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4146, 4658, GameVersionEnum.Echoes, "Eggsave", "Aboard the Space Anomaly", 23349),
+
+            // before swap 10, "Slot6Auto"
+            new(3, "Slot2Manual", true, true, false, true, true, true, true, true, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4148, 4660, GameVersionEnum.Omega, "Purfex", "Within HydroFarm Paradise", 2742841),
+        };
+        var swapSwap = new[] { 3, 10 }; // 2Manual <-> 6Auto
+
+        // Act
+        // Assert
+        TestCommonFileOperationSwap<PlatformPlaystation>(path, results, swapSwap);
+    }
+
+    [TestMethod]
     public void T400_TransferFromGog_To_0x7D1()
     {
         // Arrange

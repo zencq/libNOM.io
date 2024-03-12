@@ -519,6 +519,48 @@ public abstract class CommonTestClass
         AssertCommonFileOperation(results[create[0]], GetFileOperationResults(containers[create[1]]));
     }
 
+    protected static void TestCommonFileOperationSwap<TPlatform>(string path, ReadResults[] results, int[] swap) where TPlatform : IPlatform
+    {
+        // Arrange
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Hollow,
+        };
+
+        // Act
+        var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
+
+        platform.Swap(platform.GetSaveContainer(swap[0])!, platform.GetSaveContainer(swap[1])!);
+
+        // Assert
+        foreach(var expected in results) 
+        {
+            var container = platform.GetSaveContainer(expected.CollectionIndex)!;
+            var priject = new PrivateObject(container);
+
+            Assert.AreEqual(expected.CollectionIndex, container.CollectionIndex);
+            Assert.AreEqual(expected.Identifier, container.Identifier);
+            Assert.AreEqual(expected.Exists, container.Exists);
+            Assert.AreEqual(expected.IsCompatible, container.IsCompatible);
+            Assert.AreEqual(expected.IsOld, container.IsOld);
+            Assert.AreEqual(expected.HasBase, container.HasBase);
+            Assert.AreEqual(expected.HasFreighter, container.HasFreighter);
+            Assert.AreEqual(expected.HasSettlement, container.HasSettlement);
+            Assert.AreEqual(expected.HasActiveExpedition, container.HasActiveExpedition);
+            Assert.AreEqual(expected.CanSwitchContext, container.CanSwitchContext);
+            Assert.AreEqual(expected.ActiveContext, container.ActiveContext);
+            Assert.AreEqual(expected.GameMode, priject.GetFieldOrProperty(nameof(ReadResults.GameMode)).ToString());
+            Assert.AreEqual(expected.Difficulty, container.Difficulty);
+            Assert.AreEqual(expected.Season, container.Season);
+            Assert.AreEqual(expected.BaseVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
+            Assert.AreEqual(expected.SaveVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
+            Assert.AreEqual(expected.SaveName, container.SaveName);
+            Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
+            Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
+            Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+        }
+    }
+
     protected static void TestCommonFileOperationTransfer<TPlatform, TSource>(string pathSource, string path, UserIdentification userIdentificationSource, UserIdentification userIdentification, int source, int userDecisionsSource, int[] transfer, int existingContainersCount, ReadResults[] results) where TPlatform : IPlatform where TSource : IPlatform
     {
         // Arrange
