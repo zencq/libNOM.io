@@ -30,17 +30,18 @@ jobs:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: ${{ runner.os }}-nuget-
-      - name: Large File Storage (Create)
-        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
-      - name: Large File Storage (Cache)
-        uses: actions/cache@v4
-        with:
-          path: .git/lfs/objects
-          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
-          restore-keys: |
-            ${{ runner.os }}-lfs-
-      - name: Large File Storage (Pull)
-        run: git lfs pull
+      # TODO: Disable until pipeline runs properly and LFS bandwidth is reseted.
+      # - name: Large File Storage (Create)
+      #   run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
+      # - name: Large File Storage (Cache)
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: .git/lfs/objects
+      #     key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-lfs-
+      # - name: Large File Storage (Pull)
+      #   run: git lfs pull
       - name: Secret Injector
         run: Get-ChildItem "./libNOM.test/Properties/" -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
         shell: pwsh

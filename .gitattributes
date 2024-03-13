@@ -63,6 +63,6 @@
 #*.RTF   diff=astextplain
 
 ###############################################################################
-# lfs for the testsuite archive
+# lfs for the testsuite archive (disabled for now. see pipeline.yml)
 ###############################################################################
-libNOM.test/Resources/TESTSUITE_ARCHIVE*.* filter=lfs diff=lfs merge=lfs -text
+# libNOM.test/Resources/TESTSUITE_ARCHIVE*.* filter=lfs diff=lfs merge=lfs -text
