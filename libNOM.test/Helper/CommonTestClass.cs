@@ -303,7 +303,7 @@ public abstract class CommonTestClass
 
     protected static string GetCombinedPath(params string[] paths)
     {
-        return Path.Combine([DIRECTORY_TESTSUITE_ARCHIVE, ..paths]);
+        return Path.Combine([DIRECTORY_TESTSUITE_ARCHIVE, .. paths]);
     }
 
     protected static IEnumerable<Container> GetExistingContainers(IPlatform platform)
@@ -1094,54 +1094,6 @@ public abstract class CommonTestClass
                     });
                 }
             }
-
-            //using var zipArchive = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
-            //{
-            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
-            //});
-            //using var reader = zipArchive.ExtractAllEntries();
-            ////reader.WriteAllToDirectory(template, new ExtractionOptions
-            ////{
-            ////    ExtractFullPath = true,
-            ////    //Overwrite = true,
-            ////    PreserveFileTime = true,
-            ////});
-            //var totalItems = zipArchive.Entries.Count;
-            //var currentItem = 0;
-
-            //while (reader.MoveToNextEntry())
-            //{
-            //    currentItem++;
-            //    var target = Path.Combine(template, reader.Entry.Key);
-
-            //    if (!reader.Entry.IsDirectory)
-            //    //{
-            //    //    Directory.CreateDirectory(target);
-            //    //}
-            //    //else
-            //    {
-            //        reader.WriteAllToDirectory(template, new ExtractionOptions
-            //        {
-            //            ExtractFullPath = true,
-            //            Overwrite = true,
-            //            PreserveFileTime = true,
-            //        });
-            //        //reader.WriteEntryToFile(target);
-            //    }
-            //}
-
-            //using var zipArchive2 = ZipArchive.Open($"{nameof(Properties.Resources.TESTSUITE_ARCHIVE)}.zip", new()
-            //{
-            //    Password = Properties.Resources.TESTSUITE_PASSWORD,
-            //});
-            //foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
-            //    entry.WriteToDirectory(template, new ExtractionOptions
-            //    {
-            //        ExtractFullPath = true,
-            //        Overwrite = true,
-            //        PreserveFileTime = true,
-            //    });
-        }
         if (!Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE))
             Copy(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE, DIRECTORY_TESTSUITE_ARCHIVE);
     }
