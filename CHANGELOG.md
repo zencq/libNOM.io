@@ -42,7 +42,7 @@ All notable changes to this project will be documented in this file. It uses the
 * Now targeting .NET 7 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * Now publishing to [NuGet Gallery](https://www.nuget.org/packages/libNOM.io)
 * A setting `WriteAlways` to choose between writing always or only if a container
-  is unsynced
+  is not synced
 * A privacy setting to decide whether external sources should be used to to improve
   user identification (e.g. launcher configs or API calls)
 * An `IPlatform` interface you can use instead of the abstract base class

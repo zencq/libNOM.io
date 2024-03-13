@@ -129,6 +129,17 @@ public partial class PlatformSteam : Platform
 #endif
 
         base.InitializeComponent(directory, platformSettings);
+
+        // Files can have 0 or 1 or 2 numbers in its name.
+        if (IsValid)
+        {
+#if NETSTANDARD2_0_OR_GREATER
+            _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "*");
+#else
+            _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "?"));
+            _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", string.Empty));
+#endif
+        }
     }
 
     #endregion

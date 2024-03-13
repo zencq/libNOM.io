@@ -8,8 +8,6 @@ using libNOM.io.Models;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Newtonsoft.Json;
-
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
@@ -243,17 +241,6 @@ public abstract class CommonTestClass
 
     #region Convert
 
-    protected static DateTimeOffset NullifyTicks(DateTimeOffset timestamp)
-    {
-        var ticks = timestamp.Ticks % TICK_DIVISOR; // get last four digits
-        return timestamp.Subtract(new TimeSpan(ticks));
-    }
-
-    protected static uint RotateLeft(uint value, int bits)
-    {
-        return (value << bits) | (value >> (32 - bits));
-    }
-
     protected static uint[] ToUInt32(byte[] source)
     {
         var result = new uint[source.Length / sizeof(uint)];
@@ -284,12 +271,6 @@ public abstract class CommonTestClass
         // Recursively call this method to copying subdirectories.
         foreach (var directory in cacheDirectories)
             Copy(directory.FullName, Path.Combine(destination, directory.Name));
-    }
-
-    protected static T DeepCopy<T>(T original)
-    {
-        var serialized = JsonConvert.SerializeObject(original);
-        return JsonConvert.DeserializeObject<T>(serialized)!;
     }
 
     #endregion
@@ -618,32 +599,38 @@ public abstract class CommonTestClass
 
         platform.Load(container);
 
+        // Container is synced and therefore WatcherChange should resolve itself.
         File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers1 = GetWatcherChangeContainers(platform);
         var count1 = watchers1.Count();
         var synced1 = container.IsSynced;
 
+        // Container not synced after setting a value.
         container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSONPATH_KEY);
         var synced2 = container.IsSynced;
 
+        // Container is not synced and WatcherChange needs to resolved manually.
         File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers2 = GetWatcherChangeContainers(platform);
         var count2 = watchers2.Count();
         var synced3 = container.IsSynced;
 
+        // Container still not synced due to negative decision.
         var watcherContainer2 = watchers2.FirstOrDefault();
         Guard.IsNotNull(watcherContainer2);
         platform.OnWatcherDecision(watcherContainer2, false);
         var synced4 = container.IsSynced;
 
+        // Container still not synced and WatcherChange needs to resolved manually.
         File.WriteAllBytes(pathWatching, bytes);
         Thread.Sleep(FILESYSTEMWATCHER_SLEEP);
         var watchers3 = GetWatcherChangeContainers(platform);
         var count3 = watchers3.Count();
         var synced5 = container.IsSynced;
 
+        // Container will be overwritten and is synced again due to positive decision.
         var watcherContainer3 = watchers3.FirstOrDefault();
         Guard.IsNotNull(watcherContainer3);
         platform.OnWatcherDecision(watcherContainer3, true);

@@ -470,7 +470,7 @@ public class Container : IContainer
     public void SetJsonValue(JToken value, ReadOnlySpan<int> indices)
     {
         ThrowHelperIsLoaded();
-        // If setting the value was successful, it is now unsynced.
+        // If setting the value was successful, it is not synced anymore.
         IsSynced = !_jsonObject!.SetValue(value, indices);
     }
 
@@ -479,7 +479,7 @@ public class Container : IContainer
     public void SetJsonValue(JToken value, string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
-        // If setting the value was successful, it is now unsynced.
+        // If setting the value was successful, it is not synced anymore.
         IsSynced = !_jsonObject!.SetValue(value, pathIdentifier, context);
     }
 

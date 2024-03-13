@@ -6,12 +6,18 @@ using libNOM.io;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using Newtonsoft.Json;
+
 namespace libNOM.test;
 
 
 // Do not use System.Range for simplicity of the file and performance is not critical.
 [TestClass]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_GOG.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_MICROSOFT.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_PLAYSTATION.zip")]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_SWITCH.zip")]
 public class SteamTest : CommonTestClass
 {
     #region Constant
@@ -42,7 +48,8 @@ public class SteamTest : CommonTestClass
             ReadOnlySpan<uint> key = [(RotateLeft((uint)(entry) ^ 0x1422CB8C, 13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
 
             // DeepCopy as value would be changed otherwise and casting again does not work.
-            Span<uint> result = DeepCopy(value);
+            var serialized = JsonConvert.SerializeObject(value);
+            Span<uint> result = JsonConvert.DeserializeObject<uint[]>(serialized)!;
 
             uint hash = 0;
             int iterations = value.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
@@ -84,6 +91,11 @@ public class SteamTest : CommonTestClass
         }
 
         return value;
+    }
+
+    private static uint RotateLeft(uint value, int bits)
+    {
+        return (value << bits) | (value >> (32 - bits));
     }
 
     private static void AssertCommonMeta(Container container, uint[] metaA, uint[] metaB)
@@ -367,7 +379,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var originMusicVolume = 80; // 80
-        var originUtcTicks = 638263807910000000; // 2023-07-31 06:13:11 +00:00
+        var originUtcTicks = 638263807920000000; // 2023-07-31 06:13:12 +00:00
         var path = GetCombinedPath("Steam", "st_76561198042453834");
 
         // Act

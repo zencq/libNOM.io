@@ -289,7 +289,7 @@ public interface IPlatform
     #region FileSystemWatcher
 
     /// <summary>
-    /// Resolves automatic decisions or those made by the user by reloading the container or mark as unsynced.
+    /// Resolves automatic decisions or those made by the user by reloading the container or mark as not synced.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="execute"></param>

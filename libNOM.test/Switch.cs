@@ -9,6 +9,10 @@ namespace libNOM.test;
 
 // Do not use System.Range for simplicity of the file and performance is not critical.
 [TestClass]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_GOG.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_MICROSOFT.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_PLAYSTATION.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip")]
 [DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_SWITCH.zip")]
 public class SwitchTest : CommonTestClass
 {
@@ -164,7 +168,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var originMusicVolume = 80; // 80
-        var originUtcTicks = 638006823230000000; // 2022-10-06 19:45:32 +00:00
+        var originUtcTicks = 638006823320000000; // 2022-10-06 19:45:32 +00:00
         var path = GetCombinedPath("Switch", "4");
 
         // Act
@@ -192,7 +196,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var originMusicVolume = 80; // 80
-        var originUtcTicks = 638298440830000000; // 2023-09-09 08:14:43 +00:00
+        var originUtcTicks = 638298440840000000; // 2023-09-09 08:14:44 +00:00
         var path = GetCombinedPath("Switch", "5");
 
         // Act
