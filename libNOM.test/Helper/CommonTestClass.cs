@@ -1094,6 +1094,7 @@ public abstract class CommonTestClass
                     });
                 }
             }
+        }
         if (!Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE))
             Copy(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE, DIRECTORY_TESTSUITE_ARCHIVE);
     }
