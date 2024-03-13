@@ -43,7 +43,7 @@ since 1.0.0.
 * Now publishing to [NuGet Gallery](https://www.nuget.org/packages/libNOM.io)
 * A setting `WriteAlways` to choose between writing always or only if a container
   is not synced
-* A privacy setting to decide whether external sources should be used to to improve
+* A privacy setting to decide whether external sources should be used to improve
   user identification (e.g. launcher configs or API calls)
 * An `IPlatform` interface you can use instead of the abstract base class
 * Lots of UnitTests

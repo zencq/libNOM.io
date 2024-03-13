@@ -30,7 +30,7 @@ jobs:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: ${{ runner.os }}-nuget-
-      # TODO: Disable until pipeline runs properly and LFS bandwidth is reseted.
+      # TODO: Disabled until pipeline runs properly and LFS bandwidth is reseted.
       # - name: Large File Storage (Create)
       #   run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
       # - name: Large File Storage (Cache)
