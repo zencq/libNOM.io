@@ -4,9 +4,18 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.7.0)
+## Unreleased
 
 ### Known Issues
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.7.0 (2024-03-13)
+
 ### Added
 * Now targeting .NET 8 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * Holiday 2023 Expeditions
@@ -20,6 +29,7 @@ since 1.0.0.
 * Support for new data file format used on Microsoft platform since game version
   **Omega 4.52**
 * Omega Expedition
+
 ### Changed
 * `GetMaximumSlots` is now an extension of `IEnumerable<Container>`
 * `GetSaveContainers()` replaces all previous SaveContainers getter
@@ -28,13 +38,13 @@ since 1.0.0.
 * Bump *CommunityToolkit.Diagnostics* from 8.2.1 to 8.2.2
 * Bump *CommunityToolkit.HighPerformance* from 8.2.1 to 8.2.2
 * Bump *libNOM.map* from 0.9.2 to 0.11.0
-### Deprecated
+
 ### Removed
 * Dedicated getter for paths in `Platform.Settings`
+
 ### Fixed
 * If a new `JObject` is set in a `Container`, ensure it will be stored with the
   configured obfuscation
-### Security
 
 ## 0.6.0 (2023-09-11)
 
