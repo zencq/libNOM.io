@@ -18,7 +18,7 @@ public class ConvertTest : CommonTestClass
         var parentIn = Directory.GetParent(pathIn);
 
         // Act
-        libNOM.io.Globals.Convert.ToJson(pathIn);
+        libNOM.io.Global.Convert.ToJson(pathIn);
         var json = parentIn!.GetFiles("7818252AB45E46868B43B7118290E50F.*.json").FirstOrDefault();
 
         // Assert
@@ -34,7 +34,7 @@ public class ConvertTest : CommonTestClass
         var parentIn = Directory.GetParent(pathIn);
 
         // Act
-        libNOM.io.Globals.Convert.ToSaveFile(pathIn, PlatformEnum.Steam);
+        libNOM.io.Global.Convert.ToSaveFile(pathIn, PlatformEnum.Steam);
 
         var data = parentIn!.GetFiles($"7818252AB45E46868B43B7118290E50F.{PlatformEnum.Steam}.*.data").First();
         var meta = parentIn!.GetFiles($"7818252AB45E46868B43B7118290E50F.{PlatformEnum.Steam}.*.meta").First();

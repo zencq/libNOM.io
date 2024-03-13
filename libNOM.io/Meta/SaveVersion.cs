@@ -20,7 +20,7 @@ internal static partial class SaveVersion
 
     [GeneratedRegex("\\\"Version\\\":(\\d{4,}),", RegexOptions.Compiled, 100)]
     private static partial Regex RegexPlaintext();
-        
+
     private static readonly Regex[] Regexes = [
         RegexObfuscated(),
         RegexPlaintext(),
@@ -31,12 +31,16 @@ internal static partial class SaveVersion
 
     #region Calculate
 
+    /// <inheritdoc cref="Calculate(Container, GameVersionEnum)"/>
+    internal static int Calculate(Container container) => Calculate(container, container.GameVersion);
+
     /// <summary>
     /// Calculates the in-file version based on the base version, game mode, and season.
     /// </summary>
     /// <param name="container"></param>
+    /// <param name="containerVersion"></param>
     /// <returns></returns>
-    internal static int Calculate(Container container)
+    internal static int Calculate(Container container, GameVersionEnum containerVersion)
     {
         // Season  1 =    7205 = BaseVersion + (6 * 512) + ( 0 * 128 * 512) = BaseVersion + 3072 + ( 1 * 65536)
         // Season  2 =  138277 = BaseVersion + (6 * 512) + ( 2 * 128 * 512) = BaseVersion + 3072 + ( 2 * 65536)
@@ -45,11 +49,11 @@ internal static partial class SaveVersion
         // Season 23 = 1514546 = BaseVersion + (6 * 512) + (23 * 128 * 512) = BaseVersion + 3072 + (23 * 65536)
 
         // Since Omega only Permadeath has still its own offset.
-        if (container.GameMode == PresetGameModeEnum.Seasonal && !container.IsVersion450Omega)
+        if (container.GameMode == PresetGameModeEnum.Seasonal && containerVersion < GameVersionEnum.Omega)
             return container.BaseVersion + Constants.OFFSET_GAMEMODE_SEASONAL + ((int)(container.Season) * Constants.OFFSET_MULTIPLICATION_GAMEMODE_SEASON);
 
         // Since Waypoint only Permadeath and Seasonal still have their own offset.
-        if (container.GameMode == PresetGameModeEnum.Permadeath || !container.IsVersion400Waypoint)
+        if (container.GameMode == PresetGameModeEnum.Permadeath || containerVersion < GameVersionEnum.Waypoint)
             return container.BaseVersion + ((int)(container.GameMode) * Constants.OFFSET_GAMEMODE);
 
         return container.BaseVersion + (Constants.GAMEMODE_INT_NORMAL * Constants.OFFSET_GAMEMODE);

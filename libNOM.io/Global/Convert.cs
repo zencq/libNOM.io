@@ -2,7 +2,7 @@
 
 using CommunityToolkit.Diagnostics;
 
-namespace libNOM.io.Globals;
+namespace libNOM.io.Global;
 
 
 public static class Convert

@@ -199,7 +199,7 @@ public static class NewtonsoftExtensions
     /// <summary>
     /// Evaluates a JSONPath expression and sets the new value only if there is one to replace.
     /// </summary>
-    /// <param name="jsonObject"></param>
+    /// <param name="self"></param>
     /// <param name="value"></param>
     /// <param name="pathIdentifier"></param>
     internal static void SetValueIfNotNullOrEmpty(this JObject self, JToken value, string pathIdentifier)
@@ -219,8 +219,7 @@ public static class NewtonsoftExtensions
     /// Selects a collection of elements using multiple JSONPath expression with conjunction.
     /// </summary>
     /// <param name="self"></param>
-    /// <param name="path"></param>
-    /// <param name="expressions"></param>
+    /// <param name="paths"></param>
     /// <returns></returns>
     internal static IEnumerable<T> SelectTokensWithIntersection<T>(this JObject self, IEnumerable<string> paths)
     {

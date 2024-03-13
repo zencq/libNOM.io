@@ -238,27 +238,29 @@ public partial class PlatformSteam : Platform
 #endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
-        //  0. META HEADER          (  4)
-        //  1. META FORMAT          (  4)
-        //  2. SPOOKY HASH          ( 16) // SAVE_FORMAT_2
-        //  6. SHA256 HASH          ( 32) // SAVE_FORMAT_2
-        // 14. DECOMPRESSED SIZE    (  4) // SAVE_FORMAT_3
-        // 15. COMPRESSED SIZE      (  4) // SAVE_FORMAT_1
-        // 16. PROFILE HASH         (  4) // SAVE_FORMAT_1
-        // 17. BASE VERSION         (  4) // SAVE_FORMAT_3
-        // 18. GAME MODE            (  2) // SAVE_FORMAT_3
-        // 18. SEASON               (  2) // SAVE_FORMAT_3
-        // 19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
-        // 20. EMPTY                (  8)
+        /**
+          0. META HEADER          (  4)
+          1. META FORMAT          (  4)
+          2. SPOOKY HASH          ( 16) // SAVE_FORMAT_2
+          6. SHA256 HASH          ( 32) // SAVE_FORMAT_2
+         14. DECOMPRESSED SIZE    (  4) // SAVE_FORMAT_3
+         15. COMPRESSED SIZE      (  4) // SAVE_FORMAT_1
+         16. PROFILE HASH         (  4) // SAVE_FORMAT_1
+         17. BASE VERSION         (  4) // SAVE_FORMAT_3
+         18. GAME MODE            (  2) // SAVE_FORMAT_3
+         18. SEASON               (  2) // SAVE_FORMAT_3
+         19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
+         20. EMPTY                (  8)
 
-        // 22. EMPTY                ( 16) // SAVE_FORMAT_2
-        //                          (104)
+         22. EMPTY                ( 16) // SAVE_FORMAT_2
+                                  (104)
 
-        // 22. SAVE NAME            (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
-        // 54. SAVE SUMMARY         (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
-        // 86. DIFFICULTY PRESET    (  1) // SAVE_FORMAT_3
-        // 86. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
-        //                          (360)
+         22. SAVE NAME            (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
+         54. SAVE SUMMARY         (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
+         86. DIFFICULTY PRESET    (  1) // SAVE_FORMAT_3
+         86. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
+                                  (360)
+         */
 
         // Do not write wrong data in case a step before failed.
         if (decompressed.TryGetValue(0, out var header) && header == META_HEADER)
@@ -284,9 +286,8 @@ public partial class PlatformSteam : Platform
                     DifficultyPreset = disk[344],
                 };
 
-            container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough to calculate SaveVersion
-            container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
-            container.GameVersion = GameVersionEnum.Unknown; // reset to get the 100% accurate result later
+            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
         }
 
         // Size is save to write always.

@@ -211,7 +211,7 @@ public partial class PlatformMicrosoft : Platform
         {
             DataFile = extra.MicrosoftBlobDataFile,
             MetaFile = extra.MicrosoftBlobMetaFile,
-            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
+            /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="Platform.UpdateContainerWithDataInformation"/>.
             Extra = extra,
         };
     }
@@ -495,9 +495,8 @@ public partial class PlatformMicrosoft : Platform
                 SizeDisk = decompressed[4],
             };
 
-        container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough to calculate SaveVersion
-        container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
-        container.GameVersion = GameVersionEnum.Unknown; // reset to get the 100% accurate result later
+        // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+        container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
     }
 
     protected override ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)

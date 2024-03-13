@@ -7,12 +7,6 @@ internal static partial class DifficultyPreset
 {
     #region Getter
 
-    /// <inheritdoc cref="Get(Container, JObject?)"/>
-    internal static DifficultyPresetTypeEnum Get(Container container)
-    {
-        return Get(container, container.GetJsonObject());
-    }
-
     /// <summary>
     /// Gets the difficulty based on the data inside the save.
     /// </summary>

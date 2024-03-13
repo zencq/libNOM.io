@@ -113,25 +113,27 @@ public partial class PlatformSwitch : Platform
 #endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
-        //  0. META HEADER          (  4)
-        //  1. META FORMAT          (  4)
-        //  2. DECOMPRESSED SIZE    (  4)
-        //  3. META INDEX           (  4)
-        //  4. TIMESTAMP            (  4)
-        //  5. BASE VERSION         (  4)
-        //  6. GAME MODE            (  2)
-        //  6. SEASON               (  2)
-        //  7. TOTAL PLAY TIME      (  4)
-        //  8. EMPTY                (  8)
+        /**
+          0. META HEADER          (  4)
+          1. META FORMAT          (  4)
+          2. DECOMPRESSED SIZE    (  4)
+          3. META INDEX           (  4)
+          4. TIMESTAMP            (  4)
+          5. BASE VERSION         (  4)
+          6. GAME MODE            (  2)
+          6. SEASON               (  2)
+          7. TOTAL PLAY TIME      (  4)
+          8. EMPTY                (  8)
 
-        // 10. EMPTY                ( 60)
-        //                          (100)
+         10. EMPTY                ( 60)
+                                  (100)
 
-        // 10. SAVE NAME            (128) // may contain additional junk data after null terminator
-        // 42. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
-        // 74. DIFFICULTY PRESET    (  1)
-        // 74. EMPTY                ( 59) // may contain additional junk data
-        //                          (356)
+         10. SAVE NAME            (128) // may contain additional junk data after null terminator
+         42. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
+         74. DIFFICULTY PRESET    (  1)
+         74. EMPTY                ( 59) // may contain additional junk data
+                                  (356)
+         */
 
         if (disk.IsEmpty())
             return;
@@ -173,9 +175,8 @@ public partial class PlatformSwitch : Platform
                 };
             }
 
-            container.GameVersion = Meta.GameVersion.Get(container.Extra.BaseVersion); // not 100% accurate but good enough to calculate SaveVersion
-            container.SaveVersion = Meta.SaveVersion.Calculate(container); // needs GameVersion
-            container.GameVersion = GameVersionEnum.Unknown; // reset to get the 100% accurate result later
+            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
         }
     }
 

@@ -277,19 +277,21 @@ public partial class PlatformPlaystation : Platform
             }
             else if (_usesSaveWizard)
             {
-                //  0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
-                //  2. CONST (2)            (  4)
-                //  3. META OFFSET          (  4)
-                //  4. CONST (1)            (  4)
-                //  5. COMPRESSED SIZE      (  4)
-                //  6. EMPTY                ( 44) // here the same structure as the old memory.dat format starts but with many empty values
-                // 17. META FORMAT          (  4)
-                // 18. EMPTY                ( 20)
-                // 23. DECOMPRESSED SIZE    (  4)
-                // 24. EMPTY                (  4)
-                // 25. CONST (1)            (  4)
-                // 26. EMPTY                (  8)
-                //                          (112)
+                /**
+                  0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
+                  2. CONST (2)            (  4)
+                  3. META OFFSET          (  4)
+                  4. CONST (1)            (  4)
+                  5. COMPRESSED SIZE      (  4)
+                  6. EMPTY                ( 44) // here the same structure as the old memory.dat format starts but with many empty values
+                 17. META FORMAT          (  4)
+                 18. EMPTY                ( 20)
+                 23. DECOMPRESSED SIZE    (  4)
+                 24. EMPTY                (  4)
+                 25. CONST (1)            (  4)
+                 26. EMPTY                (  8)
+                                          (112)
+                 */
 
                 container.Extra = container.Extra with
                 {
@@ -304,20 +306,22 @@ public partial class PlatformPlaystation : Platform
         }
         else
         {
-            //  0. META HEADER          ( 4)
-            //  1. META FORMAT          ( 4)
-            //  2. COMPRESSED SIZE      ( 4)
-            //  3. CHUNK OFFSET         ( 4)
-            //  4. CHUNK SIZE           ( 4)
-            //  5. META INDEX           ( 4)
-            //  6. TIMESTAMP            ( 4)
-            //  7. DECOMPRESSED SIZE    ( 4)
-            //                          (32)
+            /**
+              0. META HEADER          ( 4)
+              1. META FORMAT          ( 4)
+              2. COMPRESSED SIZE      ( 4)
+              3. CHUNK OFFSET         ( 4)
+              4. CHUNK SIZE           ( 4)
+              5. META INDEX           ( 4)
+              6. TIMESTAMP            ( 4)
+              7. DECOMPRESSED SIZE    ( 4)
+                                      (32)
 
-            //  8. SAVEWIZARD OFFSET    ( 4)
-            //  9. CONST (1)            ( 4)
-            // 10. EMPTY                ( 8)
-            //                          (48)
+              8. SAVEWIZARD OFFSET    ( 4)
+              9. CONST (1)            ( 4)
+             10. EMPTY                ( 8)
+                                      (48)
+             */
 
             if (decompressed.IsEmpty || decompressed[3] == 0)
             {

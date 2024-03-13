@@ -2,7 +2,7 @@
 
 using Newtonsoft.Json;
 
-namespace libNOM.io.Globals;
+namespace libNOM.io.Global;
 
 
 internal static partial class Common

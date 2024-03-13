@@ -439,7 +439,7 @@ public abstract class CommonTestClass
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var tag = typeof(TPlatform) == typeof(PlatformMicrosoft) ? libNOM.io.Globals.Constants.INCOMPATIBILITY_004 : libNOM.io.Globals.Constants.INCOMPATIBILITY_006;
+        var tag = typeof(TPlatform) == typeof(PlatformMicrosoft) ? libNOM.io.Global.Constants.INCOMPATIBILITY_004 : libNOM.io.Global.Constants.INCOMPATIBILITY_006;
 
         // Act
         var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
@@ -470,7 +470,7 @@ public abstract class CommonTestClass
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
         };
-        var tag = typeof(TPlatform) == typeof(PlatformMicrosoft) ? libNOM.io.Globals.Constants.INCOMPATIBILITY_004 : libNOM.io.Globals.Constants.INCOMPATIBILITY_006;
+        var tag = typeof(TPlatform) == typeof(PlatformMicrosoft) ? libNOM.io.Global.Constants.INCOMPATIBILITY_004 : libNOM.io.Global.Constants.INCOMPATIBILITY_006;
 
         // Act
         var platform = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
@@ -588,7 +588,7 @@ public abstract class CommonTestClass
             Watcher = true,
         };
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
 
         // Act
         var bytes = File.ReadAllBytes(pathWatching);
@@ -803,7 +803,7 @@ public abstract class CommonTestClass
         };
         var writeCallback = false;
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
 
         // Act
         var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;
@@ -853,7 +853,7 @@ public abstract class CommonTestClass
         };
         var writeCallback = false;
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
 
         // Act
         var platformA = (TPlatform?)(Activator.CreateInstance(typeof(TPlatform), path, settings))!;

@@ -1,6 +1,6 @@
 ﻿using K4os.Compression.LZ4;
 
-namespace libNOM.io.Globals;
+namespace libNOM.io.Global;
 
 
 internal static class LZ4

@@ -111,7 +111,7 @@ public class ContainerTest : CommonTestClass
             UseMapping = true,
         };
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
 
         // Act
         var platform = new PlatformSteam(path, settings);
@@ -206,7 +206,7 @@ public class ContainerTest : CommonTestClass
             UseMapping = true,
         };
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[GALACTICADDRESS_JSONPATH_KEY] = GALACTICADDRESS_JSONPATH;
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[GALACTICADDRESS_JSONPATH_KEY] = GALACTICADDRESS_JSONPATH;
 
         // Act
         var platform = new PlatformSteam(path, settings);
@@ -249,7 +249,7 @@ public class ContainerTest : CommonTestClass
         };
         var validSlotIndices = new JArray { new JObject { { "X", 0 }, { "Y", 0 } } };
 
-        libNOM.io.Globals.Constants.JSONPATH_EXTENSION[VALIDSLOTINDICES_JSONPATH_KEY] = VALIDSLOTINDICES_JSONPATH;
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[VALIDSLOTINDICES_JSONPATH_KEY] = VALIDSLOTINDICES_JSONPATH;
 
         // Act
         var platform = new PlatformSteam(path, settings);

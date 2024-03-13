@@ -1,4 +1,4 @@
-﻿namespace libNOM.io.Globals;
+﻿namespace libNOM.io.Global;
 
 
 public static class Constants
