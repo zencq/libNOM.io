@@ -9,12 +9,50 @@ using Microsoft.Extensions.Caching.Memory;
 namespace libNOM.io;
 
 
-/// <summary>
-/// Abstract base for all platforms which just hook into the methods they need.
-/// </summary>
+// This partial class contains UserIdentification related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    #region FileSystemWatcher
+    #region Field
+
+    protected readonly IAppCache _cache = new CachingService();
+    protected readonly LazyCacheEntryOptions _options = new();
+    protected readonly FileSystemWatcher _watcher = new();
+
+    #endregion
+
+    #region Getter
+
+    /// <summary>
+    /// Gets all <see cref="Container"/> affected by one cache eviction.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name)
+    {
+        return SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    #endregion
+
+    #region Constructor
+
+    protected virtual void InitializeWatcher()
+    {
+        // Cache
+        _options.RegisterPostEvictionCallback(OnCacheEviction);
+        _options.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(Constants.CACHE_EXPIRATION), ExpirationMode.ImmediateEviction);
+
+        // Watcher
+        _watcher.Changed += OnWatcherEvent;
+        _watcher.Created += OnWatcherEvent;
+        _watcher.Deleted += OnWatcherEvent;
+        _watcher.Renamed += OnWatcherEvent;
+
+        _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex];
+        _watcher.Path = Location.FullName;
+    }
+
+    #endregion
 
     /// <summary>
     /// Enables the <see cref="FileSystemWatcher"/> if settings allowing it.
@@ -32,12 +70,14 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         _watcher.EnableRaisingEvents = false;
     }
 
+    #region Event
+
     /// <summary>
     /// Gets called on a watcher event and adds the new change type to the cache.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="e"></param>
-    protected void OnWatcherEvent(object source, FileSystemEventArgs e)
+    private void OnWatcherEvent(object source, FileSystemEventArgs e)
     {
         // Workaround to update the value and keep the immediate eviction.
         if (_cache.TryGetValue(e.Name, out Lazy<WatcherChangeTypes> lazyType))

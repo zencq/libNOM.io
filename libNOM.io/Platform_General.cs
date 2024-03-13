@@ -29,14 +29,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Field
-
-    protected readonly IAppCache _cache = new CachingService();
-    protected readonly LazyCacheEntryOptions _options = new();
-    protected readonly FileSystemWatcher _watcher = new();
-
-    #endregion
-
     #region Property
 
     #region Container
@@ -165,16 +157,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return -1;
     }
 
-    /// <summary>
-    /// Gets all <see cref="Container"/> affected by one cache eviction.
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name)
-    {
-        return SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
-    }
-
     // private //
 
     private static IEnumerable<SaveContextQueryEnum> GetContexts(JObject jsonObject)
@@ -261,16 +243,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             return;
 
         // Watcher
-        _options.RegisterPostEvictionCallback(OnCacheEviction);
-        _options.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(Constants.CACHE_EXPIRATION), ExpirationMode.ImmediateEviction);
-
-        _watcher.Changed += OnWatcherEvent;
-        _watcher.Created += OnWatcherEvent;
-        _watcher.Deleted += OnWatcherEvent;
-        _watcher.Renamed += OnWatcherEvent;
-
-        _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex];
-        _watcher.Path = Location.FullName;
+        InitializeWatcher();
 
         // Loading
         GeneratePlatformData();
