@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance;
+
 using libNOM.map;
-using Newtonsoft.Json;
+
 using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
 
 namespace libNOM.io;
 
@@ -12,91 +12,44 @@ public partial class PlatformPlaystation : Platform
 {
     #region Constant
 
-    internal override int COUNT_SAVE_SLOTS => _usesSaveStreaming ? base.COUNT_SAVE_SLOTS : 5;
+    internal static readonly string[] ANCHOR_FILE_PATTERN = ["savedata??.hg", "memory.dat"];
 
-    #region Platform Specific
-
-    protected const uint MEMORYDAT_LENGTH_ACCOUNTDATA = 0x40000U;
-    protected const uint MEMORYDAT_LENGTH_CONTAINER = 0x300000U;
-    protected const uint MEMORYDAT_LENGTH_TOTAL = 0x2000000U; // 32 MB
-
-    protected int MEMORYDAT_META_INDEX_OFFSET => _usesSaveWizard ? 8 : 3;
-    protected int MEMORYDAT_META_INDEX_LENGTH => _usesSaveWizard ? 7 : 2;
-
-    protected int MEMORYDAT_OFFSET_META => _usesSaveWizard ? 0x40 : 0x0; // 64 : 0
-    protected int MEMORYDAT_OFFSET_DATA => _usesSaveWizard ? 0x1040 : 0x20000; // 4160 : 131072
-    private const uint MEMORYDAT_OFFSET_DATA_CONTAINER = 0xE0000U;
+    protected override int COUNT_SAVE_SLOTS => _usesSaveStreaming ? base.COUNT_SAVE_SLOTS : 5;
 
     protected const uint META_HEADER = 0xCA55E77E;
+    internal override int META_LENGTH_TOTAL_VANILLA => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
+    internal override int META_LENGTH_TOTAL_WAYPOINT => _usesSaveWizard ? 0x70 : 0x0; // 112 : 0 // actually _FRONTIERS would be more accurate as there was no changed in Waypoint for PlayStation but reusing it as it has to be implemented anyway and would have no use otherwise
 
-    protected override int META_LENGTH_TOTAL_VANILLA => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
-    protected override int META_LENGTH_TOTAL_WAYPOINT => _usesSaveWizard ? 0x70 : 0x0; // 112 : 0 // actually Frontiers but reused as no use otherwise
+    private const uint MEMORYDAT_LENGTH_ACCOUNTDATA = 0x40000U;
+    private const uint MEMORYDAT_LENGTH_CONTAINER = 0x300000U;
+    private const uint MEMORYDAT_LENGTH_TOTAL = 0x2000000U; // 32 MB
+    private const uint MEMORYDAT_LENGTH_TOTAL_SAVEWIZARD = 0x3000000U; // 48 MB // ten uncompressed saves may exceed the default length
+    private int MEMORYDAT_META_INDEX_OFFSET => _usesSaveWizard ? 8 : 3;
+    private int MEMORYDAT_META_INDEX_LENGTH => _usesSaveWizard ? 7 : 2;
+    private int MEMORYDAT_OFFSET_META => _usesSaveWizard ? 0x40 : 0x0; // 64 : 0
+    private int MEMORYDAT_OFFSET_DATA => _usesSaveWizard ? 0x1040 : 0x20000; // 4160 : 131072
+    private const uint MEMORYDAT_OFFSET_DATA_ACCOUNTDATA = 0x20000U;
+    private const uint MEMORYDAT_OFFSET_DATA_CONTAINER = 0xE0000U;
 
+#pragma warning disable IDE0051 // Remove unused private member
     internal const string SAVEWIZARD_HEADER = "NOMANSKY";
     internal static readonly byte[] SAVEWIZARD_HEADER_BINARY = SAVEWIZARD_HEADER.GetUTF8Bytes();
-    protected const int SAVEWIZARD_VERSION_1 = 1;
-    protected const int SAVEWIZARD_VERSION_2 = 2;
-
-    #endregion
-
-    #region Generated Regex
-
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    private static readonly Regex AnchorFileRegex0 = new("savedata\\d{2}\\.hg", RegexOptions.Compiled);
-    private static readonly Regex AnchorFileRegex1 = new("memory\\.dat", RegexOptions.Compiled);
-#else
-    [GeneratedRegex("savedata\\d{2}\\.hg", RegexOptions.Compiled)]
-    private static partial Regex AnchorFileRegex0();
-
-    [GeneratedRegex("memory\\.dat", RegexOptions.Compiled)]
-    private static partial Regex AnchorFileRegex1();
-#endif
-
-    #endregion
-
-    #region Directory Data
-
-    internal static readonly string[] ANCHOR_FILE_GLOB = ["savedata*.hg", "memory*.dat"];
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0, AnchorFileRegex1];
-#else
-    internal static readonly Regex[] ANCHOR_FILE_REGEX = [AnchorFileRegex0(), AnchorFileRegex1()];
-#endif
-
-    #endregion
+    private const int SAVEWIZARD_VERSION_1 = 1; // not used but for completeness
+    private const int SAVEWIZARD_VERSION_2 = 2;
+#pragma warning restore IDE0051
 
     #endregion
 
     #region Field
 
-    private DateTimeOffset? _lastWriteTime;
-    private FileInfo? _memorydat;
-    private bool _usesSaveStreaming;
-    private bool _usesSaveWizard;
+    private DateTimeOffset? _lastWriteTime; // will be set to track _memorydat timestamp
+    private FileInfo? _memorydat; // will be set if _usesSaveStreaming is false
+    private bool _usesSaveStreaming; // will be set to indicate whether save streaming is used
+    private bool _usesSaveWizard; // will be set to indicate whether SaveWizard is used
 
     #endregion
 
     #region Property
-
-    #region Configuration
-
-    // public //
-
-    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Playstation;
-
-    // protected //
-
-    protected override string[] PlatformAnchorFileGlob { get; } = ANCHOR_FILE_GLOB;
-
-    protected override Regex[] PlatformAnchorFileRegex { get; } = ANCHOR_FILE_REGEX;
-
-    protected override string? PlatformArchitecture { get; } = "PS4|Final";
-
-    protected override string? PlatformProcessPath { get; } = null;
-
-    protected override string PlatformToken { get; } = "PS";
-
-    #endregion
 
     #region Flags
 
@@ -122,11 +75,29 @@ public partial class PlatformPlaystation : Platform
 
     #endregion
 
+    #region Platform Indicator
+
+    // public //
+
+    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Playstation;
+
+    // protected //
+
+    protected override string[] PlatformAnchorFilePattern { get; } = ANCHOR_FILE_PATTERN;
+
+    protected override string? PlatformArchitecture { get; } = "PS4|Final";
+
+    protected override string? PlatformProcessPath { get; } = null;
+
+    protected override string PlatformToken { get; } = "PS";
+
     #endregion
 
-    #region Getter
+    #endregion
 
-    #region Container
+    // //
+
+    #region Getter
 
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
     {
@@ -134,10 +105,10 @@ public partial class PlatformPlaystation : Platform
             return base.GetCacheEvictionContainers(name);
 
         if (!name.Equals("memory.dat", StringComparison.OrdinalIgnoreCase))
-            return Enumerable.Empty<Container>();
+            return [];
 
         // Cache previous timestamp.
-        var lastWriteTicks = _lastWriteTime!.Value.UtcTicks.GetBlobTicks();
+        var lastWriteTicks = _lastWriteTime!.NullifyTicks(4)!.Value.UtcTicks;
 
         // Refresh will also update _lastWriteTime.
         RefreshContainerCollection();
@@ -145,8 +116,6 @@ public partial class PlatformPlaystation : Platform
         // Get all written container that are newer than the previous timestamp.
         return SaveContainerCollection.Where(i => i.Exists && i.LastWriteTime?.UtcTicks >= lastWriteTicks);
     }
-
-    #endregion
 
     #endregion
 
@@ -177,11 +146,11 @@ public partial class PlatformPlaystation : Platform
     protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         // Proceed to base method even if no directory.
-        if (directory is not null && GetAnchorFileIndex(directory) is int anchorFileIndex and not -1)
+        if (GetAnchorFileIndex(directory) is int anchorFileIndex and not -1) // implicit directory is not null
         {
             if (anchorFileIndex == 1) // memory.dat
             {
-                _memorydat = new FileInfo(Path.Combine(directory.FullName, "memory.dat"));
+                _memorydat = new FileInfo(Path.Combine(directory!.FullName, "memory.dat"));
                 _lastWriteTime = _memorydat.LastWriteTime;
             }
             else
@@ -190,11 +159,11 @@ public partial class PlatformPlaystation : Platform
             }
 
             // Get first file that is not account data if not _memorydat.
-            var f = _memorydat ?? directory.GetFiles().FirstOrDefault(f => PlatformAnchorFileRegex[anchorFileIndex].IsMatch(f.Name) && !f.Name.Contains("00"));
+            var f = _memorydat ?? directory!.GetFiles(PlatformAnchorFilePattern[anchorFileIndex]).FirstOrDefault(i => !i.Name.Contains("00"));
             if (f is not null)
             {
-                using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-                _usesSaveWizard = SAVEWIZARD_HEADER_BINARY.SequenceEqual(reader.ReadBytes(SAVEWIZARD_HEADER_BINARY.Length));
+                using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.Read));
+                _usesSaveWizard = reader.ReadBytes(SAVEWIZARD_HEADER_BINARY.Length).SequenceEqual(SAVEWIZARD_HEADER_BINARY);
             }
         }
 
@@ -216,59 +185,25 @@ public partial class PlatformPlaystation : Platform
 
             // AccountData may have an additional meta/manifest file (for SaveWizard only).
             // Otherwise the meta data are at the beginning of the data file itself (for SaveWizard only).
-            return new Container(metaIndex)
+            return new Container(metaIndex, this)
             {
                 DataFile = data,
                 MetaFile = metaIndex == 0 ? (meta.Exists ? meta : null) : (_usesSaveWizard ? data : null),
                 /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-                Extra = new()
+                Extra = extra ?? new()
                 {
                     LastWriteTime = data.LastWriteTime,
                 },
             };
         }
 
-        return new Container(metaIndex)
+        return new Container(metaIndex, this)
         {
             DataFile = _memorydat,
             MetaFile = _memorydat,
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-            Extra = new(),
+            Extra = extra ?? new(),
         };
-    }
-
-    protected override JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
-    {
-        JObject? jsonObject;
-        try
-        {
-            jsonObject = binary.GetJson();
-        }
-        catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
-        {
-            container.IncompatibilityException = ex;
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;
-            return null;
-        }
-        if (jsonObject is null)
-        {
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_003;
-            return null;
-        }
-
-        // Deobfuscate anyway if _useSaveWizard to realign mapping by SaveWizard.
-        if (Settings.UseMapping || _usesSaveWizard)
-        {
-            container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
-        }
-
-        // Do deliver a consistent experience, make sure the file is obfuscated if the setting is set to false.
-        if (Settings.UseMapping is false) // is false is more visible than a !
-        {
-            Mapping.Obfuscate(jsonObject);
-        }
-
-        return jsonObject;
     }
 
     #endregion
@@ -277,6 +212,7 @@ public partial class PlatformPlaystation : Platform
 
     protected override ReadOnlySpan<byte> LoadContainer(Container container)
     {
+        // With save streaming base can be used, otherwise meta needs to be loaded earlier.
         if (_usesSaveStreaming)
             return base.LoadContainer(container);
 
@@ -290,17 +226,13 @@ public partial class PlatformPlaystation : Platform
         {
             var data = LoadData(container);
             if (data.IsEmpty())
-            {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-            }
             else
-            {
                 return data;
-            }
         }
 
         container.IncompatibilityTag ??= Constants.INCOMPATIBILITY_006;
-        return Array.Empty<byte>();
+        return [];
     }
 
     protected override Span<byte> ReadMeta(Container container)
@@ -325,7 +257,7 @@ public partial class PlatformPlaystation : Platform
             reader.BaseStream.Seek(MEMORYDAT_OFFSET_META + (container.MetaIndex * META_LENGTH_TOTAL_VANILLA), SeekOrigin.Begin);
             return reader.ReadBytes(META_LENGTH_TOTAL_VANILLA);
         }
-        return Array.Empty<byte>();
+        return [];
     }
 
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
@@ -345,19 +277,21 @@ public partial class PlatformPlaystation : Platform
             }
             else if (_usesSaveWizard)
             {
-                //  0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
-                //  2. CONST (2)            (  4)
-                //  3. META OFFSET          (  4)
-                //  4. CONST (1)            (  4)
-                //  5. COMPRESSED SIZE      (  4)
-                //  6. EMPTY                ( 44) // here the same structure as the old memory.dat format starts but with many empty values
-                // 17. META FORMAT          (  4)
-                // 18. EMPTY                ( 20)
-                // 23. DECOMPRESSED SIZE    (  4)
-                // 24. EMPTY                (  4)
-                // 25. CONST (1)            (  4)
-                // 26. EMPTY                (  8)
-                //                          (112)
+                /**
+                  0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
+                  2. CONST (2)            (  4)
+                  3. META OFFSET          (  4)
+                  4. CONST (1)            (  4)
+                  5. COMPRESSED SIZE      (  4)
+                  6. EMPTY                ( 44) // here the same structure as the old memory.dat format starts but with many empty values
+                 17. META FORMAT          (  4)
+                 18. EMPTY                ( 20)
+                 23. DECOMPRESSED SIZE    (  4)
+                 24. EMPTY                (  4)
+                 25. CONST (1)            (  4)
+                 26. EMPTY                (  8)
+                                          (112)
+                 */
 
                 container.Extra = container.Extra with
                 {
@@ -372,20 +306,22 @@ public partial class PlatformPlaystation : Platform
         }
         else
         {
-            //  0. META HEADER          ( 4)
-            //  1. META FORMAT          ( 4)
-            //  2. COMPRESSED SIZE      ( 4)
-            //  3. CHUNK OFFSET         ( 4)
-            //  4. CHUNK SIZE           ( 4)
-            //  5. META INDEX           ( 4)
-            //  6. TIMESTAMP            ( 4)
-            //  7. DECOMPRESSED SIZE    ( 4)
-            //                          (32)
+            /**
+              0. META HEADER          ( 4)
+              1. META FORMAT          ( 4)
+              2. COMPRESSED SIZE      ( 4)
+              3. CHUNK OFFSET         ( 4)
+              4. CHUNK SIZE           ( 4)
+              5. META INDEX           ( 4)
+              6. TIMESTAMP            ( 4)
+              7. DECOMPRESSED SIZE    ( 4)
+                                      (32)
 
-            //  8. SAVEWIZARD OFFSET    ( 4)
-            //  9. CONST (1)            ( 4)
-            // 10. EMPTY                ( 8)
-            //                          (48)
+              8. SAVEWIZARD OFFSET    ( 4)
+              9. CONST (1)            ( 4)
+             10. EMPTY                ( 8)
+                                      (48)
+             */
 
             if (decompressed.IsEmpty || decompressed[3] == 0)
             {
@@ -415,7 +351,7 @@ public partial class PlatformPlaystation : Platform
     protected override ReadOnlySpan<byte> ReadData(Container container)
     {
         if (container.DataFile?.Exists != true)
-            return Array.Empty<byte>();
+            return [];
 
         if (_usesSaveStreaming && (container.IsAccount || !_usesSaveWizard))
             return base.ReadData(container);
@@ -450,22 +386,31 @@ public partial class PlatformPlaystation : Platform
     {
         // Sizes other than for AccountData need to be set directly in CompressData() as the compressed data wont be returned if _usesSaveWizard.
         if (container.IsAccount)
-        {
             container.Extra = container.Extra with
             {
                 Size = _usesSaveWizard ? (uint)(decompressed.Length) : (uint)(disk.Length),
                 SizeDecompressed = (uint)(decompressed.Length),
                 SizeDisk = (uint)(disk.Length),
             };
-        }
         // Save memory by only storing it when necessary.
         else if (!_usesSaveStreaming)
-        {
             container.Extra = container.Extra with
             {
                 Bytes = disk.ToArray(),
             };
-        }
+    }
+
+    protected override JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
+    {
+        var jsonObject = base.DeserializeContainer(container, binary);
+        if (jsonObject is null) // incompatibility properties are set in base
+            return null;
+
+        // Deobfuscate anyway if _useSaveWizard to realign mapping by SaveWizard.
+        if (_usesSaveWizard)
+            container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
+
+        return jsonObject;
     }
 
     #endregion
@@ -477,39 +422,36 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveStreaming)
         {
             base.Write(container, writeTime);
+            return;
         }
-        else
+
+        if (!CanUpdate || !container.IsLoaded)
+            return;
+
+        DisableWatcher();
+
+        // Write memory.dat file if something needs to be updated.
+        if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
         {
-            if (!CanUpdate || !container.IsLoaded)
-                return;
-
-            DisableWatcher();
-
-            // Writing all memory.dat file if something needs to be updated.
-            if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
+            if (Settings.WriteAlways || !container.IsSynced)
             {
-                if (Settings.WriteAlways || !container.IsSynced)
-                {
-                    container.Exists = true;
-                    container.IsSynced = true;
+                container.Exists = true;
+                container.IsSynced = true;
 
-                    _ = PrepareData(container); // stored in container.Extra.Bytes and written in WriteMemoryDat()
-                }
-
-                if (Settings.SetLastWriteTime)
-                {
-                    _lastWriteTime = container.LastWriteTime = writeTime;
-                }
-
-                WriteMemoryDat();
+                _ = PrepareData(container); // stored in container.Extra.Bytes and written in WriteMemoryDat()
             }
 
-            EnableWatcher();
+            if (Settings.SetLastWriteTime)
+                _lastWriteTime = container.LastWriteTime = writeTime;
 
-            // Always refresh in case something above was executed.
-            container.RefreshFileInfo();
-            container.WriteCallback.Invoke();
+            WriteMemoryDat();
         }
+
+        EnableWatcher();
+
+        // Always refresh in case something above was executed.
+        container.RefreshFileInfo();
+        container.WriteCallback.Invoke();
     }
 
     protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)
@@ -518,17 +460,13 @@ public partial class PlatformPlaystation : Platform
 
         if (_usesSaveStreaming)
         {
-            if (container.IsAccount)
+            if (container.IsAccount) // no compression for account data
                 return data;
 
             result = base.CompressData(container, data);
         }
         else
-        {
-            // Compression for AccountData as well.
-            _ = LZ4.Encode(data, out var r);
-            result = r;
-        }
+            _ = LZ4.Encode(data, out result);
 
         container.Extra = container.Extra with
         {
@@ -537,7 +475,7 @@ public partial class PlatformPlaystation : Platform
             SizeDisk = (uint)(result.Length),
         };
 
-        // SaveWizard will do the compression itself.
+        // SaveWizard will do the compression itself but we need the updated extra data.
         if (_usesSaveWizard)
             return data;
 
@@ -548,9 +486,9 @@ public partial class PlatformPlaystation : Platform
     {
         // memory.dat will be written in its own method and therefore we do not need to write anything here.
         if (_usesSaveStreaming)
+            // Append data to already written meta.
             if (_usesSaveWizard && !container.IsAccount)
             {
-                // Append data to already written meta.
                 using var stream = new FileStream(container.DataFile!.FullName, FileMode.Append);
 #if NETSTANDARD2_0
                 stream.Write(data.ToArray(), 0, data.Length);
@@ -558,104 +496,106 @@ public partial class PlatformPlaystation : Platform
                 stream.Write(data);
 #endif
             }
+            // Homebrew and Account always handled as usual.
             else
-            {
-                // Homebrew and Account always handled as usual.
                 base.WriteData(container, data);
-            }
     }
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
+        var buffer = _usesSaveStreaming ? CreateSaveStreamingMeta(container) : CreateLegacyMeta(container);
+        return buffer.AsSpan().Cast<byte, uint>();
+    }
+
+    private byte[] CreateSaveStreamingMeta(Container container)
+    {
         byte[] buffer = [];
 
-        if (_usesSaveStreaming)
+        if (container.IsAccount)
         {
-            if (container.IsAccount)
+            // Use Switch values of META_LENGTH_TOTAL in fallback.
+            buffer = container.Extra.Bytes ?? new byte[container.MetaFormat == MetaFormatEnum.Waypoint ? 0x164 : 0x64];
+
+            // Overwrite only SizeDecompressed.
+            using var writer = new BinaryWriter(new MemoryStream(buffer));
+            writer.Write(META_HEADER); // 4
+            writer.Write(Constants.SAVE_FORMAT_3); // 4
+            writer.Write(container.Extra.SizeDecompressed); // 4
+        }
+        else if (_usesSaveWizard) // no meta for homebrew if _usesSaveStreaming
+        {
+            buffer = new byte[META_LENGTH_TOTAL_WAYPOINT];
+
+            using var writer = new BinaryWriter(new MemoryStream(buffer));
+
+            writer.Write(SAVEWIZARD_HEADER_BINARY); // 8
+            writer.Write(SAVEWIZARD_VERSION_2); // 4
+            writer.Write(MEMORYDAT_OFFSET_META); // 4
+            writer.Write(1); // 4
+            writer.Write(container.Extra.SizeDisk); // 4
+
+            writer.Seek(44, SeekOrigin.Current); // skip empty
+
+            writer.Write(Constants.SAVE_FORMAT_3); // 4
+
+            writer.Seek(20, SeekOrigin.Current); // skip empty
+
+            writer.Write(container.Extra.SizeDecompressed); // 4
+
+            writer.Seek(04, SeekOrigin.Current); // skip empty
+
+            writer.Write(1); // 4
+        }
+
+        return buffer;
+    }
+
+    private byte[] CreateLegacyMeta(Container container)
+    {
+        var buffer = new byte[container.MetaSize];
+
+        if (container.Exists)
+        {
+            var legacyOffset = container.IsAccount ? MEMORYDAT_OFFSET_DATA_ACCOUNTDATA : (uint)(MEMORYDAT_OFFSET_DATA_CONTAINER + (container.CollectionIndex * MEMORYDAT_LENGTH_CONTAINER));
+            var legacyLength = container.IsAccount ? MEMORYDAT_LENGTH_ACCOUNTDATA : MEMORYDAT_LENGTH_CONTAINER;
+
+            using var writer = new BinaryWriter(new MemoryStream(buffer));
+            writer.Write(META_HEADER); // 4
+            writer.Write(Constants.SAVE_FORMAT_2); // 4
+            writer.Write(container.Extra.SizeDisk); // 4
+            writer.Write(legacyOffset); // 4
+            writer.Write(legacyLength); // 4
+            writer.Write(container.MetaIndex); // 4
+            writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
+            writer.Write(container.Extra.SizeDecompressed); // 4
+
+            if (_usesSaveWizard)
             {
-                // Use Switch values of META_LENGTH_TOTAL in fallback.
-                buffer = container.Extra.Bytes ?? new byte[container.MetaFormat == MetaFormatEnum.Waypoint ? 0x164 : 0x64];
+                var offset = MEMORYDAT_OFFSET_DATA + SAVEWIZARD_HEADER.Length;
+                if (container.MetaIndex > 0)
+                {
+                    var precedingContainer = SaveContainerCollection.Where(i => i.Exists && i.MetaIndex < container.MetaIndex);
 
-                using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-                // Overwrite only SizeDecompressed.
-                writer.Write(META_HEADER); // 4
-                writer.Write(Constants.SAVE_FORMAT_3); // 4
-                writer.Write(container.Extra.SizeDecompressed); // 4
-            }
-            else if (_usesSaveWizard)
-            {
-                buffer = new byte[META_LENGTH_TOTAL_WAYPOINT];
-
-                using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-                writer.Write(SAVEWIZARD_HEADER_BINARY); // 8
-                writer.Write(SAVEWIZARD_VERSION_2); // 4
-                writer.Write(MEMORYDAT_OFFSET_META); // 4
-                writer.Write(1); // 4
-                writer.Write(container.Extra.SizeDisk); // 4
-
-                writer.Seek(44, SeekOrigin.Current); // skip empty
-
-                writer.Write(Constants.SAVE_FORMAT_3); // 4
-
-                writer.Seek(20, SeekOrigin.Current); // skip empty
-
-                writer.Write(container.Extra.SizeDecompressed); // 4
-
-                writer.Seek(04, SeekOrigin.Current); // skip empty
-
+                    offset += (int)(AccountContainer.Extra.SizeDecompressed);
+                    offset += (int)(precedingContainer.Sum(i => SAVEWIZARD_HEADER.Length + i.Extra.SizeDecompressed));
+                    offset += SAVEWIZARD_HEADER.Length;
+                }
+                writer.Write(offset); // 4
                 writer.Write(1); // 4
             }
         }
         else
         {
-            buffer = new byte[GetMetaSize(container)];
+            using var writer = new BinaryWriter(new MemoryStream(buffer));
+            writer.Write(META_HEADER); // 4
+            writer.Write(Constants.SAVE_FORMAT_2); // 4
 
-            if (container.Exists)
-            {
-                var legacyOffset = container.IsAccount ? 0x20000 : (uint)(MEMORYDAT_OFFSET_DATA_CONTAINER + (container.CollectionIndex * MEMORYDAT_LENGTH_CONTAINER));
-                var legacyLength = container.IsAccount ? MEMORYDAT_LENGTH_ACCOUNTDATA : MEMORYDAT_LENGTH_CONTAINER;
+            writer.Seek(12, SeekOrigin.Current);
 
-                using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-                writer.Write(META_HEADER); // 4
-                writer.Write(Constants.SAVE_FORMAT_2); // 4
-                writer.Write(container.Extra.SizeDisk); // 4
-                writer.Write(legacyOffset); // 4
-                writer.Write(legacyLength); // 4
-                writer.Write(container.MetaIndex); // 4
-                writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
-                writer.Write(container.Extra.SizeDecompressed); // 4
-
-                if (_usesSaveWizard)
-                {
-                    var offset = MEMORYDAT_OFFSET_DATA + SAVEWIZARD_HEADER.Length;
-                    if (container.MetaIndex > 0)
-                    {
-                        var precedingContainer = SaveContainerCollection.Where(i => i.Exists && i.MetaIndex < container.MetaIndex);
-
-                        offset += (int)(AccountContainer.Extra.SizeDecompressed);
-                        offset += (int)(precedingContainer.Sum(i => SAVEWIZARD_HEADER.Length + i.Extra.SizeDecompressed));
-                        offset += SAVEWIZARD_HEADER.Length;
-                    }
-                    writer.Write(offset); // 4
-                    writer.Write(1); // 4
-                }
-            }
-            else
-            {
-                using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-                writer.Write(META_HEADER); // 4
-                writer.Write(Constants.SAVE_FORMAT_2); // 4
-
-                writer.BaseStream.Seek(12, SeekOrigin.Current);
-                writer.Write(uint.MaxValue); // 4
-            }
+            writer.Write(uint.MaxValue); // 4
         }
 
-        return buffer.AsSpan().Cast<byte, uint>();
+        return buffer;
     }
 
     /// <summary>
@@ -666,85 +606,75 @@ public partial class PlatformPlaystation : Platform
 #endif
     private void WriteMemoryDat()
     {
-        // 16 MB more for SaveWizard as ten uncompressed saves may exceed the default length.
-        var buffer = new byte[_usesSaveWizard ? 0x3000000U : MEMORYDAT_LENGTH_TOTAL];
+        var buffer = new byte[_usesSaveWizard ? MEMORYDAT_LENGTH_TOTAL_SAVEWIZARD : MEMORYDAT_LENGTH_TOTAL];
 
-        using (var writer = new BinaryWriter(new MemoryStream(buffer)))
+        using var writer = new BinaryWriter(new MemoryStream(buffer));
+
+        if (_usesSaveWizard)
         {
-            if (_usesSaveWizard)
-            {
-                writer.Write(SAVEWIZARD_HEADER_BINARY);
-                writer.Write(Constants.SAVE_FORMAT_2);
-                writer.Write(MEMORYDAT_OFFSET_META);
-                writer.Write(GetExistingContainers().Count() + 1); // + 1 for AccountData that are always present in memory.dat
-                writer.Write(MEMORYDAT_LENGTH_TOTAL);
+            writer.Write(SAVEWIZARD_HEADER_BINARY);
+            writer.Write(Constants.SAVE_FORMAT_2);
+            writer.Write(MEMORYDAT_OFFSET_META);
+            writer.Write(SaveContainerCollection.Where(i => i.Exists).Count() + 1); // + 1 for AccountData that ia always present in memory.dat
+            writer.Write(MEMORYDAT_LENGTH_TOTAL);
 
-                writer.BaseStream.Seek(MEMORYDAT_OFFSET_META, SeekOrigin.Begin);
-            }
+            writer.Seek(MEMORYDAT_OFFSET_META, SeekOrigin.Begin);
+        }
 
+        // AccountData
+        AddContainerMeta(writer, AccountContainer);
+
+        writer.Seek(META_LENGTH_TOTAL_VANILLA, SeekOrigin.Current);
+
+        // Container
+        foreach (var container in SaveContainerCollection)
+            AddContainerMeta(writer, container);
+
+        writer.Seek(MEMORYDAT_OFFSET_DATA, SeekOrigin.Begin);
+
+        if (_usesSaveWizard)
+        {
             // AccountData
-            {
-#if NETSTANDARD2_0
-                var meta = CreateMeta(AccountContainer, AccountContainer.Extra.Bytes);
-                writer.Write(meta.AsBytes().ToArray());
-#else
-                var meta = CreateMeta(AccountContainer, AccountContainer.Extra.Bytes);
-                writer.Write(meta.AsBytes());
-#endif
-            }
-
-            writer.BaseStream.Seek(META_LENGTH_TOTAL_VANILLA, SeekOrigin.Current);
+            AddSaveWizardContainer(writer, AccountContainer);
 
             // Container
-            foreach (var container in SaveContainerCollection)
+            foreach (var container in SaveContainerCollection.Where(i => i.Exists))
+                AddSaveWizardContainer(writer, container);
+
+            buffer = buffer.AsSpan().Slice(0, (int)(writer.BaseStream.Position)).ToArray();
+        }
+        else
+        {
+            // AccountData
+            writer.Write(AccountContainer.Extra.Bytes!);
+
+            // Container
+            foreach (var container in SaveContainerCollection.Where(i => i.Exists))
             {
-#if NETSTANDARD2_0
-                var meta = CreateMeta(container, container.Extra.Bytes);
-                writer.Write(meta.AsBytes().ToArray());
-#else
-                var meta = CreateMeta(container, container.Extra.Bytes);
-                writer.Write(meta.AsBytes());
-#endif
-            }
-
-            writer.BaseStream.Seek(MEMORYDAT_OFFSET_DATA, SeekOrigin.Begin);
-
-            if (_usesSaveWizard)
-            {
-                // AccountData
-                writer.Write(SAVEWIZARD_HEADER_BINARY);
-                writer.Write(AccountContainer.Extra.Bytes!);
-
-                // Container
-                foreach (var container in GetExistingContainers())
-                {
-                    writer.Write(SAVEWIZARD_HEADER_BINARY);
-                    writer.Write(container.Extra.Bytes!);
-                }
-
-                buffer = buffer.AsSpan().Slice(0, (int)(writer.BaseStream.Position)).ToArray();
-            }
-            else
-            {
-                // AccountData
-                writer.Write(AccountContainer.Extra.Bytes!);
-
-                // Container
-                foreach (var container in SaveContainerCollection)
-                {
-                    writer.BaseStream.Seek(MEMORYDAT_OFFSET_DATA_CONTAINER + (container.CollectionIndex * MEMORYDAT_LENGTH_CONTAINER), SeekOrigin.Begin);
-
-                    if (container.Exists)
-                    {
-                        writer.Write(container.Extra.Bytes!);
-                    }
-                }
+                writer.Seek(container.Extra.PlaystationOffset!.Value, SeekOrigin.Begin);
+                writer.Write(container.Extra.Bytes!);
             }
         }
 
         // Write and refresh the memory.dat file.
-        File.WriteAllBytes(_memorydat!.FullName, buffer);
+        _memorydat!.WriteAllBytes(buffer);
         _memorydat!.Refresh();
+    }
+
+    private void AddContainerMeta(BinaryWriter writer, Container container)
+    {
+        var meta = CreateMeta(container, container.Extra.Bytes);
+#if NETSTANDARD2_0
+        writer.Write(meta.AsBytes().ToArray());
+#else
+        writer.Write(meta.AsBytes());
+#endif
+    }
+
+    private static void AddSaveWizardContainer(BinaryWriter writer, Container container)
+    {
+        writer.Write(SAVEWIZARD_HEADER_BINARY);
+        writer.Write(container.Extra.Bytes!);
     }
 
     #endregion
@@ -762,18 +692,17 @@ public partial class PlatformPlaystation : Platform
         }
 
         foreach (var (Source, Destination) in operationData)
-        {
             if (!Source.Exists)
             {
                 Delete(Destination, false);
             }
-            else if (Destination.Exists || !Destination.Exists && CanCreate)
+            else if (Destination.Exists || (!Destination.Exists && CanCreate))
             {
                 if (!Source.IsLoaded)
                     BuildContainerFull(Source);
 
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -789,23 +718,16 @@ public partial class PlatformPlaystation : Platform
                 Destination.SaveVersion = Source.SaveVersion;
 
                 // Update bytes in platform extra as it is what will be written later.
+                // Could also be done in CopyPlatformExtra but here we do not need to override another method.
                 Destination.Extra = Destination.Extra with
                 {
                     Bytes = CreateData(Destination).ToArray(),
+                    LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now,
                 };
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
-        }
-        //else
-        //    continue;
 
-        UpdateUserIdentification();
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion
@@ -814,32 +736,29 @@ public partial class PlatformPlaystation : Platform
 
     protected override void Delete(IEnumerable<Container> containers, bool write)
     {
-        Guard.IsTrue(CanDelete);
-
         if (_usesSaveStreaming)
         {
             base.Delete(containers, write);
+            return;
         }
-        else
+
+        Guard.IsTrue(CanDelete);
+
+        DisableWatcher();
+
+        foreach (var container in containers)
         {
-            DisableWatcher();
+            container.Reset();
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_006;
 
-            foreach (var container in containers)
-            {
-                container.Reset();
-                container.IncompatibilityTag = Constants.INCOMPATIBILITY_006;
-
-                // Set afterwards again to make sure it is set to false.
-                container.Exists = false;
-            }
-
-            if (write)
-            {
-                WriteMemoryDat();
-            }
-
-            EnableWatcher();
+            // Set afterwards again to make sure it is set to false.
+            container.Exists = false;
         }
+
+        if (write)
+            WriteMemoryDat();
+
+        EnableWatcher();
     }
 
     #endregion
@@ -851,17 +770,14 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveStreaming)
         {
             base.Move(containerOperationData, write);
+            return;
         }
-        else
-        {
-            Copy(containerOperationData, false);
-            Delete(containerOperationData.Select(i => i.Source), false);
 
-            if (write)
-            {
-                WriteMemoryDat();
-            }
-        }
+        Copy(containerOperationData, false);
+        Delete(containerOperationData.Select(i => i.Source), false);
+
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion
@@ -872,71 +788,67 @@ public partial class PlatformPlaystation : Platform
     {
         if (_usesSaveStreaming)
         {
-            base.Move(containerOperationData, write);
+            base.Swap(containerOperationData, write);
+            return;
         }
-        else
+
+        // Make sure everything can be swapped.
+        foreach (var (Source, Destination) in containerOperationData.Where(i => i.Source.Exists && i.Destination.Exists))
         {
-            // Make sure everything can be swapped.
-            foreach (var (Source, Destination) in containerOperationData.Where(i => i.Source.Exists && i.Destination.Exists))
-            {
-                if (!Source.IsLoaded)
-                    BuildContainerFull(Source);
+            if (!Source.IsLoaded)
+                BuildContainerFull(Source);
 
-                if (!Destination.IsLoaded)
-                    BuildContainerFull(Destination);
+            if (!Destination.IsLoaded)
+                BuildContainerFull(Destination);
 
-                if (!Source.IsCompatible || !Destination.IsCompatible)
-                    throw new InvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} / {Destination.IncompatibilityTag}");
-            }
-
-            foreach (var (Source, Destination) in containerOperationData)
-            {
-                if (Source.Exists)
-                {
-                    // Source and Destination exists. Swap.
-                    if (Destination.Exists)
-                    {
-                        // Cache.
-                        var jsonObject = Destination.GetJsonObject();
-                        var writeTime = Destination.LastWriteTime;
-
-                        // Write Source to Destination.
-                        Destination.LastWriteTime = Source.LastWriteTime;
-                        Destination.SetJsonObject(Source.GetJsonObject());
-                        RebuildContainerFull(Destination);
-
-                        // Write Destination to Source.
-                        Destination.LastWriteTime = writeTime;
-                        Source.SetJsonObject(jsonObject);
-                        RebuildContainerFull(Source);
-                    }
-                    // Source exists only. Move to Destination.
-                    else
-                    {
-                        Move(Source, Destination, false);
-                    }
-                }
-                // Destination exists only. Move to Source.
-                else if (Destination.Exists)
-                {
-                    Move(Destination, Source, false);
-                }
-            }
-
-            UpdateUserIdentification();
-
-            if (write)
-            {
-                WriteMemoryDat();
-            }
+            if (!Source.IsCompatible || !Destination.IsCompatible)
+                ThrowHelper.ThrowInvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} >> {Destination.IncompatibilityTag}");
         }
+
+        foreach (var (Source, Destination) in containerOperationData)
+        {
+            if (Source.Exists)
+            {
+                // Source and Destination exists. Swap.
+                if (Destination.Exists)
+                {
+                    // Keep a copy to be able to set Source correctly after Destination is done.
+                    var copy = Common.DeepCopy(Destination);
+
+                    // Write Source to Destination.
+                    Destination.LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now;
+                    Destination.SaveVersion = Source.SaveVersion;
+                    Destination.SetJsonObject(Source.GetJsonObject());
+                    CopyPlatformExtra(Destination, Source);
+                    RebuildContainerFull(Destination);
+
+                    // Write Destination to Source.
+                    Source.LastWriteTime = copy.LastWriteTime ?? DateTimeOffset.Now;
+                    Source.SaveVersion = copy.SaveVersion;
+                    Source.SetJsonObject(copy.GetJsonObject());
+                    CopyPlatformExtra(Source, copy);
+                    RebuildContainerFull(Source);
+                }
+                // Source exists only. Move to Destination.
+                else
+                    Move(Source, Destination, false);
+            }
+            // Destination exists only. Move to Source.
+            else if (Destination.Exists)
+                Move(Destination, Source, false);
+        }
+
+        UpdateUserIdentification();
+
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion
 
     #region Transfer
 
-    protected override void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex, bool write)
+    protected override void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
     {
         if (_usesSaveStreaming)
         {
@@ -944,14 +856,12 @@ public partial class PlatformPlaystation : Platform
             return;
         }
 
-        if (_preparedForTransfer != destinationSlotIndex)
-            PrepareTransferDestination(destinationSlotIndex);
+        PrepareTransferDestination(destinationSlotIndex);
 
         if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
-            throw new InvalidOperationException("Cannot transfer as at least one user identification is not complete.");
+            ThrowHelper.ThrowInvalidOperationException("Cannot transfer as at least one user identification is not complete.");
 
-        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(GetSlotContainers(destinationSlotIndex), (Source, Destination) => (Source, Destination)))
-        {
+        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(SaveContainerCollection.Where(i => i.SlotIndex == destinationSlotIndex), (Source, Destination) => (Source, Destination)))
             if (!Source.Exists)
             {
                 Delete(Destination, false);
@@ -959,7 +869,10 @@ public partial class PlatformPlaystation : Platform
             else if (Destination.Exists || !Destination.Exists && CanCreate)
             {
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
+
+                // Needs to be set first to use the correct obfuscation sate.
+                Destination.Platform = this;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -973,25 +886,21 @@ public partial class PlatformPlaystation : Platform
                 // Additional properties required to properly rebuild the container.
                 Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
+                Destination.UserIdentification = PlatformUserIdentification; // update to match new platform
 
                 // Update bytes in platform extra as it is what will be written later.
+                // Could also be done in CopyPlatformExtra but here we do not need to override another method.
                 Destination.Extra = Destination.Extra with
                 {
                     Bytes = CreateData(Destination).ToArray(),
+                    LastWriteTime = Source.LastWriteTime ?? DateTimeOffset.Now,
                 };
 
                 TransferOwnership(Destination, sourceTransferData);
-
-                // This "if" is not really useful in this method but properly implemented nonetheless.
-                if (write)
-                {
-                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
-            //else
-            //    continue;
-        }
+
+        if (write)
+            WriteMemoryDat();
     }
 
     #endregion
@@ -1006,10 +915,9 @@ public partial class PlatformPlaystation : Platform
     private void RefreshContainerCollection()
     {
         for (var metaIndex = 0; metaIndex < Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL; metaIndex++)
-        {
             if (metaIndex == 0)
             {
-                // Reset bytes as trigger to read the file again.
+                // Reset bytes to trigger to read the file again.
                 AccountContainer.Extra = new PlatformExtra
                 {
                     MetaFormat = MetaFormatEnum.Unknown,
@@ -1029,19 +937,17 @@ public partial class PlatformPlaystation : Platform
                     Bytes = null,
                 };
 
-                // Only build full if container was already loaded.
-                if (Settings.LoadingStrategy < LoadingStrategyEnum.Full && !container.IsLoaded)
+                // Only rebuild full if container was already loaded and not synced (to not overwrite pending watcher changes).
+                if (container.IsLoaded)
                 {
-                    RebuildContainerHollow(container);
-                }
-                else
-                {
-                    // Do not rebuild if not synced (to not overwrite pending watcher changes).
                     if (container.IsSynced)
                         RebuildContainerFull(container);
                 }
+                else
+                    RebuildContainerHollow(container);
+
+                GenerateBackupCollection(container);
             }
-        }
     }
 
     #endregion

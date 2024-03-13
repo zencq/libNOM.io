@@ -6,7 +6,7 @@ namespace libNOM.io.Extensions;
 internal static class ZipArchiveExtensions
 {
     /// <summary>
-    /// Reads the binary of a zip archive entry.
+    /// Reads the specified entry without extracting it.
     /// </summary>
     /// <param name="self"></param>
     /// <param name="entryName"></param>
@@ -14,16 +14,17 @@ internal static class ZipArchiveExtensions
     /// <returns></returns>
     internal static bool ReadEntry(this ZipArchive self, string entryName, out byte[] result)
     {
-        var entry = self.GetEntry(entryName);
-        if (entry is null)
+        if (self.GetEntry(entryName) is ZipArchiveEntry entry)
         {
-            result = [];
-            return false;
+            using var memory = new MemoryStream();
+            using var stream = entry.Open();
+
+            stream.CopyTo(memory);
+            result = memory.ToArray();
+            return true;
         }
 
-        using var stream = new MemoryStream();
-        entry.Open().CopyTo(stream);
-        result = stream.ToArray();
-        return true;
+        result = [];
+        return false;
     }
 }

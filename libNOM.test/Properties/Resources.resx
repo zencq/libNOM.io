@@ -118,8 +118,23 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="TESTSUITE_ARCHIVE" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\TESTSUITE_ARCHIVE.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="TESTSUITE_ARCHIVE_GAMEMODE" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TESTSUITE_ARCHIVE_GAMEMODE.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="TESTSUITE_ARCHIVE_PLATFORM_GOG" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TESTSUITE_ARCHIVE_PLATFORM_GOG.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="TESTSUITE_ARCHIVE_PLATFORM_MICROSOFT" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TESTSUITE_ARCHIVE_PLATFORM_MICROSOFT.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="TESTSUITE_ARCHIVE_PLATFORM_PLAYSTATION" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TESTSUITE_ARCHIVE_PLATFORM_PLAYSTATION.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="TESTSUITE_ARCHIVE_PLATFORM_STEAM" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="TESTSUITE_ARCHIVE_PLATFORM_SWITCH" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TESTSUITE_ARCHIVE_PLATFORM_SWITCH.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="TESTSUITE_PASSWORD" xml:space="preserve">
     <value>{{ secrets.TESTSUITE_PASSWORD }}</value>

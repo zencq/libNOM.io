@@ -26,5 +26,11 @@ public enum SeasonEnum : ushort
     Utopia, // 9th
     Singularity, // 10th
     Voyagers, // 11th
+    UtopiaRedux,
+    SingularityRedux,
+    CartographersRedux2023,
+    VoyagersRedux,
+    OmegaExperimental, // was part of a trial before the actual release
+    Omega, // 12th
     Future,
 }

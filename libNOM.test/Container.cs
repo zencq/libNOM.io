@@ -1,27 +1,33 @@
-﻿using libNOM.io;
-using libNOM.io.Enums;
+﻿using CommunityToolkit.Diagnostics;
+
+using libNOM.io;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Newtonsoft.Json.Linq;
 
 namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class ContainerTest : CommonTestInitializeCleanup
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_GAMEMODE.zip")]
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip")]
+public class ContainerTest : CommonTestClass
 {
-    protected static readonly int[] GALACTICADDRESS_INDICES = new[] { 2, 0, 1 };
-    protected const string GALACTICADDRESS_JSON_PATH = "PlayerStateData.UniverseAddress.GalacticAddress";
+    protected static readonly int[] GALACTICADDRESS_INDICES = [2, 0, 1];
+    protected const string GALACTICADDRESS_JSONPATH_KEY = "GALACTICADDRESS";
+    protected static readonly string[] GALACTICADDRESS_JSONPATH = ["", "PlayerStateData.UniverseAddress.GalacticAddress", "", "{0}.PlayerStateData.UniverseAddress.GalacticAddress"];
 
-    protected static readonly int[] VALIDSLOTINDICES_INDICES = new[] { 2, 3, 1 };
-    protected const string VALIDSLOTINDICES_JSON_PATH = "PlayerStateData.Inventory.ValidSlotIndices";
+    protected static readonly int[] VALIDSLOTINDICES_INDICES = [2, 3, 1];
+    protected const string VALIDSLOTINDICES_JSONPATH_KEY = "VALIDSLOTINDICES";
+    protected static readonly string[] VALIDSLOTINDICES_JSONPATH = ["", "PlayerStateData.Inventory.ValidSlotIndices", "", "{0}.PlayerStateData.Inventory.ValidSlotIndices"];
 
     [TestMethod]
-    public void T01_Backup()
+    public void T00_Backup()
     {
         // Arrange
         var backupCreatedCallback = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -29,7 +35,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
         var pattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
 
         container.BackupCreatedCallback += (backup) =>
@@ -48,7 +54,7 @@ public class ContainerTest : CommonTestInitializeCleanup
         var backups2Container = container.BackupCollection.Count;
         var backups2File = Directory.GetFiles(settings.Backup, pattern).Length;
 
-        var backups2ContainerNew = new PlatformSteam(path, settings).GetSaveContainer(0)!.BackupCollection.Count;
+        var backups2ContainerNew = GetOneSaveContainer(new PlatformSteam(path, settings), 0).BackupCollection.Count;
         var backups2FileAfter = Directory.GetFiles(settings.Backup, pattern).Length;
 
         // Assert
@@ -63,11 +69,11 @@ public class ContainerTest : CommonTestInitializeCleanup
     }
 
     [TestMethod]
-    public void T02_Restore()
+    public void T01_Restore()
     {
         // Arrange
         var backupRestoredCallback = false;
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -75,13 +81,15 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
+
         container.BackupRestoredCallback += () =>
         {
             backupRestoredCallback = true;
         };
 
         platform.Backup(container);
+
         var backup = container.BackupCollection.First();
         platform.Restore(backup);
 
@@ -96,26 +104,29 @@ public class ContainerTest : CommonTestInitializeCleanup
     public void T10_JsonValue_Path()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
             UseMapping = true,
         };
 
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[UNITS_JSONPATH_KEY] = UNITS_JSONPATH;
+
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
-        var units1 = container.GetJsonValue<int>(UNITS_JSON_PATH);
+        var units1 = container.GetJsonValue<int>(UNITS_JSONPATH_KEY);
 
-        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSON_PATH);
-        var units2 = container.GetJsonValue<int>(UNITS_JSON_PATH);
+        container.SetJsonValue(UNITS_NEW_AMOUNT, UNITS_JSONPATH_KEY);
+        var units2 = container.GetJsonValue<int>(UNITS_JSONPATH_KEY);
 
         // Assert
         Assert.IsFalse(container.IsSynced);
-        Assert.AreEqual(-1221111157, units1); // 3073856139
+        Assert.AreEqual(-1221111157, units1); // 3.073.856.139
         Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
     }
 
@@ -123,7 +134,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     public void T11_JsonValue_Digits()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -132,7 +143,8 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
         var units1 = container.GetJsonValue<int>(UNITS_INDICES);
@@ -142,7 +154,7 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Assert
         Assert.IsFalse(container.IsSynced);
-        Assert.AreEqual(-1221111157, units1); // 3073856139
+        Assert.AreEqual(-1221111157, units1); // 3.073.856.139
         Assert.AreEqual(UNITS_NEW_AMOUNT, units2);
     }
 
@@ -150,7 +162,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     public void T20_SaveName()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
+        var path = GetCombinedPath("GameMode", "Custom");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -158,7 +170,8 @@ public class ContainerTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(16)!;
+        var container = platform.GetSaveContainer(16);
+        Guard.IsNotNull(container);
 
         var name0 = container.SaveName;
 
@@ -186,23 +199,26 @@ public class ContainerTest : CommonTestInitializeCleanup
             { "SolarSystemIndex", 4 },
             { "PlanetIndex", 4 },
         };
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
             UseMapping = true,
         };
 
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[GALACTICADDRESS_JSONPATH_KEY] = GALACTICADDRESS_JSONPATH;
+
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
-        var galacticAddress_A1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSON_PATH)!);
+        var galacticAddress_A1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSONPATH_KEY)!);
         var galacticAddress_A2 = container.GetJsonValue<JObject>(GALACTICADDRESS_INDICES)!;
 
-        container.SetJsonValue(galacticAddress, GALACTICADDRESS_JSON_PATH);
-        var galacticAddress_B1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSON_PATH)!);
+        container.SetJsonValue(galacticAddress, GALACTICADDRESS_JSONPATH_KEY);
+        var galacticAddress_B1 = (JObject)(container.GetJsonToken(GALACTICADDRESS_JSONPATH_KEY)!);
         var galacticAddress_B2 = container.GetJsonValue<JObject>(GALACTICADDRESS_INDICES)!;
 
         // Assert
@@ -225,7 +241,7 @@ public class ContainerTest : CommonTestInitializeCleanup
     public void T31_SetJArray()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -233,16 +249,19 @@ public class ContainerTest : CommonTestInitializeCleanup
         };
         var validSlotIndices = new JArray { new JObject { { "X", 0 }, { "Y", 0 } } };
 
+        libNOM.io.Global.Constants.JSONPATH_EXTENSION[VALIDSLOTINDICES_JSONPATH_KEY] = VALIDSLOTINDICES_JSONPATH;
+
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
-        var validSlotIndices_A1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSON_PATH)!);
+        var validSlotIndices_A1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSONPATH_KEY)!);
         var validSlotIndices_A2 = container.GetJsonValue<JArray>(VALIDSLOTINDICES_INDICES)!;
 
-        container.SetJsonValue(validSlotIndices, VALIDSLOTINDICES_JSON_PATH);
-        var validSlotIndices_B1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSON_PATH)!);
+        container.SetJsonValue(validSlotIndices, VALIDSLOTINDICES_JSONPATH_KEY);
+        var validSlotIndices_B1 = (JArray)(container.GetJsonToken(VALIDSLOTINDICES_JSONPATH_KEY)!);
         var validSlotIndices_B2 = container.GetJsonValue<JArray>(VALIDSLOTINDICES_INDICES)!;
 
         // Assert

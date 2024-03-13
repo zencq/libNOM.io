@@ -1,143 +1,81 @@
-﻿using libNOM.io;
-using libNOM.io.Enums;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class GameModeTest : CommonTestInitializeCleanup
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_GAMEMODE.zip")]
+public class GameModeTest : CommonTestClass
 {
     [TestMethod]
-    public void T01_VanillaHollow()
+    public void T00_VanillaHollow()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
+        //  4 //  5.hg // 3Auto
+        // 14 // 15.hg // 8Auto
+        //  8 //  9.hg // 5Auto
+        // 12 // 13.hg // 7Auto
+        var containerIndices = new int[] { 4, 14, 8, 12 };
+        var loadingStrategy = LoadingStrategyEnum.Hollow;
+        var path = GetCombinedPath("GameMode", "Vanilla");
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
-        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-
         // Assert
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Creative, GetPrivateFieldOrProperty<PresetGameModeEnum>(creative, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Survival, GetPrivateFieldOrProperty<PresetGameModeEnum>(survival, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
-
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
+        TestCommonGameModeVanilla(path, loadingStrategy, containerIndices);
     }
 
     [TestMethod]
-    public void T02_VanillaFull()
+    public void T01_VanillaFull()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Vanilla");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
+        //  4 //  5.hg // 3Auto
+        // 14 // 15.hg // 8Auto
+        //  8 //  9.hg // 5Auto
+        // 12 // 13.hg // 7Auto
+        var containerIndices = new int[] { 4, 14, 8, 12 };
+        var loadingStrategy = LoadingStrategyEnum.Full;
+        var path = GetCombinedPath("GameMode", "Vanilla");
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
-        var normal = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var creative = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var survival = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-        var permadeath = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-
         // Assert
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Creative, GetPrivateFieldOrProperty<PresetGameModeEnum>(creative, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Survival, GetPrivateFieldOrProperty<PresetGameModeEnum>(survival, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
-
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
+        TestCommonGameModeVanilla(path, loadingStrategy, containerIndices);
     }
 
     [TestMethod]
-    public void T03_CustomHollow()
+    public void T02_CustomHollow()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Hollow,
-        };
+        // 16 // 17.hg //  9Auto
+        //  4 //  5.hg //  3Auto
+        // 12 // 13.hg //  7Auto
+        // 18 // 19.hg // 10Auto
+        // 14 // 15.hg //  8Auto
+        //  8 //  9.hg //  5Auto
+        var containerIndices = new int[] { 16, 4, 12, 18, 14, 8 };
+        var loadingStrategy = LoadingStrategyEnum.Hollow;
+        var path = GetCombinedPath("GameMode", "Custom");
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
-        var normal = platform.GetSaveContainer(16)!; // 17.hg // 9Auto
-        var creative = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var survival = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-        var relaxed = platform.GetSaveContainer(18)!; // 19.hg // 10Auto
-        var permadeath = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var seasonal = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-
         // Assert
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(creative, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(survival, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(relaxed, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Seasonal, GetPrivateFieldOrProperty<PresetGameModeEnum>(seasonal, "GameMode"));
-
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Relaxed, relaxed.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, seasonal.GameDifficulty);
+        TestCommonGameModeCustom(path, loadingStrategy, containerIndices);
     }
 
     [TestMethod]
-    public void T04_CustomFull()
+    public void T03_CustomFull()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "GameMode", "Custom");
-        var settings = new PlatformSettings
-        {
-            LoadingStrategy = LoadingStrategyEnum.Full,
-        };
+        // 16 // 17.hg //  9Auto
+        //  4 //  5.hg //  3Auto
+        // 12 // 13.hg //  7Auto
+        // 18 // 19.hg // 10Auto
+        // 14 // 15.hg //  8Auto
+        //  8 //  9.hg //  5Auto
+        var containerIndices = new int[] { 16, 4, 12, 18, 14, 8 };
+        var loadingStrategy = LoadingStrategyEnum.Full;
+        var path = GetCombinedPath("GameMode", "Custom");
 
         // Act
-        var platform = new PlatformSteam(path, settings);
-
-        var normal = platform.GetSaveContainer(16)!; // 17.hg // 9Auto
-        var creative = platform.GetSaveContainer(4)!; // 5.hg // 3Auto
-        var survival = platform.GetSaveContainer(12)!; // 13.hg // 7Auto
-        var relaxed = platform.GetSaveContainer(18)!; // 19.hg // 10Auto
-        var permadeath = platform.GetSaveContainer(14)!; // 15.hg // 8Auto
-        var seasonal = platform.GetSaveContainer(8)!; // 9.hg // 5Auto
-
         // Assert
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(normal, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(creative, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(survival, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Normal, GetPrivateFieldOrProperty<PresetGameModeEnum>(relaxed, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Permadeath, GetPrivateFieldOrProperty<PresetGameModeEnum>(permadeath, "GameMode"));
-        Assert.AreEqual(PresetGameModeEnum.Seasonal, GetPrivateFieldOrProperty<PresetGameModeEnum>(seasonal, "GameMode"));
-
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, normal.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Creative, creative.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Survival, survival.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Relaxed, relaxed.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Permadeath, permadeath.GameDifficulty);
-        Assert.AreEqual(DifficultyPresetTypeEnum.Normal, seasonal.GameDifficulty);
+        TestCommonGameModeCustom(path, loadingStrategy, containerIndices);
     }
 }

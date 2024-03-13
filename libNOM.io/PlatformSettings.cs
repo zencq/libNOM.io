@@ -59,7 +59,7 @@ public record class PlatformSettings
     public bool Watcher { get; set; }
 
     /// <summary>
-    /// Whether to write a <see cref="Container"/> always or only if unsynced.
+    /// Whether to write a <see cref="Container"/> always or only if not synced.
     /// Default: false
     /// </summary>
     public bool WriteAlways { get; set; }
@@ -116,7 +116,7 @@ public record class PlatformSettings
     public bool Watcher { get; init; }
 
     /// <summary>
-    /// Whether to write a <see cref="Container"/> always or only if unsynced.
+    /// Whether to write a <see cref="Container"/> always or only if not synced.
     /// Default: false
     /// </summary>
     public bool WriteAlways { get; init; }

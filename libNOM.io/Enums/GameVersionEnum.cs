@@ -33,7 +33,7 @@ public enum GameVersionEnum : uint
     Beachhead = 340,
     Prisms = 350,
     [Description(nameof(Prisms))]
-    PrismsWithBytebeatAuthor = 351,
+    PrismsWithByteBeatAuthor = 351,
     Frontiers = 360,
     Emergence = 370,
     Sentinel = 380,
@@ -54,4 +54,7 @@ public enum GameVersionEnum : uint
     Mac = 425,
     Singularity = 430,
     Echoes = 440,
+    Omega = 450,
+    [Description(nameof(Omega))]
+    OmegaWithV2 = 452,
 }

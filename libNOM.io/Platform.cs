@@ -1,17 +1,20 @@
-﻿using CommunityToolkit.Diagnostics;
-using CommunityToolkit.HighPerformance;
-using LazyCache;
-using libNOM.io.Interfaces;
-using libNOM.map;
-using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
-using System.Text.RegularExpressions;
+
+using CommunityToolkit.Diagnostics;
+using CommunityToolkit.HighPerformance;
+
+using LazyCache;
+
+using libNOM.io.Interfaces;
+
+using Microsoft.Extensions.Caching.Memory;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace libNOM.io;
 
@@ -23,19 +26,19 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 {
     #region Constant
 
-    internal virtual int COUNT_SAVE_SLOTS { get; } = 15; // overrideable for compatibility with old PlayStation format
-    internal virtual int COUNT_SAVES_PER_SLOT { get; } = 2;
+    protected virtual int COUNT_SAVE_SLOTS { get; } = 15; // overridable for compatibility with old PlayStation format
+    private int COUNT_SAVES_PER_SLOT { get; } = 2;
     internal int COUNT_SAVES_TOTAL => COUNT_SAVE_SLOTS * COUNT_SAVES_PER_SLOT; // { get; }
 
-    protected abstract int META_LENGTH_TOTAL_VANILLA { get; }
-    protected abstract int META_LENGTH_TOTAL_WAYPOINT { get; }
+    protected virtual int META_LENGTH_KNOWN { get; } = -1; // in fact, everything is known, but named as such because everything after that can contain additional junk data
+    internal abstract int META_LENGTH_TOTAL_VANILLA { get; }
+    internal abstract int META_LENGTH_TOTAL_WAYPOINT { get; }
 
     #endregion
 
     #region Field
 
     protected readonly IAppCache _cache = new CachingService();
-    protected int _preparedForTransfer = -1;
     protected readonly LazyCacheEntryOptions _options = new();
     protected readonly FileSystemWatcher _watcher = new();
 
@@ -57,25 +60,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public DirectoryInfo Location { get; protected set; }
 
-    public abstract PlatformEnum PlatformEnum { get; }
-
-    public UserIdentificationData PlatformUserIdentification { get; } = new();
-
     public PlatformSettings Settings { get; protected set; }
 
     // protected //
 
     protected int AnchorFileIndex { get; set; } = -1;
-
-    protected abstract string[] PlatformAnchorFileGlob { get; }
-
-    protected abstract Regex[] PlatformAnchorFileRegex { get; }
-
-    protected abstract string? PlatformArchitecture { get; }
-
-    protected abstract string? PlatformProcessPath { get; }
-
-    protected abstract string PlatformToken { get; }
 
     #endregion
 
@@ -91,7 +80,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public abstract bool CanDelete { get; }
 
-    public virtual bool Exists => Location?.Exists == true; // { get; }
+    public virtual bool Exists => Location?.Exists ?? false; // { get; }
 
     public virtual bool HasAccountData => AccountContainer.Exists && AccountContainer.IsCompatible; // { get; }
 
@@ -122,7 +111,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         }
     }
 
-    public virtual bool IsValid => PlatformAnchorFileRegex.ContainsIndex(AnchorFileIndex); // { get; }
+    public virtual bool IsValid => PlatformAnchorFilePattern.ContainsIndex(AnchorFileIndex); // { get; }
 
     public abstract bool RestartToApply { get; }
 
@@ -132,123 +121,39 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    #region Platform Indicator
+
+    // public //
+
+    public abstract PlatformEnum PlatformEnum { get; }
+
+    public UserIdentification PlatformUserIdentification { get; } = new();
+
+    // protected //
+
+    protected abstract string[] PlatformAnchorFilePattern { get; }
+
+    protected abstract string? PlatformArchitecture { get; }
+
+    protected abstract string? PlatformProcessPath { get; }
+
+    protected abstract string PlatformToken { get; }
+
     #endregion
+
+    #endregion
+
+    // //
 
     #region Getter
 
     // public //
 
-    public int GetMaximumSlots() => COUNT_SAVE_SLOTS;
+    public Container? GetAccountContainer() => AccountContainer;
 
-    // protected //
+    public Container? GetSaveContainer(int collectionIndex) => SaveContainerCollection.FirstOrDefault(i => i.CollectionIndex == collectionIndex);
 
-    protected int GetMetaSize(Container container)
-    {
-        return container.MetaFormat switch
-        {
-            MetaFormatEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
-            _ => META_LENGTH_TOTAL_VANILLA,
-        };
-    }
-
-    // private //
-
-    /// <summary>
-    /// Creates an unique identifier for bases based on its location.
-    /// </summary>
-    /// <param name="jsonObject"></param>
-    /// <returns></returns>
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
-    private static string GetBaseIdentifier(JObject jsonObject)
-    {
-#if NETSTANDARD2_0_OR_GREATER
-        var galacticAddress = jsonObject.GetValue<string>("oZw", "GalacticAddress")!;
-        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
-#else
-        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("oZw", "GalacticAddress");
-        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Slice(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
-#endif
-
-        var positionX = jsonObject.GetValue<int>("wMC[0]", "Position[0]");
-        var positionY = jsonObject.GetValue<int>("wMC[1]", "Position[1]");
-        var positionZ = jsonObject.GetValue<int>("wMC[2]", "Position[2]");
-
-        return $"{galacticInteger}{positionX:+000000;-000000}{positionY:+000000;-000000}{positionZ:+000000;-000000}";
-    }
-
-    // //
-
-    #region Container
-
-    // public //
-
-    public Container GetAccountContainer()
-    {
-        return AccountContainer;
-    }
-
-    public Container? GetSaveContainer(int collectionIndex)
-    {
-        if (SaveContainerCollection.ContainsIndex(collectionIndex))
-            return SaveContainerCollection[collectionIndex];
-
-        return null;
-    }
-
-    public IEnumerable<Container> GetExistingContainers()
-    {
-        return SaveContainerCollection.Where(i => i.Exists);
-    }
-
-    public IEnumerable<Container> GetLoadedContainers()
-    {
-        return SaveContainerCollection.Where(i => i.IsLoaded);
-    }
-
-    public IEnumerable<Container> GetSlotContainers(int slotIndex)
-    {
-        return SaveContainerCollection.Where(i => i.SlotIndex == slotIndex);
-    }
-
-    public IEnumerable<Container> GetUnsyncedContainers()
-    {
-        return SaveContainerCollection.Where(i => i.IsLoaded && !i.IsSynced);
-    }
-
-    public IEnumerable<Container> GetWatcherContainers()
-    {
-        return SaveContainerCollection.Where(i => i.HasWatcherChange);
-    }
-
-    // protected //
-
-    /// <summary>
-    /// Gets all <see cref="Container"/> affected by one cache eviction.
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name)
-    {
-        return SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
-    }
-
-    #endregion
-
-    #region Path
-
-    // public //
-
-    public string GetBackupPath()
-    {
-        return Path.GetFullPath(Settings.Backup);
-    }
-
-    public string GetDownloadPath()
-    {
-        return Path.GetFullPath(Settings.Download);
-    }
+    public IEnumerable<Container> GetSaveContainers() => SaveContainerCollection;
 
     // protected //
 
@@ -260,23 +165,43 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected int GetAnchorFileIndex(DirectoryInfo? directory)
     {
         if (directory is not null)
-        {
-            for (var i = 0; i < PlatformAnchorFileRegex.Length; i++)
-            {
-                if (directory.GetFiles().Any(j => PlatformAnchorFileRegex[i].IsMatch(j.Name)))
+            for (var i = 0; i < PlatformAnchorFilePattern.Length; i++)
+                if (directory.GetFiles(PlatformAnchorFilePattern[i]).Length != 0)
                     return i;
-            }
-        }
+
         return -1;
+    }
+
+    /// <summary>
+    /// Gets all <see cref="Container"/> affected by one cache eviction.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    protected virtual IEnumerable<Container> GetCacheEvictionContainers(string name)
+    {
+        return SaveContainerCollection.Where(i => i.DataFile?.Name.Equals(name, StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    // private //
+
+    private static IEnumerable<SaveContextQueryEnum> GetContexts(JObject jsonObject)
+    {
+        // Check first whether there can be context keys.
+        if (Constants.JSONPATH["ACTIVE_CONTEXT"].Any(jsonObject.ContainsKey))
+        {
+            // Then return all contexts that are in the specified JSON.
+            if (Constants.JSONPATH["BASE_CONTEXT"].Any(jsonObject.ContainsKey))
+                yield return SaveContextQueryEnum.Main;
+            if (Constants.JSONPATH["EXPEDITION_CONTEXT"].Any(jsonObject.ContainsKey))
+                yield return SaveContextQueryEnum.Season;
+        }
+        else
+            yield return SaveContextQueryEnum.DontCare;
     }
 
     #endregion
 
-    #endregion
-
     #region Setter
-
-    // public //
 
     /// <summary>
     /// Updates the instance with a new configuration. If null is passed, the settings will be reset to default.
@@ -284,7 +209,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="platformSettings"></param>
     public void SetSettings(PlatformSettings? platformSettings)
     {
-        // Cache old strategy first to be able to properly react to the change.
+        // Cache old values first to be able to properly react to the change.
+        var oldMapping = Settings.UseMapping;
         var oldStrategy = Settings.LoadingStrategy;
 
         // Update.
@@ -300,17 +226,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             DisableWatcher();
         }
         else if (Settings.LoadingStrategy > LoadingStrategyEnum.Empty && oldStrategy == LoadingStrategyEnum.Empty)
-        {
-            GeneratePlatformData();
-        }
-    }
+            GeneratePlatformData(); // calls EnableWatcher()
 
-    // private //
-
-    private static void SetValueIfNullOrEmpty(JObject jsonObject, JToken value, string obfuscated, string deobfuscated)
-    {
-        if (!string.IsNullOrEmpty(jsonObject.GetValue<string>(obfuscated, deobfuscated)))
-            jsonObject.SetValue(value, obfuscated, deobfuscated);
+        // Ensure mapping is updated in the containers.
+        if (Settings.UseMapping != oldMapping)
+            foreach (var container in SaveContainerCollection.Where(i => i.IsLoaded))
+                container.SetJsonObject(container.GetJsonObject());
     }
 
     #endregion
@@ -320,30 +241,15 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     #region Constructor
 
 #pragma warning disable CS8618 // Non-nullable property 'Settings' must contain a non-null value when exiting constructor. Property 'Settings' is set in InitializeComponent.
-    public Platform()
-    {
-        InitializeComponent(null, null);
-    }
+    public Platform() => InitializeComponent(null, null);
 
-    public Platform(string path)
-    {
-        InitializeComponent(new(path), null);
-    }
+    public Platform(string path) => InitializeComponent(new(path), null);
 
-    public Platform(string path, PlatformSettings platformSettings)
-    {
-        InitializeComponent(new(path), platformSettings);
-    }
+    public Platform(string path, PlatformSettings platformSettings) => InitializeComponent(new(path), platformSettings);
 
-    public Platform(DirectoryInfo directory)
-    {
-        InitializeComponent(directory, null);
-    }
+    public Platform(DirectoryInfo directory) => InitializeComponent(directory, null);
 
-    public Platform(DirectoryInfo directory, PlatformSettings platformSettings)
-    {
-        InitializeComponent(directory, platformSettings);
-    }
+    public Platform(DirectoryInfo directory, PlatformSettings platformSettings) => InitializeComponent(directory, platformSettings);
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
 
     /// <summary>
@@ -370,7 +276,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         _watcher.Deleted += OnWatcherEvent;
         _watcher.Renamed += OnWatcherEvent;
 
-        _watcher.Filter = PlatformAnchorFileGlob[AnchorFileIndex];
+        _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex];
         _watcher.Path = Location.FullName;
 
         // Loading
@@ -450,14 +356,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 else if (metaIndex > 1) // skip index 1
                 {
                     var container = CreateContainer(metaIndex);
+
                     if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
-                    {
                         BuildContainerHollow(container);
-                    }
                     else
-                    {
                         BuildContainerFull(container);
-                    }
+
                     GenerateBackupCollection(container);
                     bag.Add(container);
                 }
@@ -469,10 +373,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <inheritdoc cref="CreateContainer(int, PlatformExtra?)"/>
-    internal Container CreateContainer(int metaIndex)
-    {
-        return CreateContainer(metaIndex, null);
-    }
+    internal Container CreateContainer(int metaIndex) => CreateContainer(metaIndex, null);
 
     /// <summary>
     /// Creates a <see cref="Container"/> with basic data.
@@ -503,45 +404,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var binary = LoadContainer(container);
 
         if (container.IsCompatible)
-            ProcessContainerData(container, binary.GetString());
-    }
-
-    /// <summary>
-    /// Deserializes the read data of a <see cref="Container"/> into a JSON object.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="binary"></param>
-    /// <returns></returns>
-    protected virtual JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
-    {
-        JObject? jsonObject;
-        try
-        {
-            jsonObject = binary.GetJson();
-        }
-        catch (Exception ex) when (ex is JsonReaderException or JsonSerializationException)
-        {
-            container.IncompatibilityException = ex;
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;
-            return null;
-        }
-        if (jsonObject is null)
-        {
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_003;
-            return null;
-        }
-
-        if (Settings.UseMapping)
-        {
-            container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
-        }
-        else
-        {
-            // Do deliver a consistent experience, make sure the file is obfuscated if the setting is set to false.
-            Mapping.Obfuscate(jsonObject);
-        }
-
-        return jsonObject;
+            ProcessContainerData(container, binary.GetString(), false);
     }
 
     /// <summary>
@@ -566,7 +429,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             try
             {
-                container.BackupCollection.Add(new(container.MetaIndex)
+                container.BackupCollection.Add(new(container.MetaIndex, this)
                 {
                     DataFile = new(file),
                     GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
@@ -574,16 +437,70 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
                 });
             }
-            catch (FormatException)
-            {
-                // Ignore.
-            }
+            catch (FormatException) { } // ignore
         }
     }
 
     #endregion
 
     #region Load
+
+    public void Load(Container container)
+    {
+        if (container.IsBackup)
+            LoadBackupContainer(container);
+        else
+            LoadSaveContainer(container);
+    }
+
+    /// <summary>
+    /// Loads data of the specified backup.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <exception cref="ArgumentException"/>
+    private void LoadBackupContainer(Container container)
+    {
+        Guard.IsTrue(container.Exists);
+        Guard.IsTrue(container.IsBackup);
+
+        // Load
+        container.ClearIncompatibility();
+
+        using var zipArchive = ZipFile.Open(container.DataFile!.FullName, ZipArchiveMode.Read);
+        if (zipArchive.ReadEntry("data", out var data))
+        {
+            _ = zipArchive.ReadEntry("meta", out var meta);
+
+            // Loads all meta information into the extra property.
+            LoadMeta(container, meta);
+
+            var binary = LoadData(container, data);
+            if (binary.IsEmpty())
+                container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
+            else if (DeserializeContainer(container, binary) is JObject jsonObject)
+                ProcessContainerData(container, jsonObject);
+        }
+    }
+
+    /// <summary>
+    /// Loads data of the specified save.
+    /// </summary>
+    /// <param name="container"></param>
+    private void LoadSaveContainer(Container container)
+    {
+        if (Settings.LoadingStrategy < LoadingStrategyEnum.Current)
+            Settings = Settings with { LoadingStrategy = LoadingStrategyEnum.Current };
+
+        if (Settings.LoadingStrategy == LoadingStrategyEnum.Current && container.IsSave)
+        {
+            // Unloads data by removing the reference to the JSON object.
+            var loadedContainers = SaveContainerCollection.Where(i => i.IsLoaded && !i.Equals(container));
+            foreach (var loadedContainer in loadedContainers)
+                loadedContainer.SetJsonObject(null);
+        }
+
+        BuildContainerFull(container);
+    }
 
     /// <summary>
     /// Loads the save data of a <see cref="Container"/> into a processable format using meta data.
@@ -602,17 +519,41 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             var data = LoadData(container);
             if (data.IsEmpty())
-            {
                 container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-            }
             else
-            {
                 return data;
-            }
         }
 
         container.IncompatibilityTag ??= Constants.INCOMPATIBILITY_006;
-        return Array.Empty<byte>();
+        return [];
+    }
+
+    public void Reload(Container container)
+    {
+        if (container.IsLoaded)
+            RebuildContainerFull(container);
+        else
+            RebuildContainerHollow(container);
+    }
+
+    public void Rebuild(Container container, JObject jsonObject) => ProcessContainerData(container, jsonObject);
+
+    /// <summary>
+    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
+    /// </summary>
+    /// <param name="container"></param>
+    protected void RebuildContainerFull(Container container) => BuildContainerFull(container);
+
+    /// <summary>
+    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by extracting from the string representation.
+    /// </summary>
+    /// <param name="container"></param>
+    protected void RebuildContainerHollow(Container container)
+    {
+        var binary = LoadContainer(container);
+
+        if (container.IsCompatible)
+            ProcessContainerData(container, binary.GetString(), true); // force
     }
 
     /// <inheritdoc cref="LoadMeta(Container, Span{byte})"/>
@@ -632,7 +573,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         // 2. Decrypt
         // 3. Decompress
-        var result = read.IsEmpty() ? Array.Empty<uint>() : DecompressMeta(container, DecryptMeta(container, read));
+        var result = read.IsEmpty() ? [] : DecompressMeta(container, DecryptMeta(container, read));
         // 4. Update Container Information
         UpdateContainerWithMetaInformation(container, result.AsBytes(), result);
     }
@@ -644,10 +585,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual Span<byte> ReadMeta(Container container)
     {
-        if (container.MetaFile?.Exists != true)
-            return Array.Empty<byte>();
-
-        return File.ReadAllBytes(container.MetaFile!.FullName);
+        return container.MetaFile?.ReadAllBytes() ?? [];
     }
 
     /// <summary>
@@ -714,10 +652,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual ReadOnlySpan<byte> ReadData(Container container)
     {
-        if (container.DataFile?.Exists != true)
-            return Array.Empty<byte>();
-
-        return File.ReadAllBytes(container.DataFile!.FullName);
+        return container.DataFile?.ReadAllBytes() ?? [];
     }
 
     /// <summary>
@@ -743,7 +678,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return data;
 
         var offset = 0;
-        ReadOnlySpan<byte> result = Array.Empty<byte>();
+        ReadOnlySpan<byte> result = [];
 
         while (offset < data.Length)
         {
@@ -775,6 +710,33 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         };
     }
 
+    /// <summary>
+    /// Deserializes the read data of a <see cref="Container"/> into a JSON object.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="binary"></param>
+    /// <returns></returns>
+    protected virtual JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
+    {
+        JObject? jsonObject;
+        try
+        {
+            jsonObject = binary.GetJson();
+        }
+        catch (Exception ex) when (ex is ArgumentOutOfRangeException or JsonReaderException or JsonSerializationException)
+        {
+            container.IncompatibilityException = ex;
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;
+            return null;
+        }
+        if (jsonObject is null)
+        {
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_003;
+            return null;
+        }
+        return jsonObject;
+    }
+
     #endregion
 
     #region Process
@@ -785,196 +747,56 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="jsonObject"></param>
     /// <param name="force"></param>
-    private void ProcessContainerData(Container container, JObject jsonObject, bool force = false)
+    private void ProcessContainerData(Container container, JObject jsonObject)
     {
-        // Values relevant for AccountData first.
-        if (container.SaveVersion == 0 || force)
-            container.SaveVersion = Json.GetVersion(jsonObject);
+        // Setting the JSON will enable all properties.
+        container.SetJsonObject(jsonObject);
 
         // No need to do these things for AccountData.
         if (container.IsSave)
         {
-            // Then all independent values.
-            if (container.TotalPlayTime == 0 || force)
-                container.TotalPlayTime = Json.GetTotalPlayTime(jsonObject);
-
-            if (container.IsVersion400Waypoint)
-            {
-                if (string.IsNullOrEmpty(container.SaveName) || force)
-                    container.SaveName = Json.GetSaveName(jsonObject);
-
-                if (string.IsNullOrEmpty(container.SaveSummary) || force)
-                    container.SaveSummary = Json.GetSaveSummary(jsonObject);
-            }
-
-            // Finally all remaining values that depend on others.
-            if (container.Season == SeasonEnum.None && container.GameMode == PresetGameModeEnum.Seasonal || force)
-                container.Season = Calculate.CalculateSeason(container); // needs SaveVersion
-
-            if (container.BaseVersion == 0 || force)
-                container.BaseVersion = Calculate.CalculateBaseVersion(container); // needs SaveVersion and GameMode and Season
-
-            if (container.GameVersion == GameVersionEnum.Unknown || force)
-                container.GameVersion = Json.GetGameVersionEnum(container, jsonObject); // needs BaseVersion
-
-            if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-                container.GameDifficulty = Json.GetGameDifficulty(container, jsonObject); // needs BaseVersion and GameVersion
-
-            // Set UserIdentification.
             container.UserIdentification = GetUserIdentification(jsonObject);
             UpdateUserIdentification();
         }
-
-        container.SetJsonObject(jsonObject);
 
         // If we are in here, the container is in sync (again).
         container.IsSynced = true;
     }
 
     /// <inheritdoc cref="ProcessContainerData(Container, JObject, bool)"/>
-    private static void ProcessContainerData(Container container, string json, bool force = false)
+    private static void ProcessContainerData(Container container, string json, bool force)
     {
         // Values relevant for AccountData first.
-        if (container.SaveVersion == 0 || force)
-            container.SaveVersion = Json.GetVersion(json);
+        if (container.SaveVersion <= 0 || force)
+            container.SaveVersion = Meta.SaveVersion.Get(json);
 
         // Then all independent values.
+        if (container.Extra.GameMode == 0 || force)
+            container.GameMode = Meta.GameMode.Get(json);
+
         if (container.TotalPlayTime == 0 || force)
-            container.TotalPlayTime = Json.GetTotalPlayTime(json);
-
-        if (container.IsVersion400Waypoint)
-        {
-            if (string.IsNullOrEmpty(container.SaveName) || force)
-                container.SaveName = Json.GetSaveName(json);
-
-            if (string.IsNullOrEmpty(container.SaveSummary) || force)
-                container.SaveSummary = Json.GetSaveSummary(json);
-        }
+            container.TotalPlayTime = Meta.TotalPlayTime.Get(json);
 
         // Finally all remaining values that depend on others.
-        if (container.Season == SeasonEnum.None && container.GameMode == PresetGameModeEnum.Seasonal || force)
-            container.Season = Calculate.CalculateSeason(container); // needs SaveVersion
+        if (container.GameMode == PresetGameModeEnum.Seasonal && container.Season == SeasonEnum.None || force)
+            container.Season = Meta.Season.Get(json); // needs GameMode
 
-        if (container.BaseVersion == 0 || force)
-            container.BaseVersion = Calculate.CalculateBaseVersion(container); // needs SaveVersion and GameMode and Season
+        if (container.BaseVersion <= 0 || force)
+            container.BaseVersion = Meta.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
 
         if (container.GameVersion == GameVersionEnum.Unknown)
-            container.GameVersion = Json.GetGameVersionEnum(container, json); // needs BaseVersion
+            container.GameVersion = Meta.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
 
-        if (container.GameDifficulty == DifficultyPresetTypeEnum.Invalid || force)
-            container.GameDifficulty = Json.GetGameDifficulty(container, json); // needs BaseVersion and GameVersion
-    }
+        if (container.Difficulty == DifficultyPresetTypeEnum.Invalid || force)
+            container.Difficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
 
-    #endregion
-
-    #region Reload
-
-    public void Load(Container container)
-    {
-        if (container.IsBackup)
+        if (container.IsVersion400Waypoint) // needs GameVersion
         {
-            LoadBackupContainer(container);
-        }
-        else
-        {
-            LoadSaveContainer(container);
-        }
-    }
+            if (string.IsNullOrEmpty(container.SaveName) || force)
+                container.SaveName = Meta.SaveName.Get(json);
 
-    /// <summary>
-    /// Loads data of the specified backup.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <exception cref="ArgumentException"/>
-    private void LoadBackupContainer(Container container)
-    {
-        Guard.IsTrue(container.Exists);
-        Guard.IsTrue(container.IsBackup);
-
-        // Load
-        container.ClearIncompatibility();
-
-        using var zipArchive = ZipFile.Open(container.DataFile!.FullName, ZipArchiveMode.Read);
-        if (zipArchive.ReadEntry("data", out var data))
-        {
-            _ = zipArchive.ReadEntry("meta", out var meta);
-
-            // Loads all meta information into the extra property.
-            LoadMeta(container, meta);
-
-            var binary = LoadData(container, data);
-            if (binary.IsEmpty())
-            {
-                container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-                return;
-            }
-
-            // Process
-            if (DeserializeContainer(container, binary) is JObject jsonObject)
-                ProcessContainerData(container, jsonObject, true);
-        }
-    }
-
-    /// <summary>
-    /// Loads data of the specified save.
-    /// </summary>
-    /// <param name="container"></param>
-    private void LoadSaveContainer(Container container)
-    {
-        if (Settings.LoadingStrategy < LoadingStrategyEnum.Current)
-            Settings = Settings with { LoadingStrategy = LoadingStrategyEnum.Current };
-
-        if (Settings.LoadingStrategy == LoadingStrategyEnum.Current && container.IsSave)
-        {
-            var loadedContainers = GetLoadedContainers().Where(i => !i.Equals(container));
-            foreach (var loadedContainer in loadedContainers)
-            {
-                // Unloads data by removing the reference to the JSON object.
-                loadedContainer.SetJsonObject(null);
-            }
-        }
-
-        BuildContainerFull(container);
-    }
-
-    public void Rebuild(Container container, JObject jsonObject)
-    {
-        ProcessContainerData(container, jsonObject, true);
-    }
-
-    /// <summary>
-    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
-    /// </summary>
-    /// <param name="container"></param>
-    protected void RebuildContainerFull(Container container)
-    {
-        var binary = LoadContainer(container);
-
-        if (container.IsCompatible && DeserializeContainer(container, binary) is JObject jsonObject)
-            ProcessContainerData(container, jsonObject, true);
-    }
-
-    /// <summary>
-    /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by extracting from the string representation.
-    /// </summary>
-    /// <param name="container"></param>
-    protected void RebuildContainerHollow(Container container)
-    {
-        var binary = LoadContainer(container);
-
-        if (container.IsCompatible)
-            ProcessContainerData(container, binary.GetString(), true);
-    }
-
-    public void Reload(Container container)
-    {
-        if (container.IsLoaded)
-        {
-            RebuildContainerFull(container);
-        }
-        else
-        {
-            RebuildContainerHollow(container);
+            if (string.IsNullOrEmpty(container.SaveSummary) || force)
+                container.SaveSummary = Meta.SaveSummary.Get(json);
         }
     }
 
@@ -993,32 +815,19 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
         // In case LastWriteTime is written inside meta set it before writing.
         if (Settings.SetLastWriteTime)
-        {
             container.LastWriteTime = writeTime;
-        }
 
         if (Settings.WriteAlways || !container.IsSynced)
         {
+            JustWrite(container);
+
             container.Exists = true;
             container.IsSynced = true;
-
-            JustWrite(container);
         }
 
         // To ensure the timestamp will be the same the next time, the file times are always set to the currently saved one.
-        if (container.LastWriteTime is not null)
-        {
-            if (container.DataFile is not null)
-            {
-                File.SetCreationTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-                File.SetLastWriteTime(container.DataFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-            }
-            if (container.MetaFile is not null)
-            {
-                File.SetCreationTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-                File.SetLastWriteTime(container.MetaFile.FullName, container.LastWriteTime!.Value.LocalDateTime);
-            }
-        }
+        container.DataFile?.SetFileTime(container.LastWriteTime);
+        container.MetaFile?.SetFileTime(container.LastWriteTime);
 
         EnableWatcher();
 
@@ -1076,13 +885,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             return data;
 
         var position = 0;
-        ReadOnlySpan<byte> result = Array.Empty<byte>();
+        ReadOnlySpan<byte> result = [];
 
         while (position < data.Length)
         {
             var source = data.Slice(position, Math.Min(Constants.SAVE_STREAMING_CHUNK_MAX_LENGTH, data.Length - position));
             _ = LZ4.Encode(source, out var target);
-            position += Constants.SAVE_STREAMING_CHUNK_MAX_LENGTH;
+            position += source.Length;
 
             var chunkHeader = new ReadOnlySpan<uint>(
             [
@@ -1116,8 +925,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="data"></param>
     protected virtual void WriteData(Container container, ReadOnlySpan<byte> data)
     {
-        if (container.DataFile is not null)
-            File.WriteAllBytes(container.DataFile.FullName, data.ToArray());
+        container.DataFile?.WriteAllBytes(data);
     }
 
     /// <summary>
@@ -1146,6 +954,30 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="data"></param>
     /// <returns></returns>
     protected abstract Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data);
+
+    /// <summary>
+    /// Adds meta data that were added with Waypoint.
+    /// Contrary to the leading data, this is the same for all platforms.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="writer"></param>
+    protected void AddWaypointMeta(BinaryWriter writer, Container container)
+    {
+        // Always append cached bytes but overwrite afterwards if Waypoint.
+        writer.Write(container.Extra.Bytes ?? []); // length depends on platform
+
+        if (container.MetaFormat >= MetaFormatEnum.Waypoint)
+        {
+            writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+            writer.Write(container.SaveName.GetBytesWithTerminator()); // 128
+
+            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST), SeekOrigin.Begin);
+            writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
+
+            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2), SeekOrigin.Begin);
+            writer.Write((byte)(container.Difficulty)); // 1
+        }
+    }
 
     /// <summary>
     /// Compresses the created meta file content.
@@ -1178,8 +1010,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// <param name="meta"></param>
     protected virtual void WriteMeta(Container container, ReadOnlySpan<byte> meta)
     {
-        if (container.MetaFile is not null)
-            File.WriteAllBytes(container.MetaFile.FullName, meta.ToArray());
+        container.MetaFile?.WriteAllBytes(meta);
     }
 
     #endregion
@@ -1198,18 +1029,16 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
         var path = Path.Combine(Settings.Backup, name);
 
-        Directory.CreateDirectory(Settings.Backup);
+        Directory.CreateDirectory(Settings.Backup); // ensure directory exists
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
             _ = zipArchive.CreateEntryFromFile(container.DataFile.FullName, "data");
             if (container.MetaFile?.Exists == true)
-            {
                 _ = zipArchive.CreateEntryFromFile(container.MetaFile.FullName, "meta");
-            }
         }
 
         // Create new backup container.
-        var backup = new Container(container.MetaIndex)
+        var backup = new Container(container.MetaIndex, this)
         {
             DataFile = new(path),
             GameVersion = container.GameVersion,
@@ -1224,9 +1053,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             Delete(outdated);
             foreach (var item in outdated)
-            {
                 container.BackupCollection.Remove(item);
-            }
         }
 
         container.BackupCreatedCallback.Invoke(backup);
@@ -1234,18 +1061,17 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     public void Restore(Container backup)
     {
+        // Does not make sense without it being an existing backup.
         Guard.IsTrue(backup.Exists);
         Guard.IsTrue(backup.IsBackup);
 
         if (!backup.IsLoaded)
-        {
             LoadBackupContainer(backup);
-        }
 
         if (!backup.IsCompatible)
             ThrowHelper.ThrowInvalidOperationException(backup.IncompatibilityException?.Message ?? backup.IncompatibilityTag ?? $"{backup} is incompatible.");
 
-        var container = GetSaveContainer(backup.CollectionIndex);
+        var container = SaveContainerCollection.First(i => i.CollectionIndex == backup.CollectionIndex);
         Rebuild(container!, backup.GetJsonObject());
 
         // Set IsSynced to false as ProcessContainerData set it to true but it is not compared to the state on disk.
@@ -1257,16 +1083,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Copy
 
-    public void Copy(Container source, Container destination) => Copy(new[] { (Source: source, Destination: destination) }, true);
-
-    protected void Copy(Container source, Container destination, bool write) => Copy(new[] { (Source: source, Destination: destination) }, write);
+    public void Copy(Container source, Container destination) => Copy([(Source: source, Destination: destination)], true);
 
     public void Copy(IEnumerable<(Container Source, Container Destination)> operationData) => Copy(operationData, true);
 
     protected virtual void Copy(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
     {
         foreach (var (Source, Destination) in operationData)
-        {
             if (!Source.Exists)
             {
                 Delete(Destination, write);
@@ -1277,7 +1100,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                     BuildContainerFull(Source);
 
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -1294,14 +1117,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
                 if (write)
-                {
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
-            //else
-            //    continue;
-        }
 
         UpdateUserIdentification();
     }
@@ -1337,9 +1154,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Delete
 
-    public void Delete(Container container) => Delete(new[] { container }, true);
+    public void Delete(Container container) => Delete([container], true);
 
-    protected void Delete(Container container, bool write) => Delete(new[] { container }, write);
+    protected void Delete(Container container, bool write) => Delete([container], write);
 
     public void Delete(IEnumerable<Container> containers) => Delete(containers, true);
 
@@ -1353,29 +1170,16 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             if (write)
             {
-                if (container.DataFile?.Exists == true)
+                try
                 {
-                    try
-                    {
-                        File.Delete(container.DataFile.FullName);
-                    }
-                    catch (Exception ex) when (ex is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException)
-                    {
-                        // Nothing to do.
-                    }
+                    container.DataFile?.Delete();
                 }
-
-                if (container.MetaFile?.Exists == true)
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } // nothing to do
+                try
                 {
-                    try
-                    {
-                        File.Delete(container.MetaFile.FullName);
-                    }
-                    catch (Exception ex) when (ex is IOException or NotSupportedException or PathTooLongException or UnauthorizedAccessException)
-                    {
-                        // Nothing to do.
-                    }
+                    container.MetaFile?.Delete();
                 }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } // nothing to do
             }
 
             container.Reset();
@@ -1389,9 +1193,9 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Move
 
-    public void Move(Container source, Container destination) => Move(new[] { (Source: source, Destination: destination) }, true);
+    public void Move(Container source, Container destination) => Move([(Source: source, Destination: destination)], true);
 
-    protected void Move(Container source, Container destination, bool write) => Move(new[] { (Source: source, Destination: destination) }, write);
+    protected void Move(Container source, Container destination, bool write) => Move([(Source: source, Destination: destination)], write);
 
     public void Move(IEnumerable<(Container Source, Container Destination)> operationData) => Move(operationData, true);
 
@@ -1405,9 +1209,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Swap
 
-    public void Swap(Container source, Container destination) => Swap(new[] { (Source: source, Destination: destination) }, true);
-
-    protected void Swap(Container source, Container destination, bool write) => Swap(new[] { (Source: source, Destination: destination) }, write);
+    public void Swap(Container source, Container destination) => Swap([(Source: source, Destination: destination)], true);
 
     public void Swap(IEnumerable<(Container Source, Container Destination)> operationData) => Swap(operationData, true);
 
@@ -1423,7 +1225,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 BuildContainerFull(Destination);
 
             if (!Source.IsCompatible || !Destination.IsCompatible)
-                throw new InvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} / {Destination.IncompatibilityTag}");
+                ThrowHelper.ThrowInvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} >> {Destination.IncompatibilityTag}");
         }
 
         foreach (var (Source, Destination) in operationData)
@@ -1433,31 +1235,30 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 // Source and Destination exists. Swap.
                 if (Destination.Exists)
                 {
-                    // Cache.
-                    var jsonObject = Destination.GetJsonObject();
-                    var writeTime = Destination.LastWriteTime;
+                    // Keep a copy to be able to set Source correctly after Destination is done.
+                    var copy = Common.DeepCopy(Destination);
 
                     // Write Source to Destination.
+                    Destination.SaveVersion = Source.SaveVersion;
                     Destination.SetJsonObject(Source.GetJsonObject());
+                    CopyPlatformExtra(Destination, Source);
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
                     RebuildContainerFull(Destination);
 
                     // Write Destination to Source.
-                    Source.SetJsonObject(jsonObject);
-                    Write(Source, writeTime ?? DateTimeOffset.Now);
+                    Source.SaveVersion = copy.SaveVersion;
+                    Source.SetJsonObject(copy.GetJsonObject());
+                    CopyPlatformExtra(Source, copy);
+                    Write(Source, copy.LastWriteTime ?? DateTimeOffset.Now);
                     RebuildContainerFull(Source);
                 }
                 // Source exists only. Move to Destination.
                 else
-                {
-                    Move(Source, Destination);
-                }
+                    Move(Source, Destination, write);
             }
             // Destination exists only. Move to Source.
             else if (Destination.Exists)
-            {
-                Move(Destination, Source);
-            }
+                Move(Destination, Source, write);
         }
 
         UpdateUserIdentification();
@@ -1467,24 +1268,11 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
     #region Transfer
 
-    public ContainerTransferData PrepareTransferSource(int sourceSlotIndex)
+    public TransferData GetSourceTransferData(int sourceSlotIndex)
     {
+        PrepareUserIdentification();
 
-        // If user identification is not complete, load saves until it is.
-        foreach (var container in SaveContainerCollection.Where(i => i.Exists && !i.IsLoaded))
-        {
-            // Faking while-loop by checking first.
-            if (PlatformUserIdentification.IsComplete())
-                break;
-
-            BuildContainerFull(container);
-        }
-
-        var sourceTransferData = new ContainerTransferData
-        {
-            Containers = GetSlotContainers(sourceSlotIndex),
-            UserIdentification = PlatformUserIdentification,
-        };
+        var sourceTransferData = new TransferData(SaveContainerCollection.Where(i => i.SlotIndex == sourceSlotIndex), true, [], true, true, true, PlatformUserIdentification);
 
         foreach (var container in sourceTransferData.Containers)
         {
@@ -1495,57 +1283,39 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 BuildContainerFull(container);
 
             var jsonObject = container.GetJsonObject();
-            var usesMapping = jsonObject.UsesMapping();
 
-            var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})]" : $"6f=.F?0[?({{0}})]";
-            var expressions = new[]
-            {
-                usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-                usesMapping ? $"@.Owner.UID == '{PlatformUserIdentification.UID}'" : $"@.3?K.K7E == '{PlatformUserIdentification.UID}'",
-            };
-
-            foreach (var persistentPlayerBase in jsonObject.SelectTokensWithIntersection(path, expressions).Cast<JObject>())
-            {
-                var baseName = persistentPlayerBase.GetValue<string>("NKm", "Name");
-                var baseType = persistentPlayerBase.GetValue<string>("peI.DPp", "BaseType.PersistentBaseTypes");
-
-                if (string.IsNullOrEmpty(baseName))
+                var expressions = new[]
                 {
-                    if (baseType == PersistentBaseTypesEnum.FreighterBase.ToString())
-                    {
-                        baseName = "Freighter Base";
-                    }
-                    else if (baseType == PersistentBaseTypesEnum.HomePlanetBase.ToString())
-                    {
-                        baseName = "Unnamed Planet Base";
-                    }
-                    else
-                    {
-                        baseName = "Unnamed Base";
-                    }
-                }
+                Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject),
+                Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, PlatformUserIdentification.UID),
+                };
 
-                sourceTransferData.TransferBaseUserDecision[GetBaseIdentifier(persistentPlayerBase)] = new() { DoTransfer = true, Name = baseName! };
+            foreach (var context in GetContexts(jsonObject))
+            {
+                var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_FOR_TRANSFER", jsonObject, context);
+                foreach (var persistentPlayerBase in jsonObject.SelectTokensWithIntersection<JObject>(expressions.Select(i => string.Format(path, i))))
+                {
+                    var name = persistentPlayerBase.GetValue<string>("RELATIVE_BASE_NAME");
+                    if (string.IsNullOrEmpty(name))
+                        name = EnumExtensions.Parse<PersistentBaseTypesEnum>(persistentPlayerBase.GetValue<string>("RELATIVE_BASE_TYPE")) switch
+                        {
+                            PersistentBaseTypesEnum.FreighterBase => "Freighter Base",
+                            PersistentBaseTypesEnum.HomePlanetBase => "Unnamed Planet Base",
+                            _ => "Unnamed Base",
+                        };
+
+                    sourceTransferData.TransferBaseUserDecision[GetBaseIdentifier(persistentPlayerBase)] = new(context, name!, true);
+                }
             }
         }
 
         UpdateUserIdentification();
 
-        return sourceTransferData with
-        {
-            UserIdentification = PlatformUserIdentification,
-        };
+        return sourceTransferData with { UserIdentification = PlatformUserIdentification };
     }
 
-    public void PrepareTransferDestination(int destinationSlotIndex)
+    private void PrepareUserIdentification()
     {
-        // Load destination as they are needed anyway.
-        foreach (var container in GetSlotContainers(destinationSlotIndex))
-        {
-            if (container.Exists && !container.IsLoaded)
-                BuildContainerFull(container);
-        }
-
         // If user identification is not complete, load saves until it is.
         foreach (var container in SaveContainerCollection.Where(i => i.Exists && !i.IsLoaded))
         {
@@ -1555,33 +1325,69 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
 
             BuildContainerFull(container);
         }
-
-        _preparedForTransfer = destinationSlotIndex;
     }
 
-    public void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex) => Transfer(sourceTransferData, destinationSlotIndex, true);
+    /// <summary>
+    /// Creates an unique identifier for bases based on its location.
+    /// </summary>
+    /// <param name="jsonObject"></param>
+    /// <returns></returns>
+    private static string GetBaseIdentifier(JObject jsonObject)
+    {
+#if NETSTANDARD2_0
+        var galacticAddress = jsonObject.GetValue<string>("RELATIVE_BASE_GALACTIC_ADDRESS")!;
+        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
+#else
+        ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("RELATIVE_BASE_GALACTIC_ADDRESS");
+        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress[2..], NumberStyles.HexNumber) : long.Parse(galacticAddress);
+#endif
 
-    /// <inheritdoc cref="Transfer(ContainerTransferData, int)"/>
+        var positionX = jsonObject.GetValue<int>("RELATIVE_BASE_POSITION_0");
+        var positionY = jsonObject.GetValue<int>("RELATIVE_BASE_POSITION_1");
+        var positionZ = jsonObject.GetValue<int>("RELATIVE_BASE_POSITION_2");
+
+        return $"{galacticInteger}{positionX:+000000;-000000}{positionY:+000000;-000000}{positionZ:+000000;-000000}";
+    }
+
+    /// <summary>
+    /// Ensures that the destination is prepared for the incoming <see cref="Transfer(TransferData, int)"/>.
+    /// Mainly to lookup the user identification.
+    /// </summary>
+    /// <param name="destinationSlotIndex"></param>
+    protected void PrepareTransferDestination(int destinationSlotIndex)
+    {
+        // Load destination as they are needed anyway.
+        foreach (var container in SaveContainerCollection.Where(i => i.SlotIndex == destinationSlotIndex))
+            if (container.Exists && !container.IsLoaded)
+                BuildContainerFull(container);
+
+        PrepareUserIdentification();
+    }
+
+    public void Transfer(TransferData sourceTransferData, int destinationSlotIndex) => Transfer(sourceTransferData, destinationSlotIndex, true);
+
+    /// <inheritdoc cref="Transfer(TransferData, int)"/>
     /// <param name="write"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    protected virtual void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex, bool write)
+    protected virtual void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
     {
-        if (_preparedForTransfer != destinationSlotIndex)
-            PrepareTransferDestination(destinationSlotIndex);
+        PrepareTransferDestination(destinationSlotIndex);
 
         if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
-            throw new InvalidOperationException("Cannot transfer as at least one user identification is not complete.");
+            ThrowHelper.ThrowInvalidOperationException("Cannot transfer as at least one user identification is not complete.");
 
-        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(GetSlotContainers(destinationSlotIndex), (Source, Destination) => (Source, Destination)))
-        {
+        foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(SaveContainerCollection.Where(i => i.SlotIndex == destinationSlotIndex), (Source, Destination) => (Source, Destination)))
             if (!Source.Exists)
             {
                 Delete(Destination, write);
             }
-            else if (Destination.Exists || !Destination.Exists && CanCreate)
+            else if (Destination.Exists || (!Destination.Exists && CanCreate))
             {
                 if (!Source.IsCompatible)
-                    throw new InvalidOperationException($"Cannot transfer as the source container is not compatible: {Source.IncompatibilityTag}");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
+
+                // Needs to be set first to use the correct obfuscation sate.
+                Destination.Platform = this;
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
@@ -1595,19 +1401,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
                 // Additional properties required to properly rebuild the container.
                 Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
+                Destination.UserIdentification = PlatformUserIdentification; // update to match new platform
 
                 TransferOwnership(Destination, sourceTransferData);
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
                 if (write)
-                {
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
-                }
             }
-            //else
-            //    continue;
-        }
     }
 
     /// <summary>
@@ -1620,7 +1421,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     {
         CopyPlatformExtra(destination, source);
 
-        // Reset bytes as from another platform would not be right.
+        // Reset bytes as from another platform it would not be right.
         destination.Extra = destination.Extra with
         {
             Bytes = null,
@@ -1632,36 +1433,40 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferOwnership(Container container, ContainerTransferData sourceTransferData)
+    protected void TransferOwnership(Container container, TransferData sourceTransferData)
     {
         var jsonObject = container.GetJsonObject();
-        var usesMapping = jsonObject.UsesMapping();
 
         // Change token for Platform.
-        jsonObject.SetValue(PlatformArchitecture, "8>q", "Platform");
+        jsonObject.SetValue(PlatformArchitecture, "PLATFORM");
 
         if (sourceTransferData.TransferDiscovery) // 1.0
-            TransferGeneralOwnership(jsonObject, usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record..[?(@.UID == '{sourceTransferData.UserIdentification!.UID}')]" : $"fDu.ETO.OsQ.?fB..[?(@.K7E == '{sourceTransferData.UserIdentification!.UID}')]");
+            TransferGeneralOwnership(jsonObject, sourceTransferData, SaveContextQueryEnum.DontCare, "TRANSFER_UID_DISCOVERY");
 
         if (container.IsVersion(GameVersionEnum.Foundation) && sourceTransferData.TransferBase) // 1.1
-            TransferBaseOwnership(jsonObject, sourceTransferData);
+            foreach (var context in GetContexts(jsonObject))
+                TransferBaseOwnership(jsonObject, sourceTransferData, context);
 
-        if (container.IsVersion351PrismsWithBytebeatAuthor && sourceTransferData.TransferBytebeat) // 3.51
-            TransferBytebeatOwnership(jsonObject, sourceTransferData);
+        if (container.IsVersion351PrismsWithByteBeatAuthor && sourceTransferData.TransferByteBeat) // 3.51
+            TransferByteBeatOwnership(jsonObject, sourceTransferData);
 
         if (container.IsVersion360Frontiers && sourceTransferData.TransferSettlement) // 3.6
-            TransferGeneralOwnership(jsonObject, usesMapping ? $"PlayerStateData.SettlementStatesV2..[?(@.UID == '{sourceTransferData.UserIdentification!.UID}')]" : $"6f=.GQA..[?(@.K7E == '{sourceTransferData.UserIdentification!.UID}')]");
+            foreach (var context in GetContexts(jsonObject))
+                TransferGeneralOwnership(jsonObject, sourceTransferData, context, "TRANSFER_UID_SETTLEMENT");
     }
 
     /// <summary>
     /// Generic method that transfers ownerships according to the specified path.
     /// </summary>
     /// <param name="jsonObject"></param>
-    /// <param name="path"></param>
-    protected void TransferGeneralOwnership(JObject jsonObject, string path)
+    /// <param name="sourceTransferData"></param>
+    /// <param name="context"></param>
+    /// <param name="pathIdentifier"></param>
+    protected void TransferGeneralOwnership(JObject jsonObject, TransferData sourceTransferData, SaveContextQueryEnum context, string pathIdentifier)
     {
-        foreach (var ownership in jsonObject.SelectTokens(path))
-            TransferGeneralOwnership((JObject)(ownership));
+        var path = Json.GetPath(pathIdentifier, jsonObject, context, sourceTransferData.UserIdentification.UID);
+        foreach (var ownership in jsonObject.SelectTokens(path).Cast<JObject>())
+            TransferGeneralOwnership(ownership);
     }
 
     /// <summary>
@@ -1671,12 +1476,12 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected void TransferGeneralOwnership(JObject jsonObject)
     {
         // Only UID is guaranteed.
-        jsonObject.SetValue(PlatformUserIdentification.UID, "K7E", "UID");
+        jsonObject.SetValue(PlatformUserIdentification.UID, "RELATIVE_OWNER_UID");
 
         // Replace LID, PTK, and USN if it is not empty.
-        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.LID, "f5Q", "LID");
-        SetValueIfNullOrEmpty(jsonObject, PlatformUserIdentification.USN, "V?:", "USN");
-        SetValueIfNullOrEmpty(jsonObject, PlatformToken, "D6b", "PTK");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.LID, "RELATIVE_OWNER_LID");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIVE_OWNER_USN");
+        jsonObject.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIVE_OWNER_PTK");
     }
 
     /// <summary>
@@ -1684,17 +1489,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferBaseOwnership(JObject jsonObject, ContainerTransferData sourceTransferData)
+    /// <param name="context"></param>
+    protected void TransferBaseOwnership(JObject jsonObject, TransferData sourceTransferData, SaveContextQueryEnum context)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
-        foreach (var persistentPlayerBase in jsonObject.SelectTokens(usesMapping ? "PlayerStateData.PersistentPlayerBases[*]" : "6f=.F?0[*]").Cast<JObject>())
-        {
-            var identifier = GetBaseIdentifier(persistentPlayerBase);
-
-            if (sourceTransferData.TransferBaseUserDecision.TryGetValue(identifier, out var userDecision) && userDecision.DoTransfer)
-                TransferGeneralOwnership((JObject)(persistentPlayerBase[usesMapping ? "Owner" : "3?K"]!));
-        }
+        var path = Json.GetPath("TRANSFER_UID_BASE", jsonObject, context);
+        foreach (var persistentPlayerBase in jsonObject.SelectTokens(path).Cast<JObject>())
+            if (sourceTransferData.TransferBaseUserDecision.TryGetValue(GetBaseIdentifier(persistentPlayerBase), out var userDecision) && userDecision.DoTransfer)
+                TransferGeneralOwnership(persistentPlayerBase.GetValue<JObject>("RELATIVE_BASE_OWNER")!);
     }
 
     /// <summary>
@@ -1702,15 +1503,14 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="sourceTransferData"></param>
-    protected void TransferBytebeatOwnership(JObject jsonObject, ContainerTransferData sourceTransferData)
+    protected void TransferByteBeatOwnership(JObject jsonObject, TransferData sourceTransferData)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
-        foreach (var mySong in jsonObject.SelectTokens(usesMapping ? $"PlayerStateData.MySongs[?(@.AuthorOnlineID == '{sourceTransferData.UserIdentification!.UID}')]" : $"6f=.ON4[?(@.m7b == '{sourceTransferData.UserIdentification!.UID}')]").Cast<JObject>())
+        var path = Json.GetPath("TRANSFER_UID_BYTEBEAT", jsonObject, sourceTransferData.UserIdentification.UID);
+        foreach (var mySong in jsonObject.SelectTokens(path).Cast<JObject>())
         {
-            mySong.SetValue(PlatformUserIdentification.UID, "m7b", "AuthorOnlineID");
-            mySong.SetValue(PlatformUserIdentification.USN, "4ha", "AuthorUsername");
-            mySong.SetValue(PlatformToken, "d2f", "AuthorPlatform");
+            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.UID, "RELATIVE_SONG_AUTHOR_ID");
+            mySong.SetValueIfNotNullOrEmpty(PlatformUserIdentification.USN, "RELATIVE_SONG_AUTHOR_USERNAME");
+            mySong.SetValueIfNotNullOrEmpty(PlatformToken, "RELATIVE_SONG_AUTHOR_PLATFORM");
         }
     }
 
@@ -1744,16 +1544,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     protected void OnWatcherEvent(object source, FileSystemEventArgs e)
     {
         // Workaround to update the value and keep the immediate eviction.
-        var contains = _cache.TryGetValue(e.Name, out Lazy<WatcherChangeTypes> lazyType);
-        if (contains)
+        if (_cache.TryGetValue(e.Name, out Lazy<WatcherChangeTypes> lazyType))
         {
             _cache.Remove(e.Name);
             _cache.GetOrAdd(e.Name, () => (lazyType.Value | e.ChangeType), _options);
         }
         else
-        {
             _cache.GetOrAdd(e.Name, () => (e.ChangeType), _options);
-        }
     }
 
     /// <summary>
@@ -1778,7 +1575,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
          * mf_save.hg (Changed)
          * save.hg (Changed)
          * mf_save.hg (Changed)
-        
+
         Deleted by game or an editor:
          * save.hg (Deleted)
          * mf_save.hg (Deleted)
@@ -1813,7 +1610,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         if (reason is not EvictionReason.Expired and not EvictionReason.TokenExpired)
             return;
 
-        // Choose what actually happend based on the combined change types combinations listed at the beginning of this method.
+        // Choose what actually happened based on the combined change types combinations listed at the beginning of this method.
         var changeType = (WatcherChangeTypes)(value) switch
         {
             WatcherChangeTypes.Renamed => WatcherChangeTypes.Created, // Save Streaming
@@ -1825,9 +1622,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
         {
             container.SetWatcherChange(changeType);
             if (container.IsSynced)
-            {
                 OnWatcherDecision(container, true);
-            }
         }
     }
 
@@ -1843,9 +1638,8 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
             container.RefreshFileInfo();
         }
         else
-        {
             container.IsSynced = false;
-        }
+
         container.ResolveWatcherChange();
 
         // Invoke as it was written but from the outside.
@@ -1859,7 +1653,7 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     #region UserIdentification
 
     /// <summary>
-    /// Updates the <see cref="UserIdentificationData"/> with data from all loaded containers.
+    /// Updates the <see cref="UserIdentification"/> with data from all loaded containers.
     /// </summary>
     protected void UpdateUserIdentification()
     {
@@ -1870,13 +1664,13 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> for this platform.
+    /// Gets the <see cref="UserIdentification"/> for this platform.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
-    protected UserIdentificationData GetUserIdentification(JObject jsonObject)
+    protected UserIdentification GetUserIdentification(JObject jsonObject)
     {
-        return new UserIdentificationData
+        return new UserIdentification
         {
             LID = GetUserIdentification(jsonObject, "LID"),
             UID = GetUserIdentification(jsonObject, "UID"),
@@ -1886,101 +1680,109 @@ public abstract class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key.
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
     protected virtual string GetUserIdentification(JObject jsonObject, string key)
     {
-        var usesMapping = jsonObject.UsesMapping();
-
+        // Utilize GetPath() to get the right obfuscation state of the key.
         key = key switch
         {
-            "LID" => usesMapping ? "LID" : "f5Q",
-            "UID" => usesMapping ? "UID" : "K7E",
-            "USN" => usesMapping ? "USN" : "V?:",
+            "LID" => Json.GetPath("RELATIVE_OWNER_LID", jsonObject),
+            "UID" => Json.GetPath("RELATIVE_OWNER_UID", jsonObject),
+            "USN" => Json.GetPath("RELATIVE_OWNER_USN", jsonObject),
             _ => string.Empty,
         };
         if (string.IsNullOrEmpty(key))
             return string.Empty;
 
         // ByBase is most reliable due to the BaseType, then BySettlement is second as it is still something you own, and ByDiscovery as last resort which can be a mess.
-        return GetUserIdentificationByBase(jsonObject, key).MostCommon() ?? GetUserIdentificationBySettlement(jsonObject, key).MostCommon() ?? GetUserIdentificationByDiscovery(jsonObject, key).MostCommon() ?? string.Empty;
+        return GetUserIdentificationByBase(jsonObject, key) ?? GetUserIdentificationBySettlement(jsonObject, key) ?? GetUserIdentificationByDiscovery(jsonObject, key) ?? string.Empty;
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from discoveries.
-    /// </summary>
-    /// <param name="jsonObject"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    protected virtual IEnumerable<string> GetUserIdentificationByDiscovery(JObject jsonObject, string key)
-    {
-        var usesMapping = jsonObject.UsesMapping();
-
-        var path = usesMapping ? $"DiscoveryManagerData.DiscoveryData-v1.Store.Record[?({{0}})].OWS.{key}" : $"fDu.ETO.OsQ.?fB[?({{0}})].ksu.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.OWS.PTK == '' || @.OWS.PTK == '{PlatformToken}'" : $"@.ksu.D6b == '' || @.ksu.D6b == '{PlatformToken}'", // only with valid platform
-            usesMapping ? $"@.OWS.LID != ''" : $"@.ksu.f5Q != ''", // only if set
-        };
-
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
-    }
-
-    /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from bases.
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key from bases.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
-    protected virtual IEnumerable<string> GetUserIdentificationByBase(JObject jsonObject, string key)
+    protected virtual string? GetUserIdentificationByBase(JObject jsonObject, string key)
     {
-        var usesMapping = jsonObject.UsesMapping();
+        var expressions = GetIntersectionExpressionsByBase(jsonObject);
+        var result = new List<string>();
 
-        var path = usesMapping ? $"PlayerStateData.PersistentPlayerBases[?({{0}})].Owner.{key}" : $"6f=.F?0[?({{0}})].3?K.{key}";
-        var expressions = new[]
+        foreach (var context in GetContexts(jsonObject))
         {
-            usesMapping ? $"@.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.BaseType.PersistentBaseTypes == '{PersistentBaseTypesEnum.FreighterBase}'" : $"@.peI.DPp == '{PersistentBaseTypesEnum.HomePlanetBase}' || @.peI.DPp == '{PersistentBaseTypesEnum.FreighterBase}'", // only with own base
-            usesMapping ? $"@.Owner.PTK == '' || @.Owner.PTK == '{PlatformToken}'" : $"@.3?K.D6b == '' || @.3?K.D6b == '{PlatformToken}'", // only with valid platform
-            usesMapping ? $"@.Owner.LID != ''" : $"@.3?K.f5Q != ''", // only if set
-        };
+            var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_KEY", jsonObject, context, key);
+            result.AddRange(expressions.Select(i => string.Format(path, i)));
+    }
 
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
+    }
+
+    protected virtual string[] GetIntersectionExpressionsByBase(JObject jsonObject)
+    {
+        return
+        [
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
+            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
+        ];
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentificationData"/> information for the specified property key from settlements.
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key from discoveries.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    protected virtual IEnumerable<string> GetUserIdentificationBySettlement(JObject jsonObject, string key)
+    protected virtual string? GetUserIdentificationByDiscovery(JObject jsonObject, string key)
     {
-        var usesMapping = jsonObject.UsesMapping();
+        var path = Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_KEY", jsonObject, key);
+        var result = GetIntersectionExpressionsByDiscovery(jsonObject).Select(i => string.Format(path, i));
 
-        var path = usesMapping ? $"PlayerStateData.SettlementStatesV2[?({{0}})].Owner.{key}" : $"6f=.GQA[?({{0}})].3?K.{key}";
-        var expressions = new[]
-        {
-            usesMapping ? $"@.Owner.PTK == '{PlatformToken}'" : $"@.3?K.D6b == '{PlatformToken}'", // only with valid platform
-            usesMapping ? $"@.Owner.LID != ''" : $"@.3?K.f5Q != ''", // only if set
-        };
+        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
+    }
 
-        return GetUserIdentificationIntersection(jsonObject, path, expressions);
+    protected virtual string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
+    {
+        return
+        [
+            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
+            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
+        ];
     }
 
     /// <summary>
-    /// Intersects the result of the specified expressions.
+    /// Gets the <see cref="UserIdentification"/> information for the specified property key from settlements.
     /// </summary>
     /// <param name="jsonObject"></param>
-    /// <param name="path"></param>
-    /// <param name="expressions"></param>
+    /// <param name="key"></param>
     /// <returns></returns>
-    protected static IEnumerable<string> GetUserIdentificationIntersection(JObject jsonObject, string path, params string[] expressions)
+    protected virtual string? GetUserIdentificationBySettlement(JObject jsonObject, string key)
     {
-        return (IEnumerable<string>)(jsonObject.SelectTokensWithIntersection(path, expressions).Select(i => i.Value<string>()).Where(j => !string.IsNullOrWhiteSpace(j)));
+        var expressions = GetIntersectionExpressionsBySettlement(jsonObject);
+        var result = new List<string>();
+
+        foreach (var context in GetContexts(jsonObject))
+        {
+            var path = Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_KEY", jsonObject, context, key);
+            result.AddRange(expressions.Select(i => string.Format(path, i)));
+        }
+
+        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
+    }
+
+    protected virtual string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
+    {
+        return
+        [
+            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
+            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
+        ];
     }
 
     #endregion

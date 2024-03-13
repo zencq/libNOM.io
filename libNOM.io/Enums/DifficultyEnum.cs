@@ -2,7 +2,7 @@
 
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcActiveSurvivalBarsDifficultyOption.cs#L7
-public enum ActiveSurvivalBarsDifficultyEnum : uint
+internal enum ActiveSurvivalBarsDifficultyEnum : uint
 {
     None,
     HealthOnly,
@@ -11,7 +11,7 @@ public enum ActiveSurvivalBarsDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcHazardDrainDifficultyOption.cs#L7
-public enum HazardDrainDifficultyEnum : uint
+internal enum HazardDrainDifficultyEnum : uint
 {
     Slow,
     Normal,
@@ -19,7 +19,7 @@ public enum HazardDrainDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcEnergyDrainDifficultyOption.cs#L7
-public enum EnergyDrainDifficultyEnum : uint
+internal enum EnergyDrainDifficultyEnum : uint
 {
     Slow,
     Normal,
@@ -27,7 +27,7 @@ public enum EnergyDrainDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcSubstanceCollectionDifficultyOption.cs#L7
-public enum SubstanceCollectionDifficultyEnum : uint
+internal enum SubstanceCollectionDifficultyEnum : uint
 {
     High,
     Normal,
@@ -35,7 +35,7 @@ public enum SubstanceCollectionDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcSprintingCostDifficultyOption.cs#L7
-public enum SprintingCostDifficultyEnum : uint
+internal enum SprintingCostDifficultyEnum : uint
 {
     Free,
     Low,
@@ -43,7 +43,7 @@ public enum SprintingCostDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcScannerRechargeDifficultyOption.cs#L7
-public enum ScannerRechargeDifficultyEnum : uint
+internal enum ScannerRechargeDifficultyEnum : uint
 {
     VeryFast,
     Fast,
@@ -52,7 +52,7 @@ public enum ScannerRechargeDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcDamageReceivedDifficultyOption.cs#L7
-public enum DamageReceivedDifficultyEnum : uint
+internal enum DamageReceivedDifficultyEnum : uint
 {
     None,
     Low,
@@ -61,7 +61,7 @@ public enum DamageReceivedDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcBreakTechOnDamageDifficultyOption.cs#L7
-public enum BreakTechOnDamageProbabilityEnum : uint
+internal enum BreakTechOnDamageProbabilityEnum : uint
 {
     None,
     Low,
@@ -69,7 +69,7 @@ public enum BreakTechOnDamageProbabilityEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcDeathConsequencesDifficultyOption.cs#L7
-public enum DeathConsequencesDifficultyEnum : uint
+internal enum DeathConsequencesDifficultyEnum : uint
 {
     None,
     ItemGrave,
@@ -78,7 +78,7 @@ public enum DeathConsequencesDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcChargingRequirementsDifficultyOption.cs#L7
-public enum ChargingRequirementsDifficultyEnum : uint
+internal enum ChargingRequirementsDifficultyEnum : uint
 {
     None,
     Low,
@@ -87,7 +87,7 @@ public enum ChargingRequirementsDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcFuelUseDifficultyOption.cs#L7
-public enum FuelUseDifficultyEnum : uint
+internal enum FuelUseDifficultyEnum : uint
 {
     Free,
     Cheap,
@@ -96,7 +96,7 @@ public enum FuelUseDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcLaunchFuelCostDifficultyOption.cs#L7
-public enum LaunchFuelCostDifficultyEnum : uint
+internal enum LaunchFuelCostDifficultyEnum : uint
 {
     Free,
     Low,
@@ -105,7 +105,7 @@ public enum LaunchFuelCostDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcCurrencyCostDifficultyOption.cs#L7
-public enum CurrencyCostDifficultyEnum : uint
+internal enum CurrencyCostDifficultyEnum : uint
 {
     Free,
     Cheap,
@@ -114,7 +114,7 @@ public enum CurrencyCostDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcItemShopAvailabilityDifficultyOption.cs#L7
-public enum ItemShopAvailabilityDifficultyEnum : uint
+internal enum ItemShopAvailabilityDifficultyEnum : uint
 {
     High,
     Normal,
@@ -122,7 +122,7 @@ public enum ItemShopAvailabilityDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcInventoryStackLimitsDifficultyOption.cs#L7
-public enum InventoryStackLimitsDifficultyEnum : uint
+internal enum InventoryStackLimitsDifficultyEnum : uint
 {
     High,
     Normal,
@@ -130,7 +130,7 @@ public enum InventoryStackLimitsDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcDamageGivenDifficultyOption.cs#L7
-public enum DamageGivenDifficultyEnum : uint
+internal enum DamageGivenDifficultyEnum : uint
 {
     High,
     Normal,
@@ -138,7 +138,7 @@ public enum DamageGivenDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcCombatTimerDifficultyOption.cs#L7
-public enum CombatTimerDifficultyOptionEnum : uint
+internal enum CombatTimerDifficultyOptionEnum : uint
 {
     Off,
     Slow,
@@ -147,7 +147,7 @@ public enum CombatTimerDifficultyOptionEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcCreatureHostilityDifficultyOption.cs#L7
-public enum CreatureHostilityDifficultyEnum : uint
+internal enum CreatureHostilityDifficultyEnum : uint
 {
     NeverAttack,
     AttackIfProvoked,
@@ -155,7 +155,7 @@ public enum CreatureHostilityDifficultyEnum : uint
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcReputationGainDifficultyOption.cs#L7
-public enum ReputationGainDifficultyEnum : uint
+internal enum ReputationGainDifficultyEnum : uint
 {
     VeryFast,
     Fast,

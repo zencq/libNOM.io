@@ -63,9 +63,59 @@ namespace libNOM.test.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] TESTSUITE_ARCHIVE {
+        internal static byte[] TESTSUITE_ARCHIVE_GAMEMODE {
             get {
-                object obj = ResourceManager.GetObject("TESTSUITE_ARCHIVE", resourceCulture);
+                object obj = ResourceManager.GetObject("TESTSUITE_ARCHIVE_GAMEMODE", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] TESTSUITE_ARCHIVE_PLATFORM_GOG {
+            get {
+                object obj = ResourceManager.GetObject("TESTSUITE_ARCHIVE_PLATFORM_GOG", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] TESTSUITE_ARCHIVE_PLATFORM_MICROSOFT {
+            get {
+                object obj = ResourceManager.GetObject("TESTSUITE_ARCHIVE_PLATFORM_MICROSOFT", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] TESTSUITE_ARCHIVE_PLATFORM_PLAYSTATION {
+            get {
+                object obj = ResourceManager.GetObject("TESTSUITE_ARCHIVE_PLATFORM_PLAYSTATION", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] TESTSUITE_ARCHIVE_PLATFORM_STEAM {
+            get {
+                object obj = ResourceManager.GetObject("TESTSUITE_ARCHIVE_PLATFORM_STEAM", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] TESTSUITE_ARCHIVE_PLATFORM_SWITCH {
+            get {
+                object obj = ResourceManager.GetObject("TESTSUITE_ARCHIVE_PLATFORM_SWITCH", resourceCulture);
                 return ((byte[])(obj));
             }
         }

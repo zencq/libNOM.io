@@ -1,19 +1,19 @@
 ﻿using libNOM.io;
-using libNOM.io.Enums;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace libNOM.test;
 
 
 [TestClass]
-[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE.zip")]
-public class SettingsTest : CommonTestInitializeCleanup
+[DeploymentItem("../../../Resources/TESTSUITE_ARCHIVE_PLATFORM_STEAM.zip")]
+public class SettingsTest : CommonTestClass
 {
     [TestMethod]
     public void LoadingStrategyHollow()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -21,7 +21,7 @@ public class SettingsTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var loadedContainers = platform.GetLoadedContainers().Count();
+        var loadedContainers = GetLoadedContainers(platform).Count();
 
         // Assert
         Assert.AreEqual(0, loadedContainers);
@@ -31,7 +31,7 @@ public class SettingsTest : CommonTestInitializeCleanup
     public void LoadingStrategyCurrent()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -39,13 +39,13 @@ public class SettingsTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var loadedContainers0 = platform.GetLoadedContainers().Count();
+        var loadedContainers0 = GetLoadedContainers(platform).Count();
 
-        platform.Load(platform.GetSaveContainer(1)!);
-        var loadedContainers1 = platform.GetLoadedContainers().Count();
+        platform.Load(GetOneSaveContainer(platform, 1));
+        var loadedContainers1 = GetLoadedContainers(platform).Count();
 
-        platform.Load(platform.GetSaveContainer(2)!);
-        var loadedContainers2 = platform.GetLoadedContainers().Count();
+        platform.Load(GetOneSaveContainer(platform, 2));
+        var loadedContainers2 = GetLoadedContainers(platform).Count();
 
         // Assert
         Assert.AreEqual(0, loadedContainers0);
@@ -57,7 +57,7 @@ public class SettingsTest : CommonTestInitializeCleanup
     public void LoadingStrategyPartial()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Partial,
@@ -65,13 +65,13 @@ public class SettingsTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var loadedContainers0 = platform.GetLoadedContainers().Count();
+        var loadedContainers0 = GetLoadedContainers(platform).Count();
 
-        platform.Load(platform.GetSaveContainer(1)!);
-        var loadedContainers1 = platform.GetLoadedContainers().Count();
+        platform.Load(GetOneSaveContainer(platform, 1));
+        var loadedContainers1 = GetLoadedContainers(platform).Count();
 
-        platform.Load(platform.GetSaveContainer(2)!);
-        var loadedContainers2 = platform.GetLoadedContainers().Count();
+        platform.Load(GetOneSaveContainer(platform, 2));
+        var loadedContainers2 = GetLoadedContainers(platform).Count();
 
         // Assert
         Assert.AreEqual(0, loadedContainers0);
@@ -83,7 +83,7 @@ public class SettingsTest : CommonTestInitializeCleanup
     public void LoadingStrategyFull()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
@@ -91,7 +91,7 @@ public class SettingsTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var loadedContainers = platform.GetLoadedContainers();
+        var loadedContainers = GetLoadedContainers(platform);
 
         // Assert
         Assert.AreEqual(5, loadedContainers.Count());
@@ -101,7 +101,7 @@ public class SettingsTest : CommonTestInitializeCleanup
     public void MaxBackupCount()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -111,8 +111,8 @@ public class SettingsTest : CommonTestInitializeCleanup
         // Act
         var platform = new PlatformSteam(path, settings);
 
-        var backupPath = platform.GetBackupPath();
-        var container = platform.GetSaveContainer(0)!;
+        var backupPath = platform.Settings.Backup;
+        var container = GetOneSaveContainer(platform, 0);
         var searchPattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.zip".ToLowerInvariant();
 
         platform.Backup(container);
@@ -134,7 +134,7 @@ public class SettingsTest : CommonTestInitializeCleanup
     public void UseMapping_True()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -143,7 +143,7 @@ public class SettingsTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
 
         platform.Load(container);
 
@@ -156,7 +156,7 @@ public class SettingsTest : CommonTestInitializeCleanup
     public void UseMapping_False()
     {
         // Arrange
-        var path = Path.Combine(nameof(Properties.Resources.TESTSUITE_ARCHIVE), "Platform", "Steam", "st_76561198371877533");
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Current,
@@ -165,7 +165,7 @@ public class SettingsTest : CommonTestInitializeCleanup
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = platform.GetSaveContainer(0)!;
+        var container = GetOneSaveContainer(platform, 0);
 
         platform.Load(container);
 

@@ -91,15 +91,15 @@ public interface IPlatform
     /// <summary>
     /// Identification of the user including username and some ids.
     /// </summary>
-    public UserIdentificationData PlatformUserIdentification { get; }
+    public UserIdentification PlatformUserIdentification { get; }
 
     #endregion
 
     #endregion
+
+    // //
 
     #region Getter
-
-    #region Container
 
     /// <summary>
     /// Gets the <see cref="Container"/> with the account data.
@@ -108,66 +108,23 @@ public interface IPlatform
     public Container? GetAccountContainer();
 
     /// <summary>
-    /// Gets a single <see cref="Container"/> with save data.
+    /// Gets a specific <see cref="Container"/> with save data.
     /// </summary>
-    /// <param name="collectionIndex"></param>
+    /// <param name="index">The CollectionIndex of the save to get.</param>
     /// <returns></returns>
-    public Container? GetSaveContainer(int collectionIndex);
+    public Container? GetSaveContainer(int index);
 
     /// <summary>
-    /// Gets all <see cref="Container"/>s that exist.
+    /// Gets all possible <see cref="Container"/> with save data, that then can be filtered further.
+    /// Here are some examples:
+    /// <code>Where(i => i.Exists)</code> to get those that are actually exist.
+    /// <code>Where(i => i.IsLoaded)</code> to get those that are actually loaded.
+    /// <code>Where(i => i.SlotIndex == slotIndex)</code> to get those of the specified slot.
+    /// <code>Where(i => i.IsLoaded && !i.IsSynced)</code> to get those that have unsaved changes.
+    /// <code>Where(i => i.HasWatcherChange)</code> to get those that have unresolved changes detected by the FileSystemWatcher.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<Container> GetExistingContainers();
-
-    /// <summary>
-    /// Gets all <see cref="Container"/>s that are currently loaded.
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerable<Container> GetLoadedContainers();
-
-    /// <summary>
-    /// Gets all <see cref="Container"/>s for the specified slot.
-    /// </summary>
-    /// <param name="slotIndex"></param>
-    /// <returns></returns>
-    public IEnumerable<Container> GetSlotContainers(int slotIndex);
-
-    /// <summary>
-    /// Gets all <see cref="Container"/>s that are loaded but unsynced.
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerable<Container> GetUnsyncedContainers();
-
-    /// <summary>
-    /// Gets all <see cref="Container"/>s with unresolved changes by the <see cref="FileSystemWatcher"/>.
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerable<Container> GetWatcherContainers();
-
-    #endregion
-
-    #region Path
-
-    /// <summary>
-    /// Gets the absolute path to the backup directory.
-    /// </summary>
-    /// <returns></returns>
-    public string GetBackupPath();
-
-    /// <summary>
-    /// Gets absolute path to the download directory.
-    /// </summary>
-    /// <returns></returns>
-    public string GetDownloadPath();
-
-    #endregion
-
-    /// <summary>
-    /// Returns the maximum number of possible save slots.
-    /// </summary>
-    /// <returns></returns>
-    public int GetMaximumSlots();
+    public IEnumerable<Container> GetSaveContainers();
 
     #endregion
 
@@ -183,7 +140,7 @@ public interface IPlatform
 
     // // Read / Write
 
-    #region Reload
+    #region Load
 
     /// <summary>
     /// Loads data of a <see cref= "Container"/> in consideration of the loading strategy.
@@ -192,17 +149,17 @@ public interface IPlatform
     public void Load(Container container);
 
     /// <summary>
+    /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
+    /// </summary>
+    /// <param name="container"></param>
+    public void Reload(Container container);
+
+    /// <summary>
     /// Rebuilds the container with data from the specified JSON object.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="jsonObject"></param>
     public void Rebuild(Container container, JObject jsonObject);
-
-    /// <summary>
-    /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
-    /// </summary>
-    /// <param name="container"></param>
-    public void Reload(Container container);
 
     #endregion
 
@@ -311,26 +268,19 @@ public interface IPlatform
     #region Transfer
 
     /// <summary>
-    /// Prepares the specified slot for transfer.
+    /// Gets all necessary data from the specified slot in the source.
     /// </summary>
     /// <param name="sourceSlotIndex"></param>
     /// <returns></returns>
-    public ContainerTransferData PrepareTransferSource(int sourceSlotIndex);
+    public TransferData GetSourceTransferData(int sourceSlotIndex);
 
     /// <summary>
-    /// Ensures that the destination is prepared for the incoming <see cref="Transfer(ContainerTransferData, int)"/>.
-    /// Mainly to lookup the user identification.
-    /// </summary>
-    /// <param name="destinationSlotIndex"></param>
-    public void PrepareTransferDestination(int destinationSlotIndex);
-
-    /// <summary>
-    /// Transfers a specified slot to another account or platform according to the prepared <see cref="ContainerTransferData"/>.
+    /// Transfers a specified slot to another account or platform according to the prepared <see cref="TransferData"/>.
     /// Works similar to copy but with additional ownership transfer.
     /// </summary>
     /// <param name="sourceTransferData"></param>
     /// <param name="destinationSlotIndex"></param>
-    public void Transfer(ContainerTransferData sourceTransferData, int destinationSlotIndex);
+    public void Transfer(TransferData sourceTransferData, int destinationSlotIndex);
 
     #endregion
 
@@ -339,7 +289,7 @@ public interface IPlatform
     #region FileSystemWatcher
 
     /// <summary>
-    /// Resolves automatic decisions or those made by the user by reloading the container or mark as unsynced.
+    /// Resolves automatic decisions or those made by the user by reloading the container or mark as not synced.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="execute"></param>

@@ -1,8 +1,9 @@
-﻿using CommunityToolkit.HighPerformance;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
+
+using CommunityToolkit.HighPerformance;
+
+using Newtonsoft.Json.Linq;
 
 namespace libNOM.io.Extensions;
 
@@ -77,24 +78,16 @@ internal static class ReadOnlySpanExtensions
     }
 
     /// <summary>
-    /// Deserializes and deobfuscates the raw binary JSON to an object.
+    /// Deserializes a raw binary JSON to an object.
     /// </summary>
     /// <param name="self"></param>
     /// <returns>The deserialized object from the bytes.</returns>
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     internal static JObject? GetJson(this ReadOnlySpan<byte> self)
     {
-        // Account has no proper decompressed size in the initial Fractal update (4.10).
-        var length = self.IndexOf((byte)(0));
+        // Account has no proper decompressed size in the initial Fractal update (4.10) and therefore we look for the first.
         // Escaping gone wrong by HG. The backslash is in the file but instead of one of the chars below, still the unescaped control char.
-        var json = self.Slice(0, length).GetString().Replace((char)(0x9), 't').Replace((char)(0xA), 'n').Replace((char)(0xD), 'r');
-
-        if (JsonConvert.DeserializeObject(json) is JObject jsonObject)
-            return jsonObject;
-
-        return null;
+        var json = GetStringUntilTerminator(self).Replace((char)(0x9), 't').Replace((char)(0xA), 'n').Replace((char)(0xD), 'r');
+        return json.GetJson();
     }
 
     /// <summary>
@@ -105,7 +98,7 @@ internal static class ReadOnlySpanExtensions
 #if !NETSTANDARD2_0
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
 #endif
-    internal static string GetSaveRenamingString(this ReadOnlySpan<byte> self)
+    internal static string GetStringUntilTerminator(this ReadOnlySpan<byte> self)
     {
         return GetString(self.Slice(0, self.IndexOf((byte)(0))));
     }
@@ -152,20 +145,20 @@ internal static class ReadOnlySpanExtensions
 #endif
     }
 
-    internal static int ReadString(this ReadOnlySpan<byte> self, out string result, int start)
+    internal static int ReadString(this ReadOnlySpan<byte> self, int start, out string result)
     {
-        var length = self.Cast<int>(start) * 2;
-        result = self.Slice(start + 4, length).Cast<byte, char>().ToString();
+        var length = self.Cast<int>(start) * 2; // times two as it is UTF-16
+        result = self.Slice(start + sizeof(int), length).Cast<byte, char>().ToString();
         return sizeof(int) + length;
     }
 
-    internal static int ReadString(this ReadOnlySpan<byte> self, out ReadOnlySpan<char> result, int start, int length)
+    internal static int ReadString(this ReadOnlySpan<byte> self, int start, int length, out ReadOnlySpan<char> result)
     {
         result = self.Slice(start, length).Cast<byte, char>().TrimEnd('\0');
         return length;
     }
 
-#endregion
+    #endregion
 }
 
 internal static class SpanExtensions
