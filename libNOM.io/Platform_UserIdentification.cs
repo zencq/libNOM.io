@@ -5,39 +5,23 @@ using Newtonsoft.Json.Linq;
 namespace libNOM.io;
 
 
-/// <summary>
-/// Abstract base for all platforms which just hook into the methods they need.
-/// </summary>
+// This partial class contains UserIdentification related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    #region UserIdentification
-
-    /// <summary>
-    /// Updates the <see cref="UserIdentification"/> with data from all loaded containers.
-    /// </summary>
-    protected void UpdateUserIdentification()
-    {
-        PlatformUserIdentification.LID = SaveContainerCollection.Select(i => i.UserIdentification?.LID).MostCommon();
-        PlatformUserIdentification.PTK = PlatformToken;
-        PlatformUserIdentification.UID = SaveContainerCollection.Select(i => i.UserIdentification?.UID).MostCommon();
-        PlatformUserIdentification.USN = SaveContainerCollection.Select(i => i.UserIdentification?.USN).MostCommon();
-    }
+    #region Get
 
     /// <summary>
     /// Gets the <see cref="UserIdentification"/> for this platform.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
-    protected UserIdentification GetUserIdentification(JObject jsonObject)
+    private UserIdentification GetUserIdentification(JObject jsonObject) => new()
     {
-        return new UserIdentification
-        {
-            LID = GetUserIdentification(jsonObject, "LID"),
-            UID = GetUserIdentification(jsonObject, "UID"),
-            USN = GetUserIdentification(jsonObject, "USN"),
-            PTK = PlatformToken,
-        };
-    }
+        LID = GetUserIdentification(jsonObject, "LID"),
+        UID = GetUserIdentification(jsonObject, "UID"),
+        USN = GetUserIdentification(jsonObject, "USN"),
+        PTK = PlatformToken,
+    };
 
     /// <summary>
     /// Gets the <see cref="UserIdentification"/> information for the specified property key.
@@ -59,28 +43,45 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             return string.Empty;
 
         // ByBase is most reliable due to the BaseType, then BySettlement is second as it is still something you own, and ByDiscovery as last resort which can be a mess.
-        var a = GetUserIdentificationByBase(jsonObject, key);
-        var b = GetUserIdentificationByDiscovery(jsonObject, key);
-        var c = GetUserIdentificationBySettlement(jsonObject, key);
-
-        return GetUserIdentificationByBase(jsonObject, key) ?? GetUserIdentificationBySettlement(jsonObject, key) ?? GetUserIdentificationByDiscovery(jsonObject, key) ?? string.Empty;
+        return GetUserIdentificationInContext(jsonObject, key, GetIntersectionExpressionsByBase, "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_KEY")
+            ?? GetUserIdentificationInContext(jsonObject, key, GetIntersectionExpressionsBySettlement, "INTERSECTION_SETTLEMENT_OWNERSHIP_KEY")
+            ?? GetUserIdentificationInCommon(jsonObject, key, GetIntersectionExpressionsByDiscovery, "INTERSECTION_DISCOVERY_DATA_OWNERSHIP_KEY")
+            ?? string.Empty;
     }
 
     /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the specified property key from bases.
+    /// Gets the <see cref="UserIdentification"/> information for the specified key from common data.
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
+    /// <param name="GetIntersectionExpressions">Function to get all intersection expressions for this type.</param>
+    /// <param name="pathIdentifier">Path with placeholders where the intersection expressions are inserted.</param>
+    /// <returns></returns>
+    private static string? GetUserIdentificationInCommon(JObject jsonObject, string key, Func<JObject, string[]> GetIntersectionExpressions, string pathIdentifier)
+    {
+        var path = Json.GetPath(pathIdentifier, jsonObject, key);
+        var result = GetIntersectionExpressions(jsonObject).Select(i => string.Format(path, i));
+
+        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
+    }
+
+    /// <summary>
+    /// Gets the <see cref="UserIdentification"/> information for the specified key from within a context.
+    /// </summary>
+    /// <param name="jsonObject"></param>
+    /// <param name="key"></param>
+    /// <param name="GetIntersectionExpressions">Function to get all intersection expressions for this type.</param>
+    /// <param name="pathIdentifier">Path with placeholders where the intersection expressions are inserted.</param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
-    protected virtual string? GetUserIdentificationByBase(JObject jsonObject, string key)
+    private static string? GetUserIdentificationInContext(JObject jsonObject, string key, Func<JObject, string[]> GetIntersectionExpressions, string pathIdentifier)
     {
-        var expressions = GetIntersectionExpressionsByBase(jsonObject);
+        var expressions = GetIntersectionExpressions(jsonObject);
         var result = new List<string>();
 
         foreach (var context in GetContexts(jsonObject))
         {
-            var path = Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_KEY", jsonObject, context, key);
+            var path = Json.GetPath(pathIdentifier, jsonObject, context, key);
             result.AddRange(expressions.Select(i => string.Format(path, i)));
         }
 
@@ -97,20 +98,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         ];
     }
 
-    /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the specified property key from discoveries.
-    /// </summary>
-    /// <param name="jsonObject"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    protected virtual string? GetUserIdentificationByDiscovery(JObject jsonObject, string key)
-    {
-        var path = Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_KEY", jsonObject, key);
-        var result = GetIntersectionExpressionsByDiscovery(jsonObject).Select(i => string.Format(path, i));
-
-        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
-    }
-
     protected virtual string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
     {
         return
@@ -120,26 +107,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         ];
     }
 
-    /// <summary>
-    /// Gets the <see cref="UserIdentification"/> information for the specified property key from settlements.
-    /// </summary>
-    /// <param name="jsonObject"></param>
-    /// <param name="key"></param>
-    /// <returns></returns>
-    protected virtual string? GetUserIdentificationBySettlement(JObject jsonObject, string key)
-    {
-        var expressions = GetIntersectionExpressionsBySettlement(jsonObject);
-        var result = new List<string>();
-
-        foreach (var context in GetContexts(jsonObject))
-        {
-            var path = Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_KEY", jsonObject, context, key);
-            result.AddRange(expressions.Select(i => string.Format(path, i)));
-        }
-
-        return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
-    }
-
     protected virtual string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
     {
         return
@@ -147,6 +114,21 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
             Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
         ];
+    }
+
+    #endregion
+
+    #region Update
+
+    /// <summary>
+    /// Updates the <see cref="UserIdentification"/> with data from all loaded containers.
+    /// </summary>
+    protected void UpdateUserIdentification()
+    {
+        PlatformUserIdentification.LID = SaveContainerCollection.Select(i => i.UserIdentification?.LID).MostCommon();
+        PlatformUserIdentification.PTK = PlatformToken;
+        PlatformUserIdentification.UID = SaveContainerCollection.Select(i => i.UserIdentification?.UID).MostCommon();
+        PlatformUserIdentification.USN = SaveContainerCollection.Select(i => i.UserIdentification?.USN).MostCommon();
     }
 
     #endregion

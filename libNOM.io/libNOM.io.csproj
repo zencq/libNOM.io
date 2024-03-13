@@ -4,9 +4,6 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0</TargetFrameworks>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Platform.cs" />
-  </ItemGroup>
 
   <!-- Global Usings -->
   <ItemGroup>
@@ -95,7 +92,6 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="Platform.cs" />
   </ItemGroup>
 
 </Project>
