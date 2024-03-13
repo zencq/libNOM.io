@@ -91,7 +91,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         var tasks = new List<Task>();
 
         // Only PC platforms can be located directly on the machine.
-        tasks.AddRange(TryAddDirectory<PlatformSteam>()); // is available on all operating systems
+        tasks.AddRange(TryAddDirectory<PlatformSteam>()); // is available on all relevant operating systems
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {

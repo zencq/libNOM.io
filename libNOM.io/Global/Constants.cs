@@ -39,10 +39,6 @@ public static class Constants
 
     internal const string FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmssfff";
 
-    internal const short GAMEMODE_INT_NORMAL = (int)(PresetGameModeEnum.Normal); // 1
-    internal const short GAMEMODE_INT_PERMADEATH = (int)(PresetGameModeEnum.Permadeath); // 5
-    internal const short GAMEMODE_INT_SEASONAL = (int)(PresetGameModeEnum.Seasonal); // 6
-
     internal const GameVersionEnum LOWEST_SUPPORTED_VERSION = GameVersionEnum.BeyondWithVehicleCam;
 
     internal static readonly Dictionary<string, string[]> JSONPATH = new()
@@ -174,7 +170,5 @@ public static class Constants
     internal const int THRESHOLD_GAMEMODE_PERMADEATH = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Permadeath) * OFFSET_GAMEMODE);
     internal const int THRESHOLD_GAMEMODE_SEASONAL = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Seasonal) * OFFSET_GAMEMODE);
     internal const int THRESHOLD_VANILLA = 4098;
-    internal const int THRESHOLD_VANILLA_GAMEMODE = THRESHOLD_VANILLA + OFFSET_GAMEMODE;
     internal const int THRESHOLD_WAYPOINT = 4140;
-    internal const int THRESHOLD_WAYPOINT_GAMEMODE = THRESHOLD_WAYPOINT + OFFSET_GAMEMODE;
 }

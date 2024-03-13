@@ -56,7 +56,7 @@ internal static partial class SaveVersion
         if (container.GameMode == PresetGameModeEnum.Permadeath || containerVersion < GameVersionEnum.Waypoint)
             return container.BaseVersion + ((int)(container.GameMode) * Constants.OFFSET_GAMEMODE);
 
-        return container.BaseVersion + (Constants.GAMEMODE_INT_NORMAL * Constants.OFFSET_GAMEMODE);
+        return container.BaseVersion + ((int)(PresetGameModeEnum.Normal) * Constants.OFFSET_GAMEMODE);
     }
 
     #endregion
