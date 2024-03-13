@@ -250,7 +250,7 @@ public class Container : IContainer
         set
         {
             // Maximum length in-game is 42 characters.
-            value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_INGAME)).ToString();
+            value = value.AsSpan(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_INGAME)).ToString();
 
             Extra = Extra with { SaveName = value };
 
@@ -270,7 +270,7 @@ public class Container : IContainer
         }
         set
         {
-            value = value.AsSpanSubstring(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_MANIFEST - 1)).ToString();
+            value = value.AsSpan(0, Math.Min(value.Length, Constants.SAVE_RENAMING_LENGTH_MANIFEST - 1)).ToString();
 
             Extra = Extra with { SaveSummary = value };
 
