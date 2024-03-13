@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 
 using CommunityToolkit.Diagnostics;
 
@@ -12,12 +10,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Newtonsoft.Json;
 
-using SharpCompress;
 using SharpCompress.Archives;
-using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
-using SharpCompress.Readers;
 
 namespace libNOM.test.Helper;
 
@@ -1024,18 +1019,7 @@ public abstract class CommonTestClass
     }
 
     #endregion
-    private static bool IsMatch(byte[] haystack, int position, byte[] needle)
-    {
-        for (var i = 0; i < needle.Length; i++)
-        {
-            if (haystack[position + i] != needle[i])
-            {
-                return false;
-            }
-        }
 
-        return true;
-    }
     [TestInitialize]
     public void ExtractArchive()
     {
@@ -1043,56 +1027,19 @@ public abstract class CommonTestClass
         {
             Directory.CreateDirectory(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE);
 
-            foreach (var file in Directory.EnumerateFiles(".", $"{DIRECTORY_TESTSUITE_ARCHIVE}_*.zip")) 
+            foreach (var file in Directory.EnumerateFiles(".", $"{DIRECTORY_TESTSUITE_ARCHIVE}*.zip"))
             {
-                Console.WriteLine(file);
-                Debug.WriteLine(file);
-                int MAX_SEARCH_LENGTH_FOR_EOCD = 65557;
-
-                var bytes = File.ReadAllBytes(file);
-
-                var len = bytes.Length < MAX_SEARCH_LENGTH_FOR_EOCD ? (int)bytes.Length : MAX_SEARCH_LENGTH_FOR_EOCD;
-                byte[] needle = { 0x06, 0x05, 0x4b, 0x50 };
-
-                var seek = File.ReadAllBytes(file)[(bytes.Length-len)..];
-
-                // Search in reverse
-                Array.Reverse(seek);
-                Console.WriteLine($"{file}: Reverse: {string.Join("   ", seek[..22].Select(x => x.ToString("X2")))}");
-                Debug.WriteLine($"{file}: Reverse: {string.Join("   ", seek[..22].Select(x => x.ToString("X2")))}");
-                // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
-                var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
-
-                for (var pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
-                {
-                    if (IsMatch(seek, pos_from_end, needle))
-                    {
-                        Console.WriteLine($"{file}: Position: {pos_from_end}");
-                        Debug.WriteLine($"{file}: Position: {pos_from_end}");
-                        //-pos_from_end;
-                        //stream.Seek(-pos_from_end, SeekOrigin.End);
-                        break;
-                    }
-                }
-
-
-                Console.WriteLine($"{file}: ZipArchive.Open");
-                Debug.WriteLine($"{file}: ZipArchive.Open");
                 using var zipArchive = ZipArchive.Open(file, new()
                 {
                     Password = Properties.Resources.TESTSUITE_PASSWORD,
                 });
                 foreach (var entry in zipArchive.Entries.Where(i => !i.IsDirectory))
-                {
-                    Console.WriteLine($"Entry: {entry.Key}");
-                    Debug.WriteLine($"Entry: {entry.Key}");
                     entry.WriteToDirectory(DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE, new ExtractionOptions
                     {
                         ExtractFullPath = true,
                         Overwrite = true,
                         PreserveFileTime = true,
                     });
-                }
             }
         }
         if (!Directory.Exists(DIRECTORY_TESTSUITE_ARCHIVE))
