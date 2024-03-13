@@ -139,7 +139,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         if (headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (headerInteger == Constants.SAVE_STREAMING_HEADER && headerString0xA0.Contains("PS4|Final")))
         {
             // Only for files in the save streaming format.
-            if (Directory.GetFiles(directory, PlatformPlaystation.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
+            if (Directory.EnumerateFiles(directory, PlatformPlaystation.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
             {
                 platform = new PlatformPlaystation(headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER);
                 meta = new(path);
@@ -155,7 +155,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
                 platform = new PlatformSwitch();
 
                 // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
-                if (Directory.GetFiles(directory, PlatformSwitch.ANCHOR_FILE_PATTERN[1]).Any(fullPath.Equals))
+                if (Directory.EnumerateFiles(directory, PlatformSwitch.ANCHOR_FILE_PATTERN[1]).Any(fullPath.Equals))
                 {
                     meta = new(Path.Combine(directory, data.Name.Replace("savedata", "manifest")));
                     metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit)));
@@ -167,7 +167,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
                 platform = new PlatformSteam();
 
                 // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
-                if (Directory.GetFiles(directory, PlatformSteam.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
+                if (Directory.EnumerateFiles(directory, PlatformSteam.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
                 {
                     var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit));
 
@@ -356,6 +356,6 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// <returns></returns>
     private static IEnumerable<DirectoryInfo> GetAccountsInPath(string path, string pattern)
     {
-        return IsPathValid(path, out var directory) ? directory!.GetDirectories(pattern) : Enumerable.Empty<DirectoryInfo>();
+        return IsPathValid(path, out var directory) ? directory!.EnumerateDirectories(pattern) : Enumerable.Empty<DirectoryInfo>();
     }
 }

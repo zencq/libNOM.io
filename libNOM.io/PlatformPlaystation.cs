@@ -159,7 +159,7 @@ public partial class PlatformPlaystation : Platform
             }
 
             // Get first file that is not account data if not _memorydat.
-            var f = _memorydat ?? directory!.GetFiles(PlatformAnchorFilePattern[anchorFileIndex]).FirstOrDefault(i => !i.Name.Contains("00"));
+            var f = _memorydat ?? directory!.EnumerateFiles(PlatformAnchorFilePattern[anchorFileIndex]).FirstOrDefault(i => !i.Name.Contains("00"));
             if (f is not null)
             {
                 using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.Read));

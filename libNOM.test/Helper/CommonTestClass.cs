@@ -258,8 +258,8 @@ public abstract class CommonTestClass
         var sourceDirectory = new DirectoryInfo(source);
 
         // Cache directories and files before we start copying.
-        var cacheDirectories = sourceDirectory.GetDirectories();
-        var cacheFiles = sourceDirectory.GetFiles();
+        var cacheDirectories = sourceDirectory.EnumerateDirectories();
+        var cacheFiles = sourceDirectory.EnumerateFiles();
 
         // Create the destination directory.
         Directory.CreateDirectory(destination);
@@ -301,11 +301,6 @@ public abstract class CommonTestClass
     protected static IEnumerable<Container> GetLoadedContainers(IPlatform platform)
     {
         return platform.GetSaveContainers().Where(i => i.IsLoaded);
-    }
-
-    protected static Container GetOneSaveContainer(IPlatform platform, int collectionIndex)
-    {
-        return platform.GetSaveContainers().First(i => i.CollectionIndex == collectionIndex);
     }
 
     protected static string GetString(IEnumerable<byte> source)

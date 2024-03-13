@@ -1,4 +1,6 @@
-﻿using libNOM.io;
+﻿using CommunityToolkit.Diagnostics;
+
+using libNOM.io;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,7 +12,7 @@ namespace libNOM.test;
 public class SettingsTest : CommonTestClass
 {
     [TestMethod]
-    public void LoadingStrategyHollow()
+    public void T00_LoadingStrategyHollow()
     {
         // Arrange
         var path = GetCombinedPath("Steam", "st_76561198371877533");
@@ -28,7 +30,7 @@ public class SettingsTest : CommonTestClass
     }
 
     [TestMethod]
-    public void LoadingStrategyCurrent()
+    public void T01_LoadingStrategyCurrent()
     {
         // Arrange
         var path = GetCombinedPath("Steam", "st_76561198371877533");
@@ -41,10 +43,10 @@ public class SettingsTest : CommonTestClass
         var platform = new PlatformSteam(path, settings);
         var loadedContainers0 = GetLoadedContainers(platform).Count();
 
-        platform.Load(GetOneSaveContainer(platform, 1));
+        platform.Load(platform.GetSaveContainer(1)!);
         var loadedContainers1 = GetLoadedContainers(platform).Count();
 
-        platform.Load(GetOneSaveContainer(platform, 2));
+        platform.Load(platform.GetSaveContainer(2)!);
         var loadedContainers2 = GetLoadedContainers(platform).Count();
 
         // Assert
@@ -54,7 +56,7 @@ public class SettingsTest : CommonTestClass
     }
 
     [TestMethod]
-    public void LoadingStrategyPartial()
+    public void T02_LoadingStrategyPartial()
     {
         // Arrange
         var path = GetCombinedPath("Steam", "st_76561198371877533");
@@ -67,10 +69,10 @@ public class SettingsTest : CommonTestClass
         var platform = new PlatformSteam(path, settings);
         var loadedContainers0 = GetLoadedContainers(platform).Count();
 
-        platform.Load(GetOneSaveContainer(platform, 1));
+        platform.Load(platform.GetSaveContainer(1)!);
         var loadedContainers1 = GetLoadedContainers(platform).Count();
 
-        platform.Load(GetOneSaveContainer(platform, 2));
+        platform.Load(platform.GetSaveContainer(2)!);
         var loadedContainers2 = GetLoadedContainers(platform).Count();
 
         // Assert
@@ -80,7 +82,7 @@ public class SettingsTest : CommonTestClass
     }
 
     [TestMethod]
-    public void LoadingStrategyFull()
+    public void T03_LoadingStrategyFull()
     {
         // Arrange
         var path = GetCombinedPath("Steam", "st_76561198371877533");
@@ -98,7 +100,7 @@ public class SettingsTest : CommonTestClass
     }
 
     [TestMethod]
-    public void MaxBackupCount()
+    public void T10_MaxBackupCount()
     {
         // Arrange
         var path = GetCombinedPath("Steam", "st_76561198371877533");
@@ -110,9 +112,10 @@ public class SettingsTest : CommonTestClass
 
         // Act
         var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         var backupPath = platform.Settings.Backup;
-        var container = GetOneSaveContainer(platform, 0);
         var searchPattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.zip".ToLowerInvariant();
 
         platform.Backup(container);
@@ -131,7 +134,7 @@ public class SettingsTest : CommonTestClass
     }
 
     [TestMethod]
-    public void UseMapping_True()
+    public void T20_UseMapping_True()
     {
         // Arrange
         var path = GetCombinedPath("Steam", "st_76561198371877533");
@@ -143,7 +146,8 @@ public class SettingsTest : CommonTestClass
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
 
@@ -153,7 +157,7 @@ public class SettingsTest : CommonTestClass
     }
 
     [TestMethod]
-    public void UseMapping_False()
+    public void T21_UseMapping_False()
     {
         // Arrange
         var path = GetCombinedPath("Steam", "st_76561198371877533");
@@ -165,7 +169,8 @@ public class SettingsTest : CommonTestClass
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         platform.Load(container);
 

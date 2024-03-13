@@ -345,7 +345,7 @@ public partial class PlatformMicrosoft : Platform
         if (blobContainerIndex.Exists)
             files.Add(blobContainerIndex);
         else
-            foreach (var file in extra.MicrosoftBlobDirectory!.GetFiles("container.*"))
+            foreach (var file in extra.MicrosoftBlobDirectory!.EnumerateFiles("container.*"))
                 files.Add(file);
 
         // Start with the presumably newest one.
