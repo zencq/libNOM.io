@@ -1,22 +1,56 @@
-﻿using System.Globalization;
-using System.IO.Compression;
-
-using CommunityToolkit.Diagnostics;
+﻿using CommunityToolkit.Diagnostics;
 
 using libNOM.io.Interfaces;
-
-using Microsoft.Extensions.Caching.Memory;
-
-using Newtonsoft.Json.Linq;
 
 namespace libNOM.io;
 
 
-/// <summary>
-/// Abstract base for all platforms which just hook into the methods they need.
-/// </summary>
+// This partial class contains file operation related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    #region Helper
+
+    private void EnsureIsLoaded(Container container)
+    {
+        if (!container.IsLoaded)
+            BuildContainerFull(container);
+    }
+
+    #endregion
+
+    #region PlatformExtra
+
+    /// <summary>
+    /// Copies the platform extra from the source container.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    protected virtual void CopyPlatformExtra(Container container, Container other)
+    {
+        // Overwrite all general values but keep platform specific stuff unchanged.
+        container.Extra = container.Extra with
+        {
+            MetaFormat = other.Extra.MetaFormat,
+            Bytes = other.Extra.Bytes,
+            Size = other.Extra.Size,
+            SizeDecompressed = other.Extra.SizeDecompressed,
+            SizeDisk = other.Extra.SizeDisk,
+            LastWriteTime = other.Extra.LastWriteTime,
+            BaseVersion = other.Extra.BaseVersion,
+            GameMode = other.Extra.GameMode,
+            Season = other.Extra.Season,
+            TotalPlayTime = other.Extra.TotalPlayTime,
+            SaveName = other.Extra.SaveName,
+            SaveSummary = other.Extra.SaveSummary,
+            DifficultyPreset = other.Extra.DifficultyPreset,
+        };
+    }
+
+    #endregion
+
+    // //
+
     #region Copy
 
     public void Copy(Container source, Container destination) => Copy([(Source: source, Destination: destination)], true);
@@ -32,8 +66,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             }
             else if (Destination.Exists || (!Destination.Exists && CanCreate))
             {
-                if (!Source.IsLoaded)
-                    BuildContainerFull(Source);
+                EnsureIsLoaded(Source);
 
                 if (!Source.IsCompatible)
                     ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
@@ -59,33 +92,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         UpdateUserIdentification();
     }
 
-    /// <summary>
-    /// Copies the platform extra from the source container.
-    /// </summary>
-    /// <param name="destination"></param>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    protected virtual void CopyPlatformExtra(Container destination, Container source)
-    {
-        // Overwrite all general values but keep platform specific stuff unchanged.
-        destination.Extra = destination.Extra with
-        {
-            MetaFormat = source.Extra.MetaFormat,
-            Bytes = source.Extra.Bytes,
-            Size = source.Extra.Size,
-            SizeDecompressed = source.Extra.SizeDecompressed,
-            SizeDisk = source.Extra.SizeDisk,
-            LastWriteTime = source.Extra.LastWriteTime,
-            BaseVersion = source.Extra.BaseVersion,
-            GameMode = source.Extra.GameMode,
-            Season = source.Extra.Season,
-            TotalPlayTime = source.Extra.TotalPlayTime,
-            SaveName = source.Extra.SaveName,
-            SaveSummary = source.Extra.SaveSummary,
-            DifficultyPreset = source.Extra.DifficultyPreset,
-        };
-    }
-
     #endregion
 
     #region Delete
@@ -106,16 +112,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         {
             if (write)
             {
-                try
-                {
-                    container.DataFile?.Delete();
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } // nothing to do
-                try
-                {
-                    container.MetaFile?.Delete();
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { } // nothing to do
+                if (container.DataFile?.Exists == true)
+                    container.DataFile!.Delete();
+
+                if (container.MetaFile?.Exists == true)
+                    container.MetaFile!.Delete();
             }
 
             container.Reset();
@@ -151,19 +152,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     protected virtual void Swap(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
     {
-        // Make sure everything can be swapped.
-        foreach (var (Source, Destination) in operationData.Where(i => i.Source.Exists && i.Destination.Exists))
-        {
-            if (!Source.IsLoaded)
-                BuildContainerFull(Source);
-
-            if (!Destination.IsLoaded)
-                BuildContainerFull(Destination);
-
-            if (!Source.IsCompatible || !Destination.IsCompatible)
-                ThrowHelper.ThrowInvalidOperationException($"Cannot swap as at least one container is not compatible: {Source.IncompatibilityTag} >> {Destination.IncompatibilityTag}");
-        }
-
         foreach (var (Source, Destination) in operationData)
         {
             if (Source.Exists)
@@ -171,22 +159,21 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 // Source and Destination exists. Swap.
                 if (Destination.Exists)
                 {
+                    EnsureIsLoaded(Source);
+                    EnsureIsLoaded(Destination);
+
+                    // Make sure they can be swapped.
+                    if (!Source.IsCompatible || !Destination.IsCompatible)
+                        ThrowHelper.ThrowInvalidOperationException($"Cannot swap as at least one container is not compatible. {Source.Identifier}: {Source.IncompatibilityTag} >> {Destination.Identifier}: {Destination.IncompatibilityTag}");
+
                     // Keep a copy to be able to set Source correctly after Destination is done.
                     var copy = Common.DeepCopy(Destination);
 
                     // Write Source to Destination.
-                    Destination.SaveVersion = Source.SaveVersion;
-                    Destination.SetJsonObject(Source.GetJsonObject());
-                    CopyPlatformExtra(Destination, Source);
-                    Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Destination);
+                    SwapOverwrite(Destination, Source, write);
 
                     // Write Destination to Source.
-                    Source.SaveVersion = copy.SaveVersion;
-                    Source.SetJsonObject(copy.GetJsonObject());
-                    CopyPlatformExtra(Source, copy);
-                    Write(Source, copy.LastWriteTime ?? DateTimeOffset.Now);
-                    RebuildContainerFull(Source);
+                    SwapOverwrite(Source, copy, write);
                 }
                 // Source exists only. Move to Destination.
                 else
@@ -198,6 +185,18 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         }
 
         UpdateUserIdentification();
+    }
+
+    private void SwapOverwrite(Container container, Container other, bool write)
+    {
+        container.SaveVersion = other.SaveVersion;
+        container.SetJsonObject(other.GetJsonObject());
+        CopyPlatformExtra(container, other);
+        if (write)
+        {
+            Write(container, other.LastWriteTime ?? DateTimeOffset.Now);
+            RebuildContainerFull(container);
+        }
     }
 
     #endregion

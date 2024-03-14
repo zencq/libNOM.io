@@ -59,6 +59,29 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    #region PlatformExtra
+
+    /// <summary>
+    /// Creates the platform extra for the destination container.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    protected virtual void CreatePlatformExtra(Container container, Container other)
+    {
+        CopyPlatformExtra(container, other);
+
+        // Reset bytes as from another platform it would not be right.
+        container.Extra = container.Extra with
+        {
+            Bytes = null,
+        };
+    }
+
+    #endregion
+
+    // // 
+
     #region Prepare
 
     /// <summary>
@@ -173,23 +196,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 if (write)
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
             }
-    }
-
-    /// <summary>
-    /// Creates the platform extra for the destination container.
-    /// </summary>
-    /// <param name="destination"></param>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    protected virtual void CreatePlatformExtra(Container destination, Container source)
-    {
-        CopyPlatformExtra(destination, source);
-
-        // Reset bytes as from another platform it would not be right.
-        destination.Extra = destination.Extra with
-        {
-            Bytes = null,
-        };
     }
 
     #endregion
