@@ -1,4 +1,6 @@
-﻿using libNOM.io.Interfaces;
+﻿using System.Data.Common;
+
+using libNOM.io.Interfaces;
 
 using Newtonsoft.Json.Linq;
 
@@ -57,10 +59,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="GetIntersectionExpressions">Function to get all intersection expressions for this type.</param>
     /// <param name="pathIdentifier">Path with placeholders where the intersection expressions are inserted.</param>
     /// <returns></returns>
-    private static string? GetUserIdentificationInCommon(JObject jsonObject, string key, Func<JObject, string[]> GetIntersectionExpressions, string pathIdentifier)
+    private static string? GetUserIdentificationInCommon(JObject jsonObject, string key, Func<(string Identifier, object[] Interpolations)[]> GetIntersectionExpressions, string pathIdentifier)
     {
         var path = Json.GetPath(pathIdentifier, jsonObject, key);
-        var result = GetIntersectionExpressions(jsonObject).Select(i => string.Format(path, i));
+        var result = GetIntersectionExpressions().Select(i => Json.GetPath(i.Identifier, jsonObject, i.Interpolations)).Select(i => string.Format(path, i));
 
         return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
@@ -74,9 +76,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="pathIdentifier">Path with placeholders where the intersection expressions are inserted.</param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
-    private static string? GetUserIdentificationInContext(JObject jsonObject, string key, Func<JObject, string[]> GetIntersectionExpressions, string pathIdentifier)
+    private static string? GetUserIdentificationInContext(JObject jsonObject, string key, Func<(string Identifier, object[] Interpolations)[]> GetIntersectionExpressions, string pathIdentifier)
     {
-        var expressions = GetIntersectionExpressions(jsonObject);
+        var expressions = GetIntersectionExpressions().Select(i => Json.GetPath(i.Identifier, jsonObject, i.Interpolations));
         var result = new List<string>();
 
         foreach (var context in GetContexts(jsonObject))
@@ -88,33 +90,21 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
 
-    protected virtual string[] GetIntersectionExpressionsByBase(JObject jsonObject)
-    {
-        return
-        [
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
-        ];
-    }
+    protected virtual (string, object[])[] GetIntersectionExpressionsByBase() => [
+        ("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", [PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase]),
+        ("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", [PlatformToken]),
+        ("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_LID", []),
+    ];
 
-    protected virtual string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
-    {
-        return
-        [
-            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
-            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
-        ];
-    }
+    protected virtual (string, object[])[] GetIntersectionExpressionsByDiscovery() => [
+        ("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", [PlatformToken]),
+        ("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_WITH_LID", []),
+    ];
 
-    protected virtual string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
-    {
-        return
-        [
-            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", jsonObject, PlatformToken),
-            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", jsonObject),
-        ];
-    }
+    protected virtual (string, object[])[] GetIntersectionExpressionsBySettlement() => [
+        ("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", [PlatformToken]),
+        ("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", []),
+    ];
 
     #endregion
 
