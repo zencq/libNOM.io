@@ -43,7 +43,6 @@ public partial class PlatformMicrosoft : Platform
     #region Field
 
     private string _accountGuid = null!; // will be set when containers.index is parsed
-    private string? _accountId; // will be set if available in path
     private FileInfo _containersindex = null!; // will be set if valid
     private DateTimeOffset _lastWriteTime; // will be set when containers.index is parsed to store global timestamp
     private string _processIdentifier = null!; // will be set when containers.index is parsed
@@ -143,10 +142,10 @@ public partial class PlatformMicrosoft : Platform
         {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
             if (directory.Name.Length == 49 && directory.Name.EndsWith(ACCOUNT_PATTERN.Substring(1)) && directory.Name.Substring(0, 16).All("0123456789ABCDEFabcdef".Contains))
-                _accountId = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
+                _uid = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
 #else
             if (directory.Name.Length == 49 && directory.Name.EndsWith(ACCOUNT_PATTERN[1..]) && directory.Name[..16].All(char.IsAsciiHexDigit))
-                _accountId = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
+                _uid = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
 #endif
 
             _containersindex = new FileInfo(Path.Combine(directory.FullName, "containers.index"));
@@ -996,41 +995,10 @@ public partial class PlatformMicrosoft : Platform
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        if (key is "UID" && _accountId is not null)
-            return _accountId;
+        if (key is "UID" && _uid is not null)
+            return _uid;
 
         return base.GetUserIdentification(jsonObject, key);
-    }
-
-    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
-    {
-        if (_accountId is null)
-            return base.GetIntersectionExpressionsByBase(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _accountId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
-    {
-        if (_accountId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _accountId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
-    {
-        if (_accountId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _accountId),
-        ];
     }
 
     #endregion

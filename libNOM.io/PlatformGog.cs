@@ -16,8 +16,7 @@ public class PlatformGog : PlatformSteam
 
     #region Field
 
-    private string? _userId; // both will be set if GOG Galaxy config file exists
-    private string? _username;
+    private string? _usn; // will be set together with _uid if GOG Galaxy config file exists
 
     #endregion
 
@@ -64,8 +63,8 @@ public class PlatformGog : PlatformSteam
             if (File.Exists(path))
             {
                 var jsonObject = JsonConvert.DeserializeObject(File.ReadAllText(path)) as JObject;
-                _userId = jsonObject?.GetValue<string>("userId");
-                _username = jsonObject?.GetValue<string>("username");
+                _uid = jsonObject?.GetValue<string>("userId");
+                _usn = jsonObject?.GetValue<string>("username");
             }
         }
 
@@ -83,8 +82,8 @@ public class PlatformGog : PlatformSteam
         // Base call not as default as _userId and _username can also be null.
         var result = key switch
         {
-            "UID" => _userId,
-            "USN" => _username,
+            "UID" => _uid,
+            "USN" => _usn,
             _ => null,
         } ?? base.GetUserIdentification(jsonObject, key);
 
@@ -93,37 +92,6 @@ public class PlatformGog : PlatformSteam
             result = "Explorer";
 
         return result ?? string.Empty;
-    }
-
-    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
-    {
-        if (_userId is null)
-            return base.GetIntersectionExpressionsByBase(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
-    {
-        if (_userId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
-    {
-        if (_userId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
-        ];
     }
 
     #endregion

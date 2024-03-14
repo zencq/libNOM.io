@@ -1,6 +1,4 @@
-﻿using System.Data.Common;
-
-using libNOM.io.Interfaces;
+﻿using libNOM.io.Interfaces;
 
 using Newtonsoft.Json.Linq;
 
@@ -10,6 +8,12 @@ namespace libNOM.io;
 // This partial class contains UserIdentification related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    #region Fields
+
+    protected string? _uid; // will usually be set if available in path
+
+    #endregion
+
     #region Get
 
     /// <summary>
@@ -45,9 +49,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             return string.Empty;
 
         // ByBase is most reliable due to the BaseType, then BySettlement is second as it is still something you own, and ByDiscovery as last resort which can be a mess.
-        return GetUserIdentificationInContext(jsonObject, key, GetIntersectionExpressionsByBase, "INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_KEY")
-            ?? GetUserIdentificationInContext(jsonObject, key, GetIntersectionExpressionsBySettlement, "INTERSECTION_SETTLEMENT_OWNERSHIP_KEY")
-            ?? GetUserIdentificationInCommon(jsonObject, key, GetIntersectionExpressionsByDiscovery, "INTERSECTION_DISCOVERY_DATA_OWNERSHIP_KEY")
+        return GetUserIdentificationInContext(jsonObject, key, "PERSISTENT_PLAYER_BASE", [("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", [PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase])])
+            ?? GetUserIdentificationInContext(jsonObject, key, "SETTLEMENT")
+            ?? GetUserIdentificationInCommon(jsonObject, key, "DISCOVERY_DATA")
             ?? string.Empty;
     }
 
@@ -56,13 +60,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
-    /// <param name="GetIntersectionExpressions">Function to get all intersection expressions for this type.</param>
-    /// <param name="pathIdentifier">Path with placeholders where the intersection expressions are inserted.</param>
+    /// <param name="by"></param>
+    /// <param name="additionalExpressions"></param>
     /// <returns></returns>
-    private static string? GetUserIdentificationInCommon(JObject jsonObject, string key, Func<(string Identifier, object[] Interpolations)[]> GetIntersectionExpressions, string pathIdentifier)
+    private string? GetUserIdentificationInCommon(JObject jsonObject, string key, string by, params (string, object[])[] additionalExpressions)
     {
-        var path = Json.GetPath(pathIdentifier, jsonObject, key);
-        var result = GetIntersectionExpressions().Select(i => Json.GetPath(i.Identifier, jsonObject, i.Interpolations)).Select(i => string.Format(path, i));
+        var path = Json.GetPath($"INTERSECTION_{by}_OWNERSHIP_KEY", jsonObject, key);
+        var result = GetCommonIntersectionExpressions(by).Concat(additionalExpressions).Select(i => Json.GetPath(i.Item1, jsonObject, i.Item2)).Select(i => string.Format(path, i));
 
         return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
@@ -72,39 +76,35 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="jsonObject"></param>
     /// <param name="key"></param>
-    /// <param name="GetIntersectionExpressions">Function to get all intersection expressions for this type.</param>
-    /// <param name="pathIdentifier">Path with placeholders where the intersection expressions are inserted.</param>
+    /// <param name="by"></param>
+    /// <param name="additionalExpressions"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
-    private static string? GetUserIdentificationInContext(JObject jsonObject, string key, Func<(string Identifier, object[] Interpolations)[]> GetIntersectionExpressions, string pathIdentifier)
+    private string? GetUserIdentificationInContext(JObject jsonObject, string key, string by, params (string, object[])[] additionalExpressions)
     {
-        var expressions = GetIntersectionExpressions().Select(i => Json.GetPath(i.Identifier, jsonObject, i.Interpolations));
+        var expressions = GetCommonIntersectionExpressions(by).Concat(additionalExpressions).Select(i => Json.GetPath(i.Item1, jsonObject, i.Item2));
         var result = new List<string>();
 
         foreach (var context in GetContexts(jsonObject))
         {
-            var path = Json.GetPath(pathIdentifier, jsonObject, context, key);
+            var path = Json.GetPath($"INTERSECTION_{by}_OWNERSHIP_KEY", jsonObject, context, key);
             result.AddRange(expressions.Select(i => string.Format(path, i)));
         }
 
         return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
 
-    protected virtual (string, object[])[] GetIntersectionExpressionsByBase() => [
-        ("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", [PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase]),
-        ("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_PTK", [PlatformToken]),
-        ("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_WITH_LID", []),
-    ];
-
-    protected virtual (string, object[])[] GetIntersectionExpressionsByDiscovery() => [
-        ("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_PTK", [PlatformToken]),
-        ("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_WITH_LID", []),
-    ];
-
-    protected virtual (string, object[])[] GetIntersectionExpressionsBySettlement() => [
-        ("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_PTK", [PlatformToken]),
-        ("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_WITH_LID", []),
-    ];
+    private (string, object[])[] GetCommonIntersectionExpressions(string category)
+    {
+        if (_uid is null)
+            return [
+                ($"INTERSECTION_{category}_OWNERSHIP_EXPRESSION_PTK", [PlatformToken]),
+                ($"INTERSECTION_{category}_OWNERSHIP_EXPRESSION_WITH_LID", []),
+            ];
+        return [
+            ($"INTERSECTION_{category}_OWNERSHIP_EXPRESSION_THIS_UID", [_uid]),
+        ];
+    }
 
     #endregion
 

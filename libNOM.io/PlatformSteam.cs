@@ -45,7 +45,6 @@ public partial class PlatformSteam : Platform
 
     #region Field
 
-    private string? _steamId; // will be set if available in path
     private SteamService? _steamService; // will be set if SteamService is accessed
 
     #endregion
@@ -122,10 +121,10 @@ public partial class PlatformSteam : Platform
         // Proceed to base method even if no directory.
 #if NETSTANDARD2_0
         if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory!.Name.Substring(11).All(char.IsDigit)) // implicit directory is not null
-            _steamId = directory.Name.Substring(3); // remove "st_"
+            _uid = directory.Name.Substring(3); // remove "st_"
 #else
         if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory!.Name[11..].All(char.IsDigit)) // implicit directory is not null
-            _steamId = directory.Name[3..]; // remove "st_"
+            _uid = directory.Name[3..]; // remove "st_"
 #endif
 
         base.InitializeComponent(directory, platformSettings);
@@ -409,47 +408,16 @@ public partial class PlatformSteam : Platform
         // Base call not as default as _steamId can also be null.
         var result = key switch
         {
-            "LID" => _steamId,
-            "UID" => _steamId,
+            "LID" => _uid,
+            "UID" => _uid,
             _ => null,
         } ?? base.GetUserIdentification(jsonObject, key);
 
         // Get via API only if not found in-file.
-        if (key == "USN" && string.IsNullOrEmpty(result) && Settings.UseExternalSourcesForUserIdentification && _steamId is not null)
+        if (key == "USN" && string.IsNullOrEmpty(result) && Settings.UseExternalSourcesForUserIdentification && _uid is not null)
             result = GetUserIdentificationBySteam();
 
         return result ?? string.Empty;
-    }
-
-    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
-    {
-        if (_steamId is null)
-            return base.GetIntersectionExpressionsByBase(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
-    {
-        if (_steamId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
-    {
-        if (_steamId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
-        ];
     }
 
     /// <summary>
@@ -462,7 +430,7 @@ public partial class PlatformSteam : Platform
         if (!Properties.Resources.STEAM_API_KEY.All(char.IsLetterOrDigit))
             return null;
 
-        var task = SteamService.GetPersonaNameAsync(_steamId!);
+        var task = SteamService.GetPersonaNameAsync(_uid!);
         task.Wait();
         return task.Result;
     }
