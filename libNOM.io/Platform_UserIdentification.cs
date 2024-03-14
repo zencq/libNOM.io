@@ -63,10 +63,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="by"></param>
     /// <param name="additionalExpressions"></param>
     /// <returns></returns>
-    private string? GetUserIdentificationInCommon(JObject jsonObject, string key, string by, params (string, object[])[] additionalExpressions)
+    private string? GetUserIdentificationInCommon(JObject jsonObject, string key, string by, params (string, object?[])[] additionalExpressions)
     {
         var path = Json.GetPath($"INTERSECTION_{by}_OWNERSHIP_KEY", jsonObject, key);
-        var result = GetCommonIntersectionExpressions(by).Concat(additionalExpressions).Select(i => Json.GetPath(i.Item1, jsonObject, i.Item2)).Select(i => string.Format(path, i));
+        var result = GetUserIdentificationIntersectionExpressions(by).Concat(additionalExpressions).Select(i => Json.GetPath(i.Item1, jsonObject, i.Item2)).Select(i => string.Format(path, i));
 
         return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
@@ -80,9 +80,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="additionalExpressions"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/38256828"/>
-    private string? GetUserIdentificationInContext(JObject jsonObject, string key, string by, params (string, object[])[] additionalExpressions)
+    private string? GetUserIdentificationInContext(JObject jsonObject, string key, string by, params (string, object?[])[] additionalExpressions)
     {
-        var expressions = GetCommonIntersectionExpressions(by).Concat(additionalExpressions).Select(i => Json.GetPath(i.Item1, jsonObject, i.Item2));
+        var expressions = GetUserIdentificationIntersectionExpressions(by).Concat(additionalExpressions).Select(i => Json.GetPath(i.Item1, jsonObject, i.Item2));
         var result = new List<string>();
 
         foreach (var context in GetContexts(jsonObject))
@@ -94,7 +94,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return jsonObject.SelectTokensWithIntersection<string>(result).MostCommon();
     }
 
-    private (string, object[])[] GetCommonIntersectionExpressions(string category)
+    private (string, object?[])[] GetUserIdentificationIntersectionExpressions(string category)
     {
         if (_uid is null)
             return [

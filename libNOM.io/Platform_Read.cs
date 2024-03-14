@@ -154,35 +154,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Loads data of the specified backup.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <exception cref="ArgumentException"/>
-    private void LoadBackupContainer(Container container)
-    {
-        Guard.IsTrue(container.Exists);
-        Guard.IsTrue(container.IsBackup);
-
-        // Load
-        container.ClearIncompatibility();
-
-        using var zipArchive = ZipFile.Open(container.DataFile!.FullName, ZipArchiveMode.Read);
-        if (zipArchive.ReadEntry("data", out var data))
-        {
-            _ = zipArchive.ReadEntry("meta", out var meta);
-
-            // Loads all meta information into the extra property.
-            LoadMeta(container, meta);
-
-            var binary = LoadData(container, data);
-            if (binary.IsEmpty())
-                container.IncompatibilityTag = Constants.INCOMPATIBILITY_001;
-            else if (DeserializeContainer(container, binary) is JObject jsonObject)
-                ProcessContainerData(container, jsonObject);
-        }
-    }
-
-    /// <summary>
     /// Loads data of the specified save.
     /// </summary>
     /// <param name="container"></param>
@@ -235,8 +206,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         else
             RebuildContainerHollow(container);
     }
-
-    public void Rebuild(Container container, JObject jsonObject) => ProcessContainerData(container, jsonObject);
 
     /// <summary>
     /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
