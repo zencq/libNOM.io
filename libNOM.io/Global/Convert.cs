@@ -155,7 +155,7 @@ public static class Convert
         container.IsSynced = true;
         container.Platform = platform; // to get the right sizes
 
-        platform.JustWrite(container);
+        platform.PrepareWrite(container);
     }
 
     // private //

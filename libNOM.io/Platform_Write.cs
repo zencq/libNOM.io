@@ -5,9 +5,7 @@ using libNOM.io.Interfaces;
 namespace libNOM.io;
 
 
-/// <summary>
-/// Abstract base for all platforms which just hook into the methods they need.
-/// </summary>
+// This partial class contains writing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     #region Write
@@ -27,7 +25,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         if (Settings.WriteAlways || !container.IsSynced)
         {
-            JustWrite(container);
+            PrepareWrite(container);
 
             container.Exists = true;
             container.IsSynced = true;
@@ -44,7 +42,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.WriteCallback.Invoke();
     }
 
-    internal void JustWrite(Container container)
+    internal void PrepareWrite(Container container)
     {
         var data = PrepareData(container);
         var meta = PrepareMeta(container, data);
@@ -52,6 +50,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         WriteMeta(container, meta);
         WriteData(container, data);
     }
+
+    #endregion
+
+    #region Data
 
     /// <summary>
     /// Prepares the ready to write to disk binary data file content.
@@ -136,6 +138,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.DataFile?.WriteAllBytes(data);
     }
 
+    #endregion
+
+    #region Meta
+
     /// <summary>
     /// Prepares the ready to write to disk binary meta file content.
     /// </summary>
@@ -179,7 +185,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
             writer.Write(container.SaveName.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST), SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST), SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
             writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
 
             writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2), SeekOrigin.Begin);
