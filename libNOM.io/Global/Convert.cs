@@ -2,6 +2,8 @@
 
 using CommunityToolkit.Diagnostics;
 
+using Newtonsoft.Json.Linq;
+
 namespace libNOM.io.Global;
 
 
@@ -165,38 +167,59 @@ public static class Convert
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    private static Container? GetContainer(string? input, Platform? platform)
+    private static Container? GetContainer(string? input, Platform platform)
     {
-        if (string.IsNullOrWhiteSpace(input))
-            return null;
+        if (CreateContainer(input, platform) is Container container && container.Exists)
+        {
+            // Try original save files first.
+            if (!container.IsLoaded)
+                container.SetJsonObject(ReadAllBytes(input!)); // input is an existing file as container would be null otherwise
 
+            // If it is a plaintext JSON file, the first try above fails.
+            if (!container.IsLoaded)
+                container.SetJsonObject(ReadAllText(input!));
+
+            return container.IsLoaded ? container : null;
+        }
+
+        return null;
+    }
+
+    private static Container? CreateContainer(string? input, Platform platform)
+    {
         Container? container = null;
+
+        if (File.Exists(input))
+        {
+            try
+            {
+                container = PlatformCollection.AnalyzeFile(input!);
+            }
+            catch (Exception ex) when (ex is OverflowException) { } // use fallback below
+
+            container ??= new Container(-1, platform) { DataFile = new(input) };
+        }
+
+        return container;
+    }
+
+    private static JObject? ReadAllBytes(string input)
+    {
         try
         {
-            container = PlatformCollection.AnalyzeFile(input!);
+            ReadOnlySpan<byte> bytes = File.ReadAllBytes(input);
+            return bytes.GetJson();
         }
-        catch (Exception ex) when (ex is OverflowException) { } // use fallback below
-        if (container is null && File.Exists(input))
+        catch (Exception ex) when (ex is ArgumentOutOfRangeException)
         {
-            container = new Container(-1, platform!) { DataFile = new(input) };
-            try
-            {
-                // Try original save files first.
-                ReadOnlySpan<byte> bytes = File.ReadAllBytes(input);
-                container.SetJsonObject(bytes.GetJson());
-            }
-            catch (Exception ex) when (ex is ArgumentOutOfRangeException) { }
-            try
-            {
-                // If it is a plaintext JSON file, the first try above fails.
-                var text = File.ReadAllText(input);
-                container.SetJsonObject(text.GetJson());
-            }
-            catch { }
-            if (!container.IsLoaded) // no valid JSON in specified file
-                return null;
+            return null;
         }
-        return container;
+    }
+
+    private static JObject? ReadAllText(string input)
+    {
+        string text = File.ReadAllText(input);
+        return text.GetJson();
     }
 
     #endregion

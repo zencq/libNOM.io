@@ -181,7 +181,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
             writer.Write(container.SaveName.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST), SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
+            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 1), SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
             writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
 
             writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2), SeekOrigin.Begin);

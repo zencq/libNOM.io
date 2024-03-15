@@ -277,13 +277,7 @@ public partial class PlatformSteam : Platform
             };
 
             // Extended data since Waypoint.
-            if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-                container.Extra = container.Extra with
-                {
-                    SaveName = disk.Slice(88, 128).GetStringUntilTerminator(),
-                    SaveSummary = disk.Slice(216, 128).GetStringUntilTerminator(),
-                    DifficultyPreset = disk[344],
-                };
+            UpdateContainerWithWaypointMetaInformation(container, disk);
 
             // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
             container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));

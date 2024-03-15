@@ -222,41 +222,46 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <inheritdoc cref="UpdateContainerWithJsonInformation(Container, JObject)"/>
+    /// <param name="json"></param>
+    /// <param name="force"></param>
     private static void UpdateContainerWithJsonInformation(Container container, string json, bool force)
     {
-        // Values relevant for AccountData first.
-        if (container.SaveVersion <= 0 || force)
-            container.SaveVersion = Meta.SaveVersion.Get(json);
-
-        // Then all independent values.
-        if (container.Extra.GameMode == 0 || force)
+        // Independent values first.
+        if (IsUpdateNecessary(container.Extra.GameMode, force))
             container.GameMode = Meta.GameMode.Get(json);
 
-        if (container.TotalPlayTime == 0 || force)
+        if (IsUpdateNecessary(container.SaveVersion, force))
+            container.SaveVersion = Meta.SaveVersion.Get(json);
+
+        if (IsUpdateNecessary((int)(container.Extra.TotalPlayTime), force))
             container.TotalPlayTime = Meta.TotalPlayTime.Get(json);
 
         // Finally all remaining values that depend on others.
-        if (container.GameMode == PresetGameModeEnum.Seasonal && container.Season == SeasonEnum.None || force)
-            container.Season = Meta.Season.Get(json); // needs GameMode
+        if (container.GameMode == PresetGameModeEnum.Seasonal && IsUpdateNecessary(container.Extra.Season, force)) // needs GameMode
+            container.Season = Meta.Season.Get(json);
 
-        if (container.BaseVersion <= 0 || force)
+        if (IsUpdateNecessary(container.Extra.BaseVersion, force))
             container.BaseVersion = Meta.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
 
-        if (container.GameVersion == GameVersionEnum.Unknown)
+        if (IsUpdateNecessary((int)(container.GameVersion), force))
             container.GameVersion = Meta.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
 
-        if (container.Difficulty == DifficultyPresetTypeEnum.Invalid || force)
+        if (IsUpdateNecessary((int)(container.Extra.DifficultyPreset), force))
             container.Difficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
 
         if (container.IsVersion400Waypoint) // needs GameVersion
         {
-            if (string.IsNullOrEmpty(container.SaveName) || force)
+            if (IsUpdateNecessary(container.Extra.SaveName, force))
                 container.SaveName = Meta.SaveName.Get(json);
 
-            if (string.IsNullOrEmpty(container.SaveSummary) || force)
+            if (IsUpdateNecessary(container.Extra.SaveSummary, force))
                 container.SaveSummary = Meta.SaveSummary.Get(json);
         }
     }
+
+    private static bool IsUpdateNecessary(int property, bool force) => force || property <= 0;
+
+    private static bool IsUpdateNecessary(string property, bool force) => force || string.IsNullOrEmpty(property);
 
     /// <summary>
     /// Updates the specified container with information from the meta file.
@@ -265,6 +270,17 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="disk"></param>
     /// <param name="decompressed"></param>
     protected abstract void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
+
+    protected void UpdateContainerWithWaypointMetaInformation(Container container, ReadOnlySpan<byte> disk)
+    {
+        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
+            container.Extra = container.Extra with
+            {
+                SaveName = disk.Slice(META_LENGTH_KNOWN, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+                SaveSummary = disk.Slice(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 1), Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+                DifficultyPreset = disk[META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2)],
+            };
+    }
 
     /// <summary>
     /// Updates the specified container with information from the data file.
@@ -280,5 +296,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             SizeDisk = (uint)(disk.Length),
         };
     }
+
     #endregion
 }

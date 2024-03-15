@@ -465,13 +465,7 @@ public partial class PlatformMicrosoft : Platform
         };
 
         // Extended data since Waypoint.
-        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-            container.Extra = container.Extra with
-            {
-                SaveName = disk.Slice(20, 128).GetStringUntilTerminator(),
-                SaveSummary = disk.Slice(148, 128).GetStringUntilTerminator(),
-                DifficultyPreset = disk[276],
-            };
+        UpdateContainerWithWaypointMetaInformation(container, disk);
 
         // As data has a save streaming like format since Omega 4.52, the disk size now stored.
         if (Meta.GameVersion.Get(container.Extra.BaseVersion) < GameVersionEnum.OmegaWithV2)

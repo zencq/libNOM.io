@@ -89,9 +89,9 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    // // Read / Write
+    // //
 
-    #region Generate
+    #region Initialize
 
     private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
@@ -106,57 +106,49 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    #region Load
+    #region Process
 
 #if !NETSTANDARD2_0
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
 #endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
-        /**
-          0. META HEADER          (  4)
-          1. META FORMAT          (  4)
-          2. DECOMPRESSED SIZE    (  4)
-          3. META INDEX           (  4)
-          4. TIMESTAMP            (  4)
-          5. BASE VERSION         (  4)
-          6. GAME MODE            (  2)
-          6. SEASON               (  2)
-          7. TOTAL PLAY TIME      (  4)
-          8. EMPTY                (  8)
+        //  0. META HEADER          (  4)
+        //  1. META FORMAT          (  4)
+        //  2. DECOMPRESSED SIZE    (  4)
+        //  3. META INDEX           (  4)
+        //  4. TIMESTAMP            (  4)
+        //  5. BASE VERSION         (  4)
+        //  6. GAME MODE            (  2)
+        //  6. SEASON               (  2)
+        //  7. TOTAL PLAY TIME      (  4)
+        //  8. EMPTY                (  8)
 
-         10. EMPTY                ( 60)
-                                  (100)
+        // 10. EMPTY                ( 60)
+        //                          (100)
 
-         10. SAVE NAME            (128) // may contain additional junk data after null terminator
-         42. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
-         74. DIFFICULTY PRESET    (  1)
-         74. EMPTY                ( 59) // may contain additional junk data
-                                  (356)
-         */
+        // 10. SAVE NAME            (128) // may contain additional junk data after null terminator
+        // 42. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
+        // 74. DIFFICULTY PRESET    (  1)
+        // 74. EMPTY                ( 59) // may contain additional junk data
+        //                          (356)
 
         if (disk.IsEmpty())
             return;
 
-        if (container.IsAccount)
+        container.Extra = container.Extra with
         {
-            container.Extra = container.Extra with
-            {
-                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
-                Bytes = disk.ToArray(),
-                Size = (uint)(disk.Length),
-                SizeDecompressed = decompressed[2],
-            };
-        }
-        else
+            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
+            Bytes = container.IsAccount ? disk.ToArray() : disk.Slice(META_LENGTH_KNOWN).ToArray(),
+            Size = (uint)(disk.Length),
+            SizeDecompressed = decompressed[2],
+        };
+
+        if (container.IsSave)
         {
             // Vanilla data always available.
             container.Extra = container.Extra with
             {
-                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
-                Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
-                Size = (uint)(disk.Length),
-                SizeDecompressed = decompressed[2],
                 LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[4]).ToLocalTime(),
                 BaseVersion = (int)(decompressed[5]),
                 GameMode = disk.Cast<ushort>(24),
@@ -165,15 +157,7 @@ public partial class PlatformSwitch : Platform
             };
 
             // Extended data since Waypoint.
-            if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-            {
-                container.Extra = container.Extra with
-                {
-                    SaveName = disk.Slice(40, 128).GetStringUntilTerminator(),
-                    SaveSummary = disk.Slice(168, 128).GetStringUntilTerminator(),
-                    DifficultyPreset = disk[296],
-                };
-            }
+            UpdateContainerWithWaypointMetaInformation(container, disk);
 
             // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
             container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
