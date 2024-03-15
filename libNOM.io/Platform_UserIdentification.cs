@@ -14,7 +14,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Get
+    #region Getter
 
     /// <summary>
     /// Gets the <see cref="UserIdentification"/> for this platform.

@@ -116,29 +116,29 @@ public partial class PlatformSteam : Platform
     public PlatformSteam(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
     /// <seealso href="https://help.steampowered.com/en/faqs/view/2816-BE67-5B69-0FEC"/>
-    protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
+    protected override void InitializePlatformSpecific()
     {
-        // Proceed to base method even if no directory.
+        // Extract UID from directory name if possible.
 #if NETSTANDARD2_0
-        if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory!.Name.Substring(11).All(char.IsDigit)) // implicit directory is not null
-            _uid = directory.Name.Substring(3); // remove "st_"
+        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && Location.Name.Substring(11).All(char.IsDigit)) // implicit directory is not null
+            _uid = Location.Name.Substring(3); // remove "st_"
 #else
-        if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory!.Name[11..].All(char.IsDigit)) // implicit directory is not null
-            _uid = directory.Name[3..]; // remove "st_"
+        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && Location.Name[11..].All(char.IsDigit))
+            _uid = Location.Name[3..]; // remove "st_"
 #endif
+    }
 
-        base.InitializeComponent(directory, platformSettings);
+    protected override void InitializeWatcher()
+    {
+        base.InitializeWatcher();
 
         // Files can have 0 or 1 or 2 numbers in its name.
-        if (IsValid)
-        {
 #if NETSTANDARD2_0_OR_GREATER
-            _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "*");
+        _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "*");
 #else
-            _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "?"));
-            _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", string.Empty));
+        _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "?"));
+        _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", string.Empty));
 #endif
-        }
     }
 
     #endregion

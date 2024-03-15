@@ -9,7 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace libNOM.io;
 
 
-// This partial class contains UserIdentification related code.
+// This partial class contains FileSystemWatcher related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     #region Field
@@ -34,7 +34,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Constructor
+    #region Initialize
 
     protected virtual void InitializeWatcher()
     {
@@ -54,6 +54,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    #region Events
+
     /// <summary>
     /// Enables the <see cref="FileSystemWatcher"/> if settings allowing it.
     /// </summary>
@@ -69,8 +71,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         _watcher.EnableRaisingEvents = false;
     }
-
-    #region Event
 
     /// <summary>
     /// Gets called on a watcher event and adds the new change type to the cache.

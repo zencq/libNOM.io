@@ -62,7 +62,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="directory"></param>
     /// <param name="platformSettings"></param>
-    protected virtual void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
+    private void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
     {
         AnchorFileIndex = GetAnchorFileIndex(directory);
         Location = directory!; // force with ! even if null as it would be invalid anyway
@@ -73,12 +73,16 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             return;
 
         InitializeWatcher();
+
+        InitializePlatformSpecific();
         InitializePlatform();
     }
 
     #endregion
 
     #region Initialize
+
+    protected virtual void InitializePlatformSpecific() { }
 
     /// <summary>
     /// Generates all related containers as well as the user identification.

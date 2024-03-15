@@ -10,6 +10,8 @@ public class PlatformGog : PlatformSteam
 
     internal new const string ACCOUNT_PATTERN = "DefaultUser";
 
+    private static readonly string GALAXY_CONFIG_JSON = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GOG.com", "Galaxy", "Configuration", "config.json");
+
     internal static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
     #endregion
@@ -54,21 +56,14 @@ public class PlatformGog : PlatformSteam
 
     public PlatformGog(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
-    protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
+    protected override void InitializePlatformSpecific()
     {
-        // Proceed to base method even if no directory.
-        if (directory is not null && platformSettings?.UseExternalSourcesForUserIdentification == true)
+        if (Settings.UseExternalSourcesForUserIdentification && File.Exists(GALAXY_CONFIG_JSON))
         {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GOG.com", "Galaxy", "Configuration", "config.json");
-            if (File.Exists(path))
-            {
-                var jsonObject = JsonConvert.DeserializeObject(File.ReadAllText(path)) as JObject;
-                _uid = jsonObject?.GetValue<string>("userId");
-                _usn = jsonObject?.GetValue<string>("username");
-            }
+            var jsonObject = JsonConvert.DeserializeObject(File.ReadAllText(GALAXY_CONFIG_JSON)) as JObject;
+            _uid = jsonObject?.GetValue<string>("userId");
+            _usn = jsonObject?.GetValue<string>("username");
         }
-
-        base.InitializeComponent(directory, platformSettings);
     }
 
     #endregion

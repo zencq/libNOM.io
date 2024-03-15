@@ -59,29 +59,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region PlatformExtra
-
-    /// <summary>
-    /// Creates the platform extra for the destination container.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    protected virtual void CreatePlatformExtra(Container container, Container other)
-    {
-        CopyPlatformExtra(container, other);
-
-        // Reset bytes as from another platform it would not be right.
-        container.Extra = container.Extra with
-        {
-            Bytes = null,
-        };
-    }
-
-    #endregion
-
-    // // 
-
     #region Prepare
 
     /// <summary>
@@ -200,7 +177,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Ownership
+    #region Transfer Ownership
 
     /// <summary>
     /// Transfers ownerships to new container according to the prepared data.

@@ -143,31 +143,25 @@ public partial class PlatformPlaystation : Platform
 
     public PlatformPlaystation(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
-    protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
+    protected override void InitializePlatformSpecific()
     {
-        // Proceed to base method even if no directory.
-        if (GetAnchorFileIndex(directory) is int anchorFileIndex and not -1) // implicit directory is not null
+        if (AnchorFileIndex == 1) // memory.dat
         {
-            if (anchorFileIndex == 1) // memory.dat
-            {
-                _memorydat = new FileInfo(Path.Combine(directory!.FullName, "memory.dat"));
-                _lastWriteTime = _memorydat.LastWriteTime;
-            }
-            else
-            {
-                _usesSaveStreaming = true;
-            }
-
-            // Get first file that is not account data if not _memorydat.
-            var f = _memorydat ?? directory!.EnumerateFiles(PlatformAnchorFilePattern[anchorFileIndex]).FirstOrDefault(i => !i.Name.Contains("00"));
-            if (f is not null)
-            {
-                using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.Read));
-                _usesSaveWizard = reader.ReadBytes(SAVEWIZARD_HEADER_BINARY.Length).SequenceEqual(SAVEWIZARD_HEADER_BINARY);
-            }
+            _memorydat = new FileInfo(Path.Combine(Location.FullName, "memory.dat"));
+            _lastWriteTime = _memorydat.LastWriteTime;
+        }
+        else
+        {
+            _usesSaveStreaming = true;
         }
 
-        base.InitializeComponent(directory, platformSettings);
+        // Get first file that is not account data if not _memorydat.
+        var f = _memorydat ?? Location.EnumerateFiles(PlatformAnchorFilePattern[AnchorFileIndex]).FirstOrDefault(i => !i.Name.Contains("00"));
+        if (f is not null)
+        {
+            using var reader = new BinaryReader(File.Open(f.FullName, FileMode.Open, FileAccess.Read, FileShare.Read));
+            _usesSaveWizard = reader.ReadBytes(SAVEWIZARD_HEADER_BINARY.Length).SequenceEqual(SAVEWIZARD_HEADER_BINARY);
+        }
     }
 
     #endregion

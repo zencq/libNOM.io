@@ -8,17 +8,24 @@ namespace libNOM.io;
 // This partial class contains file operation related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    #region Helper
-
-    private void EnsureIsLoaded(Container container)
-    {
-        if (!container.IsLoaded)
-            BuildContainerFull(container);
-    }
-
-    #endregion
-
     #region PlatformExtra
+
+    /// <summary>
+    /// Creates the platform extra for the destination container.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    protected virtual void CreatePlatformExtra(Container container, Container other)
+    {
+        CopyPlatformExtra(container, other);
+
+        // Reset bytes as from another platform it would not be right.
+        container.Extra = container.Extra with
+        {
+            Bytes = null,
+        };
+    }
 
     /// <summary>
     /// Copies the platform extra from the source container.
@@ -49,7 +56,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    // //
+    private void EnsureIsLoaded(Container container)
+    {
+        if (!container.IsLoaded)
+            BuildContainerFull(container);
+    }
 
     #region Copy
 

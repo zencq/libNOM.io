@@ -356,6 +356,6 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// <returns></returns>
     private static IEnumerable<DirectoryInfo> GetAccountsInPath(string path, string pattern)
     {
-        return IsPathValid(path, out var directory) ? directory!.EnumerateDirectories(pattern) : Enumerable.Empty<DirectoryInfo>();
+        return IsPathValid(path, out var directory) ? directory!.EnumerateDirectories(pattern) : [];
     }
 }

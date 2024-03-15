@@ -132,26 +132,17 @@ public partial class PlatformMicrosoft : Platform
 
     public PlatformMicrosoft(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
-#if NETSTANDARD2_1_OR_GREATER || NET6_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and we do not want three ways, so we only do oldest and newest.")]
-#endif
-    protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
+    protected override void InitializePlatformSpecific()
     {
-        // Proceed to base method even if no directory.
-        if (directory is not null)
-        {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-            if (directory.Name.Length == 49 && directory.Name.EndsWith(ACCOUNT_PATTERN.Substring(1)) && directory.Name.Substring(0, 16).All("0123456789ABCDEFabcdef".Contains))
-                _uid = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
+        if (Location.Name.Length == 49 && Location.Name.EndsWith(ACCOUNT_PATTERN.Substring(1)) && Location.Name.Substring(0, 16).All("0123456789ABCDEFabcdef".Contains))
+            _uid = System.Convert.ToInt64(Location.Name.Split('_')[0], 16).ToString();
 #else
-            if (directory.Name.Length == 49 && directory.Name.EndsWith(ACCOUNT_PATTERN[1..]) && directory.Name[..16].All(char.IsAsciiHexDigit))
-                _uid = System.Convert.ToInt64(directory.Name.Split('_')[0], 16).ToString();
+        if (Location.Name.Length == 49 && Location.Name.EndsWith(ACCOUNT_PATTERN[1..]) && Location.Name[..16].All(char.IsAsciiHexDigit))
+            _uid = System.Convert.ToInt64(Location.Name.Split('_')[0], 16).ToString();
 #endif
 
-            _containersindex = new FileInfo(Path.Combine(directory.FullName, "containers.index"));
-        }
-
-        base.InitializeComponent(directory, platformSettings);
+        _containersindex = new FileInfo(Path.Combine(Location.FullName, "containers.index"));
     }
 
     #endregion

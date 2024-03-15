@@ -83,8 +83,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Backup / Restore
-
     public void Backup(Container container)
     {
         // Does not make sense without the data file.
@@ -140,6 +138,4 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container!.IsSynced = false;
         container!.BackupRestoredCallback.Invoke();
     }
-
-    #endregion
 }

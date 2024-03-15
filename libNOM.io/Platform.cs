@@ -1,11 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 
-using LazyCache;
-
 using libNOM.io.Interfaces;
-
-using Microsoft.Extensions.Caching.Memory;
 
 using Newtonsoft.Json.Linq;
 
@@ -20,7 +16,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     #region Constant
 
     protected virtual int COUNT_SAVE_SLOTS { get; } = 15; // overridable for compatibility with old PlayStation format
-    private int COUNT_SAVES_PER_SLOT { get; } = 2;
+    protected virtual int COUNT_SAVES_PER_SLOT { get; } = 2; // overridable in case it will be necessary in the future
     internal int COUNT_SAVES_TOTAL => COUNT_SAVE_SLOTS * COUNT_SAVES_PER_SLOT; // { get; }
 
     protected virtual int META_LENGTH_KNOWN { get; } = -1; // in fact, everything is known, but named as such because everything after that can contain additional junk data
@@ -114,8 +110,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    // //
-
     #region Getter
 
     // public //
@@ -180,8 +174,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    // //
-
     #region IEquatable
 
     public override bool Equals(object? obj)
@@ -212,5 +204,4 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     #endregion
-
 }
