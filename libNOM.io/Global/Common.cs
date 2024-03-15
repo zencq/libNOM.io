@@ -26,7 +26,11 @@ internal static partial class Common
         return JsonConvert.DeserializeObject<T>(serialized)!;
     }
 
-    internal static bool IsWindowsOrLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    internal static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
     internal static bool IsMac() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+    internal static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+    internal static bool IsWindowsOrLinux() => IsWindows() || IsLinux();
 }

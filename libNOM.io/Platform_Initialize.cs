@@ -57,6 +57,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     public Platform(DirectoryInfo directory, PlatformSettings platformSettings) => InitializeComponent(directory, platformSettings);
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
 
+    #endregion
+
+    #region Initialize
+
     /// <summary>
     /// Workaround to be able to decide when inherited classes initialize their components.
     /// </summary>
@@ -77,10 +81,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         InitializePlatformSpecific();
         InitializePlatform();
     }
-
-    #endregion
-
-    #region Initialize
 
     protected virtual void InitializePlatformSpecific() { }
 

@@ -74,7 +74,7 @@ public class PlatformGog : PlatformSteam
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        // Base call not as default as _userId and _username can also be null.
+        // Base call not as default as _uid and _usn can also be null.
         var result = key switch
         {
             "UID" => _uid,

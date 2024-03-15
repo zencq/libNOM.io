@@ -23,13 +23,13 @@ public partial class PlatformSteam : Platform
 
     internal static readonly string PATH = ((Func<string>)(() =>
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (Common.IsWindows())
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) // SteamDeck
+        if (Common.IsLinux()) // SteamDeck
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "Steam", "steamapps", "compatdata", "275850", "pfx", "drive_c", "users", "steamuser", "Application Data", "HelloGames", "NMS");
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
+        if (Common.IsMac())
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "HelloGames", "NMS");
 
         return string.Empty; // same as if not defined at all
@@ -115,18 +115,9 @@ public partial class PlatformSteam : Platform
 
     public PlatformSteam(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
-    /// <seealso href="https://help.steampowered.com/en/faqs/view/2816-BE67-5B69-0FEC"/>
-    protected override void InitializePlatformSpecific()
-    {
-        // Extract UID from directory name if possible.
-#if NETSTANDARD2_0
-        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && Location.Name.Substring(11).All(char.IsDigit)) // implicit directory is not null
-            _uid = Location.Name.Substring(3); // remove "st_"
-#else
-        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && Location.Name[11..].All(char.IsDigit))
-            _uid = Location.Name[3..]; // remove "st_"
-#endif
-    }
+    #endregion
+
+    #region Initialize
 
     protected override void InitializeWatcher()
     {
@@ -141,11 +132,18 @@ public partial class PlatformSteam : Platform
 #endif
     }
 
-    #endregion
-
-    // // Read / Write
-
-    #region Generate
+    /// <seealso href="https://help.steampowered.com/en/faqs/view/2816-BE67-5B69-0FEC"/>
+    protected override void InitializePlatformSpecific()
+    {
+        // Extract UID from directory name if possible.
+#if NETSTANDARD2_0
+        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && Location.Name.Substring(ACCOUNT_PATTERN.Length - 1).All(char.IsDigit)) // implicit directory is not null
+            _uid = Location.Name.Substring(3); // remove "st_"
+#else
+        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && Location.Name[(ACCOUNT_PATTERN.Length - 1)..].All(char.IsDigit))
+            _uid = Location.Name[3..]; // remove "st_"
+#endif
+    }
 
     private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
@@ -166,71 +164,7 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    #region Load
-
-    protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
-    {
-        var value = base.DecryptMeta(container, meta).ToArray(); // needs to be an array for the deep copy
-
-        if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT)
-            return value;
-
-        // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
-#if NETSTANDARD2_0_OR_GREATER
-        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(((StoragePersistentSlotEnum[])(Enum.GetValues(typeof(StoragePersistentSlotEnum)))).Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
-#else
-        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(Enum.GetValues<StoragePersistentSlotEnum>().Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
-#endif
-
-        foreach (var entry in enumValues)
-        {
-            // When overwriting META_ENCRYPTION_KEY[0] it can happen that the value is not set afterwards and therefore create a new collection to ensure it will be correct.
-            ReadOnlySpan<uint> key = [(((uint)(entry) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
-
-            // DeepCopy as value would be changed otherwise and casting again does not work.
-            Span<uint> result = Common.DeepCopy(value);
-
-            uint hash = 0;
-            int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
-            int lastIndex = result.Length - 1;
-
-            // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
-            for (int i = 0; i < iterations; i++)
-                hash += 0x9E3779B9;
-
-            for (int i = 0; i < iterations; i++)
-            {
-                uint current = result[0];
-                int keyIndex = (int)(hash >> 2 & 3);
-                int valueIndex = lastIndex;
-
-                for (int j = lastIndex; j > 0; j--, valueIndex--)
-                {
-                    uint j1 = (current >> 3) ^ (result[valueIndex - 1] << 4);
-                    uint j2 = (current * 4) ^ (result[valueIndex - 1] >> 5);
-                    uint j3 = (result[valueIndex - 1] ^ key[(j & 3) ^ keyIndex]);
-                    uint j4 = (current ^ hash);
-                    result[valueIndex] -= (j1 + j2) ^ (j3 + j4);
-                    current = result[valueIndex];
-                }
-
-                valueIndex = lastIndex;
-
-                uint i1 = (current >> 3) ^ (result[valueIndex] << 4);
-                uint i2 = (current * 4) ^ (result[valueIndex] >> 5);
-                uint i3 = (result[valueIndex] ^ key[keyIndex]);
-                uint i4 = (current ^ hash);
-                result[0] -= (i1 + i2) ^ (i3 + i4);
-
-                hash += 0x61C88647;
-            }
-
-            if (result[0] == META_HEADER)
-                return result;
-        }
-
-        return value;
-    }
+    #region Process
 
 #if !NETSTANDARD2_0
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
@@ -289,6 +223,70 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
+    #region Load
+
+    protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
+    {
+        var value = base.DecryptMeta(container, meta).ToArray(); // needs to be an array for the deep copy
+
+        if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT)
+            return value;
+
+        // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
+        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(EnumExtensions.GetValues<StoragePersistentSlotEnum>().Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
+
+        foreach (var entry in enumValues)
+        {
+            // When overwriting META_ENCRYPTION_KEY[0] it can happen that the value is not set afterwards and therefore create a new collection to ensure it will be correct.
+            ReadOnlySpan<uint> key = [(((uint)(entry) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
+
+            // DeepCopy as value would be changed otherwise and casting again does not work.
+            Span<uint> result = Common.DeepCopy(value);
+
+            uint hash = 0;
+            int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
+            int lastIndex = result.Length - 1;
+
+            // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
+            for (int i = 0; i < iterations; i++)
+                hash += 0x9E3779B9;
+
+            for (int i = 0; i < iterations; i++)
+            {
+                uint current = result[0];
+                int keyIndex = (int)(hash >> 2 & 3);
+                int valueIndex = lastIndex;
+
+                for (int j = lastIndex; j > 0; j--, valueIndex--)
+                {
+                    uint j1 = (current >> 3) ^ (result[valueIndex - 1] << 4);
+                    uint j2 = (current * 4) ^ (result[valueIndex - 1] >> 5);
+                    uint j3 = (result[valueIndex - 1] ^ key[(j & 3) ^ keyIndex]);
+                    uint j4 = (current ^ hash);
+                    result[valueIndex] -= (j1 + j2) ^ (j3 + j4);
+                    current = result[valueIndex];
+                }
+
+                valueIndex = lastIndex;
+
+                uint i1 = (current >> 3) ^ (result[valueIndex] << 4);
+                uint i2 = (current * 4) ^ (result[valueIndex] >> 5);
+                uint i3 = (result[valueIndex] ^ key[keyIndex]);
+                uint i4 = (current ^ hash);
+                result[0] -= (i1 + i2) ^ (i3 + i4);
+
+                hash += 0x61C88647;
+            }
+
+            if (result[0] == META_HEADER)
+                return result;
+        }
+
+        return value;
+    }
+
+    #endregion
+
     #region Write
 
     public override void Write(Container container, DateTimeOffset writeTime)
@@ -330,20 +328,12 @@ public partial class PlatformSteam : Platform
         }
         else // SAVE_FORMAT_2
         {
-#if NETSTANDARD2_0_OR_GREATER
-            var sha256 = SHA256.Create().ComputeHash(data.ToArray());
-#else
-            var sha256 = SHA256.HashData(data);
-#endif
-            var spookyHash = new SpookyHash(0x155AF93AC304200, 0x8AC7230489E7FFFF);
-            spookyHash.Update(sha256);
-            spookyHash.Update(data.ToArray());
-            spookyHash.Final(out ulong hash1, out ulong hash2);
+            var hashes = ProduceHashes(data);
 
-            writer.Write(hash1); // 8
-            writer.Write(hash2); // 8
+            writer.Write(hashes.SpookyHash1); // 8
+            writer.Write(hashes.SpookyHash2); // 8
 
-            writer.Write(sha256); // 256 / 8 = 32
+            writer.Write(hashes.SHA256); // 256 / 8 = 32
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
@@ -351,6 +341,22 @@ public partial class PlatformSteam : Platform
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
+    }
+
+    private static (byte[] SHA256, ulong SpookyHash1, ulong SpookyHash2) ProduceHashes(ReadOnlySpan<byte> data)
+    {
+#if NETSTANDARD2_0_OR_GREATER
+        var sha256 = SHA256.Create().ComputeHash(data.ToArray());
+#else
+        var sha256 = SHA256.HashData(data);
+#endif
+
+        var spookyHash = new SpookyHash(0x155AF93AC304200, 0x8AC7230489E7FFFF);
+        spookyHash.Update(sha256);
+        spookyHash.Update(data.ToArray());
+        spookyHash.Final(out ulong spookyFinal1, out ulong spookyFinal2);
+
+        return (sha256, spookyFinal1, spookyFinal2);
     }
 
     protected override ReadOnlySpan<byte> EncryptMeta(Container container, ReadOnlySpan<byte> data, Span<byte> meta)
@@ -393,13 +399,11 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    // // User Identification
-
     #region UserIdentification
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        // Base call not as default as _steamId can also be null.
+        // Base call not as default as _uid can also be null.
         var result = key switch
         {
             "LID" => _uid,
@@ -420,11 +424,11 @@ public partial class PlatformSteam : Platform
     /// <returns></returns>
     private string? GetUserIdentificationBySteam()
     {
-        // Ensure STEAM_API_KEY is a valid one.
+        // Ensure STEAM_API_KEY is a formal valid one.
         if (!Properties.Resources.STEAM_API_KEY.All(char.IsLetterOrDigit))
             return null;
 
-        var task = SteamService.GetPersonaNameAsync(_uid!);
+        var task = SteamService.GetPersonaNameAsync(_uid!); // _uid has been checked before
         task.Wait();
         return task.Result;
     }
