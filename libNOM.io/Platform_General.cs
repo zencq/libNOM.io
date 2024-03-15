@@ -39,20 +39,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Configuration
-
-    // public //
-
-    public DirectoryInfo Location { get; protected set; }
-
-    public PlatformSettings Settings { get; protected set; }
-
-    // protected //
-
-    protected int AnchorFileIndex { get; set; } = -1;
-
-    #endregion
-
     #region Flags
 
     // public //
@@ -140,23 +126,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     public IEnumerable<Container> GetSaveContainers() => SaveContainerCollection;
 
-    // protected //
-
-    /// <summary>
-    /// Gets the index of the matching anchor.
-    /// </summary>
-    /// <param name="directory"></param>
-    /// <returns></returns>
-    protected int GetAnchorFileIndex(DirectoryInfo? directory)
-    {
-        if (directory is not null)
-            for (var i = 0; i < PlatformAnchorFilePattern.Length; i++)
-                if (directory.GetFiles(PlatformAnchorFilePattern[i]).Length != 0)
-                    return i;
-
-        return -1;
-    }
-
     // private //
 
     private static IEnumerable<SaveContextQueryEnum> GetContexts(JObject jsonObject)
@@ -201,7 +170,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             DisableWatcher();
         }
         else if (Settings.LoadingStrategy > LoadingStrategyEnum.Empty && oldStrategy == LoadingStrategyEnum.Empty)
-            GeneratePlatformData(); // calls EnableWatcher()
+            InitializePlatform(); // calls EnableWatcher()
 
         // Ensure mapping is updated in the containers.
         if (Settings.UseMapping != oldMapping)
@@ -212,44 +181,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     #endregion
 
     // //
-
-    #region Constructor
-
-#pragma warning disable CS8618 // Non-nullable property 'Settings' must contain a non-null value when exiting constructor. Property 'Settings' is set in InitializeComponent.
-    public Platform() => InitializeComponent(null, null);
-
-    public Platform(string path) => InitializeComponent(new(path), null);
-
-    public Platform(string path, PlatformSettings platformSettings) => InitializeComponent(new(path), platformSettings);
-
-    public Platform(DirectoryInfo directory) => InitializeComponent(directory, null);
-
-    public Platform(DirectoryInfo directory, PlatformSettings platformSettings) => InitializeComponent(directory, platformSettings);
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
-
-    /// <summary>
-    /// Workaround to be able to decide when inherited classes initialize their components.
-    /// </summary>
-    /// <param name="directory"></param>
-    /// <param name="platformSettings"></param>
-    protected virtual void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
-    {
-        AnchorFileIndex = GetAnchorFileIndex(directory);
-        Location = directory!; // force with ! even if null as it would be invalid anyway
-        Settings = platformSettings ?? new();
-
-        // Stop if no directory or no anchor found.
-        if (!IsValid)
-            return;
-
-        // Watcher
-        InitializeWatcher();
-
-        // Loading
-        GeneratePlatformData();
-    }
-
-    #endregion
 
     #region IEquatable
 
@@ -281,4 +212,5 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     #endregion
+
 }

@@ -1,9 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Globalization;
-using System.IO.Compression;
-
-using CommunityToolkit.Diagnostics;
-using CommunityToolkit.HighPerformance;
+﻿using CommunityToolkit.HighPerformance;
 
 using libNOM.io.Interfaces;
 
@@ -13,165 +8,10 @@ using Newtonsoft.Json.Linq;
 namespace libNOM.io;
 
 
-/// <summary>
-/// Abstract base for all platforms which just hook into the methods they need.
-/// </summary>
+// This partial class contains reading and processing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    #region Generate
-
-    /// <summary>
-    /// Generates all related containers as well as the user identification.
-    /// </summary>
-    private void GeneratePlatformData()
-    {
-        if (Settings.LoadingStrategy == LoadingStrategyEnum.Empty)
-            return;
-
-        SaveContainerCollection.Clear();
-        SaveContainerCollection.AddRange(GenerateContainerCollection());
-        SaveContainerCollection.Sort();
-
-        UpdateUserIdentification();
-        EnableWatcher();
-    }
-
-    /// <summary>
-    /// Generates a <see cref="Container"/> collection with an entry for each possible file.
-    /// </summary>
-    /// <returns></returns>
-    protected virtual IEnumerable<Container> GenerateContainerCollection()
-    {
-        var bag = new ConcurrentBag<Container>();
-
-        var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
-        {
-            return Task.Run(() =>
-            {
-                if (metaIndex == 0)
-                {
-                    AccountContainer = CreateContainer(metaIndex);
-                    BuildContainerFull(AccountContainer); // always full
-                }
-                else if (metaIndex > 1) // skip index 1
-                {
-                    var container = CreateContainer(metaIndex);
-
-                    if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
-                        BuildContainerHollow(container);
-                    else
-                        BuildContainerFull(container);
-
-                    GenerateBackupCollection(container);
-                    bag.Add(container);
-                }
-            });
-        });
-        Task.WaitAll(tasks.ToArray());
-
-        return bag;
-    }
-
-    /// <inheritdoc cref="CreateContainer(int, PlatformExtra?)"/>
-    internal Container CreateContainer(int metaIndex) => CreateContainer(metaIndex, null);
-
-    /// <summary>
-    /// Creates a <see cref="Container"/> with basic data.
-    /// </summary>
-    /// <param name="metaIndex"></param>
-    /// <param name="extra">An optional object with additional data necessary for proper creation.</param>
-    /// <returns></returns>
-    private protected abstract Container CreateContainer(int metaIndex, PlatformExtra? extra); // private protected as PlatformExtra is internal
-
-    /// <summary>
-    /// Builds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
-    /// </summary>
-    /// <param name="container"></param>
-    protected void BuildContainerFull(Container container)
-    {
-        var binary = LoadContainer(container);
-
-        if (container.IsCompatible && DeserializeContainer(container, binary) is JObject jsonObject)
-            ProcessContainerData(container, jsonObject);
-    }
-
-    /// <summary>
-    /// Builds a <see cref="Container"/> by loading from disk and processing it by extracting from the string representation.
-    /// </summary>
-    /// <param name="container"></param>
-    protected void BuildContainerHollow(Container container)
-    {
-        var binary = LoadContainer(container);
-
-        if (container.IsCompatible)
-            ProcessContainerData(container, binary.GetString(), false);
-    }
-
-    /// <summary>
-    /// Generates a collection with all backups of the specified <see cref="Container"/> that matches the MetaIndex and this <see cref="Platform"/>.
-    /// </summary>
-    /// <param name="container"></param>
-    protected void GenerateBackupCollection(Container container)
-    {
-        container.BackupCollection.Clear();
-
-        // No directory, no backups.
-        if (!Directory.Exists(Settings.Backup))
-            return;
-
-        foreach (var file in Directory.EnumerateFiles(Settings.Backup, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip".ToLowerInvariant()))
-        {
-            var parts = Path.GetFileNameWithoutExtension(file).Split('.');
-
-            // The filename of a backup needs to have the following format: "backup.{PlatformEnum}.{MetaIndex}.{CreatedAt}.{VersionEnum}" + ".zip"
-            if (parts.Length < 5)
-                continue;
-
-            try
-            {
-                container.BackupCollection.Add(new(container.MetaIndex, this)
-                {
-                    DataFile = new(file),
-                    GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
-                    IsBackup = true,
-                    LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
-                });
-            }
-            catch (FormatException) { } // ignore
-        }
-    }
-
-    #endregion
-
-    #region Load
-
-    public void Load(Container container)
-    {
-        if (container.IsBackup)
-            LoadBackupContainer(container);
-        else
-            LoadSaveContainer(container);
-    }
-
-    /// <summary>
-    /// Loads data of the specified save.
-    /// </summary>
-    /// <param name="container"></param>
-    private void LoadSaveContainer(Container container)
-    {
-        if (Settings.LoadingStrategy < LoadingStrategyEnum.Current)
-            Settings = Settings with { LoadingStrategy = LoadingStrategyEnum.Current };
-
-        if (Settings.LoadingStrategy == LoadingStrategyEnum.Current && container.IsSave)
-        {
-            // Unloads data by removing the reference to the JSON object.
-            var loadedContainers = SaveContainerCollection.Where(i => i.IsLoaded && !i.Equals(container));
-            foreach (var loadedContainer in loadedContainers)
-                loadedContainer.SetJsonObject(null);
-        }
-
-        BuildContainerFull(container);
-    }
+    #region Container
 
     /// <summary>
     /// Loads the save data of a <see cref="Container"/> into a processable format using meta data.
@@ -222,8 +62,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         var binary = LoadContainer(container);
 
         if (container.IsCompatible)
-            ProcessContainerData(container, binary.GetString(), true); // force
+            UpdateContainerWithJsonInformation(container, binary.GetString(), true); // force
     }
+
+    #endregion
+
+    #region Meta
 
     /// <inheritdoc cref="LoadMeta(Container, Span{byte})"/>
     protected void LoadMeta(Container container)
@@ -279,13 +123,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return meta;
     }
 
-    /// <summary>
-    /// Updates the specified container with information from the meta file.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="disk"></param>
-    /// <param name="decompressed"></param>
-    protected abstract void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
+    #endregion
+
+    #region Data
 
     /// <inheritdoc cref="LoadData(Container, ReadOnlySpan{byte})"/>
     protected virtual ReadOnlySpan<byte> LoadData(Container container)
@@ -365,29 +205,14 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Updates the specified container with information from the data file.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="disk"></param>
-    /// <param name="decompressed"></param>
-    protected virtual void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
-    {
-        container.Extra = container.Extra with
-        {
-            SizeDecompressed = (uint)(decompressed.Length),
-            SizeDisk = (uint)(disk.Length),
-        };
-    }
-
-    /// <summary>
     /// Deserializes the read data of a <see cref="Container"/> into a JSON object.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="binary"></param>
     /// <returns></returns>
-    protected virtual JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
+    protected virtual JObject? Deserialize(Container container, ReadOnlySpan<byte> binary)
     {
-        JObject? jsonObject;
+        JObject? jsonObject = null;
         try
         {
             jsonObject = binary.GetJson();
@@ -396,77 +221,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         {
             container.IncompatibilityException = ex;
             container.IncompatibilityTag = Constants.INCOMPATIBILITY_002;
-            return null;
         }
         if (jsonObject is null)
         {
             container.IncompatibilityTag = Constants.INCOMPATIBILITY_003;
-            return null;
         }
         return jsonObject;
-    }
-
-    #endregion
-
-    #region Process
-
-    /// <summary>
-    /// Processes the read JSON object and fills the properties of the container.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="jsonObject"></param>
-    /// <param name="force"></param>
-    private void ProcessContainerData(Container container, JObject jsonObject)
-    {
-        // Setting the JSON will enable all properties.
-        container.SetJsonObject(jsonObject);
-
-        // No need to do these things for AccountData.
-        if (container.IsSave)
-        {
-            container.UserIdentification = GetUserIdentification(jsonObject);
-            UpdateUserIdentification();
-        }
-
-        // If we are in here, the container is in sync (again).
-        container.IsSynced = true;
-    }
-
-    /// <inheritdoc cref="ProcessContainerData(Container, JObject, bool)"/>
-    private static void ProcessContainerData(Container container, string json, bool force)
-    {
-        // Values relevant for AccountData first.
-        if (container.SaveVersion <= 0 || force)
-            container.SaveVersion = Meta.SaveVersion.Get(json);
-
-        // Then all independent values.
-        if (container.Extra.GameMode == 0 || force)
-            container.GameMode = Meta.GameMode.Get(json);
-
-        if (container.TotalPlayTime == 0 || force)
-            container.TotalPlayTime = Meta.TotalPlayTime.Get(json);
-
-        // Finally all remaining values that depend on others.
-        if (container.GameMode == PresetGameModeEnum.Seasonal && container.Season == SeasonEnum.None || force)
-            container.Season = Meta.Season.Get(json); // needs GameMode
-
-        if (container.BaseVersion <= 0 || force)
-            container.BaseVersion = Meta.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
-
-        if (container.GameVersion == GameVersionEnum.Unknown)
-            container.GameVersion = Meta.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
-
-        if (container.Difficulty == DifficultyPresetTypeEnum.Invalid || force)
-            container.Difficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
-
-        if (container.IsVersion400Waypoint) // needs GameVersion
-        {
-            if (string.IsNullOrEmpty(container.SaveName) || force)
-                container.SaveName = Meta.SaveName.Get(json);
-
-            if (string.IsNullOrEmpty(container.SaveSummary) || force)
-                container.SaveSummary = Meta.SaveSummary.Get(json);
-        }
     }
 
     #endregion

@@ -400,9 +400,9 @@ public partial class PlatformPlaystation : Platform
             };
     }
 
-    protected override JObject? DeserializeContainer(Container container, ReadOnlySpan<byte> binary)
+    protected override JObject? Deserialize(Container container, ReadOnlySpan<byte> binary)
     {
-        var jsonObject = base.DeserializeContainer(container, binary);
+        var jsonObject = base.Deserialize(container, binary);
         if (jsonObject is null) // incompatibility properties are set in base
             return null;
 
