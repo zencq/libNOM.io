@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 using CommunityToolkit.HighPerformance;
@@ -289,11 +288,11 @@ public partial class PlatformSteam : Platform
 
     #region Write
 
-    public override void Write(Container container, DateTimeOffset writeTime)
+    protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
         // Update PlatformArchitecture in save depending on the current operating system without changing the sync state.
         container.GetJsonObject().SetValue(PlatformArchitecture, "PLATFORM");
-        base.Write(container, writeTime);
+        base.WritePlatformSpecific(container, writeTime);
     }
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
@@ -328,12 +327,7 @@ public partial class PlatformSteam : Platform
         }
         else // SAVE_FORMAT_2
         {
-            var hashes = ProduceHashes(data);
-
-            writer.Write(hashes.SpookyHash1); // 8
-            writer.Write(hashes.SpookyHash2); // 8
-
-            writer.Write(hashes.SHA256); // 256 / 8 = 32
+            AddHashes(writer, data); // 8 + 8 + 32 = 48
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
@@ -343,7 +337,7 @@ public partial class PlatformSteam : Platform
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    private static (byte[] SHA256, ulong SpookyHash1, ulong SpookyHash2) ProduceHashes(ReadOnlySpan<byte> data)
+    private static void AddHashes(BinaryWriter writer, ReadOnlySpan<byte> data)
     {
 #if NETSTANDARD2_0_OR_GREATER
         var sha256 = SHA256.Create().ComputeHash(data.ToArray());
@@ -356,7 +350,9 @@ public partial class PlatformSteam : Platform
         spookyHash.Update(data.ToArray());
         spookyHash.Final(out ulong spookyFinal1, out ulong spookyFinal2);
 
-        return (sha256, spookyFinal1, spookyFinal2);
+        writer.Write(spookyFinal1); // 8
+        writer.Write(spookyFinal2); // 8
+        writer.Write(sha256); // 256 / 8 = 32
     }
 
     protected override ReadOnlySpan<byte> EncryptMeta(Container container, ReadOnlySpan<byte> data, Span<byte> meta)

@@ -411,41 +411,31 @@ public partial class PlatformPlaystation : Platform
 
     #region Write
 
-    public override void Write(Container container, DateTimeOffset writeTime)
+    protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
         if (_usesSaveStreaming)
         {
-            base.Write(container, writeTime);
-            return;
+            base.WritePlatformSpecific(container, writeTime);
         }
-
-        if (!CanUpdate || !container.IsLoaded)
-            return;
-
-        DisableWatcher();
-
-        // Write memory.dat file if something needs to be updated.
-        if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
+        else
         {
-            if (Settings.WriteAlways || !container.IsSynced)
+            // Write memory.dat file if something needs to be updated.
+            if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
             {
-                container.Exists = true;
-                container.IsSynced = true;
+                if (Settings.WriteAlways || !container.IsSynced)
+                {
+                    container.Exists = true;
+                    container.IsSynced = true;
 
-                _ = PrepareData(container); // stored in container.Extra.Bytes and written in WriteMemoryDat()
+                    _ = PrepareData(container); // stored in container.Extra.Bytes and written in WriteMemoryDat()
+                }
+
+                if (Settings.SetLastWriteTime)
+                    _lastWriteTime = container.LastWriteTime = writeTime;
+
+                WriteMemoryDat();
             }
-
-            if (Settings.SetLastWriteTime)
-                _lastWriteTime = container.LastWriteTime = writeTime;
-
-            WriteMemoryDat();
         }
-
-        EnableWatcher();
-
-        // Always refresh in case something above was executed.
-        container.RefreshFileInfo();
-        container.WriteCallback.Invoke();
     }
 
     protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)

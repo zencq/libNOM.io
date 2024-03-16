@@ -10,13 +10,24 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     public void Write(Container container) => Write(container, DateTimeOffset.Now.LocalDateTime);
 
-    public virtual void Write(Container container, DateTimeOffset writeTime)
+    public void Write(Container container, DateTimeOffset writeTime)
     {
         if (!CanUpdate || !container.IsLoaded)
             return;
 
         DisableWatcher();
 
+        WritePlatformSpecific(container, writeTime);
+
+        EnableWatcher();
+
+        // Always refresh in case something above was executed.
+        container.RefreshFileInfo();
+        container.WriteCallback.Invoke();
+    }
+
+    protected virtual void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
+    {
         // In case LastWriteTime is written inside meta set it before writing.
         if (Settings.SetLastWriteTime)
             container.LastWriteTime = writeTime;
@@ -32,12 +43,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         // To ensure the timestamp will be the same the next time, the file times are always set to the currently saved one.
         container.DataFile?.SetFileTime(container.LastWriteTime);
         container.MetaFile?.SetFileTime(container.LastWriteTime);
-
-        EnableWatcher();
-
-        // Always refresh in case something above was executed.
-        container.RefreshFileInfo();
-        container.WriteCallback.Invoke();
     }
 
     internal void PrepareWrite(Container container)
