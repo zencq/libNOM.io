@@ -25,7 +25,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
 #if NETSTANDARD2_0
         var galacticAddress = jsonObject.GetValue<string>("RELATIVE_BASE_GALACTIC_ADDRESS")!;
-        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress.Substring(2), NumberStyles.HexNumber) : long.Parse(galacticAddress);
+        var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress[2..], NumberStyles.HexNumber) : long.Parse(galacticAddress);
 #else
         ReadOnlySpan<char> galacticAddress = jsonObject.GetValue<string>("RELATIVE_BASE_GALACTIC_ADDRESS");
         var galacticInteger = galacticAddress.StartsWith("0x") ? long.Parse(galacticAddress[2..], NumberStyles.HexNumber) : long.Parse(galacticAddress);

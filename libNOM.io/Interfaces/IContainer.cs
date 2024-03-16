@@ -14,6 +14,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 {
     #region Property
 
+    #region Additional Information
+
     /// <summary>
     /// List of related backups.
     /// </summary>
@@ -39,7 +41,7 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     /// </summary>
     public HashSet<string> UnknownKeys { get; set; }
 
-    // //
+    #endregion
 
     #region Flags
 
@@ -163,6 +165,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion450Omega { get; }
 
+    public bool IsVersion452OmegaWithV2 { get; }
+
     #endregion
 
     #region FileInfo
@@ -262,8 +266,6 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     #endregion
 
     #endregion
-
-    // //
 
     #region Getter
 
@@ -385,13 +387,4 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     public NotifyWriteEventHandler WriteCallback { get; set; }
 
     #endregion
-
-    // //
-
-    /// <summary>
-    /// Whether the save is up-to-date to the specified version of the game.
-    /// </summary>
-    /// <param name="versionEnum"></param>
-    /// <returns></returns>
-    public bool IsVersion(GameVersionEnum versionEnum);
 }
