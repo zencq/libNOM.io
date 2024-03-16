@@ -111,9 +111,6 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// </summary>
     /// <param name="path"></param>
     /// <returns>A pre-loaded <see cref="Container"/> if no incompatibilities.</returns>
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     public static Container? AnalyzeFile(string path)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -130,9 +127,9 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
         // Convert header with different lengths.
         var headerInteger = bytes.Cast<uint>(0);
-        var headerString0x08 = bytes.Slice(0, 0x08).GetString();
-        var headerString0x20 = bytes.Slice(0, 0x20).GetString();
-        var headerString0xA0 = bytes.Slice(0, 0xA0).GetString();
+        var headerString0x08 = bytes[..0x08].GetString();
+        var headerString0x20 = bytes[..0x20].GetString();
+        var headerString0xA0 = bytes[..0xA0].GetString();
 
         // Select a platform below to convert the file with, based on the content.
         // All kinds of Playstation.

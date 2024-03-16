@@ -108,9 +108,6 @@ public partial class PlatformSwitch : Platform
 
     #region Process
 
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         /**
@@ -140,7 +137,7 @@ public partial class PlatformSwitch : Platform
         container.Extra = container.Extra with
         {
             MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
-            Bytes = container.IsAccount ? disk.ToArray() : disk.Slice(META_LENGTH_KNOWN).ToArray(),
+            Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN..].ToArray(),
             Size = (uint)(disk.Length),
             SizeDecompressed = decompressed[2],
         };

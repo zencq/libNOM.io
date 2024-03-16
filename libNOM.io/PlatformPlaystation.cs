@@ -585,9 +585,6 @@ public partial class PlatformPlaystation : Platform
     /// <summary>
     /// Writes the memory.dat file for the previous format.
     /// </summary>
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     private void WriteMemoryDat()
     {
         var buffer = new byte[_usesSaveWizard ? MEMORYDAT_LENGTH_TOTAL_SAVEWIZARD : MEMORYDAT_LENGTH_TOTAL];
@@ -625,7 +622,7 @@ public partial class PlatformPlaystation : Platform
             foreach (var container in SaveContainerCollection.Where(i => i.Exists))
                 AddSaveWizardContainer(writer, container);
 
-            buffer = buffer.AsSpan().Slice(0, (int)(writer.BaseStream.Position)).ToArray();
+            buffer = buffer.AsSpan()[..(int)(writer.BaseStream.Position)].ToArray();
         }
         else
         {

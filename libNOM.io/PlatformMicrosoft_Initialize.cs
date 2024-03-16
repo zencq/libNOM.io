@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
 using CommunityToolkit.Diagnostics;
-using CommunityToolkit.HighPerformance;
 
 namespace libNOM.io;
 
@@ -24,58 +23,50 @@ public partial class PlatformMicrosoft : Platform
 
     #region Initialize
 
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     protected override void InitializePlatformSpecific()
     {
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
-        if (Location.Name.Length == 49 && Location.Name.EndsWith(ACCOUNT_PATTERN.Substring(1)) && Location.Name.Substring(0, 16).All("0123456789ABCDEFabcdef".Contains))
-            _uid = System.Convert.ToInt64(Location.Name.Split('_')[0], 16).ToString();
+        Func<char, bool> IsAsciiHexDigit = "0123456789ABCDEFabcdef".Contains;
 #else
-        if (Location.Name.Length == 49 && Location.Name.EndsWith(ACCOUNT_PATTERN[1..]) && Location.Name[..16].All(char.IsAsciiHexDigit))
-            _uid = System.Convert.ToInt64(Location.Name.Split('_')[0], 16).ToString();
+        Func<char, bool> IsAsciiHexDigit = char.IsAsciiHexDigit;
 #endif
+
+        if (Location.Name.Length == 49 && Location.Name.EndsWith(ACCOUNT_PATTERN[1..]) && Location.Name[..16].All(IsAsciiHexDigit))
+            _uid = System.Convert.ToInt64(Location.Name.Split('_')[0], 16).ToString();
 
         _containersindex = new FileInfo(Path.Combine(Location.FullName, "containers.index"));
     }
 
     protected override IEnumerable<Container> GenerateContainerCollection()
     {
-        var containersIndex = ParseContainersIndex();
-        if (containersIndex.Count == 0)
-            return [];
-
         var bag = new ConcurrentBag<Container>();
+        var containersIndex = ParseContainersIndex();
 
-        var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) =>
+        var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) => Task.Run(() =>
         {
-            return Task.Run(() =>
+            _ = containersIndex.TryGetValue(metaIndex, out var extra);
+            if (metaIndex == 0)
             {
-                _ = containersIndex.TryGetValue(metaIndex, out var extra);
-                if (metaIndex == 0)
-                {
-                    AccountContainer = CreateContainer(metaIndex, extra);
-                    BuildContainerFull(AccountContainer); // always full
-                }
-                else if (metaIndex == 1)
-                {
-                    _settingsContainer = extra; // just caching it to be able to write it again
-                }
+                AccountContainer = CreateContainer(metaIndex, extra);
+                BuildContainerFull(AccountContainer); // always full
+            }
+            else if (metaIndex == 1)
+            {
+                _settingsContainer = extra; // just caching it to be able to write it again
+            }
+            else
+            {
+                var container = CreateContainer(metaIndex, extra);
+
+                if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
+                    BuildContainerHollow(container);
                 else
-                {
-                    var container = CreateContainer(metaIndex, extra);
+                    BuildContainerFull(container);
 
-                    if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
-                        BuildContainerHollow(container);
-                    else
-                        BuildContainerFull(container);
-
-                    GenerateBackupCollection(container);
-                    bag.Add(container);
-                }
-            });
-        });
+                GenerateBackupCollection(container);
+                bag.Add(container);
+            }
+        }));
         Task.WaitAll(tasks.ToArray());
 
         return bag;
@@ -217,18 +208,8 @@ public partial class PlatformMicrosoft : Platform
                                             (328)
         */
 
-        var blobContainerIndex = extra.MicrosoftBlobContainerFile!;
-        var files = new HashSet<FileInfo>();
-
-        // In case the blob container extension does not match the containers.index value, try all existing ones until a data file is found.
-        if (blobContainerIndex.Exists)
-            files.Add(blobContainerIndex);
-        else
-            foreach (var file in extra.MicrosoftBlobDirectory!.EnumerateFiles("container.*"))
-                files.Add(file);
-
         // Start with the presumably newest one.
-        foreach (var blobContainer in files.OrderByDescending(i => i.Extension))
+        foreach (var blobContainer in GetPossibleBlobContainers(extra).OrderByDescending(i => i.Extension))
         {
             ReadOnlySpan<byte> bytes = blobContainer.ReadAllBytes();
             var offset = 8; // start after header
@@ -239,70 +220,58 @@ public partial class PlatformMicrosoft : Platform
             for (var j = 0; j < bytes.Cast<int>(4); j++) // blob count
             {
                 offset += bytes.ReadString(offset, BLOBCONTAINER_IDENTIFIER_LENGTH, out var blobIdentifier);
-
-                // Second Guid is the one to use as the first one is probably the current name in the cloud.
-                var blobFile = extra.MicrosoftBlobDirectory!.GetBlobFileInfo(bytes.GetGuid(offset + 16));
-                var blobSyncGuid = bytes.GetGuid(offset);
-
-                offset += 32; // 2 * sizeof(Guid)
-
-#if NETSTANDARD2_0
-                if (blobIdentifier.ToString().Equals("data"))
-                    extra = extra with
-                    {
-                        MicrosoftBlobDataFile = blobFile,
-                        MicrosoftBlobDataSyncGuid = blobSyncGuid,
-                    };
-                else if (blobIdentifier.ToString().Equals("meta"))
-                    extra = extra with
-                    {
-                        MicrosoftBlobMetaFile = blobFile,
-                        MicrosoftBlobMetaSyncGuid = blobSyncGuid,
-                    };
-#else
-                if (blobIdentifier.Equals("data".AsSpan(), StringComparison.Ordinal))
-                    extra = extra with
-                    {
-                        MicrosoftBlobDataFile = blobFile,
-                        MicrosoftBlobDataSyncGuid = blobSyncGuid,
-                    };
-                else if (blobIdentifier.Equals("meta".AsSpan(), StringComparison.Ordinal))
-                    extra = extra with
-                    {
-                        MicrosoftBlobMetaFile = blobFile,
-                        MicrosoftBlobMetaSyncGuid = blobSyncGuid,
-                    };
-#endif
+                offset += UpdateExtraWithBlobInformation(blobIdentifier, bytes[offset..], extra, out extra);
             }
 
             // Update extension in case the read one was not found and break the loop.
             if (extra.MicrosoftBlobDataFile?.Exists == true)
             {
-                extra = extra with
-                {
-                    MicrosoftBlobContainerExtension = System.Convert.ToByte(blobContainer.Extension.TrimStart('.')),
-                };
+                extra = extra with { MicrosoftBlobContainerExtension = System.Convert.ToByte(blobContainer.Extension.TrimStart('.')) };
                 break;
             }
         }
 
         // Mark as deleted if there is no existing data file.
         if (extra.MicrosoftBlobDataFile?.Exists != true)
-            extra = extra with
-            {
-                MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Deleted,
-            };
+            extra = extra with { MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Deleted };
 
         return extra;
+    }
+
+    private static HashSet<FileInfo> GetPossibleBlobContainers(PlatformExtra extra)
+    {
+        var files = new HashSet<FileInfo>();
+
+        // In case the blob container extension does not match the containers.index value, try all existing ones until a data file is found.
+        if (extra.MicrosoftBlobContainerFile!.Exists)
+            files.Add(extra.MicrosoftBlobContainerFile!);
+        else
+            foreach (var file in extra.MicrosoftBlobDirectory!.EnumerateFiles("container.*"))
+                files.Add(file);
+
+        return files;
+    }
+
+    private static int UpdateExtraWithBlobInformation(ReadOnlySpan<char> blobIdentifier, ReadOnlySpan<byte> bytes, PlatformExtra extra, out PlatformExtra result)
+    {
+        // Second Guid is the one to use as the first one is probably the current name in the cloud.
+        var blobSyncGuid = bytes.GetGuid();
+        var blobFile = extra.MicrosoftBlobDirectory!.GetBlobFileInfo(bytes.GetGuid(16));
+
+        result = blobIdentifier switch
+        {
+            "data" => extra with { MicrosoftBlobDataFile = blobFile, MicrosoftBlobDataSyncGuid = blobSyncGuid },
+            "meta" => extra with { MicrosoftBlobMetaFile = blobFile, MicrosoftBlobMetaSyncGuid = blobSyncGuid },
+            _ => extra,
+        };
+
+        return 32; // 2 * sizeof(Guid)
     }
 
     #endregion
 
     #region Process
 
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         /**
@@ -330,7 +299,7 @@ public partial class PlatformMicrosoft : Platform
         container.Extra = container.Extra with
         {
             MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
-            Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
+            Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
             Size = (uint)(disk.Length),
             BaseVersion = (int)(decompressed[0]),
             GameMode = disk.Cast<ushort>(4),

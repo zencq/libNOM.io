@@ -7,7 +7,6 @@ deobfuscation
 modding
 savegame
 
-fabcdef
 accountdata
 ambig
 compatdata
@@ -15,6 +14,7 @@ containersindex
 crossplay
 dont
 eggsave
+fabcdef
 gumsk
 iterable
 memorydat

@@ -37,7 +37,7 @@ internal static class ReadOnlySpanExtensions
     #region typeof(byte)
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="self"></param>
@@ -95,12 +95,9 @@ internal static class ReadOnlySpanExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     internal static string GetStringUntilTerminator(this ReadOnlySpan<byte> self)
     {
-        return GetString(self.Slice(0, self.IndexOf((byte)(0))));
+        return GetString(self[..self.IndexOf((byte)(0))]);
     }
 
     /// <summary>

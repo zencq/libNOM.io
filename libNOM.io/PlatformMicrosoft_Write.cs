@@ -1,14 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
-
-using CommunityToolkit.Diagnostics;
-using CommunityToolkit.HighPerformance;
-
-using Microsoft.Extensions.Caching.Memory;
-
-using Newtonsoft.Json.Linq;
-
-using Octokit;
+﻿using CommunityToolkit.HighPerformance;
 
 namespace libNOM.io;
 
@@ -29,20 +19,15 @@ public partial class PlatformMicrosoft : Platform
                 var meta = PrepareMeta(container, data);
 
                 // Cache original file information.
-                var cache = new PlatformExtra()
-                {
-                    MicrosoftBlobContainerExtension = container.Extra.MicrosoftBlobContainerExtension,
-                    MicrosoftBlobDataFile = container.Extra.MicrosoftBlobDataFile,
-                    MicrosoftBlobMetaFile = container.Extra.MicrosoftBlobMetaFile,
-                };
+                var copy = Common.DeepCopy(container.Extra);
 
                 // Create blob container with new file information.
                 var blob = PrepareBlobContainer(container);
 
                 // Write the previously created files and delete the old ones.
-                WriteMeta(container, meta, cache);
-                WriteData(container, data, cache);
-                WriteBlobContainer(container, blob, cache);
+                WriteMeta(container, meta, copy);
+                WriteData(container, data, copy);
+                WriteBlobContainer(container, blob, copy);
             }
 
             if (Settings.SetLastWriteTime)
@@ -57,13 +42,6 @@ public partial class PlatformMicrosoft : Platform
             // Finally write the containers.index file.
             WriteContainersIndex();
         }
-    }
-
-
-    private void WriteMeta(Container container, ReadOnlySpan<byte> meta, PlatformExtra cache)
-    {
-        WriteMeta(container, meta);
-        cache.MicrosoftBlobMetaFile?.Delete();
     }
 
     #region Data
@@ -101,10 +79,10 @@ public partial class PlatformMicrosoft : Platform
         return result;
     }
 
-    private void WriteData(Container container, ReadOnlySpan<byte> data, PlatformExtra cache)
+    private void WriteData(Container container, ReadOnlySpan<byte> data, PlatformExtra original)
     {
         WriteData(container, data);
-        cache.MicrosoftBlobDataFile?.Delete();
+        original.MicrosoftBlobDataFile?.Delete();
     }
 
     #endregion
@@ -143,6 +121,12 @@ public partial class PlatformMicrosoft : Platform
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
+    }
+
+    private void WriteMeta(Container container, ReadOnlySpan<byte> meta, PlatformExtra original)
+    {
+        WriteMeta(container, meta);
+        original.MicrosoftBlobMetaFile?.Delete();
     }
 
     #endregion
@@ -194,18 +178,15 @@ public partial class PlatformMicrosoft : Platform
     /// </summary>
     /// <param name="container"></param>
     /// <param name="blob"></param>
-    private static void WriteBlobContainer(Container container, byte[] blob, PlatformExtra cache)
+    private static void WriteBlobContainer(Container container, byte[] blob, PlatformExtra original)
     {
         container.Extra.MicrosoftBlobContainerFile?.WriteAllBytes(blob);
-        cache.MicrosoftBlobContainerFile?.Delete();
+        original.MicrosoftBlobContainerFile?.Delete();
     }
 
     /// <summary>
     /// Creates and writes the containers.index file content to disk.
     /// </summary>
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     private void WriteContainersIndex()
     {
         var hasSettings = _settingsContainer is not null;
@@ -235,7 +216,7 @@ public partial class PlatformMicrosoft : Platform
             foreach (var container in collection)
                 AddMicrosoftMeta(writer, container.Identifier, container.Extra);
 
-            buffer = buffer.AsSpan().Slice(0, (int)(writer.BaseStream.Position)).ToArray();
+            buffer = buffer.AsSpan()[..(int)(writer.BaseStream.Position)].ToArray();
         }
 
         // Write and refresh the containers.index file.

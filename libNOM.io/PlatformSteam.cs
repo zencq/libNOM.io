@@ -165,9 +165,6 @@ public partial class PlatformSteam : Platform
 
     #region Process
 
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         /**
@@ -201,7 +198,7 @@ public partial class PlatformSteam : Platform
             container.Extra = container.Extra with
             {
                 MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? (decompressed[1] == Constants.SAVE_FORMAT_2 ? MetaFormatEnum.Foundation : (decompressed[1] == Constants.SAVE_FORMAT_3 ? MetaFormatEnum.Frontiers : MetaFormatEnum.Unknown)) : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
-                Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
+                Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
                 SizeDecompressed = decompressed[14],
                 BaseVersion = (int)(decompressed[17]),
                 GameMode = disk.Cast<ushort>(72),
