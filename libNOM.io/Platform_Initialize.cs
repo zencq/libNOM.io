@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 
 using libNOM.io.Interfaces;
 
@@ -110,22 +111,16 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) => Task.Run(() =>
         {
-            if (metaIndex == 0)
+            switch (metaIndex)
             {
-                AccountContainer = CreateContainer(metaIndex);
-                BuildContainerFull(AccountContainer); // always full
-            }
-            else if (metaIndex > 1) // skip index 1
-            {
-                var container = CreateContainer(metaIndex);
-
-                if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
-                    BuildContainerHollow(container);
-                else
-                    BuildContainerFull(container);
-
-                GenerateBackupCollection(container);
-                bag.Add(container);
+                case 0:
+                    AccountContainer = InitializeContainer(metaIndex);
+                    break;
+                case 1:
+                    break;
+                default:
+                    bag.Add(InitializeContainer(metaIndex));
+                    break;
             }
         }));
         Task.WaitAll(tasks.ToArray());
@@ -133,8 +128,21 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return bag;
     }
 
-    /// <inheritdoc cref="CreateContainer(int, PlatformExtra?)"/>
-    private Container CreateContainer(int metaIndex) => CreateContainer(metaIndex, null);
+    private protected Container InitializeContainer(int metaIndex) => InitializeContainer(metaIndex, null);
+
+    private protected Container InitializeContainer(int metaIndex, PlatformExtra? extra)
+    {
+        var container = CreateContainer(metaIndex, extra);
+
+        if (container.IsSave && Settings.LoadingStrategy < LoadingStrategyEnum.Full)
+            BuildContainerHollow(container);
+        else
+            BuildContainerFull(container); // account data always full
+
+        GenerateBackupCollection(container);
+
+        return container;
+    }
 
     /// <summary>
     /// Creates a <see cref="Container"/> with basic data.

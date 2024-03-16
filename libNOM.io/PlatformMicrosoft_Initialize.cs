@@ -42,32 +42,26 @@ public partial class PlatformMicrosoft : Platform
         var bag = new ConcurrentBag<Container>();
         var containersIndex = ParseContainersIndex();
 
-        var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) => Task.Run(() =>
+        if (containersIndex.Count != 0)
         {
-            _ = containersIndex.TryGetValue(metaIndex, out var extra);
-            if (metaIndex == 0)
+            var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) => Task.Run(() =>
             {
-                AccountContainer = CreateContainer(metaIndex, extra);
-                BuildContainerFull(AccountContainer); // always full
-            }
-            else if (metaIndex == 1)
-            {
-                _settingsContainer = extra; // just caching it to be able to write it again
-            }
-            else
-            {
-                var container = CreateContainer(metaIndex, extra);
-
-                if (Settings.LoadingStrategy < LoadingStrategyEnum.Full)
-                    BuildContainerHollow(container);
-                else
-                    BuildContainerFull(container);
-
-                GenerateBackupCollection(container);
-                bag.Add(container);
-            }
-        }));
-        Task.WaitAll(tasks.ToArray());
+                _ = containersIndex.TryGetValue(metaIndex, out var extra);
+                switch (metaIndex)
+                {
+                    case 0:
+                        AccountContainer = InitializeContainer(metaIndex, extra);
+                        break;
+                    case 1:
+                        _settingsContainer = extra; // just caching it to be able to write it again
+                        break;
+                    default:
+                        bag.Add(InitializeContainer(metaIndex, extra));
+                        break;
+                }
+            }));
+            Task.WaitAll(tasks.ToArray());
+        }
 
         return bag;
     }
