@@ -11,6 +11,7 @@ namespace libNOM.io;
 /// <summary>
 /// Abstract base for all platforms which just hook into the methods they need.
 /// </summary>
+// This partial class contains some general code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     #region Constant

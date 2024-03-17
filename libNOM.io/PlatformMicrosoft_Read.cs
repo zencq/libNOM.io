@@ -3,6 +3,7 @@
 namespace libNOM.io;
 
 
+// This partial class contains reading and processing related code.
 public partial class PlatformMicrosoft : Platform
 {
 

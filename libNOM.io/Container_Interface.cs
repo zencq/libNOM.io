@@ -3,9 +3,7 @@
 namespace libNOM.io;
 
 
-/// <summary>
-/// Holds all information about a single save.
-/// </summary>
+// This partial class contains interface implementing code (beside IContainer).
 public partial class Container : IContainer
 {
     #region IComparable, IEquatable

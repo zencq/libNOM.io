@@ -3,18 +3,18 @@
 namespace libNOM.io;
 
 
-/// <summary>
-/// Holds all information about a single save.
-/// </summary>
+// This partial class contains public properties.
 public partial class Container : IContainer
 {
-    #region Additional Information
+    #region Field
+
+    private int _saveVersion = -1;
+
+    #endregion
 
     internal PlatformExtra Extra { get; set; }
 
     internal UserIdentification? UserIdentification { get; set; }
-
-    #endregion
 
     #region Save
 

@@ -3,6 +3,7 @@
 namespace libNOM.io;
 
 
+// This partial class contains FileSystemWatcher related code.
 public partial class PlatformMicrosoft : Platform
 {
     #region Getter

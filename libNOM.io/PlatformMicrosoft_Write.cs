@@ -3,6 +3,7 @@
 namespace libNOM.io;
 
 
+// This partial class contains writing related code.
 public partial class PlatformMicrosoft : Platform
 {
     protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)

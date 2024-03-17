@@ -3,6 +3,10 @@
 namespace libNOM.io;
 
 
+/// <summary>
+/// Implementation for the Microsoft platform.
+/// </summary>
+// This partial class contains some general code.
 public partial class PlatformMicrosoft : Platform
 {
     #region Constant

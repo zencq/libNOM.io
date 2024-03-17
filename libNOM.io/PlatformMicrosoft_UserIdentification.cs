@@ -3,6 +3,7 @@
 namespace libNOM.io;
 
 
+// This partial class contains UserIdentification related code.
 public partial class PlatformMicrosoft : Platform
 {
     protected override string GetUserIdentification(JObject jsonObject, string key)

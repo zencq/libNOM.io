@@ -12,6 +12,10 @@ using SpookilySharp;
 namespace libNOM.io;
 
 
+/// <summary>
+/// Implementation for the Steam platform.
+/// </summary>
+// This partial class contains all related code.
 public partial class PlatformSteam : Platform
 {
     #region Constant

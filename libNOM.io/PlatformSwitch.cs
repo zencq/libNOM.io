@@ -3,6 +3,10 @@
 namespace libNOM.io;
 
 
+/// <summary>
+/// Implementation for the Nintendo Switch platform.
+/// </summary>
+// This partial class contains all related code.
 public partial class PlatformSwitch : Platform
 {
     #region Constant

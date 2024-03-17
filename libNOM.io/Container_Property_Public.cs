@@ -7,12 +7,15 @@ using libNOM.io.Interfaces;
 namespace libNOM.io;
 
 
-/// <summary>
-/// Holds all information about a single save.
-/// </summary>
+// This partial class contains internal properties.
 public partial class Container : IContainer
 {
-    #region Additional Information
+    #region Field
+
+    private bool? _exists;
+    private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
+
+    #endregion
 
     public ObservableCollection<Container> BackupCollection { get; } = [];
 
@@ -23,8 +26,6 @@ public partial class Container : IContainer
     public string? IncompatibilityTag { get; internal set; }
 
     public HashSet<string> UnknownKeys { get; set; } = [];
-
-    #endregion
 
     #region Flags
 

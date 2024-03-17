@@ -14,8 +14,6 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 {
     #region Property
 
-    #region Additional Information
-
     /// <summary>
     /// List of related backups.
     /// </summary>
@@ -40,8 +38,6 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     /// List of unknown keys collected during deobfuscation.
     /// </summary>
     public HashSet<string> UnknownKeys { get; set; }
-
-    #endregion
 
     #region Flags
 
