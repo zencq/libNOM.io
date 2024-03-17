@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "libNOM.cli": {
+      "commandName": "Project",
+      "commandLineArgs": "?"
+    }
+  }
+}

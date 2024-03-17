@@ -4,6 +4,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFrameworks>net8.0</TargetFrameworks>
+		<AssemblyName>libNOM.io.cli</AssemblyName>
 	</PropertyGroup>
 
 	<!-- Global Usings -->
@@ -11,7 +12,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 	<ItemGroup>
-		<Using Include="libNOM.cli.Extensions" />
+		<Using Include="PowerArgs" />
 	</ItemGroup>
 
 	<!-- Build -->
@@ -35,7 +36,6 @@
 	<PropertyGroup Label="General">
 		<Version>1.0.0</Version>
 		<Authors>cengelha</Authors>
-		<Product>libNOM.io</Product>
 		<Description>CLI for libNOM.io to print information about saves and to convert between JSON and actual save formats.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2024</Copyright>
 		<RepositoryUrl>https://github.com/zencq/libNOM.io</RepositoryUrl>
@@ -48,6 +48,9 @@
 	<!-- Dependencies -->
 	<ItemGroup>
 		<ProjectReference Include="..\libNOM.io\libNOM.io.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="PowerArgs" Version="4.0.3" />
 	</ItemGroup>
 
 </Project>
