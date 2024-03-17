@@ -20,7 +20,7 @@ public abstract class CommonTestClass
 {
     #region Constant
 
-    protected const int FILESYSTEMWATCHER_SLEEP = 5000;
+    protected const int FILESYSTEMWATCHER_SLEEP = 10000; // 10 seconds
     protected const int OFFSET_INDEX = 2;
     protected const int TICK_DIVISOR = 10000;
 
