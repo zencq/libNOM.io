@@ -202,7 +202,7 @@ public partial class PlatformSwitch : Platform
             writer.Seek(0x8, SeekOrigin.Current); // 8
 
             // Insert trailing bytes and the extended Waypoint data.
-            AddWaypointMeta(writer, container); // Extra.Bytes is 272 or 60
+            AppendWaypointMeta(writer, container); // Extra.Bytes is 272 or 60
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

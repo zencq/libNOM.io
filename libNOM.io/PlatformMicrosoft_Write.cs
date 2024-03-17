@@ -118,7 +118,7 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(container.IsVersion452OmegaWithV2 ? container.Extra.SizeDisk : container.Extra.SizeDecompressed); // 4
 
             // Insert trailing bytes and the extended Waypoint data.
-            AddWaypointMeta(writer, container); // Extra.Bytes is 260 or 4
+            AppendWaypointMeta(writer, container); // Extra.Bytes is 260 or 4
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
@@ -202,20 +202,20 @@ public partial class PlatformMicrosoft : Platform
         {
             writer.Write(CONTAINERSINDEX_HEADER);
             writer.Write(count);
-            AddDynamicText(writer, _processIdentifier, 1);
+            AppendDynamicText(writer, _processIdentifier, 1);
             writer.Write(_lastWriteTime.ToUniversalTime().ToFileTime());
             writer.Write((int)(MicrosoftIndexSyncStateEnum.Modified));
-            AddDynamicText(writer, _accountGuid, 1);
+            AppendDynamicText(writer, _accountGuid, 1);
             writer.Write(CONTAINERSINDEX_FOOTER);
 
             if (HasAccountData)
-                AddMicrosoftMeta(writer, AccountContainer.Identifier, AccountContainer.Extra);
+                AppendMicrosoftMeta(writer, AccountContainer.Identifier, AccountContainer.Extra);
 
             if (hasSettings)
-                AddMicrosoftMeta(writer, "Settings", _settingsContainer!);
+                AppendMicrosoftMeta(writer, "Settings", _settingsContainer!);
 
             foreach (var container in collection)
-                AddMicrosoftMeta(writer, container.Identifier, container.Extra);
+                AppendMicrosoftMeta(writer, container.Identifier, container.Extra);
 
             buffer = buffer.AsSpan()[..(int)(writer.BaseStream.Position)].ToArray();
         }
@@ -225,14 +225,14 @@ public partial class PlatformMicrosoft : Platform
         _containersindex.Refresh();
     }
 
-    private static void AddMicrosoftMeta(BinaryWriter writer, string identifier, PlatformExtra extra)
+    private static void AppendMicrosoftMeta(BinaryWriter writer, string identifier, PlatformExtra extra)
     {
         // Make sure to get the latest data.
         extra.MicrosoftBlobDataFile?.Refresh();
         extra.MicrosoftBlobMetaFile?.Refresh();
 
-        AddDynamicText(writer, identifier, 2);
-        AddDynamicText(writer, extra.MicrosoftSyncTime!, 1);
+        AppendDynamicText(writer, identifier, 2);
+        AppendDynamicText(writer, extra.MicrosoftSyncTime!, 1);
         writer.Write(extra.MicrosoftBlobContainerExtension!.Value);
         writer.Write((int)(extra.MicrosoftSyncState!.Value));
         writer.Write(extra.MicrosoftBlobDirectoryGuid!.Value.ToByteArray());
@@ -242,12 +242,12 @@ public partial class PlatformMicrosoft : Platform
     }
 
     /// <summary>
-    /// Adds the length of the specified string and the string itself as unicode to the writer.
+    /// Appends the length of the specified string and the string itself as unicode to the writer.
     /// </summary>
     /// <param name="writer"></param>
     /// <param name="identifier"></param>
     /// <param name="count">How many times it should be added.</param>
-    private static void AddDynamicText(BinaryWriter writer, string identifier, int count)
+    private static void AppendDynamicText(BinaryWriter writer, string identifier, int count)
     {
         for (var i = 0; i < count; i++)
         {

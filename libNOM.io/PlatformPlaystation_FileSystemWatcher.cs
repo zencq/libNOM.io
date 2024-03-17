@@ -32,40 +32,39 @@ public partial class PlatformPlaystation : Platform
     /// </summary>
     private void RefreshContainerCollection()
     {
-        for (var metaIndex = 0; metaIndex < Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL; metaIndex++)
-            if (metaIndex == 0)
+        foreach (var metaIndex in Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL))
+            switch (metaIndex)
             {
-                // Reset bytes to trigger to read the file again.
-                AccountContainer.Extra = new PlatformExtra
-                {
-                    MetaFormat = MetaFormatEnum.Unknown,
-                    Bytes = null,
-                };
-                RebuildContainerFull(AccountContainer);
+                case 0:
+                    UpdateAndRebuildContainer(AccountContainer);
+                    break;
+                case 1:
+                    break;
+                default:
+                    UpdateAndRebuildContainer(SaveContainerCollection[metaIndex - Constants.OFFSET_INDEX]);
+                    break;
             }
-            else if (metaIndex > 1) // skip index 1
-            {
-                var collectionIndex = metaIndex - Constants.OFFSET_INDEX;
-                var container = SaveContainerCollection[collectionIndex];
+    }
 
-                // Reset bytes as trigger to read the file again.
-                container.Extra = new PlatformExtra
-                {
-                    MetaFormat = MetaFormatEnum.Unknown,
-                    Bytes = null,
-                };
+    private void UpdateAndRebuildContainer(Container container)
+    {
+        // Reset bytes as trigger to read the file again.
+        container.Extra = new PlatformExtra
+        {
+            MetaFormat = MetaFormatEnum.Unknown,
+            Bytes = null,
+        };
 
-                // Only rebuild full if container was already loaded and not synced (to not overwrite pending watcher changes).
-                if (container.IsLoaded)
-                {
-                    if (container.IsSynced)
-                        RebuildContainerFull(container);
-                }
-                else
-                    RebuildContainerHollow(container);
+        // Only rebuild full if container was already loaded and not synced (to not overwrite pending watcher changes).
+        if (container.IsLoaded)
+        {
+            if (container.IsAccount || container.IsSynced)
+                RebuildContainerFull(container);
+        }
+        else
+            RebuildContainerHollow(container);
 
-                GenerateBackupCollection(container);
-            }
+        GenerateBackupCollection(container);
     }
 
     #endregion

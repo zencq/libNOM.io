@@ -324,11 +324,11 @@ public partial class PlatformSteam : Platform
             writer.Seek(0x8, SeekOrigin.Current); // 8
 
             // Insert trailing bytes and the extended Waypoint data.
-            AddWaypointMeta(writer, container); // Extra.Bytes is 272 or 16
+            AppendWaypointMeta(writer, container); // Extra.Bytes is 272 or 16
         }
         else // SAVE_FORMAT_2
         {
-            AddHashes(writer, data); // 8 + 8 + 32 = 48
+            AppendHashes(writer, data); // 8 + 8 + 32 = 48
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
@@ -338,7 +338,7 @@ public partial class PlatformSteam : Platform
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    private static void AddHashes(BinaryWriter writer, ReadOnlySpan<byte> data)
+    private static void AppendHashes(BinaryWriter writer, ReadOnlySpan<byte> data)
     {
 #if NETSTANDARD2_0_OR_GREATER
         var sha256 = SHA256.Create().ComputeHash(data.ToArray());

@@ -107,7 +107,8 @@ public partial class PlatformPlaystation : Platform
                   3. META OFFSET          (  4)
                   4. CONST (1)            (  4)
                   5. COMPRESSED SIZE      (  4)
-                  6. EMPTY                ( 44) // here the same structure as the old memory.dat format starts but with many empty values
+                  6. EMPTY                ( 40)
+                 16. EMPTY                (  4) // here the same structure as the old memory.dat format starts but with many empty values
                  17. META FORMAT          (  4)
                  18. EMPTY                ( 20)
                  23. DECOMPRESSED SIZE    (  4)

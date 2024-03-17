@@ -99,8 +99,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 if (write)
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
             }
-
-        UpdateUserIdentification();
     }
 
     #endregion
@@ -194,8 +192,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             else if (Destination.Exists)
                 Move(Destination, Source, write);
         }
-
-        UpdateUserIdentification();
     }
 
     private void SwapOverwrite(Container container, Container other, bool write)

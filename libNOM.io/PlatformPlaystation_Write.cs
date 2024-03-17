@@ -87,54 +87,61 @@ public partial class PlatformPlaystation : Platform
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
-        var buffer = _usesSaveStreaming ? CreateSaveStreamingMeta(container) : CreateLegacyMeta(container);
+        var buffer = _usesSaveStreaming ? GetStreamingMeta(container) : GetLegacyMeta(container);
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    private byte[] CreateSaveStreamingMeta(Container container)
+    private byte[] GetStreamingMeta(Container container)
     {
-        byte[] buffer = [];
-
         if (container.IsAccount)
-        {
-            // Use Switch values of META_LENGTH_TOTAL in fallback.
-            buffer = container.Extra.Bytes ?? new byte[container.MetaFormat == MetaFormatEnum.Waypoint ? 0x164 : 0x64];
+            return CreateAccountStreamingMeta(container);
 
-            // Overwrite only SizeDecompressed.
-            using var writer = new BinaryWriter(new MemoryStream(buffer));
-            writer.Write(META_HEADER); // 4
-            writer.Write(Constants.SAVE_FORMAT_3); // 4
-            writer.Write(container.Extra.SizeDecompressed); // 4
-        }
-        else if (_usesSaveWizard) // no meta for homebrew if _usesSaveStreaming
-        {
-            buffer = new byte[META_LENGTH_TOTAL_WAYPOINT];
+        if (_usesSaveWizard) // no meta for homebrew if _usesSaveStreaming
+            return CreateWizardStreamingMeta(container);
 
-            using var writer = new BinaryWriter(new MemoryStream(buffer));
+        return [];
+    }
 
-            writer.Write(SAVEWIZARD_HEADER_BINARY); // 8
-            writer.Write(SAVEWIZARD_VERSION_2); // 4
-            writer.Write(MEMORYDAT_OFFSET_META); // 4
-            writer.Write(1); // 4
-            writer.Write(container.Extra.SizeDisk); // 4
+    private byte[] CreateAccountStreamingMeta(Container container)
+    {
+        // Use Switch values of META_LENGTH_TOTAL in fallback.
+        var buffer = container.Extra.Bytes ?? new byte[container.MetaFormat == MetaFormatEnum.Waypoint ? 0x164 : 0x64];
 
-            writer.Seek(44, SeekOrigin.Current); // skip empty
-
-            writer.Write(Constants.SAVE_FORMAT_3); // 4
-
-            writer.Seek(20, SeekOrigin.Current); // skip empty
-
-            writer.Write(container.Extra.SizeDecompressed); // 4
-
-            writer.Seek(04, SeekOrigin.Current); // skip empty
-
-            writer.Write(1); // 4
-        }
+        // Overwrite only SizeDecompressed.
+        using var writer = new BinaryWriter(new MemoryStream(buffer));
+        writer.Write(META_HEADER); // 4
+        writer.Write(Constants.SAVE_FORMAT_3); // 4
+        writer.Write(container.Extra.SizeDecompressed); // 4
 
         return buffer;
     }
 
-    private byte[] CreateLegacyMeta(Container container)
+    private byte[] CreateWizardStreamingMeta(Container container)
+    {
+        var buffer = new byte[META_LENGTH_TOTAL_WAYPOINT];
+
+        using var writer = new BinaryWriter(new MemoryStream(buffer));
+
+        writer.Write(SAVEWIZARD_HEADER_BINARY); // 8
+        writer.Write(SAVEWIZARD_VERSION_2); // 4
+        writer.Write(MEMORYDAT_OFFSET_META); // 4
+        writer.Write(1); // 4
+        writer.Write(container.Extra.SizeDisk); // 4
+
+        writer.Seek(0x28, SeekOrigin.Current); // skip empty
+
+        // Here the same structure as the old memory.dat format starts but with many empty values.
+        writer.Seek(0x4, SeekOrigin.Current); // skip META HEADER
+        writer.Write(Constants.SAVE_FORMAT_3); // 4
+        writer.Seek(0x14, SeekOrigin.Current); // skip COMPRESSED SIZE, CHUNK OFFSET, CHUNK SIZE, META INDEX, TIMESTAMP
+        writer.Write(container.Extra.SizeDecompressed); // 4
+        writer.Seek(0x4, SeekOrigin.Current); // skip SAVEWIZARD OFFSET
+        writer.Write(1); // 4
+
+        return buffer;
+    }
+
+    private byte[] GetLegacyMeta(Container container)
     {
         var buffer = new byte[container.MetaSize];
 
@@ -144,6 +151,7 @@ public partial class PlatformPlaystation : Platform
             var legacyLength = container.IsAccount ? MEMORYDAT_LENGTH_ACCOUNTDATA : MEMORYDAT_LENGTH_CONTAINER;
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
+
             writer.Write(META_HEADER); // 4
             writer.Write(Constants.SAVE_FORMAT_2); // 4
             writer.Write(container.Extra.SizeDisk); // 4
@@ -154,32 +162,34 @@ public partial class PlatformPlaystation : Platform
             writer.Write(container.Extra.SizeDecompressed); // 4
 
             if (_usesSaveWizard)
-            {
-                var offset = MEMORYDAT_OFFSET_DATA + SAVEWIZARD_HEADER.Length;
-                if (container.MetaIndex > 0)
-                {
-                    var precedingContainer = SaveContainerCollection.Where(i => i.Exists && i.MetaIndex < container.MetaIndex);
-
-                    offset += (int)(AccountContainer.Extra.SizeDecompressed);
-                    offset += (int)(precedingContainer.Sum(i => SAVEWIZARD_HEADER.Length + i.Extra.SizeDecompressed));
-                    offset += SAVEWIZARD_HEADER.Length;
-                }
-                writer.Write(offset); // 4
-                writer.Write(1); // 4
-            }
+                AppendLegacySaveWizardMeta(writer, container);
         }
         else
         {
             using var writer = new BinaryWriter(new MemoryStream(buffer));
+
             writer.Write(META_HEADER); // 4
             writer.Write(Constants.SAVE_FORMAT_2); // 4
-
-            writer.Seek(12, SeekOrigin.Current);
-
+            writer.Seek(0xC, SeekOrigin.Current); // skip empty
             writer.Write(uint.MaxValue); // 4
         }
 
         return buffer;
+    }
+
+    private void AppendLegacySaveWizardMeta(BinaryWriter writer, Container container)
+    {
+        var offset = MEMORYDAT_OFFSET_DATA + SAVEWIZARD_HEADER.Length;
+        if (container.MetaIndex > 0)
+        {
+            var precedingContainer = SaveContainerCollection.Where(i => i.Exists && i.MetaIndex < container.MetaIndex);
+
+            offset += (int)(AccountContainer.Extra.SizeDecompressed);
+            offset += (int)(precedingContainer.Sum(i => SAVEWIZARD_HEADER.Length + i.Extra.SizeDecompressed));
+            offset += SAVEWIZARD_HEADER.Length;
+        }
+        writer.Write(offset); // 4
+        writer.Write(1); // 4
     }
 
     #endregion
@@ -196,49 +206,39 @@ public partial class PlatformPlaystation : Platform
         using var writer = new BinaryWriter(new MemoryStream(buffer));
 
         if (_usesSaveWizard)
-        {
-            writer.Write(SAVEWIZARD_HEADER_BINARY);
-            writer.Write(Constants.SAVE_FORMAT_2);
-            writer.Write(MEMORYDAT_OFFSET_META);
-            writer.Write(SaveContainerCollection.Where(i => i.Exists).Count() + 1); // + 1 for AccountData that ia always present in memory.dat
-            writer.Write(MEMORYDAT_LENGTH_TOTAL);
-
-            writer.Seek(MEMORYDAT_OFFSET_META, SeekOrigin.Begin);
-        }
+            AppendWizardPreamble(writer);
 
         // AccountData
-        AddContainerMeta(writer, AccountContainer);
+        AppendContainerMeta(writer, AccountContainer);
 
         writer.Seek(META_LENGTH_TOTAL_VANILLA, SeekOrigin.Current);
 
         // Container
         foreach (var container in SaveContainerCollection)
-            AddContainerMeta(writer, container);
+            AppendContainerMeta(writer, container);
 
         writer.Seek(MEMORYDAT_OFFSET_DATA, SeekOrigin.Begin);
 
         if (_usesSaveWizard)
         {
             // AccountData
-            AddSaveWizardContainer(writer, AccountContainer);
+            AppendWizardContainer(writer, AccountContainer);
 
             // Container
             foreach (var container in SaveContainerCollection.Where(i => i.Exists))
-                AddSaveWizardContainer(writer, container);
+                AppendWizardContainer(writer, container);
 
             buffer = buffer.AsSpan()[..(int)(writer.BaseStream.Position)].ToArray();
         }
         else
         {
+            //TODO has AccountContainer proper PlaystationOffset?
             // AccountData
-            writer.Write(AccountContainer.Extra.Bytes!);
+            AppendHomebrewContainer(writer, AccountContainer);
 
             // Container
             foreach (var container in SaveContainerCollection.Where(i => i.Exists))
-            {
-                writer.Seek(container.Extra.PlaystationOffset!.Value, SeekOrigin.Begin);
-                writer.Write(container.Extra.Bytes!);
-            }
+                AppendHomebrewContainer(writer, container);
         }
 
         // Write and refresh the memory.dat file.
@@ -246,7 +246,18 @@ public partial class PlatformPlaystation : Platform
         _memorydat!.Refresh();
     }
 
-    private void AddContainerMeta(BinaryWriter writer, Container container)
+    private void AppendWizardPreamble(BinaryWriter writer)
+    {
+        writer.Write(SAVEWIZARD_HEADER_BINARY);
+        writer.Write(Constants.SAVE_FORMAT_2);
+        writer.Write(MEMORYDAT_OFFSET_META);
+        writer.Write(SaveContainerCollection.Where(i => i.Exists).Count() + 1); // + 1 for AccountData that ia always present in memory.dat
+        writer.Write(MEMORYDAT_LENGTH_TOTAL);
+
+        writer.Seek(MEMORYDAT_OFFSET_META, SeekOrigin.Begin);
+    }
+
+    private void AppendContainerMeta(BinaryWriter writer, Container container)
     {
         var meta = CreateMeta(container, container.Extra.Bytes);
 #if NETSTANDARD2_0
@@ -256,7 +267,13 @@ public partial class PlatformPlaystation : Platform
 #endif
     }
 
-    private static void AddSaveWizardContainer(BinaryWriter writer, Container container)
+    private static void AppendHomebrewContainer(BinaryWriter writer, Container container)
+    {
+        writer.Seek(container.Extra.PlaystationOffset!.Value, SeekOrigin.Begin);
+        writer.Write(container.Extra.Bytes!);
+    }
+
+    private static void AppendWizardContainer(BinaryWriter writer, Container container)
     {
         writer.Write(SAVEWIZARD_HEADER_BINARY);
         writer.Write(container.Extra.Bytes!);

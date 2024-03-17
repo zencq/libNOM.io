@@ -171,12 +171,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     protected abstract Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data);
 
     /// <summary>
-    /// Adds meta data that were added with Waypoint.
+    /// Appends meta data that were added with Waypoint.
     /// Contrary to the leading data, this is the same for all platforms.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="writer"></param>
-    protected void AddWaypointMeta(BinaryWriter writer, Container container)
+    protected void AppendWaypointMeta(BinaryWriter writer, Container container)
     {
         // Always append cached bytes but overwrite afterwards if Waypoint.
         writer.Write(container.Extra.Bytes ?? []); // length depends on platform
