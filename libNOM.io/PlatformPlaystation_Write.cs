@@ -162,7 +162,7 @@ public partial class PlatformPlaystation : Platform
             writer.Write(container.Extra.SizeDecompressed); // 4
 
             if (_usesSaveWizard)
-                AppendLegacySaveWizardMeta(writer, container);
+                AppendLegacyWizardMeta(writer, container);
         }
         else
         {
@@ -177,7 +177,7 @@ public partial class PlatformPlaystation : Platform
         return buffer;
     }
 
-    private void AppendLegacySaveWizardMeta(BinaryWriter writer, Container container)
+    private void AppendLegacyWizardMeta(BinaryWriter writer, Container container)
     {
         var offset = MEMORYDAT_OFFSET_DATA + SAVEWIZARD_HEADER.Length;
         if (container.MetaIndex > 0)

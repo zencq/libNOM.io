@@ -1,4 +1,6 @@
-﻿namespace libNOM.io;
+﻿using System.ComponentModel;
+
+namespace libNOM.io;
 
 
 public partial class PlatformPlaystation : Platform
@@ -90,81 +92,95 @@ public partial class PlatformPlaystation : Platform
         {
             if (container.IsAccount && container.MetaFile?.Exists == true)
             {
-                container.Extra = container.Extra with
-                {
-                    MetaFormat = MetaFormatEnum.Waypoint,
-                    Bytes = disk.ToArray(),
-                    Size = decompressed[2],
-                    SizeDecompressed = decompressed[2],
-                    SizeDisk = decompressed[2],
-                };
+                container.Extra = GetAccountStreamingExtra(container, disk, decompressed);
             }
             else if (_usesSaveWizard)
             {
-                /**
-                  0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
-                  2. CONST (2)            (  4)
-                  3. META OFFSET          (  4)
-                  4. CONST (1)            (  4)
-                  5. COMPRESSED SIZE      (  4)
-                  6. EMPTY                ( 40)
-                 16. EMPTY                (  4) // here the same structure as the old memory.dat format starts but with many empty values
-                 17. META FORMAT          (  4)
-                 18. EMPTY                ( 20)
-                 23. DECOMPRESSED SIZE    (  4)
-                 24. EMPTY                (  4)
-                 25. CONST (1)            (  4)
-                 26. EMPTY                (  8)
-                                          (112)
-                 */
-
-                container.Extra = container.Extra with
-                {
-                    MetaFormat = MetaFormatEnum.Frontiers,
-                    Size = decompressed[23],
-                    SizeDecompressed = decompressed[23],
-                    SizeDisk = decompressed[5],
-
-                    PlaystationOffset = META_LENGTH_TOTAL_WAYPOINT,
-                };
+                container.Extra = GetWizardStreamingExtra(container, decompressed);
             }
         }
         else
         {
-            /**
-              0. META HEADER          ( 4)
-              1. META FORMAT          ( 4)
-              2. COMPRESSED SIZE      ( 4)
-              3. CHUNK OFFSET         ( 4)
-              4. CHUNK SIZE           ( 4)
-              5. META INDEX           ( 4)
-              6. TIMESTAMP            ( 4)
-              7. DECOMPRESSED SIZE    ( 4)
-                                      (32)
-
-              8. SAVEWIZARD OFFSET    ( 4)
-              9. CONST (1)            ( 4)
-             10. EMPTY                ( 8)
-                                      (48)
-             */
-
-            if (decompressed.IsEmpty || decompressed[3] == 0)
-            {
-                container.Exists = false;
-                return;
-            }
-
-            container.Extra = container.Extra with
-            {
-                MetaFormat = MetaFormatEnum.Foundation,
-                Size = decompressed[MEMORYDAT_META_INDEX_LENGTH], // either COMPRESSED SIZE or DECOMPRESSED SIZE depending on SaveWizard usage
-                SizeDisk = decompressed[2],
-                SizeDecompressed = decompressed[7],
-                LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[6]).ToLocalTime(),
-
-                PlaystationOffset = (int)(decompressed[MEMORYDAT_META_INDEX_OFFSET]), // either CHUNK OFFSET or SAVEWIZARD OFFSET depending on SaveWizard usage
-            };
+            container.Extra = GetLegacyExtra(container, decompressed);
         }
+    }
+
+    private PlatformExtra GetAccountStreamingExtra(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        return container.Extra with
+        {
+            MetaFormat = MetaFormatEnum.Waypoint,
+            Bytes = disk.ToArray(),
+            Size = decompressed[2],
+            SizeDecompressed = decompressed[2],
+            SizeDisk = decompressed[2],
+        };
+    }
+
+    private PlatformExtra GetWizardStreamingExtra(Container container, ReadOnlySpan<uint> decompressed)
+    {
+        /**
+          0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
+          2. CONST (2)            (  4)
+          3. META OFFSET          (  4)
+          4. CONST (1)            (  4)
+          5. COMPRESSED SIZE      (  4)
+          6. EMPTY                ( 40)
+         16. EMPTY                (  4) // here the same structure as the old memory.dat format starts but with many empty values
+         17. META FORMAT          (  4)
+         18. EMPTY                ( 20)
+         23. DECOMPRESSED SIZE    (  4)
+         24. EMPTY                (  4)
+         25. CONST (1)            (  4)
+         26. EMPTY                (  8)
+                                  (112)
+         */
+        return container.Extra with
+        {
+            MetaFormat = MetaFormatEnum.Frontiers,
+            Size = decompressed[23],
+            SizeDecompressed = decompressed[23],
+            SizeDisk = decompressed[5],
+
+            PlaystationOffset = META_LENGTH_TOTAL_WAYPOINT,
+        };
+    }
+
+    private PlatformExtra GetLegacyExtra(Container container, ReadOnlySpan<uint> decompressed)
+    {
+        /**
+          0. META HEADER          ( 4)
+          1. META FORMAT          ( 4)
+          2. COMPRESSED SIZE      ( 4)
+          3. CHUNK OFFSET         ( 4)
+          4. CHUNK SIZE           ( 4)
+          5. META INDEX           ( 4)
+          6. TIMESTAMP            ( 4)
+          7. DECOMPRESSED SIZE    ( 4)
+                                  (32)
+
+          8. SAVEWIZARD OFFSET    ( 4)
+          9. CONST (1)            ( 4)
+         10. EMPTY                ( 8)
+                                  (48)
+         */
+
+        if (decompressed.IsEmpty || decompressed[3] == 0)
+        {
+            container.Exists = false;
+            return container.Extra;
+        }
+
+        return container.Extra with
+        {
+            MetaFormat = MetaFormatEnum.Foundation,
+            Size = decompressed[MEMORYDAT_META_INDEX_LENGTH], // either COMPRESSED SIZE or DECOMPRESSED SIZE depending on SaveWizard usage
+            SizeDisk = decompressed[2],
+            SizeDecompressed = decompressed[7],
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[6]).ToLocalTime(),
+
+            PlaystationOffset = (int)(decompressed[MEMORYDAT_META_INDEX_OFFSET]), // either CHUNK OFFSET or SAVEWIZARD OFFSET depending on SaveWizard usage
+        };
     }
 
     protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
