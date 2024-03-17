@@ -7,6 +7,15 @@ public partial class PlatformPlaystation : Platform
 {
     #region PlatformExtra
 
+    protected override void CreatePlatformExtra(Container container, Container other)
+    {
+        if (_usesSaveStreaming)
+            base.CreatePlatformExtra(container, other);
+        else
+            // base.CreatePlatformExtra() resets Extra.Bytes but here we want keep it and therefore calling CopyPlatformExtra() directly.
+            CopyPlatformExtra(container, other);
+    }
+
     protected override void CopyPlatformExtra(Container container, Container other)
     {
         base.CopyPlatformExtra(container, other);

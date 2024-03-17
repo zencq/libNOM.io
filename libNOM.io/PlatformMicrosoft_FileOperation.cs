@@ -8,21 +8,12 @@ public partial class PlatformMicrosoft : Platform
 {
     #region PlatformExtra
 
-    protected override void CreatePlatformExtra(Container destination, Container source)
-    {
-        base.CreatePlatformExtra(destination, source);
-
-        // Always creating dummy blob data (already created in CopyPlatformExtra() if destination does not exist).
-        if (destination.Exists)
-            ExecuteCanCreate(destination);
-    }
-
     protected override void CopyPlatformExtra(Container destination, Container source)
     {
         base.CopyPlatformExtra(destination, source);
 
         // Creating dummy blob data only necessary if destination does not exist.
-        if (!destination.Exists)
+        if (destination.DataFile is null)
             ExecuteCanCreate(destination);
     }
 
@@ -77,7 +68,7 @@ public partial class PlatformMicrosoft : Platform
             if (write)
             {
                 if (container.Extra.MicrosoftBlobDirectory?.Exists == true)
-                    container.Extra.MicrosoftBlobDirectory!.Delete();
+                    container.Extra.MicrosoftBlobDirectory!.Delete(true);
             }
 
             container.Reset();

@@ -85,15 +85,15 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
 
-                // Due to this CanCreate can be true.
-                CopyPlatformExtra(Destination, Source);
-
                 // Faking relevant properties to force it to Write().
                 Destination.Exists = true;
 
                 // Additional properties required to properly rebuild the container.
                 Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
+
+                // Due to this CanCreate can be true.
+                CopyPlatformExtra(Destination, Source);
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
                 if (write)

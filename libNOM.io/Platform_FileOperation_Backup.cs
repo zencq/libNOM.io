@@ -113,8 +113,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         // Remove the oldest backups above the maximum count.
         var outdated = container.BackupCollection.OrderByDescending(i => i.LastWriteTime).Skip(Settings.MaxBackupCount);
+
+        Delete(outdated); // delete before sending outdated into nirvana
         _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
-        Delete(outdated);
 
         container.BackupCreatedCallback.Invoke(backup);
     }

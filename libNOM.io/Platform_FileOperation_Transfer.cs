@@ -109,7 +109,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
             var jsonObject = container.GetJsonObject();
 
-            var expressions = GetTransferIntersectionExpressionsByBase().Select(i => Json.GetPath(i.Identifier, jsonObject, jsonObject, i.Interpolations));
+            var expressions = GetTransferIntersectionExpressionsByBase().Select(i => Json.GetPath(i.Identifier, jsonObject, i.Interpolations));
 
             foreach (var context in GetContexts(jsonObject))
             {
@@ -156,9 +156,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
 
-                // Due to this CanCreate can be true.
-                CreatePlatformExtra(Destination, Source);
-
                 // Faking relevant properties to force it to Write().
                 Destination.Exists = true;
 
@@ -166,6 +163,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 Destination.GameVersion = Source.GameVersion;
                 Destination.SaveVersion = Source.SaveVersion;
                 Destination.UserIdentification = PlatformUserIdentification; // update to match new platform
+
+                // Due to this CanCreate can be true.
+                CreatePlatformExtra(Destination, Source);
 
                 TransferOwnership(Destination, sourceTransferData);
 
