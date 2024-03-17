@@ -154,13 +154,6 @@ public interface IPlatform
     /// <param name="container"></param>
     public void Reload(Container container);
 
-    /// <summary>
-    /// Rebuilds the container with data from the specified JSON object.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="jsonObject"></param>
-    public void Rebuild(Container container, JObject jsonObject);
-
     #endregion
 
     #region Write

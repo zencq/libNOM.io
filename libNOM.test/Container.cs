@@ -35,7 +35,8 @@ public class ContainerTest : CommonTestClass
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
         var pattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
 
         container.BackupCreatedCallback += (backup) =>
@@ -54,7 +55,7 @@ public class ContainerTest : CommonTestClass
         var backups2Container = container.BackupCollection.Count;
         var backups2File = Directory.GetFiles(settings.Backup, pattern).Length;
 
-        var backups2ContainerNew = GetOneSaveContainer(new PlatformSteam(path, settings), 0).BackupCollection.Count;
+        var backups2ContainerNew = new PlatformSteam(path, settings).GetSaveContainer(0)!.BackupCollection.Count;
         var backups2FileAfter = Directory.GetFiles(settings.Backup, pattern).Length;
 
         // Assert
@@ -81,7 +82,8 @@ public class ContainerTest : CommonTestClass
 
         // Act
         var platform = new PlatformSteam(path, settings);
-        var container = GetOneSaveContainer(platform, 0);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
 
         container.BackupRestoredCallback += () =>
         {

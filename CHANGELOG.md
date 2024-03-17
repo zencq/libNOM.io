@@ -11,6 +11,7 @@ since 1.0.0.
 ### Changed
 ### Deprecated
 ### Removed
+* `Rebuild`
 ### Fixed
 ### Security
 

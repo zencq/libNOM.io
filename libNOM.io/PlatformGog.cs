@@ -4,11 +4,17 @@ using Newtonsoft.Json.Linq;
 namespace libNOM.io;
 
 
+/// <summary>
+/// Implementation for the GOG.com platform.
+/// </summary>
+// This partial class contains all related code.
 public class PlatformGog : PlatformSteam
 {
     #region Constant
 
     internal new const string ACCOUNT_PATTERN = "DefaultUser";
+
+    private static readonly string GALAXY_CONFIG_JSON = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GOG.com", "Galaxy", "Configuration", "config.json");
 
     internal static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
@@ -16,8 +22,7 @@ public class PlatformGog : PlatformSteam
 
     #region Field
 
-    private string? _userId; // both will be set if GOG Galaxy config file exists
-    private string? _username;
+    private string? _usn; // will be set together with _uid if GOG Galaxy config file exists
 
     #endregion
 
@@ -55,21 +60,14 @@ public class PlatformGog : PlatformSteam
 
     public PlatformGog(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
-    protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
+    protected override void InitializePlatformSpecific()
     {
-        // Proceed to base method even if no directory.
-        if (directory is not null && platformSettings?.UseExternalSourcesForUserIdentification == true)
+        if (Settings.UseExternalSourcesForUserIdentification && File.Exists(GALAXY_CONFIG_JSON))
         {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GOG.com", "Galaxy", "Configuration", "config.json");
-            if (File.Exists(path))
-            {
-                var jsonObject = JsonConvert.DeserializeObject(File.ReadAllText(path)) as JObject;
-                _userId = jsonObject?.GetValue<string>("userId");
-                _username = jsonObject?.GetValue<string>("username");
-            }
+            var jsonObject = JsonConvert.DeserializeObject(File.ReadAllText(GALAXY_CONFIG_JSON)) as JObject;
+            _uid = jsonObject?.GetValue<string>("userId");
+            _usn = jsonObject?.GetValue<string>("username");
         }
-
-        base.InitializeComponent(directory, platformSettings);
     }
 
     #endregion
@@ -80,11 +78,11 @@ public class PlatformGog : PlatformSteam
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        // Base call not as default as _userId and _username can also be null.
+        // Base call not as default as _uid and _usn can also be null.
         var result = key switch
         {
-            "UID" => _userId,
-            "USN" => _username,
+            "UID" => _uid,
+            "USN" => _usn,
             _ => null,
         } ?? base.GetUserIdentification(jsonObject, key);
 
@@ -93,37 +91,6 @@ public class PlatformGog : PlatformSteam
             result = "Explorer";
 
         return result ?? string.Empty;
-    }
-
-    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
-    {
-        if (_userId is null)
-            return base.GetIntersectionExpressionsByBase(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
-    {
-        if (_userId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
-    {
-        if (_userId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _userId),
-        ];
     }
 
     #endregion

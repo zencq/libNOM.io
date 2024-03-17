@@ -241,15 +241,16 @@ public static class NewtonsoftExtensions
 
     private static T? ConvertToken<T>(this JToken self)
     {
+        var result = default(T);
         var type = typeof(T);
 
         if (type.IsSubclassOf(typeof(JToken)) || type == typeof(JToken))
+        {
+            // integer
             if (self is T subclassOfJToken)
                 return subclassOfJToken;
-            else
-                return default;
-
-        if (type.IsEnum)
+        }
+        else if (type.IsEnum)
         {
             // integer
             if (self.Type == JTokenType.Integer && self.Value<int>() is int intValue)
@@ -260,9 +261,9 @@ public static class NewtonsoftExtensions
                 return (T)(Enum.Parse(type, stringValue));
         }
         else
-            return self.Value<T>();
+            result = self.Value<T>();
 
-        return default;
+        return result;
     }
 
     #endregion

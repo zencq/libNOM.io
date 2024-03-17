@@ -7,7 +7,7 @@ namespace libNOM.io.Global;
 
 internal static partial class Common
 {
-    // No real DeepCopy but good enough to swap and this case is only used there.
+    // No real DeepCopy but good enough to swap and that case is only using this.
     internal static Container DeepCopy(Container original)
     {
         var copy = new Container(-1, null!, original.Extra)
@@ -20,13 +20,25 @@ internal static partial class Common
         return copy;
     }
 
+    // No real DeepCopy but good enough to cache it for Microsoft.Write() and that case is only using this.
+    internal static PlatformExtra DeepCopy(PlatformExtra original) => new()
+    {
+        MicrosoftBlobContainerExtension = original.MicrosoftBlobContainerExtension,
+        MicrosoftBlobDataFile = original.MicrosoftBlobDataFile,
+        MicrosoftBlobMetaFile = original.MicrosoftBlobMetaFile,
+    };
+
     internal static T DeepCopy<T>(T original)
     {
         var serialized = JsonConvert.SerializeObject(original);
         return JsonConvert.DeserializeObject<T>(serialized)!;
     }
 
-    internal static bool IsWindowsOrLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+    internal static bool IsLinux() => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
     internal static bool IsMac() => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+    internal static bool IsWindows() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+    internal static bool IsWindowsOrLinux() => IsWindows() || IsLinux();
 }

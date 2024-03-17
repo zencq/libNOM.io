@@ -20,24 +20,14 @@ internal static partial class DifficultyPreset
 
         // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
         if (container.IsVersion400Waypoint && container.GameMode == PresetGameModeEnum.Normal)
-        {
-            // Compare the current difficulty and then compare with the different presets.
-            var difficulty = GetCurrentDifficulty(jsonObject);
-
-            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_NORMAL))
-                return DifficultyPresetTypeEnum.Normal;
-
-            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_CREATIVE))
-                return DifficultyPresetTypeEnum.Creative;
-
-            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_RELAXED))
-                return DifficultyPresetTypeEnum.Relaxed;
-
-            if (difficulty.Equals(Constants.DIFFICULTY_PRESET_SURVIVAL))
-                return DifficultyPresetTypeEnum.Survival;
-
-            return DifficultyPresetTypeEnum.Custom;
-        }
+            return GetCurrentDifficulty(jsonObject) switch
+            {
+                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_NORMAL) => DifficultyPresetTypeEnum.Normal,
+                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_CREATIVE) => DifficultyPresetTypeEnum.Creative,
+                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_RELAXED) => DifficultyPresetTypeEnum.Relaxed,
+                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_SURVIVAL) => DifficultyPresetTypeEnum.Survival,
+                _ => DifficultyPresetTypeEnum.Custom,
+            };
 
         return PreWaypointDifficulty(container);
     }
@@ -59,21 +49,14 @@ internal static partial class DifficultyPreset
         {
             // DifficultyState is stored again in SeasonData and therefore cut off here at an appropriate length.
             // DifficultyState ends at around 800 characters if save name and summary are not set. Both are limited to 128 chars so 1500 should be more than enough.
-            var jsonSubstring = json.AsSpan(0, 1500);
-
-            if (IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_NORMAL))
-                return DifficultyPresetTypeEnum.Normal;
-
-            if (IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_CREATIVE))
-                return DifficultyPresetTypeEnum.Creative;
-
-            if (IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_SURVIVAL))
-                return DifficultyPresetTypeEnum.Survival;
-
-            if (IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_RELAXED))
-                return DifficultyPresetTypeEnum.Relaxed;
-
-            return DifficultyPresetTypeEnum.Custom;
+            return json.AsSpan(0, 1500).ToString() switch
+            {
+                var jsonSubstring when IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_NORMAL) => DifficultyPresetTypeEnum.Normal,
+                var jsonSubstring when IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_CREATIVE) => DifficultyPresetTypeEnum.Creative,
+                var jsonSubstring when IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_RELAXED) => DifficultyPresetTypeEnum.Relaxed,
+                var jsonSubstring when IsPreset(jsonSubstring, Constants.DIFFICULTY_PRESET_SURVIVAL) => DifficultyPresetTypeEnum.Survival,
+                _ => DifficultyPresetTypeEnum.Custom,
+            };
         }
 
         return PreWaypointDifficulty(container);
@@ -86,72 +69,76 @@ internal static partial class DifficultyPreset
     internal static void Set(Container container, Difficulty preset)
     {
         var jsonObject = container.GetJsonObject();
+        var parameters = new (JToken, string)[] {
+            // Survival Elements
+            (preset.ActiveSurvivalBars.ToString(), "DIFFICULTY_ACTIVE_SURVIVAL_BARS"),
 
-        // Survival Elements
-        jsonObject.SetValue(preset.ActiveSurvivalBars.ToString(), "DIFFICULTY_ACTIVE_SURVIVAL_BARS");
+            // Survival Difficulty
+            (preset.HazardDrain.ToString(), "DIFFICULTY_HAZARD_DRAIN"),
+            (preset.EnergyDrain.ToString(), "DIFFICULTY_ENERGY_DRAIN"),
 
-        // Survival Difficulty
-        jsonObject.SetValue(preset.HazardDrain.ToString(), "DIFFICULTY_HAZARD_DRAIN");
-        jsonObject.SetValue(preset.EnergyDrain.ToString(), "DIFFICULTY_ENERGY_DRAIN");
+            // Natural Resources
+            (preset.SubstanceCollection.ToString(), "DIFFICULTY_SUBSTANCE_COLLECTION"),
 
-        // Natural Resources
-        jsonObject.SetValue(preset.SubstanceCollection.ToString(), "DIFFICULTY_SUBSTANCE_COLLECTION");
+            // Sprinting
+            (preset.SprintingCost.ToString(), "DIFFICULTY_SPRINTING_COST"),
 
-        // Sprinting
-        jsonObject.SetValue(preset.SprintingCost.ToString(), "DIFFICULTY_SPRINTING_COST");
+            // Scanner Recharge
+            (preset.ScannerRecharge.ToString(), "DIFFICULTY_SCANNER_RECHARGE"),
 
-        // Scanner Recharge
-        jsonObject.SetValue(preset.ScannerRecharge.ToString(), "DIFFICULTY_SCANNER_RECHARGE");
+            // Damage Levels
+            (preset.DamageReceived.ToString(), "DIFFICULTY_DAMAGE_RECEIVED"),
 
-        // Damage Levels
-        jsonObject.SetValue(preset.DamageReceived.ToString(), "DIFFICULTY_DAMAGE_RECEIVED");
+            // Technology Damage
+            (preset.BreakTechOnDamage.ToString(), "DIFFICULTY_BREAK_TECH_ON_DAMAGE"),
 
-        // Technology Damage
-        jsonObject.SetValue(preset.BreakTechOnDamage.ToString(), "DIFFICULTY_BREAK_TECH_ON_DAMAGE");
+            // Death Consequences
+            (preset.DeathConsequences.ToString(), "DIFFICULTY_DEATH_CONSEQUENCES"),
 
-        // Death Consequences
-        jsonObject.SetValue(preset.DeathConsequences.ToString(), "DIFFICULTY_DEATH_CONSEQUENCES");
+            // Fuel Usage
+            (preset.ChargingRequirements.ToString(), "DIFFICULTY_CHARGING_REQUIREMENTS"),
+            (preset.FuelUse.ToString(), "DIFFICULTY_FUEL_USE"),
+            (preset.LaunchFuelCost.ToString(), "DIFFICULTY_LAUNCH_FUEL_COST"),
 
-        // Fuel Usage
-        jsonObject.SetValue(preset.ChargingRequirements.ToString(), "DIFFICULTY_CHARGING_REQUIREMENTS");
-        jsonObject.SetValue(preset.FuelUse.ToString(), "DIFFICULTY_FUEL_USE");
-        jsonObject.SetValue(preset.LaunchFuelCost.ToString(), "DIFFICULTY_LAUNCH_FUEL_COST");
+            // Crafting
+            (preset.CraftingIsFree, "DIFFICULTY_CRAFTING_IS_FREE"),
 
-        // Crafting
-        jsonObject.SetValue(preset.CraftingIsFree, "DIFFICULTY_CRAFTING_IS_FREE");
+            // Purchases
+            (preset.CurrencyCost.ToString(), "DIFFICULTY_CURRENCY_COST"),
 
-        // Purchases
-        jsonObject.SetValue(preset.CurrencyCost.ToString(), "DIFFICULTY_CURRENCY_COST");
+            // Goods Availability
+            (preset.ItemShopAvailability.ToString(), "DIFFICULTY_ITEM_SHOP_AVAILABILITY"),
 
-        // Goods Availability
-        jsonObject.SetValue(preset.ItemShopAvailability.ToString(), "DIFFICULTY_ITEM_SHOP_AVAILABILITY");
+            // Inventory Stack Limits
+            (preset.InventoryStackLimits.ToString(), "DIFFICULTY_INVENTORY_STACK_LIMITS"),
 
-        // Inventory Stack Limits
-        jsonObject.SetValue(preset.InventoryStackLimits.ToString(), "DIFFICULTY_INVENTORY_STACK_LIMITS");
+            // Enemy Strength
+            (preset.DamageGiven.ToString(), "DIFFICULTY_DAMAGE_GIVEN"),
 
-        // Enemy Strength
-        jsonObject.SetValue(preset.DamageGiven.ToString(), "DIFFICULTY_DAMAGE_GIVEN");
+            // On-Foot Combat
+            (preset.GroundCombatTimers.ToString(), "DIFFICULTY_GROUND_COMBAT_TIMERS"),
 
-        // On-Foot Combat
-        jsonObject.SetValue(preset.GroundCombatTimers.ToString(), "DIFFICULTY_GROUND_COMBAT_TIMERS");
+            // Space Combat
+            (preset.SpaceCombatTimers.ToString(), "DIFFICULTY_SPACE_COMBAT_TIMERS"),
 
-        // Space Combat
-        jsonObject.SetValue(preset.SpaceCombatTimers.ToString(), "DIFFICULTY_SPACE_COMBAT_TIMERS");
+            // Creatures
+            (preset.CreatureHostility.ToString(), "DIFFICULTY_CREATURE_HOSTILITY"),
 
-        // Creatures
-        jsonObject.SetValue(preset.CreatureHostility.ToString(), "DIFFICULTY_CREATURE_HOSTILITY");
+            // Inventory Transfer Range
+            (preset.InventoriesAlwaysInRange, "DIFFICULTY_INVENTORIES_ALWAYS_IN_RANGE"),
 
-        // Inventory Transfer Range
-        jsonObject.SetValue(preset.InventoriesAlwaysInRange, "DIFFICULTY_INVENTORIES_ALWAYS_IN_RANGE");
+            // Hyperdrive System Access
+            (preset.WarpDriveRequirements, "DIFFICULTY_WARP_DRIVE_REQUIREMENTS"),
 
-        // Hyperdrive System Access
-        jsonObject.SetValue(preset.WarpDriveRequirements, "DIFFICULTY_WARP_DRIVE_REQUIREMENTS");
+            // Base Power
+            (preset.BaseAutoPower, "DIFFICULTY_BASE_AUTO_POWER"),
 
-        // Base Power
-        jsonObject.SetValue(preset.BaseAutoPower, "DIFFICULTY_BASE_AUTO_POWER");
+            // Reputation & Standing Gain
+            (preset.ReputationGain.ToString(), "DIFFICULTY_REPUTATION_GAIN"),
+        };
 
-        // Reputation & Standing Gain
-        jsonObject.SetValue(preset.ReputationGain.ToString(), "DIFFICULTY_REPUTATION_GAIN");
+        foreach (var (value, pathIdentifier) in parameters)
+            jsonObject.SetValue(value, pathIdentifier);
     }
 
     #endregion
@@ -229,7 +216,7 @@ internal static partial class DifficultyPreset
         return new(activeSurvivalBars, hazardDrain, energyDrain, substanceCollection, sprintingCost, scannerRecharge, damageReceived, breakTechOnDamage, deathConsequences, chargingRequirements, fuelUse, launchFuelCost, craftingIsFree, currencyCost, itemShopAvailability, inventoryStackLimits, damageGiven, groundCombatTimers, spaceCombatTimers, creatureHostility, inventoriesAlwaysInRange, warpDriveRequirements, baseAutoPower, reputationGain);
     }
 
-    private static bool IsPreset(ReadOnlySpan<char> json, Difficulty preset)
+    private static bool IsPreset(string json, Difficulty preset)
     {
         string[] settings = [
             // Survival Elements
@@ -298,13 +285,7 @@ internal static partial class DifficultyPreset
             // Reputation & Standing Gain
             $"\"vo>\":{{\"S@3\":\"{preset.ReputationGain}\"",
         ];
-
-        foreach (var value in settings)
-            if (!json.Contains(value.AsSpan(), StringComparison.OrdinalIgnoreCase))
-                return false;
-
-        // All values are there, therefore it matches the preset.
-        return true;
+        return settings.All(json.Contains);
     }
 
     private static DifficultyPresetTypeEnum PreWaypointDifficulty(Container container) => container.GameMode switch

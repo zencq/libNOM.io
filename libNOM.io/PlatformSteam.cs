@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
 using CommunityToolkit.HighPerformance;
@@ -13,6 +12,10 @@ using SpookilySharp;
 namespace libNOM.io;
 
 
+/// <summary>
+/// Implementation for the Steam platform.
+/// </summary>
+// This partial class contains all related code.
 public partial class PlatformSteam : Platform
 {
     #region Constant
@@ -23,13 +26,13 @@ public partial class PlatformSteam : Platform
 
     internal static readonly string PATH = ((Func<string>)(() =>
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (Common.IsWindows())
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) // SteamDeck
+        if (Common.IsLinux()) // SteamDeck
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "Steam", "steamapps", "compatdata", "275850", "pfx", "drive_c", "users", "steamuser", "Application Data", "HelloGames", "NMS");
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) // macOS
+        if (Common.IsMac())
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "HelloGames", "NMS");
 
         return string.Empty; // same as if not defined at all
@@ -45,7 +48,6 @@ public partial class PlatformSteam : Platform
 
     #region Field
 
-    private string? _steamId; // will be set if available in path
     private SteamService? _steamService; // will be set if SteamService is accessed
 
     #endregion
@@ -116,37 +118,35 @@ public partial class PlatformSteam : Platform
 
     public PlatformSteam(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
 
-    /// <seealso href="https://help.steampowered.com/en/faqs/view/2816-BE67-5B69-0FEC"/>
-    protected override void InitializeComponent(DirectoryInfo? directory, PlatformSettings? platformSettings)
-    {
-        // Proceed to base method even if no directory.
-#if NETSTANDARD2_0
-        if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && directory!.Name.Substring(11).All(char.IsDigit)) // implicit directory is not null
-            _steamId = directory.Name.Substring(3); // remove "st_"
-#else
-        if (directory?.Name.Length == 20 && directory!.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && directory!.Name[11..].All(char.IsDigit)) // implicit directory is not null
-            _steamId = directory.Name[3..]; // remove "st_"
-#endif
-
-        base.InitializeComponent(directory, platformSettings);
-
-        // Files can have 0 or 1 or 2 numbers in its name.
-        if (IsValid)
-        {
-#if NETSTANDARD2_0_OR_GREATER
-            _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "*");
-#else
-            _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "?"));
-            _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", string.Empty));
-#endif
-        }
-    }
-
     #endregion
 
-    // // Read / Write
+    #region Initialize
 
-    #region Generate
+    protected override void InitializeWatcher()
+    {
+        base.InitializeWatcher();
+
+        // Files can have 0 or 1 or 2 numbers in its name.
+#if NETSTANDARD2_0_OR_GREATER
+        _watcher.Filter = PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "*");
+#else
+        _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", "?"));
+        _watcher.Filters.Add(PlatformAnchorFilePattern[AnchorFileIndex].Replace("??", string.Empty));
+#endif
+    }
+
+    /// <seealso href="https://help.steampowered.com/en/faqs/view/2816-BE67-5B69-0FEC"/>
+    protected override void InitializePlatformSpecific()
+    {
+        // Extract UID from directory name if possible.
+#if NETSTANDARD2_0
+        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && Location.Name.Substring(ACCOUNT_PATTERN.Length - 1).All(char.IsDigit)) // implicit directory is not null
+            _uid = Location.Name.Substring(3); // remove "st_"
+#else
+        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && Location.Name[(ACCOUNT_PATTERN.Length - 1)..].All(char.IsDigit))
+            _uid = Location.Name[3..]; // remove "st_"
+#endif
+    }
 
     private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
     {
@@ -167,6 +167,62 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
+    #region Process
+
+    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        /**
+          0. META HEADER          (  4)
+          1. META FORMAT          (  4)
+          2. SPOOKY HASH          ( 16) // SAVE_FORMAT_2
+          6. SHA256 HASH          ( 32) // SAVE_FORMAT_2
+         14. DECOMPRESSED SIZE    (  4) // SAVE_FORMAT_3
+         15. COMPRESSED SIZE      (  4) // SAVE_FORMAT_1
+         16. PROFILE HASH         (  4) // SAVE_FORMAT_1
+         17. BASE VERSION         (  4) // SAVE_FORMAT_3
+         18. GAME MODE            (  2) // SAVE_FORMAT_3
+         18. SEASON               (  2) // SAVE_FORMAT_3
+         19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
+         20. EMPTY                (  8)
+
+         22. EMPTY                ( 16) // SAVE_FORMAT_2
+                                  (104)
+
+         22. SAVE NAME            (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
+         54. SAVE SUMMARY         (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
+         86. DIFFICULTY PRESET    (  1) // SAVE_FORMAT_3
+         86. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
+                                  (360)
+         */
+
+        // Do not write wrong data in case a step before failed.
+        if (decompressed.TryGetValue(0, out var header) && header == META_HEADER)
+        {
+            // Vanilla data always available but not always set depending on the SAVE_FORMAT.
+            container.Extra = container.Extra with
+            {
+                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? (decompressed[1] == Constants.SAVE_FORMAT_2 ? MetaFormatEnum.Foundation : (decompressed[1] == Constants.SAVE_FORMAT_3 ? MetaFormatEnum.Frontiers : MetaFormatEnum.Unknown)) : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
+                Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
+                SizeDecompressed = decompressed[14],
+                BaseVersion = (int)(decompressed[17]),
+                GameMode = disk.Cast<ushort>(72),
+                Season = disk.Cast<ushort>(74),
+                TotalPlayTime = decompressed[19],
+            };
+
+            // Extended data since Waypoint.
+            UpdateContainerWithWaypointMetaInformation(container, disk);
+
+            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
+        }
+
+        // Size is save to write always.
+        container.Extra = container.Extra with { Size = (uint)(disk.Length) };
+    }
+
+    #endregion
+
     #region Load
 
     protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
@@ -177,11 +233,7 @@ public partial class PlatformSteam : Platform
             return value;
 
         // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
-#if NETSTANDARD2_0_OR_GREATER
-        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(((StoragePersistentSlotEnum[])(Enum.GetValues(typeof(StoragePersistentSlotEnum)))).Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
-#else
-        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(Enum.GetValues<StoragePersistentSlotEnum>().Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
-#endif
+        var enumValues = new StoragePersistentSlotEnum[] { container.PersistentStorageSlot }.Concat(EnumExtensions.GetValues<StoragePersistentSlotEnum>().Where(i => i > StoragePersistentSlotEnum.AccountData && i != container.PersistentStorageSlot));
 
         foreach (var entry in enumValues)
         {
@@ -233,76 +285,15 @@ public partial class PlatformSteam : Platform
         return value;
     }
 
-#if !NETSTANDARD2_0
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057: Use range operator", Justification = "The range operator is not supported in netstandard2.0 and Slice() has no performance penalties.")]
-#endif
-    protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
-    {
-        /**
-          0. META HEADER          (  4)
-          1. META FORMAT          (  4)
-          2. SPOOKY HASH          ( 16) // SAVE_FORMAT_2
-          6. SHA256 HASH          ( 32) // SAVE_FORMAT_2
-         14. DECOMPRESSED SIZE    (  4) // SAVE_FORMAT_3
-         15. COMPRESSED SIZE      (  4) // SAVE_FORMAT_1
-         16. PROFILE HASH         (  4) // SAVE_FORMAT_1
-         17. BASE VERSION         (  4) // SAVE_FORMAT_3
-         18. GAME MODE            (  2) // SAVE_FORMAT_3
-         18. SEASON               (  2) // SAVE_FORMAT_3
-         19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
-         20. EMPTY                (  8)
-
-         22. EMPTY                ( 16) // SAVE_FORMAT_2
-                                  (104)
-
-         22. SAVE NAME            (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
-         54. SAVE SUMMARY         (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
-         86. DIFFICULTY PRESET    (  1) // SAVE_FORMAT_3
-         86. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
-                                  (360)
-         */
-
-        // Do not write wrong data in case a step before failed.
-        if (decompressed.TryGetValue(0, out var header) && header == META_HEADER)
-        {
-            // Vanilla data always available but not always set depending on the SAVE_FORMAT.
-            container.Extra = container.Extra with
-            {
-                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? (decompressed[1] == Constants.SAVE_FORMAT_2 ? MetaFormatEnum.Foundation : (decompressed[1] == Constants.SAVE_FORMAT_3 ? MetaFormatEnum.Frontiers : MetaFormatEnum.Unknown)) : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
-                Bytes = disk.Slice(META_LENGTH_KNOWN).ToArray(),
-                SizeDecompressed = decompressed[14],
-                BaseVersion = (int)(decompressed[17]),
-                GameMode = disk.Cast<ushort>(72),
-                Season = disk.Cast<ushort>(74),
-                TotalPlayTime = decompressed[19],
-            };
-
-            // Extended data since Waypoint.
-            if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-                container.Extra = container.Extra with
-                {
-                    SaveName = disk.Slice(88, 128).GetStringUntilTerminator(),
-                    SaveSummary = disk.Slice(216, 128).GetStringUntilTerminator(),
-                    DifficultyPreset = disk[344],
-                };
-
-            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
-            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
-        }
-
-        // Size is save to write always.
-        container.Extra = container.Extra with { Size = (uint)(disk.Length) };
-    }
-
     #endregion
 
     #region Write
 
-    public override void Write(Container container, DateTimeOffset writeTime)
+    protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
         // Update PlatformArchitecture in save depending on the current operating system without changing the sync state.
         container.GetJsonObject().SetValue(PlatformArchitecture, "PLATFORM");
-        base.Write(container, writeTime);
+        base.WritePlatformSpecific(container, writeTime);
     }
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
@@ -333,24 +324,11 @@ public partial class PlatformSteam : Platform
             writer.Seek(0x8, SeekOrigin.Current); // 8
 
             // Insert trailing bytes and the extended Waypoint data.
-            AddWaypointMeta(writer, container); // Extra.Bytes is 272 or 16
+            AppendWaypointMeta(writer, container); // Extra.Bytes is 272 or 16
         }
         else // SAVE_FORMAT_2
         {
-#if NETSTANDARD2_0_OR_GREATER
-            var sha256 = SHA256.Create().ComputeHash(data.ToArray());
-#else
-            var sha256 = SHA256.HashData(data);
-#endif
-            var spookyHash = new SpookyHash(0x155AF93AC304200, 0x8AC7230489E7FFFF);
-            spookyHash.Update(sha256);
-            spookyHash.Update(data.ToArray());
-            spookyHash.Final(out ulong hash1, out ulong hash2);
-
-            writer.Write(hash1); // 8
-            writer.Write(hash2); // 8
-
-            writer.Write(sha256); // 256 / 8 = 32
+            AppendHashes(writer, data); // 8 + 8 + 32 = 48
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
@@ -358,6 +336,24 @@ public partial class PlatformSteam : Platform
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
+    }
+
+    private static void AppendHashes(BinaryWriter writer, ReadOnlySpan<byte> data)
+    {
+#if NETSTANDARD2_0_OR_GREATER
+        var sha256 = SHA256.Create().ComputeHash(data.ToArray());
+#else
+        var sha256 = SHA256.HashData(data);
+#endif
+
+        var spookyHash = new SpookyHash(0x155AF93AC304200, 0x8AC7230489E7FFFF);
+        spookyHash.Update(sha256);
+        spookyHash.Update(data.ToArray());
+        spookyHash.Final(out ulong spookyFinal1, out ulong spookyFinal2);
+
+        writer.Write(spookyFinal1); // 8
+        writer.Write(spookyFinal2); // 8
+        writer.Write(sha256); // 256 / 8 = 32
     }
 
     protected override ReadOnlySpan<byte> EncryptMeta(Container container, ReadOnlySpan<byte> data, Span<byte> meta)
@@ -400,56 +396,23 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    // // User Identification
-
     #region UserIdentification
 
     protected override string GetUserIdentification(JObject jsonObject, string key)
     {
-        // Base call not as default as _steamId can also be null.
+        // Base call not as default as _uid can also be null.
         var result = key switch
         {
-            "LID" => _steamId,
-            "UID" => _steamId,
+            "LID" => _uid,
+            "UID" => _uid,
             _ => null,
         } ?? base.GetUserIdentification(jsonObject, key);
 
         // Get via API only if not found in-file.
-        if (key == "USN" && string.IsNullOrEmpty(result) && Settings.UseExternalSourcesForUserIdentification && _steamId is not null)
+        if (key == "USN" && string.IsNullOrEmpty(result) && Settings.UseExternalSourcesForUserIdentification && _uid is not null)
             result = GetUserIdentificationBySteam();
 
         return result ?? string.Empty;
-    }
-
-    protected override string[] GetIntersectionExpressionsByBase(JObject jsonObject)
-    {
-        if (_steamId is null)
-            return base.GetIntersectionExpressionsByBase(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_TYPE_OR_TYPE", jsonObject, PersistentBaseTypesEnum.HomePlanetBase, PersistentBaseTypesEnum.FreighterBase),
-            Json.GetPath("INTERSECTION_PERSISTENT_PLAYER_BASE_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsByDiscovery(JObject jsonObject)
-    {
-        if (_steamId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_DISCOVERY_DATA_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
-        ];
-    }
-
-    protected override string[] GetIntersectionExpressionsBySettlement(JObject jsonObject)
-    {
-        if (_steamId is null)
-            return base.GetIntersectionExpressionsByDiscovery(jsonObject);
-        return
-        [
-            Json.GetPath("INTERSECTION_SETTLEMENT_OWNERSHIP_EXPRESSION_THIS_UID", jsonObject, _steamId),
-        ];
     }
 
     /// <summary>
@@ -458,11 +421,11 @@ public partial class PlatformSteam : Platform
     /// <returns></returns>
     private string? GetUserIdentificationBySteam()
     {
-        // Ensure STEAM_API_KEY is a valid one.
+        // Ensure STEAM_API_KEY is a formal valid one.
         if (!Properties.Resources.STEAM_API_KEY.All(char.IsLetterOrDigit))
             return null;
 
-        var task = SteamService.GetPersonaNameAsync(_steamId!);
+        var task = SteamService.GetPersonaNameAsync(_uid!); // _uid has been checked before
         task.Wait();
         return task.Result;
     }
