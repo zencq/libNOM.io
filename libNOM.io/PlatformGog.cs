@@ -4,6 +4,10 @@ using Newtonsoft.Json.Linq;
 namespace libNOM.io;
 
 
+/// <summary>
+/// Implementation for the GOG.com platform.
+/// </summary>
+// This partial class contains all related code.
 public class PlatformGog : PlatformSteam
 {
     #region Constant
