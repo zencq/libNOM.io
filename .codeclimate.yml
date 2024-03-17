@@ -8,4 +8,4 @@ checks:
       threshold: 27  # 2 more to ignore the surrounding { }
 exclude_patterns:
   - "libNOM.test/"
-  - "libNOM.io/libNOM.io/Global/Constants.cs"  # exclude as it may not avoidable to have similar definitions
+  - "libNOM.io/Global/Constants.cs"  # exclude as it may not avoidable to have similar definitions
