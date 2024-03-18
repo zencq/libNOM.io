@@ -115,7 +115,7 @@ public partial class PlatformPlaystation : Platform
 
         // Deobfuscate anyway if _useSaveWizard to realign mapping by SaveWizard.
         if (_usesSaveWizard)
-            container.UnknownKeys = Mapping.Deobfuscate(jsonObject);
+            container.UnknownKeys = Mapping.Deobfuscate(jsonObject, container.IsAccount);
 
         return jsonObject;
     }

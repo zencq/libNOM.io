@@ -13,6 +13,13 @@ public static class NewtonsoftExtensions
     #region Flags
 
     /// <summary>
+    /// Whether the specified object contains account data.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static bool IsAccount(this JObject self) => Constants.JSONPATH["ACCOUNT_USER_SETTINGS_DATA"].Any(self.ContainsKey);
+
+    /// <summary>
     /// Whether the specified object is the root object.
     /// </summary>
     /// <param name="self"></param>
@@ -53,9 +60,9 @@ public static class NewtonsoftExtensions
         var jsonObject = Common.DeepCopy(self);
 
         if (obfuscate)
-            Mapping.Obfuscate(jsonObject);
+            Mapping.Obfuscate(jsonObject, self.IsAccount());
         else
-            Mapping.Deobfuscate(jsonObject);
+            Mapping.Deobfuscate(jsonObject, self.IsAccount());
 
         var settings = new JsonSerializerSettings { Formatting = indent ? Formatting.Indented : Formatting.None };
         var jsonString = $"{JsonConvert.SerializeObject(jsonObject, settings)}\0";

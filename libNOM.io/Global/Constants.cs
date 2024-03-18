@@ -45,6 +45,7 @@ public static class Constants
     {
         // absolute from root, common
 
+        { "ACCOUNT_USER_SETTINGS_DATA", ["B89", "UserSettingsData"] },
         { "ACTIVE_CONTEXT", ["", "", "XTp", "ActiveContext"] }, // no path in Vanilla
         { "BASE_CONTEXT", ["", "", "vLc", "BaseContext"] },
         { "EXPEDITION_CONTEXT", ["", "", "2YS", "ExpeditionContext"] },
