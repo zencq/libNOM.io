@@ -50,13 +50,12 @@ public static class NewtonsoftExtensions
     /// <returns>A JSON string representation of the object.</returns>
     public static string GetString(this JObject self, bool indent, bool obfuscate)
     {
-        var jsonObject = self;
+        var jsonObject = Common.DeepCopy(self);
 
         if (obfuscate)
-        {
-            jsonObject = Common.DeepCopy(self);
             Mapping.Obfuscate(jsonObject);
-        }
+        else
+            Mapping.Deobfuscate(jsonObject);
 
         var settings = new JsonSerializerSettings { Formatting = indent ? Formatting.Indented : Formatting.None };
         var jsonString = $"{JsonConvert.SerializeObject(jsonObject, settings)}\0";
