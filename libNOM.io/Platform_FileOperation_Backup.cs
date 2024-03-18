@@ -24,10 +24,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.BackupCollection.Clear();
 
         // No directory, no backups.
-        if (!Directory.Exists(Settings.Backup))
+        if (!Directory.Exists(Settings.BackupDirectory))
             return;
 
-        foreach (var file in Directory.EnumerateFiles(Settings.Backup, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip".ToLowerInvariant()))
+        foreach (var file in Directory.EnumerateFiles(Settings.BackupDirectory, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip".ToLowerInvariant()))
         {
             var parts = Path.GetFileNameWithoutExtension(file).Split('.');
 
@@ -89,11 +89,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         Guard.IsNotNull(container.DataFile);
         Guard.IsTrue(container.DataFile.Exists);
 
-        Directory.CreateDirectory(Settings.Backup); // ensure directory exists
+        Directory.CreateDirectory(Settings.BackupDirectory); // ensure directory exists
 
         var createdAt = DateTime.Now;
         var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
-        var path = Path.Combine(Settings.Backup, name);
+        var path = Path.Combine(Settings.BackupDirectory, name);
 
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
@@ -111,11 +111,14 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         };
         container.BackupCollection.Add(backup);
 
-        // Remove the oldest backups above the maximum count.
-        var outdated = container.BackupCollection.OrderByDescending(i => i.LastWriteTime).Skip(Settings.MaxBackupCount);
+        if (Settings.MaxBackupCount > 0)
+        {
+            // Remove the oldest backups above the maximum count.
+            var outdated = container.BackupCollection.OrderByDescending(i => i.LastWriteTime).Skip(Settings.MaxBackupCount);
 
-        Delete(outdated); // delete before sending outdated into nirvana
-        _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
+            Delete(outdated); // delete before sending outdated into nirvana
+            _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
+        }
 
         container.BackupCreatedCallback.Invoke(backup);
     }

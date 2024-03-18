@@ -9,6 +9,7 @@ since 1.0.0.
 ### Known Issues
 ### Added
 ### Changed
+* `PlatformSettings.MaxBackupCount <= 0` is now unlimited and not unintentionally disabling the backup feature
 ### Deprecated
 ### Removed
 * `Rebuild`

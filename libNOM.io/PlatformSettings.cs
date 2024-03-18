@@ -11,13 +11,7 @@ public record class PlatformSettings
     /// Where to store backups. By default relative to the working directory.
     /// Default: "backup"
     /// </summary>
-    public string Backup { get; set; } = "backup";
-
-    /// <summary>
-    /// Where to download things. By default relative to the working directory.
-    /// Default: "download"
-    /// </summary>
-    public string Download { get; set; } = "download";
+    public string BackupDirectory { get; set; } = "backup";
 
     /// <summary>
     /// How to load and keep save information and data.
@@ -68,13 +62,7 @@ public record class PlatformSettings
     /// Where to store backups. By default relative to the working directory.
     /// Default: "backup"
     /// </summary>
-    public string Backup { get; init; } = "backup";
-
-    /// <summary>
-    /// Where to download things. By default relative to the working directory.
-    /// Default: "download"
-    /// </summary>
-    public string Download { get; init; } = "download";
+    public string BackupDirectory { get; init; } = "backup";
 
     /// <summary>
     /// How to load and keep save information and data.

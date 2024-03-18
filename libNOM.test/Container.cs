@@ -45,18 +45,18 @@ public class ContainerTest : CommonTestClass
         };
 
         var backups0Container = container.BackupCollection.Count;
-        var backups0File = Directory.Exists(settings.Backup);
+        var backups0File = Directory.Exists(settings.BackupDirectory);
 
         platform.Backup(container);
         var backups1Container = container.BackupCollection.Count;
-        var backups1File = Directory.GetFiles(settings.Backup, pattern).Length;
+        var backups1File = Directory.GetFiles(settings.BackupDirectory, pattern).Length;
 
         platform.Backup(container);
         var backups2Container = container.BackupCollection.Count;
-        var backups2File = Directory.GetFiles(settings.Backup, pattern).Length;
+        var backups2File = Directory.GetFiles(settings.BackupDirectory, pattern).Length;
 
         var backups2ContainerNew = new PlatformSteam(path, settings).GetSaveContainer(0)!.BackupCollection.Count;
-        var backups2FileAfter = Directory.GetFiles(settings.Backup, pattern).Length;
+        var backups2FileAfter = Directory.GetFiles(settings.BackupDirectory, pattern).Length;
 
         // Assert
         Assert.IsTrue(backupCreatedCallback);
