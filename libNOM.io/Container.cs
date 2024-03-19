@@ -117,6 +117,9 @@ public partial class Container : IContainer
     private void ThrowHelperIsLoaded()
     {
         if (!IsLoaded)
-            ThrowHelper.ThrowInvalidOperationException("Container is not loaded.");
+        {
+            var message = IsCompatible ? "Container is not loaded." : $"Container is not loaded due to incompatibilities: {IncompatibilityException?.Message ?? IncompatibilityTag}";
+            ThrowHelper.ThrowInvalidOperationException(message);
+        }
     }
 }

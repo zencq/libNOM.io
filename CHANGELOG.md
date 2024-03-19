@@ -10,6 +10,7 @@ since 1.0.0.
 ### Added
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is now unlimited and not unintentionally disabling the backup feature
+* `Container.ThrowHelperIsLoaded` now shows incompatibility if any
 ### Deprecated
 ### Removed
 * `Rebuild`
