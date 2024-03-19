@@ -3,7 +3,7 @@
 namespace libNOM.io.Meta;
 
 
-internal static partial class DifficultyPreset
+internal static class DifficultyPreset
 {
     #region Getter
 

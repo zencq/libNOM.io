@@ -3,7 +3,7 @@
 namespace libNOM.io.Meta;
 
 
-internal static partial class GameVersion
+internal static class GameVersion
 {
     #region Getter
 

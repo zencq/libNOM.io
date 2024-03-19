@@ -97,8 +97,6 @@ public interface IPlatform
 
     #endregion
 
-    // //
-
     #region Getter
 
     /// <summary>
@@ -138,15 +136,20 @@ public interface IPlatform
 
     #endregion
 
-    // // Read / Write
-
-    #region Load
+    #region Read
 
     /// <summary>
     /// Loads data of a <see cref= "Container"/> in consideration of the loading strategy.
     /// </summary>
     /// <param name="container"></param>
     public void Load(Container container);
+
+    /// <summary>
+    /// Rebuilds the container with data from the specified JSON object.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="jsonObject"></param>
+    public void Rebuild(Container container, JObject jsonObject);
 
     /// <summary>
     /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
@@ -172,8 +175,6 @@ public interface IPlatform
     public void Write(Container container, DateTimeOffset writeTime);
 
     #endregion
-
-    // // File Operation
 
     #region Backup
 
@@ -276,8 +277,6 @@ public interface IPlatform
     public void Transfer(TransferData sourceTransferData, int destinationSlotIndex);
 
     #endregion
-
-    // // FileSystemWatcher
 
     #region FileSystemWatcher
 

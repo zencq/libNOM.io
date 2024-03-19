@@ -15,7 +15,6 @@ since 1.0.0.
 * Replace preferred platform in constructors of `PlatformCollection` with new `PlatformCollectionSettings`
 ### Deprecated
 ### Removed
-* `Rebuild`
 ### Fixed
 ### Security
 
