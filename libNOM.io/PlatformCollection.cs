@@ -1,8 +1,7 @@
-﻿using libNOM.io.Interfaces;
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
+
+using libNOM.io.Interfaces;
 
 namespace libNOM.io;
 
@@ -15,6 +14,14 @@ public class PlatformCollection : IEnumerable<IPlatform>
     #region Field
 
     private readonly ConcurrentDictionary<string, IPlatform> _collection = new();
+
+    #endregion
+
+    #region Property
+
+    public PlatformCollectionSettings CollectionSettings { get; set; }
+
+    public PlatformSettings PlatformSettings { get; set; }
 
     #endregion
 
@@ -43,24 +50,31 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #endregion
 
-    // //
-
     #region Constructor
 
-    public PlatformCollection()
+    public PlatformCollection() : this(platformSettings: null, collectionSettings: null) { }
+
+    public PlatformCollection(string? path) : this(path, null, null) { }
+
+    public PlatformCollection(PlatformSettings? platformSettings) : this(platformSettings, collectionSettings: null) { }
+
+    public PlatformCollection(PlatformCollectionSettings? collectionSettings) : this(platformSettings: null, collectionSettings) { }
+
+    public PlatformCollection(string? path, PlatformSettings? platformSettings) : this(path, platformSettings, null) { }
+
+    public PlatformCollection(string? path, PlatformCollectionSettings? collectionSettings) : this(path, null, collectionSettings) { }
+
+    public PlatformCollection(PlatformSettings? platformSettings, PlatformCollectionSettings? collectionSettings)
     {
+        CollectionSettings = collectionSettings ?? new();
+        PlatformSettings = platformSettings ?? new();
+
         Reinitialize();
     }
 
-    public PlatformCollection(string path) : this(path, null, null) { }
-
-    public PlatformCollection(string path, PlatformEnum platformPreferred) : this(path, null, platformPreferred) { }
-
-    public PlatformCollection(string path, PlatformSettings platformSettings) : this(path, platformSettings, null) { }
-
-    public PlatformCollection(string path, PlatformSettings? platformSettings, PlatformEnum? platformPreferred) : this() // Reinitialize before Analyze
+    public PlatformCollection(string? path, PlatformSettings? platformSettings, PlatformCollectionSettings? collectionSettings) : this(platformSettings, collectionSettings) // Reinitialize() before AnalyzePath()
     {
-        _ = AnalyzePath(path, platformSettings, platformPreferred);
+        _ = AnalyzePath(path, platformSettings, CollectionSettings.PreferredPlatform);
     }
 
     #endregion
@@ -77,28 +91,26 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #endregion
 
-    // public //
-
     #region Initialize
 
     /// <summary>
-    /// Initializes the collection with empty PC <see cref="Platform"/>s.
+    /// Initializes the collection.
     /// Only on a PC, platforms have a default path and can be located directly on the machine.
     /// </summary>
     public void Reinitialize()
     {
         _collection.Clear();
+
+        if (!CollectionSettings.AnalyzeLocal)
+            return;
+
         var tasks = new List<Task>();
-
-        // Only PC platforms can be located directly on the machine.
-        tasks.AddRange(TryAddDirectory<PlatformSteam>()); // is available on all relevant operating systems
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        tasks.AddRange(TryAddDirectory<PlatformSteam>()); // is available on all 3 operating systems
+        if (Common.IsWindows())
         {
             tasks.AddRange(TryAddDirectory<PlatformGog>());
             tasks.AddRange(TryAddDirectory<PlatformMicrosoft>());
         }
-
         Task.WaitAll([.. tasks]);
     }
 
@@ -210,7 +222,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string path) => AnalyzePath(path, null, null);
+    public IPlatform? AnalyzePath(string? path) => AnalyzePath(path, null, CollectionSettings.PreferredPlatform);
 
     /// <summary>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
@@ -219,7 +231,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// <param name="path"></param>
     /// <param name="platformPreferred"></param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string path, PlatformEnum platformPreferred) => AnalyzePath(path, null, platformPreferred);
+    public IPlatform? AnalyzePath(string? path, PlatformEnum? platformPreferred) => AnalyzePath(path, null, platformPreferred);
 
     /// <summary>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
@@ -227,7 +239,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// <param name="path"></param>
     /// <param name="platformSettings"></param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string path, PlatformSettings platformSettings) => AnalyzePath(path, platformSettings, null);
+    public IPlatform? AnalyzePath(string? path, PlatformSettings? platformSettings) => AnalyzePath(path, platformSettings, CollectionSettings.PreferredPlatform);
 
     /// <summary>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
@@ -236,33 +248,31 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// <param name="platformPreferred">Platform that will be checked first.</param>
     /// <param name="platformSettings">Settings for the platform found.</param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string path, PlatformSettings? platformSettings, PlatformEnum? platformPreferred)
+    public IPlatform? AnalyzePath(string? path, PlatformSettings? platformSettings, PlatformEnum? platformPreferred)
     {
-        platformSettings ??= new() { LoadingStrategy = LoadingStrategyEnum.Hollow };
+        if (!ValidatePath(path, out var directory))
+            return null;
 
-        if (_collection.TryGetValue(path, out var platform))
+        platformSettings ??= PlatformSettings;
+
+        if (platformSettings.LoadingStrategy == LoadingStrategyEnum.Empty)
+            platformSettings = platformSettings with { LoadingStrategy = LoadingStrategyEnum.Hollow };
+
+        if (_collection.TryGetValue(path!, out var platform))
         {
             platform.SetSettings(platformSettings);
             return platform;
         }
 
-        if (!IsPathValid(path, out var directory))
-            return null;
-
         // First add the preferred platform and then everything else.
         HashSet<PlatformEnum> platformSequence = platformPreferred is not null and not PlatformEnum.Unknown ? new() { platformPreferred.Value } : new();
 
-#if NETSTANDARD2_0_OR_GREATER
-        foreach (var platformEnum in (PlatformEnum[])(Enum.GetValues(typeof(PlatformEnum))))
+        foreach (var platformEnum in EnumExtensions.GetValues<PlatformEnum>())
             platformSequence.Add(platformEnum);
-#else
-        foreach (var platformEnum in Enum.GetValues<PlatformEnum>())
-            platformSequence.Add(platformEnum);
-#endif
 
         foreach (var platformEnum in platformSequence)
         {
-            Platform? result = platformEnum switch
+            IPlatform? result = platformEnum switch
             {
                 PlatformEnum.Gog => new PlatformGog(directory!, platformSettings),
                 PlatformEnum.Microsoft => new PlatformMicrosoft(directory!, platformSettings),
@@ -273,7 +283,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
             };
             if (result?.IsLoaded == true)
             {
-                _collection.TryAdd(path, result);
+                _collection.TryAdd(path!, result);
                 return result;
             }
         }
@@ -287,33 +297,15 @@ public class PlatformCollection : IEnumerable<IPlatform>
     // private //
 
     /// <summary>
-    /// Checks whether the specified path is valid.
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="directory"></param>
-    /// <returns></returns>
-    private static bool IsPathValid(string path, out DirectoryInfo? directory)
-    {
-        directory = null;
-        if (string.IsNullOrWhiteSpace(path))
-            return false;
-
-        directory = new DirectoryInfo(path);
-        return directory.Exists;
-    }
-
-    /// <summary>
     /// Adds all accounts available in the default path of the specified <see cref="Platform"/> to the collection.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     private List<Task> TryAddDirectory<T>() where T : IPlatform
     {
-        var directories = GetAccountsInPlatform<T>();
         var tasks = new List<Task>();
 
-        foreach (var directory in directories)
-        {
+        foreach (var directory in GetAccountsInPlatform<T>())
             tasks.Add(Task.Run(() =>
             {
                 var platform = (T)(Activator.CreateInstance(typeof(T), directory))!;
@@ -322,7 +314,6 @@ public class PlatformCollection : IEnumerable<IPlatform>
                     _collection.TryAdd(directory.FullName, platform);
                 }
             }));
-        }
 
         return tasks;
     }
@@ -337,11 +328,9 @@ public class PlatformCollection : IEnumerable<IPlatform>
         var typeofT = typeof(T);
         return typeofT switch
         {
-            // Not yet available.
-            //Type _ when typeofT == typeof(PlatformApple) => GetAccountsInPath(PlatformApple.PATH, PlatformApple.ACCOUNT_PATTERN);
-            Type _ when typeofT == typeof(PlatformGog) => GetAccountsInPath(PlatformGog.PATH, PlatformGog.ACCOUNT_PATTERN),
-            Type _ when typeofT == typeof(PlatformMicrosoft) => GetAccountsInPath(PlatformMicrosoft.PATH, PlatformMicrosoft.ACCOUNT_PATTERN),
-            Type _ when typeofT == typeof(PlatformSteam) => GetAccountsInPath(PlatformSteam.PATH, PlatformSteam.ACCOUNT_PATTERN),
+            _ when typeofT == typeof(PlatformGog) => GetAccountsInPath(PlatformGog.PATH, PlatformGog.ACCOUNT_PATTERN),
+            _ when typeofT == typeof(PlatformMicrosoft) => GetAccountsInPath(PlatformMicrosoft.PATH, PlatformMicrosoft.ACCOUNT_PATTERN),
+            _ when typeofT == typeof(PlatformSteam) => GetAccountsInPath(PlatformSteam.PATH, PlatformSteam.ACCOUNT_PATTERN),
             _ => [],
         };
     }
@@ -353,6 +342,22 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// <returns></returns>
     private static IEnumerable<DirectoryInfo> GetAccountsInPath(string path, string pattern)
     {
-        return IsPathValid(path, out var directory) ? directory!.EnumerateDirectories(pattern) : [];
+        return ValidatePath(path, out var directory) ? directory!.EnumerateDirectories(pattern) : [];
+    }
+
+    /// <summary>
+    /// Checks whether the specified path is valid.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="directory"></param>
+    /// <returns></returns>
+    private static bool ValidatePath(string? path, out DirectoryInfo? directory)
+    {
+        directory = null;
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        directory = new DirectoryInfo(path);
+        return directory.Exists;
     }
 }

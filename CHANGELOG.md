@@ -8,9 +8,11 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
+* `PlatformCollectionSettings` to configure `PlatformCollection`
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is now unlimited and not unintentionally disabling the backup feature
 * `Container.ThrowHelperIsLoaded` now shows incompatibility if any
+* Replace preferred platform in constructors of `PlatformCollection` with new `PlatformCollectionSettings`
 ### Deprecated
 ### Removed
 * `Rebuild`
