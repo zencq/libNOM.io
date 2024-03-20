@@ -20,7 +20,7 @@ public static class Constants
 
     /// <summary>
     /// To make the most out of <see cref="Container.GetJsonValue{T}(string, SaveContextQueryEnum)"/> and similar methods you can use this to extend the internal JSONPath dictionary.
-    /// You can then just pass an identifier and it will automatically use the right path depending on the <see cref="SaveStructureEnum"/> and the specified context if necessary.
+    /// You can then just pass an identifier and it will automatically use the right path depending on the save structure and the specified context if necessary.
     /// The format looks like this: <code>JSONPATH_EXTENSION["UPPERCASE_ID"] = ["vanilla-obfuscated-path", "vanilla-plaintext-path", "omega-obfuscated-path", "omega-plaintext-path"]</code>
     /// There are some <see cref="JSONPATH">predefined paths used within this library</see> which gives you some examples.
     /// </summary>

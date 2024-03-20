@@ -3,7 +3,7 @@
 
 /// <summary>
 /// Holds additional information for a single <see cref="Container"/>, mainly used for the meta/manifest file.
-/// As this is only used internally, it is okay to always have { get; set; } instead of  { get; init; }.
+/// As this is only used internally, it is okay to always have { get; set; } instead of { get; init; }.
 /// </summary>
 internal record class PlatformExtra
 {

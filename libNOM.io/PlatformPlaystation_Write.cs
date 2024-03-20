@@ -184,7 +184,7 @@ public partial class PlatformPlaystation : Platform
         {
             var precedingContainer = SaveContainerCollection.Where(i => i.Exists && i.MetaIndex < container.MetaIndex);
 
-            offset += (int)(AccountContainer.Extra.SizeDecompressed);
+            offset += (int)(AccountContainer!.Extra.SizeDecompressed);
             offset += (int)(precedingContainer.Sum(i => SAVEWIZARD_HEADER.Length + i.Extra.SizeDecompressed));
             offset += SAVEWIZARD_HEADER.Length;
         }
@@ -209,7 +209,7 @@ public partial class PlatformPlaystation : Platform
             AppendWizardPreamble(writer);
 
         // AccountData
-        AppendContainerMeta(writer, AccountContainer);
+        AppendContainerMeta(writer, AccountContainer!);
 
         writer.Seek(META_LENGTH_TOTAL_VANILLA, SeekOrigin.Current);
 
@@ -222,7 +222,7 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveWizard)
         {
             // AccountData
-            AppendWizardContainer(writer, AccountContainer);
+            AppendWizardContainer(writer, AccountContainer!);
 
             // Container
             foreach (var container in SaveContainerCollection.Where(i => i.Exists))
@@ -234,7 +234,7 @@ public partial class PlatformPlaystation : Platform
         {
             //TODO has AccountContainer proper PlaystationOffset?
             // AccountData
-            AppendHomebrewContainer(writer, AccountContainer);
+            AppendHomebrewContainer(writer, AccountContainer!);
 
             // Container
             foreach (var container in SaveContainerCollection.Where(i => i.Exists))

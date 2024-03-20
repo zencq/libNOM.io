@@ -30,7 +30,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Container
 
-    protected Container AccountContainer { get; set; }
+    protected Container? AccountContainer { get; set; } // can be null if LoadingStrategyEnum.Empty
 
     protected List<Container> SaveContainerCollection { get; } = [];
 
@@ -50,7 +50,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     public virtual bool Exists => Location?.Exists ?? false; // { get; }
 
-    public virtual bool HasAccountData => AccountContainer.Exists && AccountContainer.IsCompatible; // { get; }
+    public virtual bool HasAccountData => AccountContainer?.Exists == true && AccountContainer!.IsCompatible; // { get; }
 
     public abstract bool HasModding { get; }
 
