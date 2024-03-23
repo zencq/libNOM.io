@@ -70,11 +70,7 @@ public partial class PlatformPlaystation : Platform
     protected override ReadOnlySpan<byte> LoadData(Container container)
     {
         // 1. Read
-#if NETSTANDARD2_0_OR_GREATER
-        return LoadData(container, container.IsAccount || container.Extra.Bytes?.All(i => i == 0) is null or true ? ReadData(container) : container.Extra.Bytes);
-#else
-        return LoadData(container, container.IsAccount || container.Extra.Bytes?.AsSpan().Trim((byte)(0)).IsEmpty is null or true ? ReadData(container) : container.Extra.Bytes);
-#endif
+        return LoadData(container, container.IsAccount || container.Extra.Bytes?.AsSpan().IsEmpty() != false ? ReadData(container) : container.Extra.Bytes);
     }
 
     protected override ReadOnlySpan<byte> ReadData(Container container)

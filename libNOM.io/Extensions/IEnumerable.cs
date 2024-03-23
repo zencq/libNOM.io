@@ -72,20 +72,6 @@ public static class IEnumerableExtensions
 
     #endregion
 
-    #region typeof(byte)
-
-    /// <summary>
-    /// Whether this enumerable is empty, or contains only 0.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static bool IsEmpty(this IEnumerable<byte> self)
-    {
-        return !self.Any() || self.All(i => i == byte.MinValue);
-    }
-
-    #endregion
-
     #region typeof(string)
 
     /// <summary>
