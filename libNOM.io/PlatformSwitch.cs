@@ -140,11 +140,13 @@ public partial class PlatformSwitch : Platform
 
         container.Extra = container.Extra with
         {
-            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
             Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN..].ToArray(),
             Size = (uint)(disk.Length),
             SizeDecompressed = decompressed[2],
         };
+
+        if (container.IsAccount)
+            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_3);
 
         if (container.IsSave)
         {
@@ -176,20 +178,22 @@ public partial class PlatformSwitch : Platform
 
         if (container.IsAccount)
         {
-            buffer = container.Extra.Bytes ?? new byte[container.MetaSize];
+            buffer = container.Extra.Bytes ?? CreateMetaBuffer(container);
 
             // Overwrite only SizeDecompressed.
             using var writer = new BinaryWriter(new MemoryStream(buffer));
+
             writer.Seek(0x8, SeekOrigin.Begin);
             writer.Write(container.Extra.SizeDecompressed); // 4
         }
         else
         {
-            buffer = new byte[container.MetaSize];
+            buffer = CreateMetaBuffer(container);
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
+
             writer.Write(META_HEADER); // 4
-            writer.Write(Constants.SAVE_FORMAT_3); // 4
+            writer.Write(Constants.META_FORMAT_3); // 4
             writer.Write(container.Extra.SizeDecompressed); // 4
             writer.Write(container.MetaIndex); // 4
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4

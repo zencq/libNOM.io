@@ -24,6 +24,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.Extra = container.Extra with
         {
             Bytes = null,
+            Size = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
         };
     }
 
@@ -38,7 +39,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         // Overwrite all general values but keep platform specific stuff unchanged.
         container.Extra = container.Extra with
         {
-            MetaFormat = other.Extra.MetaFormat,
             Bytes = other.Extra.Bytes,
             Size = other.Extra.Size,
             SizeDecompressed = other.Extra.SizeDecompressed,

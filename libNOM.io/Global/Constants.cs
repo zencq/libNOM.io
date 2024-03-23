@@ -147,16 +147,16 @@ public static class Constants
     internal static readonly string[] JSONPATH_CONTEXT_OBFUSCATED = ["", "2YS", "vLc", "", ""]; // SaveContextQueryEnum
     internal static readonly string[] JSONPATH_CONTEXT_PLAINTEXT = ["", "ExpeditionContext", "BaseContext", "", ""];
 
+    internal const uint META_FORMAT_1 = 0x7D0; // 2000 (1.0) // not used but for completeness
+    internal const uint META_FORMAT_2 = 0x7D1; // 2001 (1.1)
+    internal const uint META_FORMAT_3 = 0x7D2; // 2002 (3.6)
+
     internal const int OFFSET_GAMEMODE = 512;
     internal const int OFFSET_INDEX = 2;
     internal const int OFFSET_SEASON = 128;
 
     internal const int OFFSET_GAMEMODE_SEASONAL = OFFSET_GAMEMODE * (int)(PresetGameModeEnum.Seasonal);
     internal const int OFFSET_MULTIPLICATION_GAMEMODE_SEASON = OFFSET_GAMEMODE * OFFSET_SEASON;
-
-    internal const uint SAVE_FORMAT_1 = 0x7D0; // 2000 (1.0) // not used but for completeness
-    internal const uint SAVE_FORMAT_2 = 0x7D1; // 2001 (1.1)
-    internal const uint SAVE_FORMAT_3 = 0x7D2; // 2002 (3.6)
 
     internal const int SAVE_RENAMING_LENGTH_MANIFEST = 0x80; // 128
     internal const int SAVE_RENAMING_LENGTH_INGAME = 0x2A; // 42

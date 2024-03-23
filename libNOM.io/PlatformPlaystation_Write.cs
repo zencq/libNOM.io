@@ -50,7 +50,6 @@ public partial class PlatformPlaystation : Platform
 
         container.Extra = container.Extra with
         {
-            Size = _usesSaveWizard ? (uint)(data.Length) : (uint)(result.Length),
             SizeDecompressed = (uint)(data.Length),
             SizeDisk = (uint)(result.Length),
         };
@@ -105,12 +104,12 @@ public partial class PlatformPlaystation : Platform
     private byte[] CreateAccountStreamingMeta(Container container)
     {
         // Use Switch values of META_LENGTH_TOTAL in fallback.
-        var buffer = container.Extra.Bytes ?? new byte[container.MetaFormat == MetaFormatEnum.Waypoint ? 0x164 : 0x64];
+        var buffer = container.Extra.Bytes ?? new byte[container.IsVersion400Waypoint ? 0x164 : 0x64];
 
         // Overwrite only SizeDecompressed.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
         writer.Write(META_HEADER); // 4
-        writer.Write(Constants.SAVE_FORMAT_3); // 4
+        writer.Write(Constants.META_FORMAT_3); // 4
         writer.Write(container.Extra.SizeDecompressed); // 4
 
         return buffer;
@@ -132,7 +131,7 @@ public partial class PlatformPlaystation : Platform
 
         // Here the same structure as the old memory.dat format starts but with many empty values.
         writer.Seek(0x4, SeekOrigin.Current); // skip META HEADER
-        writer.Write(Constants.SAVE_FORMAT_3); // 4
+        writer.Write(Constants.META_FORMAT_3); // 4
         writer.Seek(0x14, SeekOrigin.Current); // skip COMPRESSED SIZE, CHUNK OFFSET, CHUNK SIZE, META INDEX, TIMESTAMP
         writer.Write(container.Extra.SizeDecompressed); // 4
         writer.Seek(0x4, SeekOrigin.Current); // skip SAVEWIZARD OFFSET
@@ -143,7 +142,7 @@ public partial class PlatformPlaystation : Platform
 
     private byte[] GetLegacyMeta(Container container)
     {
-        var buffer = new byte[container.MetaSize];
+        var buffer = CreateMetaBuffer(container);
 
         if (container.Exists)
         {
@@ -153,7 +152,7 @@ public partial class PlatformPlaystation : Platform
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
             writer.Write(META_HEADER); // 4
-            writer.Write(Constants.SAVE_FORMAT_2); // 4
+            writer.Write(Constants.META_FORMAT_2); // 4
             writer.Write(container.Extra.SizeDisk); // 4
             writer.Write(legacyOffset); // 4
             writer.Write(legacyLength); // 4
@@ -169,7 +168,7 @@ public partial class PlatformPlaystation : Platform
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
             writer.Write(META_HEADER); // 4
-            writer.Write(Constants.SAVE_FORMAT_2); // 4
+            writer.Write(Constants.META_FORMAT_2); // 4
             writer.Seek(0xC, SeekOrigin.Current); // skip empty
             writer.Write(uint.MaxValue); // 4
         }
@@ -232,7 +231,6 @@ public partial class PlatformPlaystation : Platform
         }
         else
         {
-            //TODO has AccountContainer proper PlaystationOffset?
             // AccountData
             AppendHomebrewContainer(writer, AccountContainer!);
 
@@ -249,7 +247,7 @@ public partial class PlatformPlaystation : Platform
     private void AppendWizardPreamble(BinaryWriter writer)
     {
         writer.Write(SAVEWIZARD_HEADER_BINARY);
-        writer.Write(Constants.SAVE_FORMAT_2);
+        writer.Write(Constants.META_FORMAT_2);
         writer.Write(MEMORYDAT_OFFSET_META);
         writer.Write(SaveContainerCollection.Where(i => i.Exists).Count() + 1); // + 1 for AccountData that ia always present in memory.dat
         writer.Write(MEMORYDAT_LENGTH_TOTAL);

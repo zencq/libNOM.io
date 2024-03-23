@@ -201,7 +201,6 @@ public partial class PlatformSteam : Platform
             // Vanilla data always available but not always set depending on the SAVE_FORMAT.
             container.Extra = container.Extra with
             {
-                MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? (decompressed[1] == Constants.SAVE_FORMAT_2 ? MetaFormatEnum.Foundation : (decompressed[1] == Constants.SAVE_FORMAT_3 ? MetaFormatEnum.Frontiers : MetaFormatEnum.Unknown)) : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
                 Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
                 SizeDecompressed = decompressed[14],
                 BaseVersion = (int)(decompressed[17]),
@@ -209,6 +208,9 @@ public partial class PlatformSteam : Platform
                 Season = disk.Cast<ushort>(74),
                 TotalPlayTime = decompressed[19],
             };
+
+            if (container.IsAccount)
+                container.GameVersion = Meta.GameVersion.Get(this, disk.Length, decompressed[1]);
 
             // Extended data since Waypoint.
             UpdateContainerWithWaypointMetaInformation(container, disk);
@@ -298,14 +300,15 @@ public partial class PlatformSteam : Platform
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
-        var buffer = new byte[container.MetaSize];
+        var buffer = CreateMetaBuffer(container);
 
         // Editing account data is possible since Frontiers and therefore has always the new format.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
-        writer.Write(META_HEADER); // 4
-        writer.Write((container.IsAccount || container.IsVersion360Frontiers) ? Constants.SAVE_FORMAT_3 : Constants.SAVE_FORMAT_2); // 4
 
-        if (container.IsSave && container.MetaFormat >= MetaFormatEnum.Frontiers) // SAVE_FORMAT_3
+        writer.Write(META_HEADER); // 4
+        writer.Write(container.IsVersion360Frontiers ? Constants.META_FORMAT_3 : Constants.META_FORMAT_2); // 4
+
+        if (container.IsSave && container.IsVersion360Frontiers) // SAVE_FORMAT_3
         {
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current); // 16 + 32 = 48
@@ -360,7 +363,7 @@ public partial class PlatformSteam : Platform
     {
         uint current = 0;
         uint hash = 0;
-        int iterations = container.MetaFormat < MetaFormatEnum.Waypoint ? 8 : 6;
+        int iterations = container.IsVersion400Waypoint ? 6 : 8;
         ReadOnlySpan<uint> key = [(((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
         Span<uint> value = meta.Cast<byte, uint>();
 

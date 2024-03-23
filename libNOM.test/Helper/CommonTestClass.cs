@@ -373,7 +373,7 @@ public abstract class CommonTestClass
         Assert.AreEqual(platformResult, platform?.PlatformEnum);
     }
 
-    protected static void TestCommonBuildCollection(string path, PlatformEnum platformResult, PlatformEnum? platformPreferred)
+    protected static void TestCommonBuildCollection(string path, PlatformEnum platformResult, PlatformCollectionSettings collectionSettings)
     {
         // Arrange
         var settings = new PlatformSettings
@@ -382,7 +382,7 @@ public abstract class CommonTestClass
         };
 
         // Act
-        var collection = new PlatformCollection(path, settings, platformPreferred);
+        var collection = new PlatformCollection(path, settings, collectionSettings);
         var platform = collection.Get(path);
 
         // Assert

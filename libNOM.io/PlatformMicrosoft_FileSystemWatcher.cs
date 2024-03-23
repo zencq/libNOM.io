@@ -72,7 +72,7 @@ public partial class PlatformMicrosoft : Platform
             switch (metaIndex)
             {
                 case 0:
-                    AccountContainer = GetOrResetContainer(containersIndex, AccountContainer);
+                    AccountContainer = GetOrResetContainer(containersIndex, AccountContainer!);
                     break;
                 case 1:
 #if NETSTANDARD2_0

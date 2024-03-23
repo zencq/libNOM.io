@@ -92,9 +92,10 @@ public partial class PlatformMicrosoft : Platform
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
-        var buffer = new byte[container.MetaSize];
+        var buffer = CreateMetaBuffer(container);
 
         using var writer = new BinaryWriter(new MemoryStream(buffer));
+
         if (container.IsAccount)
         {
             // Always 1.
@@ -209,7 +210,7 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(CONTAINERSINDEX_FOOTER);
 
             if (HasAccountData)
-                AppendMicrosoftMeta(writer, AccountContainer.Identifier, AccountContainer.Extra);
+                AppendMicrosoftMeta(writer, AccountContainer!.Identifier, AccountContainer!.Extra);
 
             if (hasSettings)
                 AppendMicrosoftMeta(writer, "Settings", _settingsContainer!);

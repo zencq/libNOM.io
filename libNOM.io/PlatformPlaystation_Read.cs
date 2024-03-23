@@ -70,7 +70,11 @@ public partial class PlatformPlaystation : Platform
     protected override ReadOnlySpan<byte> LoadData(Container container)
     {
         // 1. Read
-        return LoadData(container, container.IsAccount ? ReadData(container) : (container.Extra.Bytes ?? ReadData(container)));
+#if NETSTANDARD2_0_OR_GREATER
+        return LoadData(container, container.IsAccount || container.Extra.Bytes?.All(i => i == 0) is null or true ? ReadData(container) : container.Extra.Bytes);
+#else
+        return LoadData(container, container.IsAccount || container.Extra.Bytes?.AsSpan().Trim((byte)(0)).IsEmpty is null or true ? ReadData(container) : container.Extra.Bytes);
+#endif
     }
 
     protected override ReadOnlySpan<byte> ReadData(Container container)
@@ -85,7 +89,7 @@ public partial class PlatformPlaystation : Platform
         using var reader = new BinaryReader(File.Open(container.DataFile!.FullName, FileMode.Open, FileAccess.Read, FileShare.Read));
 
         reader.BaseStream.Seek(container.Extra.PlaystationOffset!.Value, SeekOrigin.Begin);
-        var data = reader.ReadBytes((int)(container.Extra.Size));
+        var data = reader.ReadBytes((int)(container.Extra.Bytes!.Length));
 
         // Store raw bytes as the block size is dynamic and moves if SaveWizard is used. Therefore the entire file needs to be rebuild.
         if (!_usesSaveStreaming)

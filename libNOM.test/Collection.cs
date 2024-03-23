@@ -21,7 +21,7 @@ public class CollectionTest : CommonTestClass
 
         // Act
         // Assert
-        TestCommonBuildCollection(path, PlatformEnum.Gog, PlatformEnum.Gog);
+        TestCommonBuildCollection(path, PlatformEnum.Gog, new() { PreferredPlatform = PlatformEnum.Gog });
     }
 
     [TestMethod]
@@ -32,7 +32,7 @@ public class CollectionTest : CommonTestClass
 
         // Act
         // Assert
-        TestCommonBuildCollection(path, PlatformEnum.Microsoft, PlatformEnum.Microsoft);
+        TestCommonBuildCollection(path, PlatformEnum.Microsoft, new() { PreferredPlatform = PlatformEnum.Microsoft });
     }
 
     [TestMethod]
@@ -43,7 +43,7 @@ public class CollectionTest : CommonTestClass
 
         // Act
         // Assert
-        TestCommonBuildCollection(path, PlatformEnum.Playstation, PlatformEnum.Playstation);
+        TestCommonBuildCollection(path, PlatformEnum.Playstation, new() { PreferredPlatform = PlatformEnum.Playstation });
     }
 
     [TestMethod]
@@ -54,7 +54,7 @@ public class CollectionTest : CommonTestClass
 
         // Act
         // Assert
-        TestCommonBuildCollection(path, PlatformEnum.Playstation, PlatformEnum.Playstation);
+        TestCommonBuildCollection(path, PlatformEnum.Playstation, new() { PreferredPlatform = PlatformEnum.Playstation });
     }
 
     [TestMethod]
@@ -65,7 +65,7 @@ public class CollectionTest : CommonTestClass
 
         // Act
         // Assert
-        TestCommonBuildCollection(path, PlatformEnum.Steam, PlatformEnum.Steam);
+        TestCommonBuildCollection(path, PlatformEnum.Steam, new() { PreferredPlatform = PlatformEnum.Steam });
     }
 
     [TestMethod]
@@ -76,7 +76,7 @@ public class CollectionTest : CommonTestClass
 
         // Act
         // Assert
-        TestCommonBuildCollection(path, PlatformEnum.Switch, PlatformEnum.Switch);
+        TestCommonBuildCollection(path, PlatformEnum.Switch, new() { PreferredPlatform = PlatformEnum.Switch });
     }
 
     [TestMethod]
@@ -87,7 +87,7 @@ public class CollectionTest : CommonTestClass
 
         // Act
         // Assert
-        TestCommonBuildCollection(path, PlatformEnum.Steam, PlatformEnum.Microsoft);
+        TestCommonBuildCollection(path, PlatformEnum.Steam, new() { PreferredPlatform = PlatformEnum.Microsoft });
     }
 
     [TestMethod]

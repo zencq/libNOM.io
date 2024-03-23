@@ -118,7 +118,7 @@ public partial class Container : IContainer
     {
         if (!IsLoaded)
         {
-            var message = IsCompatible ? "Container is not loaded." : $"Container is not loaded due to incompatibilities: {IncompatibilityException?.Message ?? IncompatibilityTag}";
+            var message = IsCompatible ? "Container is not loaded." : $"Container cannot be loaded due to incompatibilities: {IncompatibilityException?.Message ?? IncompatibilityTag}";
             ThrowHelper.ThrowInvalidOperationException(message);
         }
     }

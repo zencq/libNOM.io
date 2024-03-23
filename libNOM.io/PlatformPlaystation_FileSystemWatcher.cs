@@ -36,7 +36,7 @@ public partial class PlatformPlaystation : Platform
             switch (metaIndex)
             {
                 case 0:
-                    UpdateAndRebuildContainer(AccountContainer);
+                    UpdateAndRebuildContainer(AccountContainer!);
                     break;
                 case 1:
                     break;
@@ -51,7 +51,6 @@ public partial class PlatformPlaystation : Platform
         // Reset bytes as trigger to read the file again.
         container.Extra = new PlatformExtra
         {
-            MetaFormat = MetaFormatEnum.Unknown,
             Bytes = null,
         };
 

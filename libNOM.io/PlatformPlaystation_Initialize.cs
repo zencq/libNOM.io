@@ -109,11 +109,12 @@ public partial class PlatformPlaystation : Platform
     {
         return container.Extra with
         {
-            MetaFormat = MetaFormatEnum.Waypoint,
             Bytes = disk.ToArray(),
             Size = decompressed[2],
             SizeDecompressed = decompressed[2],
             SizeDisk = decompressed[2],
+
+            PlaystationOffset = 0,
         };
     }
 
@@ -137,8 +138,8 @@ public partial class PlatformPlaystation : Platform
          */
         return container.Extra with
         {
-            MetaFormat = MetaFormatEnum.Frontiers,
-            Size = decompressed[23],
+            Bytes = new byte[decompressed[23]],
+            Size = (uint)(META_LENGTH_TOTAL_WAYPOINT),
             SizeDecompressed = decompressed[23],
             SizeDisk = decompressed[5],
 
@@ -164,17 +165,16 @@ public partial class PlatformPlaystation : Platform
          10. EMPTY                ( 8)
                                   (48)
          */
-
         if (decompressed.IsEmpty || decompressed[3] == 0)
         {
-            container.Exists = false;
+            container.Exists = false; // force false to overwrite existing of DataFile
             return container.Extra;
         }
 
         return container.Extra with
         {
-            MetaFormat = MetaFormatEnum.Foundation,
-            Size = decompressed[MEMORYDAT_META_INDEX_LENGTH], // either COMPRESSED SIZE or DECOMPRESSED SIZE depending on SaveWizard usage
+            Bytes = new byte[decompressed[MEMORYDAT_META_INDEX_LENGTH]], // either COMPRESSED SIZE or DECOMPRESSED SIZE depending on SaveWizard usage
+            Size = (uint)(META_LENGTH_TOTAL_VANILLA),
             SizeDisk = decompressed[2],
             SizeDecompressed = decompressed[7],
             LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[6]).ToLocalTime(),
@@ -189,7 +189,6 @@ public partial class PlatformPlaystation : Platform
         if (container.IsAccount)
             container.Extra = container.Extra with
             {
-                Size = _usesSaveWizard ? (uint)(decompressed.Length) : (uint)(disk.Length),
                 SizeDecompressed = (uint)(decompressed.Length),
                 SizeDisk = (uint)(disk.Length),
             };

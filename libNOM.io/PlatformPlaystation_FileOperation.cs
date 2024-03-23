@@ -12,8 +12,15 @@ public partial class PlatformPlaystation : Platform
         if (_usesSaveStreaming)
             base.CreatePlatformExtra(container, other);
         else
+        {
             // base.CreatePlatformExtra() resets Extra.Bytes but here we want keep it and therefore calling CopyPlatformExtra() directly.
             CopyPlatformExtra(container, other);
+
+            container.Extra = container.Extra with
+            {
+                Size = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
+            };
+        }
     }
 
     protected override void CopyPlatformExtra(Container container, Container other)

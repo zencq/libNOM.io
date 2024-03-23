@@ -61,18 +61,6 @@ public partial class Container : IContainer
         }
     }
 
-    internal MetaFormatEnum MetaFormat // { get; set; }
-    {
-        get => Extra.MetaFormat;
-        set => Extra = Extra with { MetaFormat = value };
-    }
-
-    internal int MetaSize => Platform is null ? -1 : MetaFormat switch // { get; }
-    {
-        MetaFormatEnum.Waypoint => Platform.META_LENGTH_TOTAL_WAYPOINT,
-        _ => Platform.META_LENGTH_TOTAL_VANILLA,
-    };
-
     internal int SaveVersion // { get; set; }
     {
         get
@@ -93,7 +81,7 @@ public partial class Container : IContainer
 
     internal StoragePersistentSlotEnum PersistentStorageSlot { get; }
 
-    internal Platform? Platform { get; set; }
+    internal Platform Platform { get; set; }
 
     #endregion
 }

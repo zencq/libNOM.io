@@ -293,7 +293,6 @@ public partial class PlatformMicrosoft : Platform
         // Vanilla data always available.
         container.Extra = container.Extra with
         {
-            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
             Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
             Size = (uint)(disk.Length),
             BaseVersion = (int)(decompressed[0]),
@@ -301,6 +300,9 @@ public partial class PlatformMicrosoft : Platform
             Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
             TotalPlayTime = decompressed[2],
         };
+
+        if (container.IsAccount)
+            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
 
         // Extended data since Waypoint.
         UpdateContainerWithWaypointMetaInformation(container, disk);

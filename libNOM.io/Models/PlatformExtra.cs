@@ -9,8 +9,6 @@ internal record class PlatformExtra
 {
     #region Global
 
-    internal MetaFormatEnum MetaFormat { get; set; }
-
     // Microsoft = Meta (Waypoint)
     // Playstation = Data (memory.dat) or Meta (SaveStreaming and manifest00.hg)
     // Steam = Meta (Waypoint or AccountData)
@@ -18,7 +16,7 @@ internal record class PlatformExtra
     internal byte[]? Bytes { get; set; }
 
     // Microsoft = Meta
-    // Playstation = Data (compressed or decompressed depending on SaveWizard usage)
+    // Playstation = Meta
     // Steam = Meta
     // Switch = Meta
     internal uint Size { get; set; }
