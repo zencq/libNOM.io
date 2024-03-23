@@ -21,7 +21,7 @@ internal static partial class Common
     }
 
     // No real DeepCopy but good enough to cache it for Microsoft.Write() and that case is only using this.
-    internal static PlatformExtra DeepCopy(PlatformExtra original) => new()
+    internal static ContainerExtra DeepCopy(ContainerExtra original) => new()
     {
         MicrosoftBlobContainerExtension = original.MicrosoftBlobContainerExtension,
         MicrosoftBlobDataFile = original.MicrosoftBlobDataFile,

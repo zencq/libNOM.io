@@ -164,7 +164,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     protected byte[] CreateMetaBuffer(Container container)
     {
-        var capacity = (int)(container.Extra.Size);
+        var capacity = (int)(container.Extra.MetaLength);
         if (capacity == 0)
             capacity = container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA;
 

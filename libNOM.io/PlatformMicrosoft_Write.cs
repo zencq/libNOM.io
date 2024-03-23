@@ -80,7 +80,7 @@ public partial class PlatformMicrosoft : Platform
         return result;
     }
 
-    private void WriteData(Container container, ReadOnlySpan<byte> data, PlatformExtra original)
+    private void WriteData(Container container, ReadOnlySpan<byte> data, ContainerExtra original)
     {
         WriteData(container, data);
         original.MicrosoftBlobDataFile?.Delete();
@@ -125,7 +125,7 @@ public partial class PlatformMicrosoft : Platform
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    private void WriteMeta(Container container, ReadOnlySpan<byte> meta, PlatformExtra original)
+    private void WriteMeta(Container container, ReadOnlySpan<byte> meta, ContainerExtra original)
     {
         WriteMeta(container, meta);
         original.MicrosoftBlobMetaFile?.Delete();
@@ -180,7 +180,7 @@ public partial class PlatformMicrosoft : Platform
     /// </summary>
     /// <param name="container"></param>
     /// <param name="blob"></param>
-    private static void WriteBlobContainer(Container container, byte[] blob, PlatformExtra original)
+    private static void WriteBlobContainer(Container container, byte[] blob, ContainerExtra original)
     {
         container.Extra.MicrosoftBlobContainerFile?.WriteAllBytes(blob);
         original.MicrosoftBlobContainerFile?.Delete();
@@ -226,7 +226,7 @@ public partial class PlatformMicrosoft : Platform
         _containersindex.Refresh();
     }
 
-    private static void AppendMicrosoftMeta(BinaryWriter writer, string identifier, PlatformExtra extra)
+    private static void AppendMicrosoftMeta(BinaryWriter writer, string identifier, ContainerExtra extra)
     {
         // Make sure to get the latest data.
         extra.MicrosoftBlobDataFile?.Refresh();

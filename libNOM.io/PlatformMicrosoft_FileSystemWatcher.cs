@@ -89,7 +89,7 @@ public partial class PlatformMicrosoft : Platform
             }
     }
 
-    private Container GetOrResetContainer(Dictionary<int, PlatformExtra> containersIndex, Container container)
+    private Container GetOrResetContainer(Dictionary<int, ContainerExtra> containersIndex, Container container)
     {
         if (containersIndex.TryGetValue(container.MetaIndex, out var extra))
         {
@@ -112,7 +112,7 @@ public partial class PlatformMicrosoft : Platform
         return container;
     }
 
-    private Container GetRefreshedContainer(Container container, PlatformExtra extra)
+    private Container GetRefreshedContainer(Container container, ContainerExtra extra)
     {
         if (container.Exists)
         {

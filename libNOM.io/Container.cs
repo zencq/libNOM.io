@@ -26,7 +26,7 @@ public partial class Container : IContainer
 
     public Container(int metaIndex, Platform platform) : this(metaIndex, platform, new()) { }
 
-    internal Container(int metaIndex, Platform platform, PlatformExtra extra)
+    internal Container(int metaIndex, Platform platform, ContainerExtra extra)
     {
         CollectionIndex = metaIndex - Constants.OFFSET_INDEX;
         Extra = extra;

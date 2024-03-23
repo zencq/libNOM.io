@@ -53,7 +53,7 @@ public partial class PlatformPlaystation : Platform
         }
     }
 
-    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? extra)
     {
         if (_usesSaveStreaming)
         {
@@ -106,12 +106,12 @@ public partial class PlatformPlaystation : Platform
         }
     }
 
-    private PlatformExtra GetAccountStreamingExtra(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    private ContainerExtra GetAccountStreamingExtra(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         return container.Extra with
         {
             Bytes = disk.ToArray(),
-            Size = decompressed[2],
+            MetaLength = decompressed[2],
             SizeDecompressed = decompressed[2],
             SizeDisk = decompressed[2],
 
@@ -119,7 +119,7 @@ public partial class PlatformPlaystation : Platform
         };
     }
 
-    private PlatformExtra GetWizardStreamingExtra(Container container, ReadOnlySpan<uint> decompressed)
+    private ContainerExtra GetWizardStreamingExtra(Container container, ReadOnlySpan<uint> decompressed)
     {
         /**
           0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
@@ -140,7 +140,7 @@ public partial class PlatformPlaystation : Platform
         return container.Extra with
         {
             Bytes = new byte[decompressed[23]],
-            Size = (uint)(META_LENGTH_TOTAL_WAYPOINT),
+            MetaLength = (uint)(META_LENGTH_TOTAL_WAYPOINT),
             SizeDecompressed = decompressed[23],
             SizeDisk = decompressed[5],
 
@@ -148,7 +148,7 @@ public partial class PlatformPlaystation : Platform
         };
     }
 
-    private PlatformExtra GetLegacyExtra(Container container, ReadOnlySpan<uint> decompressed)
+    private ContainerExtra GetLegacyExtra(Container container, ReadOnlySpan<uint> decompressed)
     {
         /**
           0. META HEADER          ( 4)
@@ -175,7 +175,7 @@ public partial class PlatformPlaystation : Platform
         return container.Extra with
         {
             Bytes = new byte[decompressed[MEMORYDAT_META_INDEX_LENGTH]], // either COMPRESSED SIZE or DECOMPRESSED SIZE depending on SaveWizard usage
-            Size = (uint)(META_LENGTH_TOTAL_VANILLA),
+            MetaLength = (uint)(META_LENGTH_TOTAL_VANILLA),
             SizeDisk = decompressed[2],
             SizeDecompressed = decompressed[7],
             LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[6]).ToLocalTime(),

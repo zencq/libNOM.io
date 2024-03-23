@@ -148,7 +148,7 @@ public partial class PlatformSteam : Platform
 #endif
     }
 
-    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? extra)
     {
         var name = metaIndex == 0 ? "accountdata.hg" : $"save{(metaIndex == Constants.OFFSET_INDEX ? string.Empty : metaIndex - 1)}.hg";
         var data = new FileInfo(Path.Combine(Location.FullName, name));
@@ -220,7 +220,7 @@ public partial class PlatformSteam : Platform
         }
 
         // Size is save to write always.
-        container.Extra = container.Extra with { Size = (uint)(disk.Length) };
+        container.Extra = container.Extra with { MetaLength = (uint)(disk.Length) };
     }
 
     #endregion

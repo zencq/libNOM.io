@@ -129,7 +129,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     private protected Container InitializeContainer(int metaIndex) => InitializeContainer(metaIndex, null);
 
-    private protected Container InitializeContainer(int metaIndex, PlatformExtra? extra)
+    private protected Container InitializeContainer(int metaIndex, ContainerExtra? extra)
     {
         var container = CreateContainer(metaIndex, extra);
 
@@ -149,7 +149,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="metaIndex"></param>
     /// <param name="extra">An optional object with additional data necessary for proper creation.</param>
     /// <returns></returns>
-    private protected abstract Container CreateContainer(int metaIndex, PlatformExtra? extra); // private protected as PlatformExtra is internal
+    private protected abstract Container CreateContainer(int metaIndex, ContainerExtra? extra); // private protected as PlatformExtra is internal
 
     public void Load(Container container)
     {

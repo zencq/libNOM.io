@@ -12,7 +12,7 @@ public partial class Container : IContainer
 
     #endregion
 
-    internal PlatformExtra Extra { get; set; }
+    internal ContainerExtra Extra { get; set; }
 
     internal UserIdentification? UserIdentification { get; set; }
 

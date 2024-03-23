@@ -24,7 +24,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.Extra = container.Extra with
         {
             Bytes = null,
-            Size = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
+            MetaLength = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
         };
     }
 
@@ -40,7 +40,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.Extra = container.Extra with
         {
             Bytes = other.Extra.Bytes,
-            Size = other.Extra.Size,
+            MetaLength = other.Extra.MetaLength,
             SizeDecompressed = other.Extra.SizeDecompressed,
             SizeDisk = other.Extra.SizeDisk,
             LastWriteTime = other.Extra.LastWriteTime,

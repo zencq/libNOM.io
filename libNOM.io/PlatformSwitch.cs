@@ -97,7 +97,7 @@ public partial class PlatformSwitch : Platform
 
     #region Initialize
 
-    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? extra)
     {
         return new Container(metaIndex, this)
         {
@@ -141,7 +141,7 @@ public partial class PlatformSwitch : Platform
         container.Extra = container.Extra with
         {
             Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN..].ToArray(),
-            Size = (uint)(disk.Length),
+            MetaLength = (uint)(disk.Length),
             SizeDecompressed = decompressed[2],
         };
 

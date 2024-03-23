@@ -19,7 +19,7 @@ public partial class PlatformPlaystation : Platform
 
             container.Extra = container.Extra with
             {
-                Size = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
+                MetaLength = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
             };
         }
     }

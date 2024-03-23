@@ -2,24 +2,25 @@
 
 
 /// <summary>
-/// Holds additional information for a single <see cref="Container"/>, mainly used for the meta/manifest file.
+/// Holds additional information for a single <see cref="Container"/>, mainly gathered from the meta/manifest file or on the way to access it.
+/// Most of them need to be written back to the related files.
 /// As this is only used internally, it is okay to always have { get; set; } instead of { get; init; }.
 /// </summary>
-internal record class PlatformExtra
+internal record class ContainerExtra
 {
     #region Global
 
     // Microsoft = Meta (Waypoint)
-    // Playstation = Data (memory.dat) or Meta (SaveStreaming and manifest00.hg)
+    // Playstation = Data (Legacy) or Meta (SaveStreaming)
     // Steam = Meta (Waypoint or AccountData)
     // Switch = Meta (Waypoint)
     internal byte[]? Bytes { get; set; }
 
-    // Microsoft = Meta
-    // Playstation = Meta
-    // Steam = Meta
-    // Switch = Meta
-    internal uint Size { get; set; }
+    // Microsoft
+    // Playstation
+    // Steam
+    // Switch
+    internal uint MetaLength { get; set; }
 
     // Microsoft
     // Playstation
@@ -34,7 +35,7 @@ internal record class PlatformExtra
     internal uint SizeDisk { get; set; }
 
     // Microsoft
-    // Playstation (SAVE_FORMAT_2)
+    // Playstation (META_FORMAT_2)
     // Steam
     // Switch
     internal DateTimeOffset? LastWriteTime { get; set; }

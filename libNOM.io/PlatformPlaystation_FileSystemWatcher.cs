@@ -50,7 +50,7 @@ public partial class PlatformPlaystation : Platform
     private void UpdateAndRebuildContainer(Container container)
     {
         // Reset bytes as trigger to read the file again.
-        container.Extra = new PlatformExtra
+        container.Extra = new ContainerExtra
         {
             Bytes = null,
         };
