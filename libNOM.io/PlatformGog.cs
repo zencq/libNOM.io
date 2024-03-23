@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using libNOM.io.Settings;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace libNOM.io;

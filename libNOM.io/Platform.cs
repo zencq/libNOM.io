@@ -2,6 +2,7 @@
 using System.Diagnostics;
 
 using libNOM.io.Interfaces;
+using libNOM.io.Settings;
 
 using Newtonsoft.Json.Linq;
 

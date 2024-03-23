@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 
 using libNOM.io.Interfaces;
+using libNOM.io.Settings;
 
 namespace libNOM.io;
 

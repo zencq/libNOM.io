@@ -12,6 +12,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<Using Include="libNOM.io.Enums" />
+		<Using Include="libNOM.io.Settings" />
 		<Using Include="libNOM.test.Helper" />
 	</ItemGroup>
 

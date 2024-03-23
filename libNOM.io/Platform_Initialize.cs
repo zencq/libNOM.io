@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 
 using libNOM.io.Interfaces;
+using libNOM.io.Settings;
 
 using Newtonsoft.Json.Linq;
 
