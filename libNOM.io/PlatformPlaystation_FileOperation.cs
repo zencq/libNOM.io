@@ -3,6 +3,7 @@
 namespace libNOM.io;
 
 
+// This partial class contains file operation related code.
 public partial class PlatformPlaystation : Platform
 {
     #region PlatformExtra

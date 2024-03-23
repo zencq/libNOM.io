@@ -1,6 +1,7 @@
 ﻿namespace libNOM.io;
 
 
+// This partial class contains FileSystemWatcher related code.
 public partial class PlatformPlaystation : Platform
 {
     #region Getter
