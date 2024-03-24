@@ -1,4 +1,5 @@
 ﻿using libNOM.io.Settings;
+using libNOM.io.Trace;
 
 using Newtonsoft.Json.Linq;
 
@@ -7,7 +8,7 @@ namespace libNOM.io.Interfaces;
 
 public interface IPlatform
 {
-    #region Property
+    // Property
 
     #region Configuration
 
@@ -20,6 +21,12 @@ public interface IPlatform
     /// Settings used for this platform.
     /// </summary>
     public PlatformSettings Settings { get; }
+
+    /// <summary>
+    /// Exposes a lot of additional information that are usually not necessary while using this library but might useful for debugging purposes.
+    /// Not intended to show the end user.
+    /// </summary>
+    public PlatformTrace? Trace { get; }
 
     #endregion
 
@@ -97,7 +104,7 @@ public interface IPlatform
 
     #endregion
 
-    #endregion
+    // Accessor
 
     #region Getter
 
@@ -138,7 +145,9 @@ public interface IPlatform
 
     #endregion
 
-    #region Read
+    // //
+
+    #region Initialize
 
     /// <summary>
     /// Loads data of a <see cref= "Container"/> in consideration of the loading strategy.
@@ -177,6 +186,8 @@ public interface IPlatform
     public void Write(Container container, DateTimeOffset writeTime);
 
     #endregion
+
+    // FileOperation
 
     #region Backup
 
@@ -279,6 +290,8 @@ public interface IPlatform
     public void Transfer(TransferData sourceTransferData, int destinationSlotIndex);
 
     #endregion
+
+    // //
 
     #region FileSystemWatcher
 

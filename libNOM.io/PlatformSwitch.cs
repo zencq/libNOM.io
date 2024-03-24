@@ -99,14 +99,14 @@ public partial class PlatformSwitch : Platform
 
     #region Initialize
 
-    private protected override Container CreateContainer(int metaIndex, ContainerExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? _)
     {
         return new Container(metaIndex, this)
         {
             DataFile = new FileInfo(Path.Combine(Location.FullName, $"savedata{metaIndex:D2}.hg")),
             MetaFile = new FileInfo(Path.Combine(Location.FullName, $"manifest{metaIndex:D2}.hg")),
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="Platform.UpdateContainerWithDataInformation"/>.
-            Extra = extra ?? new(),
+            Extra = new(),
         };
     }
 

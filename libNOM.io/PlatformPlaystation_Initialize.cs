@@ -55,7 +55,7 @@ public partial class PlatformPlaystation : Platform
         }
     }
 
-    private protected override Container CreateContainer(int metaIndex, ContainerExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? _)
     {
         if (_usesSaveStreaming)
         {
@@ -69,7 +69,7 @@ public partial class PlatformPlaystation : Platform
                 DataFile = data,
                 MetaFile = metaIndex == 0 ? (meta.Exists ? meta : null) : (_usesSaveWizard ? data : null),
                 /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-                Extra = extra ?? new()
+                Extra = new()
                 {
                     LastWriteTime = data.LastWriteTime,
                 },
@@ -81,7 +81,7 @@ public partial class PlatformPlaystation : Platform
             DataFile = _memorydat,
             MetaFile = _memorydat,
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-            Extra = extra ?? new(),
+            Extra = new(),
         };
     }
 

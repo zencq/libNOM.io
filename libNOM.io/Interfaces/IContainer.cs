@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 
 using libNOM.io.Delegates;
+using libNOM.io.Trace;
 
 using Newtonsoft.Json.Linq;
 
@@ -12,32 +13,7 @@ namespace libNOM.io.Interfaces;
 /// </summary>
 public interface IContainer : IComparable<Container>, IEquatable<Container>
 {
-    #region Property
-
-    /// <summary>
-    /// List of related backups.
-    /// </summary>
-    public ObservableCollection<Container> BackupCollection { get; }
-
-    /// <summary>
-    /// Identifier of the save containing the slot number and save type.
-    /// </summary>
-    public string Identifier { get; }
-
-    /// <summary>
-    /// If the incompatibility was caused by an unexpected exception, it stored here.
-    /// </summary>
-    public Exception? IncompatibilityException { get; }
-
-    /// <summary>
-    /// A tag with information why this save is incompatible. To see what reasons are available have a look at <see cref="Constants"/>.INCOMPATIBILITY_\d{3}.
-    /// </summary>
-    public string? IncompatibilityTag { get; }
-
-    /// <summary>
-    /// List of unknown keys collected during deobfuscation.
-    /// </summary>
-    public HashSet<string> UnknownKeys { get; set; }
+    // Property
 
     #region Flags
 
@@ -100,6 +76,67 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     /// Whether this is identical to the data on the drive.
     /// </summary>
     public bool IsSynced { get; set; }
+
+    #endregion
+
+    #region FileInfo
+
+    /// <summary>
+    /// The file that contains the actual save data.
+    /// </summary>
+    public FileInfo? DataFile { get; }
+
+    /// <summary>
+    /// Whether the data file and therefore the save exists.
+    /// </summary>
+    public bool Exists { get; }
+
+    /// <summary>
+    /// Timestamp when the save was written the last time.
+    /// </summary>
+    public DateTimeOffset? LastWriteTime { get; }
+
+    /// <summary>
+    /// The file that contains additional meta data about the save.
+    /// </summary>
+    public FileInfo? MetaFile { get; }
+
+    #endregion
+
+    #region FileSystemWatcher
+
+    /// <summary>
+    /// How that save was altered by an external application (created, changed, etc).
+    /// </summary>
+    public WatcherChangeTypes? WatcherChangeType { get; }
+
+    /// <summary>
+    /// Whether the save has been altered by an external application.
+    /// </summary>
+    public bool HasWatcherChange { get; }
+
+    #endregion
+
+    #region Index
+
+    /// <summary>
+    /// Starts at 0 for PlayerState1, AccountData will be -2.
+    /// </summary>
+    public int CollectionIndex { get; }
+
+    /// <summary>
+    /// Starts at 0 for AccountData, PlayerState1 will be 2.
+    /// </summary>
+    public int MetaIndex { get; }
+
+    /// <summary>
+    /// Starts at 0 for PlayerState1 and PlayerState2, AccountData will be -1.
+    /// </summary>
+    public int SlotIndex { get; }
+
+    #endregion
+
+    #region IsVersion
 
     public bool IsVersion211BeyondWithVehicleCam { get; }
 
@@ -165,60 +202,38 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     #endregion
 
-    #region FileInfo
+    #region Miscellaneous
 
     /// <summary>
-    /// The file that contains the actual save data.
+    /// List of related backups.
     /// </summary>
-    public FileInfo? DataFile { get; }
+    public ObservableCollection<Container> BackupCollection { get; }
 
     /// <summary>
-    /// Whether the data file and therefore the save exists.
+    /// Identifier of the save containing the slot number and save type.
     /// </summary>
-    public bool Exists { get; }
+    public string Identifier { get; }
 
     /// <summary>
-    /// Timestamp when the save was written the last time.
+    /// If the incompatibility was caused by an unexpected exception, it stored here.
     /// </summary>
-    public DateTimeOffset? LastWriteTime { get; }
+    public Exception? IncompatibilityException { get; }
 
     /// <summary>
-    /// The file that contains additional meta data about the save.
+    /// A tag with information why this save is incompatible. To see what reasons are available have a look at <see cref="Constants"/>.INCOMPATIBILITY_\d{3}.
     /// </summary>
-    public FileInfo? MetaFile { get; }
-
-    #endregion
-
-    #region FileSystemWatcher
+    public string? IncompatibilityTag { get; }
 
     /// <summary>
-    /// How that save was altered by an external application (created, changed, etc).
+    /// Exposes a lot of additional information that are usually not necessary while using this library but might useful for debugging purposes.
+    /// Not intended to show the end user.
     /// </summary>
-    public WatcherChangeTypes? WatcherChangeType { get; }
+    public ContainerTrace? Trace { get; }
 
     /// <summary>
-    /// Whether the save has been altered by an external application.
+    /// List of unknown keys collected during deobfuscation.
     /// </summary>
-    public bool HasWatcherChange { get; }
-
-    #endregion
-
-    #region Index
-
-    /// <summary>
-    /// Starts at 0 for PlayerState1, AccountData will be -2.
-    /// </summary>
-    public int CollectionIndex { get; }
-
-    /// <summary>
-    /// Starts at 0 for AccountData, PlayerState1 will be 2.
-    /// </summary>
-    public int MetaIndex { get; }
-
-    /// <summary>
-    /// Starts at 0 for PlayerState1 and PlayerState2, AccountData will be -1.
-    /// </summary>
-    public int SlotIndex { get; }
+    public HashSet<string> UnknownKeys { get; }
 
     #endregion
 
@@ -261,7 +276,7 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     #endregion
 
-    #endregion
+    // Accessor
 
     #region Getter
 
@@ -373,6 +388,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     public void SetWatcherChange(WatcherChangeTypes changeType);
 
     #endregion
+
+    // //
 
     #region Delegate
 

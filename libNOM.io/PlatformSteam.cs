@@ -149,7 +149,7 @@ public partial class PlatformSteam : Platform
 #endif
     }
 
-    private protected override Container CreateContainer(int metaIndex, ContainerExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? _)
     {
         var name = metaIndex == 0 ? "accountdata.hg" : $"save{(metaIndex == Constants.OFFSET_INDEX ? string.Empty : metaIndex - 1)}.hg";
         var data = new FileInfo(Path.Combine(Location.FullName, name));
@@ -159,7 +159,7 @@ public partial class PlatformSteam : Platform
             DataFile = data,
             MetaFile = new FileInfo(Path.Combine(Location.FullName, $"mf_{name}")),
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="Platform.UpdateContainerWithDataInformation"/>.
-            Extra = extra ?? new()
+            Extra = new()
             {
                 LastWriteTime = data.LastWriteTime,
             },

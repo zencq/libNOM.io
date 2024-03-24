@@ -14,63 +14,63 @@ internal record class ContainerExtra
     // Playstation = Data (Legacy) or Meta (SaveStreaming)
     // Steam = Meta (Waypoint or AccountData)
     // Switch = Meta (Waypoint)
-    internal byte[]? Bytes { get; set; }
+    internal byte[]? Bytes { get; init; }
 
     // Microsoft
     // Playstation
     // Steam
     // Switch
-    internal uint MetaLength { get; set; }
+    internal uint MetaLength { get; init; }
 
     // Microsoft
     // Playstation
     // Steam
     // Switch
-    internal uint SizeDecompressed { get; set; }
+    internal uint SizeDecompressed { get; init; }
 
     // Microsoft
     // Steam
     // Playstation
     // Switch
-    internal uint SizeDisk { get; set; }
+    internal uint SizeDisk { get; init; }
 
     // Microsoft
     // Playstation (META_FORMAT_2)
     // Steam
     // Switch
-    internal DateTimeOffset? LastWriteTime { get; set; }
+    internal DateTimeOffset? LastWriteTime { get; init; }
 
     // Microsoft
     // Steam
     // Switch
-    internal int BaseVersion { get; set; } // actually uint as well but for better readability due to less casting int is used
+    internal int BaseVersion { get; init; } // actually uint as well but for better readability due to less casting int is used
 
-    internal ushort GameMode { get; set; }
+    internal ushort GameMode { get; init; }
 
-    internal ushort Season { get; set; }
+    internal ushort Season { get; init; }
 
-    internal uint TotalPlayTime { get; set; }
+    internal uint TotalPlayTime { get; init; }
 
-    internal string SaveName { get; set; } = string.Empty;
+    internal string SaveName { get; init; } = string.Empty;
 
-    internal string SaveSummary { get; set; } = string.Empty;
+    internal string SaveSummary { get; init; } = string.Empty;
 
-    internal uint DifficultyPreset { get; set; }
+    internal uint DifficultyPreset { get; init; }
 
     #endregion
 
     #region Microsoft
 
-    internal string? MicrosoftSyncTime { get; set; } // Ticks as Hexadecimal as String with surrounding double quotes
-    internal byte? MicrosoftBlobContainerExtension { get; set; }
-    internal MicrosoftBlobSyncStateEnum? MicrosoftSyncState { get; set; }
-    internal Guid? MicrosoftBlobDirectoryGuid { get; set; }
-    internal FileInfo? MicrosoftBlobDataFile { get; set; }
-    internal Guid? MicrosoftBlobDataSyncGuid { get; set; }
-    internal FileInfo? MicrosoftBlobMetaFile { get; set; }
-    internal Guid? MicrosoftBlobMetaSyncGuid { get; set; }
+    internal string? MicrosoftSyncTime { get; init; } // Ticks as Hexadecimal as String with surrounding double quotes
+    internal byte? MicrosoftBlobContainerExtension { get; init; }
+    internal MicrosoftBlobSyncStateEnum? MicrosoftSyncState { get; init; }
+    internal Guid? MicrosoftBlobDirectoryGuid { get; init; }
+    internal FileInfo? MicrosoftBlobDataFile { get; init; }
+    internal Guid? MicrosoftBlobDataSyncGuid { get; init; }
+    internal FileInfo? MicrosoftBlobMetaFile { get; init; }
+    internal Guid? MicrosoftBlobMetaSyncGuid { get; init; }
 
-    internal DirectoryInfo? MicrosoftBlobDirectory { get; set; }
+    internal DirectoryInfo? MicrosoftBlobDirectory { get; init; }
 
     internal FileInfo? MicrosoftBlobContainerFile => MicrosoftBlobDirectory is not null && MicrosoftBlobContainerExtension is not null ? new(Path.Combine(MicrosoftBlobDirectory.FullName ?? string.Empty, $"container.{MicrosoftBlobContainerExtension}")) : null;
 
@@ -78,7 +78,7 @@ internal record class ContainerExtra
 
     #region Playstation
 
-    internal int? PlaystationOffset { get; set; }
+    internal int? PlaystationOffset { get; init; }
 
     #endregion
 }
