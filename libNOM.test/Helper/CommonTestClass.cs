@@ -738,6 +738,7 @@ public abstract class CommonTestClass
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
+            Trace = true,
             UseExternalSourcesForUserIdentification = false,
             UseMapping = true, // to check UnknownKeys
         };

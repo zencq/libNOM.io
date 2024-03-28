@@ -69,6 +69,8 @@ jobs:
         shell: pwsh
       - name: Pack
         run: dotnet pack libNOM.io --configuration Release
+      - name: Publish
+        run: dotnet publish libNOM.cli --configuration Release
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -76,6 +78,7 @@ jobs:
           path: |
             ./.github/changelogs/
             ./libNOM.io/bin/Release/libNOM.io.*nupkg
+            ./libNOM.cli/bin/Release/puhlish/libNOM.io.exe
           if-no-files-found: error
   release:
     name: Release

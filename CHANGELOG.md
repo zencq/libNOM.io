@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased
+## Unreleased (0.8.0)
 
 ### Known Issues
 ### Added
+* CLI to do file operations, convert single files and analyze single files or whole directories
 * `PlatformCollectionSettings` to configure `PlatformCollection`
+* Support for game version **Orbital 4.60**
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is now unlimited and not unintentionally disabling the backup feature
 * `Container.ThrowHelperIsLoaded` now shows incompatibility if any
