@@ -139,7 +139,15 @@ public abstract class CommonTestClass
         Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
 
         if (expectAccountData)
+        {
             Assert.IsTrue(platform.HasAccountData);
+
+            var container = platform.GetAccountContainer()!;
+
+            Assert.AreEqual(-2, container.CollectionIndex);
+            Assert.AreEqual("AccountData", container.Identifier);
+            Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+        }
         else
             Assert.IsFalse(platform.HasAccountData);
 
@@ -731,6 +739,7 @@ public abstract class CommonTestClass
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
             UseExternalSourcesForUserIdentification = false,
+            UseMapping = true, // to check UnknownKeys
         };
 
         // Act

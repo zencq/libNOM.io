@@ -31,6 +31,12 @@ public record class PlatformSettings
     public bool SetLastWriteTime { get; init; } = true;
 
     /// <summary>
+    /// Enables tracing which will collect additional, detailed internal and processed information about a <see cref="Container"/>.
+    /// Default: false
+    /// </summary>
+    public bool Trace { get; init; } = false;
+
+    /// <summary>
     /// Whether to use external sources to enhance the user identification process.
     /// Default: true
     /// </summary>

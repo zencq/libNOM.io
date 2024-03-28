@@ -4,11 +4,10 @@
 /// <summary>
 /// Holds additional information for a single <see cref="Container"/>, mainly gathered from the meta/manifest file or on the way to access it.
 /// Most of them need to be written back to the related files.
-/// As this is only used internally, it is okay to always have { get; set; } instead of { get; init; }.
 /// </summary>
 internal record class ContainerExtra
 {
-    #region Global
+    #region Meta
 
     // Microsoft = Meta (Waypoint)
     // Playstation = Data (Legacy) or Meta (SaveStreaming)
@@ -21,6 +20,10 @@ internal record class ContainerExtra
     // Steam
     // Switch
     internal uint MetaLength { get; init; }
+
+    #endregion
+
+    #region Data
 
     // Microsoft
     // Playstation

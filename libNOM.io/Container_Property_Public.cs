@@ -3,6 +3,7 @@
 using CommunityToolkit.Diagnostics;
 
 using libNOM.io.Interfaces;
+using libNOM.io.Trace;
 
 namespace libNOM.io;
 
@@ -25,7 +26,9 @@ public partial class Container : IContainer
 
     public string? IncompatibilityTag { get; internal set; }
 
-    public HashSet<string> UnknownKeys { get; set; } = [];
+    public ContainerTrace? Trace { get; internal set; }
+
+    public HashSet<string> UnknownKeys { get; internal set; } = [];
 
     #region Flags
 
@@ -156,6 +159,8 @@ public partial class Container : IContainer
     public bool IsVersion450Omega => IsVersion(GameVersionEnum.Omega); // { get; }
 
     public bool IsVersion452OmegaWithV2 => IsVersion(GameVersionEnum.OmegaWithV2); // { get; }
+
+    public bool IsVersion460Orbital => IsVersion(GameVersionEnum.Orbital); // { get; }
 
     #endregion
 

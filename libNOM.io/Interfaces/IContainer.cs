@@ -200,6 +200,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion452OmegaWithV2 { get; }
 
+    public bool IsVersion460Orbital { get; }
+
     #endregion
 
     #region Miscellaneous

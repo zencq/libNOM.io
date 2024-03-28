@@ -81,6 +81,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         InitializePlatformSpecific();
         InitializePlatform();
+
+        if (!Settings.Trace)
+            return;
+
+        InitializeTrace();
     }
 
     protected virtual void InitializePlatformSpecific() { }

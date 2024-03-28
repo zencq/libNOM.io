@@ -28,7 +28,7 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Platform Indicator
 
@@ -46,9 +46,7 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    #endregion
-
-    // //
+    // Initialize
 
     #region Constructor
 
@@ -74,7 +72,7 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    // // User Identification
+    // //
 
     #region User Identification
 
