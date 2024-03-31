@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿using libNOM.io.Interfaces;
 
 namespace libNOM.io.Trace;
 
@@ -22,6 +22,8 @@ public record class ContainerTrace
     public uint? SizeDecompressed { get; internal set; }
 
     public uint? SizeDisk { get; internal set; }
+
+    public IPlatform? Platform { get; internal set; }
 
     #endregion
 

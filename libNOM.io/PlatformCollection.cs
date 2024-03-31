@@ -119,12 +119,15 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #region Analyze
 
+    /// <inheritdoc cref="AnalyzeFile(string, PlatformSettings?)"
+    public static Container? AnalyzeFile(string path) => AnalyzeFile(path, new());
+
     /// <summary>
     /// Analysis a single file and loads it.
     /// </summary>
     /// <param name="path"></param>
     /// <returns>A pre-loaded <see cref="Container"/> if no incompatibilities.</returns>
-    public static Container? AnalyzeFile(string path)
+    public static Container? AnalyzeFile(string path, PlatformSettings? platformSettings)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return null;
@@ -151,6 +154,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
             // Only for files in the save streaming format.
             if (Directory.EnumerateFiles(directory, PlatformPlaystation.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
             {
+                // TODO add platformSettings
                 platform = new PlatformPlaystation(headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER);
                 meta = new(path);
                 metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit)));
@@ -162,7 +166,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         {
             if (headerString0xA0.Contains("NX1|Final"))
             {
-                platform = new PlatformSwitch();
+                platform = new PlatformSwitch(platformSettings);
 
                 // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
                 if (Directory.EnumerateFiles(directory, PlatformSwitch.ANCHOR_FILE_PATTERN[1]).Any(fullPath.Equals))
@@ -174,7 +178,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
             }
             else
             {
-                platform = new PlatformSteam();
+                platform = new PlatformSteam(platformSettings);
 
                 // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
                 if (Directory.EnumerateFiles(directory, PlatformSteam.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
@@ -189,7 +193,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         }
         else
         {
-            platform = new PlatformMicrosoft();
+            platform = new PlatformMicrosoft(platformSettings);
 
             metaIndex = Constants.OFFSET_INDEX;
             possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 31

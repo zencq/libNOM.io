@@ -1,5 +1,9 @@
-﻿using libNOM.cli.Args;
+﻿using System.Security.Cryptography;
+
+using libNOM.cli.Args;
 using libNOM.io;
+using libNOM.io.Interfaces;
+using libNOM.io.Settings;
 
 namespace libNOM.cli;
 
@@ -20,11 +24,47 @@ public partial class Executor
 
     #endregion
 
+    #region Getter
+
+    private static PlatformCollectionSettings GetCollectionSettings() => new()
+    {
+        AnalyzeLocal = false,
+    };
+
+    private static PlatformSettings GetPlatformSettings(bool unlimited = true, bool trace = true) => new()
+    {
+        MaxBackupCount = unlimited ? 0 : 3, // 3 is default 
+        Trace = trace,
+    };
+
+    #endregion
+
+    #region Helper
+
+    private bool GuardArgsLength(FileOperationTwoOperandArgs args) 
+    {
+        if (args.Source.Length != args.Destination.Length)
+        {
+            WriteLine("You must specify the same number of saves for Source and Destination to perform this file operation.");
+            return false;
+        }
+        return true;
+    }
+
+    private static void WriteLine(string message) => WriteLine(message, 0);
+
     private static void WriteLine(string message, int indentionLevel)
     {
         Console.WriteLine($"{"".PadLeft(indentionLevel * INDENTION_SIZE)}{message}");
     }
 
+    private static void WriteLine(string message, int indentionLevel, bool interpolation)
+    {
+        var msg = string.Format(message, interpolation ? "yes" : "no");
+        Console.WriteLine($"{"".PadLeft(indentionLevel * INDENTION_SIZE)}{msg}");
+    }
+
+    #endregion
 
     #region Analyze
 
@@ -34,7 +74,9 @@ public partial class Executor
     ]
     public void Analyze(AnalyzeArgs args)
     {
-        Console.WriteLine(nameof(Analyze));
+#if DEBUG
+        WriteLine(nameof(Analyze));
+#endif
         if (Directory.Exists(args.Input))
         {
             AnalyzeDirectory(new(args.Input), 0);
@@ -140,18 +182,22 @@ public partial class Executor
     ]
     public void Convert(ConvertArgs args)
     {
-        Console.WriteLine("Convert");
+#if DEBUG
+        WriteLine(nameof(Convert));
+#endif
     }
 
     [
         ArgActionMethod,
         ArgDescription("Adds the two operands"),
     ]
-    public void Backup(FileOperationOneOperandArgs args)
+    public void Backup(BackupArgs args)
     {
-        Console.WriteLine(nameof(Backup));
-
+#if DEBUG
+        WriteLine(nameof(Backup));
+#endif
         IEnumerable<Container>? containers = null;
+        IPlatform? platform = null;
 
         if (Directory.Exists(args.Input))
         {
@@ -161,33 +207,40 @@ public partial class Executor
                 return;
             }
 
-            var collection = new PlatformCollection(args.Input, new() { Trace = true }, new() { AnalyzeLocal = false });
+            var collection = new PlatformCollection(args.Input, new() { MaxBackupCount = 0, Trace = true }, new() { AnalyzeLocal = false });
 
-            containers = collection.FirstOrDefault()?.GetSaveContainers().Where(i => args.Indices!.Contains(i.CollectionIndex));
+            platform = collection.FirstOrDefault();
+            containers = platform?.GetSaveContainers().Where(i => args.Indices!.Contains(i.CollectionIndex));
         }
         else if (File.Exists(args.Input))
         {
-            var container = PlatformCollection.AnalyzeFile(args.Input);
+            var container = PlatformCollection.AnalyzeFile(args.Input, new() { Trace = true });
             if (container is null)
             {
                 WriteLine("Input file could not be successfully processed.", 0);
                 return;
             }
 
+            platform = container.Trace!.Platform;
             containers = [container];
         }
 
-        //if (containers is not null)
-        //    containers.Select(i => i.tr)
+        if (containers is not null && platform is not null)
+            foreach (var container in containers)
+                platform.Backup(container);
     }
 
     [
         ArgActionMethod,
         ArgDescription("Adds the two operands"),
     ]
-    public void Restore(FileOperationOneOperandArgs args)
+    public void Restore(RestoreArgs args)
     {
-        Console.WriteLine("Restore");
+#if DEBUG
+        WriteLine(nameof(Restore));
+#endif
+
+        // TODO if no indices, try extract original save from file name
 
     }
 
@@ -199,7 +252,11 @@ public partial class Executor
     ]
     public void Copy(FileOperationTwoOperandArgs args)
     {
-        Console.WriteLine("Copy");
+#if DEBUG
+        WriteLine(nameof(Copy));
+#endif
+        if (!GuardArgsLength(args))
+            return;
     }
 
     [
@@ -213,11 +270,29 @@ public partial class Executor
 
     [
         ArgActionMethod,
-        ArgDescription("Adds the two operands"),
+        ArgDescription("Swap any two save files. They will be swapped without any further questions or additional checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only swap one with one from another slot)."),
+        ArgExample("--platform <path-to-steam> --source 1 2 --destination 3 4", "Swap 1 with 3 and 2 with 4 on Steam."),
     ]
     public void Swap(FileOperationTwoOperandArgs args)
     {
-        Console.WriteLine("Swap");
+#if DEBUG
+        WriteLine(nameof(Swap));
+#endif
+        if (!GuardArgsLength(args))
+            return;
+
+        var collection = new PlatformCollection(args.Platform.FullName, GetCollectionSettings());
+        var platform = collection.FirstOrDefault();
+        if (platform is null)
+        {
+            WriteLine("No valid platform found.", 1);
+            return;
+        }
+
+        var source = platform.GetSaveContainers().Where(i => args.Source.Contains(i.CollectionIndex));
+        var destination = platform.GetSaveContainers().Where(i => args.Destination.Contains(i.CollectionIndex));
+
+        platform.Swap(source.Zip(destination));
     }
 
     [
@@ -226,6 +301,23 @@ public partial class Executor
     ]
     public void Move(FileOperationTwoOperandArgs args)
     {
-        Console.WriteLine("Move");
+#if DEBUG
+        WriteLine(nameof(Move));
+#endif
+        if (!GuardArgsLength(args))
+            return;
+
+        var collection = new PlatformCollection(args.Platform.FullName, GetCollectionSettings());
+        var platform = collection.FirstOrDefault();
+        if (platform is null)
+        {
+            WriteLine("No valid platform found.", 1);
+            return;
+        }
+
+        var source = platform.GetSaveContainers().Where(i => args.Source.Contains(i.CollectionIndex));
+        var destination = platform.GetSaveContainers().Where(i => args.Destination.Contains(i.CollectionIndex));
+
+        platform.Move(source.Zip(destination));
     }
 }

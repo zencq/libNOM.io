@@ -31,6 +31,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 GameMode = container.GameMode,
                 MetaLength = container.Extra.MetaLength,
                 PersistentStorageSlot = container.PersistentStorageSlot,
+                Platform = container.Platform,
                 SaveVersion = container.SaveVersion,
                 SizeDecompressed = container.Extra.SizeDecompressed,
                 SizeDisk = container.Extra.SizeDisk,

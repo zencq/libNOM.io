@@ -20,6 +20,7 @@ public record class PlatformSettings
 
     /// <summary>
     /// Maximum number of backups per save to keep.
+    /// Set to 0 or negative to use unlimited number of backups.
     /// Default: 3
     /// </summary>
     public int MaxBackupCount { get; init; } = 3;
