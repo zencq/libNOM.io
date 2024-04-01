@@ -22,7 +22,7 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Flags
 
@@ -66,9 +66,7 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    #endregion
-
-    // //
+    // Accessor
 
     #region Getter
 
@@ -79,23 +77,23 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    // //
+    // Initialize
 
     #region Constructor
 
     public PlatformSwitch() : base() { }
 
-    public PlatformSwitch(string path) : base(path) { }
+    public PlatformSwitch(string? path) : base(path) { }
 
-    public PlatformSwitch(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformSwitch(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformSwitch(DirectoryInfo directory) : base(directory) { }
+    public PlatformSwitch(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformSwitch(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformSwitch(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformSwitch(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     #endregion
-
-    // //
 
     #region Initialize
 
@@ -171,6 +169,8 @@ public partial class PlatformSwitch : Platform
     }
 
     #endregion
+
+    // //
 
     #region Write
 

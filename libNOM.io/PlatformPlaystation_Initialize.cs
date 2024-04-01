@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-using libNOM.io.Settings;
+﻿using libNOM.io.Settings;
 
 namespace libNOM.io;
 
@@ -14,7 +12,7 @@ public partial class PlatformPlaystation : Platform
     /// Special case for <see cref="PlatformCollection.AnalyzeFile(string)"/> to be able to use selected methods with an empty initialization.
     /// </summary>
     /// <param name="usesSaveWizard"></param>
-    internal PlatformPlaystation(bool usesSaveWizard) : base()
+    internal PlatformPlaystation(bool usesSaveWizard, PlatformSettings? platformSettings) : base(platformSettings)
     {
         _usesSaveStreaming = true;
         _usesSaveWizard = usesSaveWizard;
@@ -22,13 +20,15 @@ public partial class PlatformPlaystation : Platform
 
     public PlatformPlaystation() : base() { }
 
-    public PlatformPlaystation(string path) : base(path) { }
+    public PlatformPlaystation(string? path) : base(path) { }
 
-    public PlatformPlaystation(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformPlaystation(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformPlaystation(DirectoryInfo directory) : base(directory) { }
+    public PlatformPlaystation(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformPlaystation(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformPlaystation(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformPlaystation(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     #endregion
 

@@ -27,7 +27,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Container
 
@@ -110,7 +110,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    #endregion
+    // Accessor
 
     #region Getter
 
@@ -175,6 +175,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     #endregion
+
+    // Interface
 
     #region IEquatable
 

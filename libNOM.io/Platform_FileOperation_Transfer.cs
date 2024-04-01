@@ -165,7 +165,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 Destination.UserIdentification = PlatformUserIdentification; // update to match new platform
 
                 // Due to this CanCreate can be true.
-                CreatePlatformExtra(Destination, Source);
+                CreateContainerExtra(Destination, Source);
 
                 TransferOwnership(Destination, sourceTransferData);
 

@@ -6,6 +6,8 @@ namespace libNOM.io;
 // This partial class contains FileSystemWatcher related code.
 public partial class PlatformMicrosoft : Platform
 {
+    // Accessor
+
     #region Getter
 
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
@@ -24,6 +26,8 @@ public partial class PlatformMicrosoft : Platform
     }
 
     #endregion
+
+    // //
 
     #region Events
 

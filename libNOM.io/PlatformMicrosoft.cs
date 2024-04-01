@@ -48,7 +48,7 @@ public partial class PlatformMicrosoft : Platform
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Flags
 
@@ -93,7 +93,7 @@ public partial class PlatformMicrosoft : Platform
 
     #endregion
 
-    #endregion
+    // //
 
     #region UserIdentification
 

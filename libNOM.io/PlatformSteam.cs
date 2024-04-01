@@ -53,7 +53,7 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Configuration
 
@@ -103,21 +103,21 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    #endregion
-
-    // //
+    // Initialize
 
     #region Constructor
 
     public PlatformSteam() : base() { }
 
-    public PlatformSteam(string path) : base(path) { }
+    public PlatformSteam(string? path) : base(path) { }
 
-    public PlatformSteam(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformSteam(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformSteam(DirectoryInfo directory) : base(directory) { }
+    public PlatformSteam(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformSteam(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformSteam(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformSteam(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     #endregion
 
@@ -226,7 +226,9 @@ public partial class PlatformSteam : Platform
 
     #endregion
 
-    #region Load
+    // //
+
+    #region Read
 
     protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
     {
@@ -289,6 +291,8 @@ public partial class PlatformSteam : Platform
     }
 
     #endregion
+
+    // //
 
     #region Write
 
@@ -399,6 +403,8 @@ public partial class PlatformSteam : Platform
     }
 
     #endregion
+
+    // //
 
     #region UserIdentification
 

@@ -14,6 +14,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    // Accessor
+
     #region Getter
 
     /// <summary>
@@ -107,6 +109,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     #endregion
+
+    // //
 
     #region Update
 

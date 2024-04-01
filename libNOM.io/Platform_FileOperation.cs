@@ -16,9 +16,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="other"></param>
     /// <returns></returns>
-    protected virtual void CreatePlatformExtra(Container container, Container other)
+    protected virtual void CreateContainerExtra(Container container, Container other)
     {
-        CopyPlatformExtra(container, other);
+        CopyContainerExtra(container, other);
 
         // Reset bytes as from another platform it would not be right.
         container.Extra = container.Extra with
@@ -34,7 +34,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="other"></param>
     /// <returns></returns>
-    protected virtual void CopyPlatformExtra(Container container, Container other)
+    protected virtual void CopyContainerExtra(Container container, Container other)
     {
         // Overwrite all general values but keep platform specific stuff unchanged.
         container.Extra = container.Extra with
@@ -93,7 +93,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 Destination.SaveVersion = Source.SaveVersion;
 
                 // Due to this CanCreate can be true.
-                CopyPlatformExtra(Destination, Source);
+                CopyContainerExtra(Destination, Source);
 
                 // This "if" is not really useful in this method but properly implemented nonetheless.
                 if (write)
@@ -198,7 +198,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         container.SaveVersion = other.SaveVersion;
         container.SetJsonObject(other.GetJsonObject());
-        CopyPlatformExtra(container, other);
+        CopyContainerExtra(container, other);
         if (write)
         {
             Write(container, other.LastWriteTime ?? DateTimeOffset.Now);

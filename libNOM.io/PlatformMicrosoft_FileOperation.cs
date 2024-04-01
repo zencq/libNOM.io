@@ -6,11 +6,11 @@ namespace libNOM.io;
 // This partial class contains file operation related code.
 public partial class PlatformMicrosoft : Platform
 {
-    #region PlatformExtra
+    #region Extra
 
-    protected override void CopyPlatformExtra(Container destination, Container source)
+    protected override void CopyContainerExtra(Container destination, Container source)
     {
-        base.CopyPlatformExtra(destination, source);
+        base.CopyContainerExtra(destination, source);
 
         // Creating dummy blob data only necessary if destination does not exist.
         if (destination.DataFile is null)

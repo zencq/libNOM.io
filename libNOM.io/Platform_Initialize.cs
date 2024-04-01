@@ -49,13 +49,15 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 #pragma warning disable CS8618 // Non-nullable property 'Settings' must contain a non-null value when exiting constructor. Property 'Settings' is set in InitializeComponent.
     public Platform() => InitializeComponent(null, null);
 
-    public Platform(string path) => InitializeComponent(new(path), null);
+    public Platform(string? path) => InitializeComponent(string.IsNullOrWhiteSpace(path) ? null : new(path), null);
 
-    public Platform(string path, PlatformSettings platformSettings) => InitializeComponent(new(path), platformSettings);
+    public Platform(string? path, PlatformSettings? platformSettings) => InitializeComponent(string.IsNullOrWhiteSpace(path) ? null : new(path), platformSettings);
 
-    public Platform(DirectoryInfo directory) => InitializeComponent(directory, null);
+    public Platform(PlatformSettings? platformSettings) => InitializeComponent(null, platformSettings);
 
-    public Platform(DirectoryInfo directory, PlatformSettings platformSettings) => InitializeComponent(directory, platformSettings);
+    public Platform(DirectoryInfo? directory) => InitializeComponent(directory, null);
+
+    public Platform(DirectoryInfo? directory, PlatformSettings? platformSettings) => InitializeComponent(directory, platformSettings);
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
 
     #endregion

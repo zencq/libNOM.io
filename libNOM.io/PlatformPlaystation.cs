@@ -46,7 +46,7 @@ public partial class PlatformPlaystation : Platform
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Flags
 
@@ -87,8 +87,6 @@ public partial class PlatformPlaystation : Platform
     protected override string? PlatformProcessPath { get; } = null;
 
     protected override string PlatformToken { get; } = "PS";
-
-    #endregion
 
     #endregion
 }

@@ -14,13 +14,15 @@ public partial class PlatformMicrosoft : Platform
 
     public PlatformMicrosoft() : base() { }
 
-    public PlatformMicrosoft(string path) : base(path) { }
+    public PlatformMicrosoft(string? path) : base(path) { }
 
-    public PlatformMicrosoft(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformMicrosoft(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformMicrosoft(DirectoryInfo directory) : base(directory) { }
+    public PlatformMicrosoft(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformMicrosoft(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformMicrosoft(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformMicrosoft(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     #endregion
 
