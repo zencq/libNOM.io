@@ -5,10 +5,7 @@ using CommunityToolkit.HighPerformance;
 namespace libNOM.io;
 
 
-/// <summary>
-/// Implementation for the Microsoft platform.
-/// </summary>
-// This partial class contains some general code.
+// This partial class contains tracing related code.
 public partial class PlatformMicrosoft : Platform
 {
     #region Trace

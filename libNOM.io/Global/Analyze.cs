@@ -204,6 +204,7 @@ public static class Analyze
 
     private static FileInfo? GetCommonPlatformMeta<T>(FileInfo data) where T : Platform => typeof(T) switch
     {
+        var typeofT when typeofT == typeof(PlatformMicrosoft) => data.Directory!.EnumerateFiles().FirstOrDefault(i => !i.Name.StartsWith("container.")),
         var typeofT when typeofT == typeof(PlatformPlaystation) => data,
         var typeofT when typeofT == typeof(PlatformSteam) => new(Path.Combine(data.Directory!.FullName, $"mf_{data.Name}")),
         var typeofT when typeofT == typeof(PlatformSwitch) => new(Path.Combine(data.Directory!.FullName, data.Name.Replace("savedata", "manifest"))),

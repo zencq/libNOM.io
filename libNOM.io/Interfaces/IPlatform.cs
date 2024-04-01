@@ -192,6 +192,14 @@ public interface IPlatform
     #region Backup
 
     /// <summary>
+    /// Creates a backup <see cref="Container"/> based on the specified file.
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="metaIndex"></param>
+    /// <returns></returns>
+    public Container? CreateBackupContainer(string file, int metaIndex);
+
+    /// <summary>
     /// Creates a backup file of the specified <see cref="Container"/>.
     /// </summary>
     /// <param name="container"></param>

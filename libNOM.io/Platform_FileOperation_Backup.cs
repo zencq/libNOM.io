@@ -15,6 +15,30 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     #region Initialize
 
+    public Container? CreateBackupContainer(string file, int metaIndex)
+    {
+        var parts = Path.GetFileNameWithoutExtension(file).Split('.');
+
+        // The filename of a backup needs to have the following format: "backup.{PlatformEnum}.{MetaIndex}.{CreatedAt}.{VersionEnum}" + ".zip"
+        if (parts.Length < 5)
+            return null;
+
+        try
+        {
+            return new(metaIndex, this)
+            {
+                DataFile = new(file),
+                GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
+                IsBackup = true,
+                LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
+            };
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Generates a collection with all backups of the specified <see cref="Container"/> that matches the MetaIndex and this <see cref="Platform"/>.
     /// </summary>
@@ -29,23 +53,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         foreach (var file in Directory.EnumerateFiles(Settings.BackupDirectory, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip".ToLowerInvariant()))
         {
-            var parts = Path.GetFileNameWithoutExtension(file).Split('.');
-
-            // The filename of a backup needs to have the following format: "backup.{PlatformEnum}.{MetaIndex}.{CreatedAt}.{VersionEnum}" + ".zip"
-            if (parts.Length < 5)
+            var backup = CreateBackupContainer(file, container.MetaIndex);
+            if (backup is null)
                 continue;
 
-            try
-            {
-                container.BackupCollection.Add(new(container.MetaIndex, this)
-                {
-                    DataFile = new(file),
-                    GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
-                    IsBackup = true,
-                    LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
-                });
-            }
-            catch (FormatException) { } // ignore
+            container.BackupCollection.Add(backup);
         }
     }
 

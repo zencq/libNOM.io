@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-
-using libNOM.cli.Args;
+﻿using libNOM.cli.Args;
 using libNOM.io;
 using libNOM.io.Interfaces;
 using libNOM.io.Settings;
@@ -19,7 +17,7 @@ public partial class Executor
 
     #region Property
 
-    [HelpHook, ArgShortcut("-?"), ArgDescription("Shows this help")]
+    [HelpHook, ArgShortcut("-?"), ArgDescription("Shows this help. Please not that all file operations are executed without any further questions or checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only swap one with one from another slot).")]
     public bool Help { get; set; }
 
     #endregion
@@ -39,9 +37,11 @@ public partial class Executor
 
     #endregion
 
+    // //
+
     #region Helper
 
-    private bool GuardArgsLength(FileOperationTwoOperandArgs args) 
+    private static bool GuardArgsLength(FileOperationTwoOperandArgs args)
     {
         if (args.Source.Length != args.Destination.Length)
         {
@@ -65,6 +65,8 @@ public partial class Executor
     }
 
     #endregion
+
+    // //
 
     #region Analyze
 
@@ -98,7 +100,7 @@ public partial class Executor
 
         WriteLine(info.Name, indentionLevel);
 
-        var container = PlatformCollection.AnalyzeFile(info.FullName);
+        var container = io.Global.Analyze.AnalyzeFile(info.FullName);
 
         PrintContainerInformation(container, indentionLevel + 1);
     }
@@ -176,72 +178,98 @@ public partial class Executor
 
     #endregion
 
+    #region Backup
+
+    [
+        ArgActionMethod,
+        ArgDescription("Create a backup of all specified saves. No old backups will be deleted in this process."),
+    ]
+    public static void Backup(BackupArgs args)
+    {
+        IPlatform? platform = null;
+        IEnumerable<Container>? containers = null;
+
+        if (Directory.Exists(args.Input))
+            GetBackupDataFromDirectory(args, out platform, out containers);
+        else if (File.Exists(args.Input))
+            GetBackupDataFromFile(args, out platform, out containers);
+
+        if (platform is null && containers!.IsNullOrEmpty())
+        {
+            WriteLine("Could not find valid platform files or a save.", 1);
+            return;
+        }
+
+        foreach (var container in containers!)
+            platform!.Backup(container);
+    }
+
+    private static void GetBackupDataFromDirectory(BackupArgs args, out IPlatform? platform, out IEnumerable<Container> containers)
+    {
+        if (args.Indices!.IsNullOrEmpty())
+        {
+            WriteLine("If the input is a directory, you must specify what you want to backup.", 1);
+            platform = null;
+            containers = [];
+            return; // early exit
+        }
+
+        var collection = new PlatformCollection(args.Input, GetPlatformSettings(), GetCollectionSettings());
+
+        platform = collection.FirstOrDefault();
+        containers = platform?.GetSaveContainers().Where(i => args.Indices!.Contains(i.CollectionIndex)) ?? [];
+    }
+
+    private static void GetBackupDataFromFile(BackupArgs args, out IPlatform? platform, out IEnumerable<Container> containers)
+    {
+        var container = io.Global.Analyze.AnalyzeFile(args.Input, GetPlatformSettings());
+        if (container is null)
+        {
+            WriteLine("Input file could not be successfully processed.", 1);
+            platform = null;
+            containers = [];
+            return; // early exit
+        }
+
+        platform = container.Trace!.Platform;
+        containers = [container];
+    }
+
+    [
+        ArgActionMethod,
+        ArgDescription("Restores the specified backup."),
+    ]
+    public static void Restore(RestoreArgs args)
+    {
+        var parts = Path.GetFileNameWithoutExtension(args.Backup.Name).Split('.');
+
+        var collection = new PlatformCollection(args.Platform, GetPlatformSettings(), GetCollectionSettings());
+        var platform = collection.FirstOrDefault();
+
+        if (platform is null || parts.Length < 5)
+        {
+            WriteLine("Could not find valid platform files or backup file is in the wrong format.", 1);
+            return;
+        }
+
+        var backup = platform.CreateBackupContainer(args.Backup.FullName, args.Index ?? System.Convert.ToInt32(parts[3]));
+        if (backup is null)
+        {
+            WriteLine("Backup could not be read.", 1);
+            return;
+        }
+
+        platform.Restore(backup);
+    }
+
+    #endregion
+
     [
         ArgActionMethod,
         ArgDescription("Adds the two operands"),
     ]
     public void Convert(ConvertArgs args)
     {
-#if DEBUG
-        WriteLine(nameof(Convert));
-#endif
-    }
-
-    [
-        ArgActionMethod,
-        ArgDescription("Adds the two operands"),
-    ]
-    public void Backup(BackupArgs args)
-    {
-#if DEBUG
-        WriteLine(nameof(Backup));
-#endif
-        IEnumerable<Container>? containers = null;
-        IPlatform? platform = null;
-
-        if (Directory.Exists(args.Input))
-        {
-            if (args.Indices!.IsNullOrEmpty())
-            {
-                WriteLine("If the input is a directory, you must specify what you want to backup.", 0);
-                return;
-            }
-
-            var collection = new PlatformCollection(args.Input, new() { MaxBackupCount = 0, Trace = true }, new() { AnalyzeLocal = false });
-
-            platform = collection.FirstOrDefault();
-            containers = platform?.GetSaveContainers().Where(i => args.Indices!.Contains(i.CollectionIndex));
-        }
-        else if (File.Exists(args.Input))
-        {
-            var container = PlatformCollection.AnalyzeFile(args.Input, new() { Trace = true });
-            if (container is null)
-            {
-                WriteLine("Input file could not be successfully processed.", 0);
-                return;
-            }
-
-            platform = container.Trace!.Platform;
-            containers = [container];
-        }
-
-        if (containers is not null && platform is not null)
-            foreach (var container in containers)
-                platform.Backup(container);
-    }
-
-    [
-        ArgActionMethod,
-        ArgDescription("Adds the two operands"),
-    ]
-    public void Restore(RestoreArgs args)
-    {
-#if DEBUG
-        WriteLine(nameof(Restore));
-#endif
-
-        // TODO if no indices, try extract original save from file name
-
     }
 
     [
@@ -252,21 +280,18 @@ public partial class Executor
     ]
     public void Copy(FileOperationTwoOperandArgs args)
     {
-#if DEBUG
-        WriteLine(nameof(Copy));
-#endif
         if (!GuardArgsLength(args))
             return;
     }
 
-    [
-        ArgActionMethod,
-        ArgDescription("Adds the two operands"),
-    ]
-    public void Delete(FileOperationOneOperandArgs args)
-    {
-        Console.WriteLine("Delete");
-    }
+    //[
+    //    ArgActionMethod,
+    //    ArgDescription("Adds the two operands"),
+    //]
+    //public void Delete(FileOperationOneOperandArgs args)
+    //{
+    //    Console.WriteLine("Delete");
+    //}
 
     [
         ArgActionMethod,
@@ -275,9 +300,6 @@ public partial class Executor
     ]
     public void Swap(FileOperationTwoOperandArgs args)
     {
-#if DEBUG
-        WriteLine(nameof(Swap));
-#endif
         if (!GuardArgsLength(args))
             return;
 
@@ -301,9 +323,6 @@ public partial class Executor
     ]
     public void Move(FileOperationTwoOperandArgs args)
     {
-#if DEBUG
-        WriteLine(nameof(Move));
-#endif
         if (!GuardArgsLength(args))
             return;
 

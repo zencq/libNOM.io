@@ -44,4 +44,10 @@ public record class ContainerTrace
     public long? MicrosoftSize { get; internal set; }
 
     #endregion
+
+    #region Playstation
+
+    public int? PlaystationOffset { get; internal set; }
+
+    #endregion
 }

@@ -24,7 +24,7 @@ public static class Constants
     /// The format looks like this: <code>JSONPATH_EXTENSION["UPPERCASE_ID"] = ["vanilla-obfuscated-path", "vanilla-plaintext-path", "omega-obfuscated-path", "omega-plaintext-path"]</code>
     /// There are some <see cref="JSONPATH">predefined paths used within this library</see> which gives you some examples.
     /// </summary>
-    /// <seealso href="https://github.com/zencq/libNOM.io/blob/master/libNOM.io/Globals/Constants.cs"/>
+    /// <seealso href="https://github.com/zencq/libNOM.io/blob/master/libNOM.io/Global/Constants.cs#L44-L147"/>
     public static readonly Dictionary<string, string[]> JSONPATH_EXTENSION = [];
 
     // internal //
@@ -46,6 +46,7 @@ public static class Constants
         // absolute from root, common
 
         { "ACCOUNT_USER_SETTINGS_DATA", ["B89", "UserSettingsData"] },
+
         { "ACTIVE_CONTEXT", ["", "", "XTp", "ActiveContext"] }, // no path in Vanilla
         { "BASE_CONTEXT", ["", "", "vLc", "BaseContext"] },
         { "EXPEDITION_CONTEXT", ["", "", "2YS", "ExpeditionContext"] },
@@ -147,7 +148,7 @@ public static class Constants
     internal static readonly string[] JSONPATH_CONTEXT_OBFUSCATED = ["", "2YS", "vLc", "", ""]; // SaveContextQueryEnum
     internal static readonly string[] JSONPATH_CONTEXT_PLAINTEXT = ["", "ExpeditionContext", "BaseContext", "", ""];
 
-    internal const uint META_FORMAT_1 = 0x7D0; // 2000 (1.0) // not used but for completeness
+    internal const uint META_FORMAT_1 = 0x7D0; // 2000 (1.0)
     internal const uint META_FORMAT_2 = 0x7D1; // 2001 (1.1)
     internal const uint META_FORMAT_3 = 0x7D2; // 2002 (3.6)
 

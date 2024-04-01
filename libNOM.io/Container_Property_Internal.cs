@@ -81,7 +81,7 @@ public partial class Container : IContainer
 
     internal StoragePersistentSlotEnum PersistentStorageSlot { get; }
 
-    internal Platform Platform { get; set; }
+    internal IPlatform Platform { get; set; }
 
     #endregion
 }

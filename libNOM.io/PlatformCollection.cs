@@ -63,13 +63,19 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     public PlatformCollection(string? path) : this(path, null, null) { }
 
+    public PlatformCollection(DirectoryInfo? directory) : this(directory, null, null) { }
+
     public PlatformCollection(PlatformSettings? platformSettings) : this(platformSettings, collectionSettings: null) { }
 
     public PlatformCollection(PlatformCollectionSettings? collectionSettings) : this(platformSettings: null, collectionSettings) { }
 
     public PlatformCollection(string? path, PlatformSettings? platformSettings) : this(path, platformSettings, null) { }
 
+    public PlatformCollection(DirectoryInfo? directory, PlatformSettings? platformSettings) : this(directory, platformSettings, null) { }
+
     public PlatformCollection(string? path, PlatformCollectionSettings? collectionSettings) : this(path, null, collectionSettings) { }
+
+    public PlatformCollection(DirectoryInfo? directory, PlatformCollectionSettings? collectionSettings) : this(directory, null, collectionSettings) { }
 
     public PlatformCollection(PlatformSettings? platformSettings, PlatformCollectionSettings? collectionSettings)
     {
@@ -83,6 +89,8 @@ public class PlatformCollection : IEnumerable<IPlatform>
     {
         _ = AnalyzePath(path, platformSettings, CollectionSettings.PreferredPlatform);
     }
+
+    public PlatformCollection(DirectoryInfo? directory, PlatformSettings? platformSettings, PlatformCollectionSettings? collectionSettings) : this(directory?.FullName, platformSettings, collectionSettings) { }
 
     #endregion
 
@@ -125,9 +133,9 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #endregion
 
-    // Analyze
+    // //
 
-    #region Path
+    #region Analyze
 
     /// <summary>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
