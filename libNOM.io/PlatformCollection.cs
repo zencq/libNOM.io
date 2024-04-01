@@ -18,6 +18,8 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #endregion
 
+    // //
+
     #region Property
 
     public PlatformCollectionSettings CollectionSettings { get; set; }
@@ -25,6 +27,8 @@ public class PlatformCollection : IEnumerable<IPlatform>
     public PlatformSettings PlatformSettings { get; set; }
 
     #endregion
+
+    // Accessor
 
     #region Getter
 
@@ -50,6 +54,8 @@ public class PlatformCollection : IEnumerable<IPlatform>
     }
 
     #endregion
+
+    // Initialize
 
     #region Constructor
 
@@ -80,18 +86,6 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #endregion
 
-    #region IEnumerable
-
-    public IEnumerator<IPlatform> GetEnumerator()
-    {
-        foreach (var pair in _collection)
-            yield return pair.Value;
-    }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    #endregion
-
     #region Initialize
 
     /// <summary>
@@ -117,121 +111,35 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #endregion
 
-    #region Analyze
+    // Interface
 
-    /// <inheritdoc cref="AnalyzeFile(string, PlatformSettings?)"
-    public static Container? AnalyzeFile(string path) => AnalyzeFile(path, new());
+    #region IEnumerable
 
-    /// <summary>
-    /// Analysis a single file and loads it.
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns>A pre-loaded <see cref="Container"/> if no incompatibilities.</returns>
-    public static Container? AnalyzeFile(string path, PlatformSettings? platformSettings)
+    public IEnumerator<IPlatform> GetEnumerator()
     {
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-            return null;
-
-        FileInfo? meta = null;
-        Platform? platform = null;
-
-        ReadOnlySpan<byte> bytes = File.ReadAllBytes(path);
-        var data = new FileInfo(path);
-        var directory = data.Directory!.FullName;
-        var fullPath = Path.GetFullPath(path);
-        int metaIndex, possibleIndex = metaIndex = Constants.OFFSET_INDEX;
-
-        // Convert header with different lengths.
-        var headerInteger = bytes.Cast<uint>(0);
-        var headerString0x08 = bytes[..0x08].GetString();
-        var headerString0x20 = bytes[..0x20].GetString();
-        var headerString0xA0 = bytes[..0xA0].GetString();
-
-        // Select a platform below to convert the file with, based on the content.
-        // All kinds of Playstation.
-        if (headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (headerInteger == Constants.SAVE_STREAMING_HEADER && headerString0xA0.Contains("PS4|Final")))
-        {
-            // Only for files in the save streaming format.
-            if (Directory.EnumerateFiles(directory, PlatformPlaystation.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
-            {
-                // TODO add platformSettings
-                platform = new PlatformPlaystation(headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER);
-                meta = new(path);
-                metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit)));
-                possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 11 or 31
-            }
-        }
-        // StartsWith for uncompressed saves and plaintext JSON.
-        else if (headerInteger == Constants.SAVE_STREAMING_HEADER || headerString0x20.StartsWith("{\"F2P\":") || headerString0x20.StartsWith("{\"Version\":"))
-        {
-            if (headerString0xA0.Contains("NX1|Final"))
-            {
-                platform = new PlatformSwitch(platformSettings);
-
-                // Try to get container index from file name if matches this regular expression: savedata\d{2}\.hg
-                if (Directory.EnumerateFiles(directory, PlatformSwitch.ANCHOR_FILE_PATTERN[1]).Any(fullPath.Equals))
-                {
-                    meta = new(Path.Combine(directory, data.Name.Replace("savedata", "manifest")));
-                    metaIndex = System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit)));
-                    possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 31
-                }
-            }
-            else
-            {
-                platform = new PlatformSteam(platformSettings);
-
-                // Try to get container index from file name if matches this regular expression: save\d{0,2}\.hg
-                if (Directory.EnumerateFiles(directory, PlatformSteam.ANCHOR_FILE_PATTERN[0]).Any(fullPath.Equals))
-                {
-                    var stringValue = string.Concat(Path.GetFileNameWithoutExtension(path).Where(char.IsDigit));
-
-                    meta = new(Path.Combine(directory, $"mf_{data.Name}"));
-                    metaIndex = string.IsNullOrEmpty(stringValue) ? Constants.OFFSET_INDEX : (System.Convert.ToInt32(stringValue) + 1); // metaIndex = 3 is save2.hg
-                    possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 31
-                }
-            }
-        }
-        else
-        {
-            platform = new PlatformMicrosoft(platformSettings);
-
-            metaIndex = Constants.OFFSET_INDEX;
-            possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 31
-        }
-
-        if (platform is null)
-            return null;
-
-        if (headerString0x20.StartsWith("{\"F2P\":4098,"))
-        {
-            metaIndex = 0;
-        }
-        else if (metaIndex > possibleIndex)
-        {
-            metaIndex = Constants.OFFSET_INDEX;
-        }
-
-        // Create container and load it before returning it.
-        var container = new Container(metaIndex, platform)
-        {
-            DataFile = data,
-            MetaFile = meta,
-        };
-        platform.Load(container);
-        return container;
+        foreach (var pair in _collection)
+            yield return pair.Value;
     }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    #endregion
+
+    // Analyze
+
+    #region Path
 
     /// <summary>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
-    /// Default settings are used.
+    /// <see cref="PlatformSettings"/> and <see cref="CollectionSettings"/> are used to populate undefined parameters.
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string? path) => AnalyzePath(path, null, CollectionSettings.PreferredPlatform);
+    public IPlatform? AnalyzePath(string? path) => AnalyzePath(path, PlatformSettings, CollectionSettings.PreferredPlatform);
 
     /// <summary>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
-    /// Default settings are used.
+    /// <see cref="PlatformSettings"/> are used to populate undefined parameters.
     /// </summary>
     /// <param name="path"></param>
     /// <param name="platformPreferred"></param>
@@ -240,6 +148,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     /// <summary>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
+    /// <see cref="CollectionSettings"/> are used to populate undefined parameters.
     /// </summary>
     /// <param name="path"></param>
     /// <param name="platformSettings"></param>
@@ -250,12 +159,12 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// Analyzes a path to get the <see cref="Platform"/> it contains.
     /// </summary>
     /// <param name="path"></param>
+    /// <param name="platformSettings">Settings for the platform.</param>
     /// <param name="platformPreferred">Platform that will be checked first.</param>
-    /// <param name="platformSettings">Settings for the platform found.</param>
     /// <returns></returns>
     public IPlatform? AnalyzePath(string? path, PlatformSettings? platformSettings, PlatformEnum? platformPreferred)
     {
-        if (!ValidatePath(path, out var directory))
+        if (!Analyze.ValidatePath(path, out _))
             return null;
 
         platformSettings ??= PlatformSettings;
@@ -269,32 +178,11 @@ public class PlatformCollection : IEnumerable<IPlatform>
             return platform;
         }
 
-        // First add the preferred platform and then everything else.
-        HashSet<PlatformEnum> platformSequence = platformPreferred is not null and not PlatformEnum.Unknown ? new() { platformPreferred.Value } : new();
+        var result = Analyze.AnalyzePath(path, platformSettings, platformPreferred);
+        if (result is not null)
+            _collection.TryAdd(path!, result);
 
-        foreach (var platformEnum in EnumExtensions.GetValues<PlatformEnum>())
-            platformSequence.Add(platformEnum);
-
-        foreach (var platformEnum in platformSequence)
-        {
-            IPlatform? result = platformEnum switch
-            {
-                PlatformEnum.Gog => new PlatformGog(directory!, platformSettings),
-                PlatformEnum.Microsoft => new PlatformMicrosoft(directory!, platformSettings),
-                PlatformEnum.Playstation => new PlatformPlaystation(directory!, platformSettings),
-                PlatformEnum.Steam => new PlatformSteam(directory!, platformSettings),
-                PlatformEnum.Switch => new PlatformSwitch(directory!, platformSettings),
-                _ => null,
-            };
-            if (result?.IsLoaded == true)
-            {
-                _collection.TryAdd(path!, result);
-                return result;
-            }
-        }
-
-        // Nothing found.
-        return null;
+        return result;
     }
 
     #endregion
@@ -328,41 +216,18 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    private static IEnumerable<DirectoryInfo> GetAccountsInPlatform<T>() where T : IPlatform
+    private static IEnumerable<DirectoryInfo> GetAccountsInPlatform<T>() where T : IPlatform => typeof(T) switch
     {
-        var typeofT = typeof(T);
-        return typeofT switch
-        {
-            _ when typeofT == typeof(PlatformGog) => GetAccountsInPath(PlatformGog.PATH, PlatformGog.ACCOUNT_PATTERN),
-            _ when typeofT == typeof(PlatformMicrosoft) => GetAccountsInPath(PlatformMicrosoft.PATH, PlatformMicrosoft.ACCOUNT_PATTERN),
-            _ when typeofT == typeof(PlatformSteam) => GetAccountsInPath(PlatformSteam.PATH, PlatformSteam.ACCOUNT_PATTERN),
-            _ => [],
-        };
-    }
+        var typeofT when typeofT == typeof(PlatformGog) => GetAccountsInPath(PlatformGog.PATH, PlatformGog.ACCOUNT_PATTERN),
+        var typeofT when typeofT == typeof(PlatformMicrosoft) => GetAccountsInPath(PlatformMicrosoft.PATH, PlatformMicrosoft.ACCOUNT_PATTERN),
+        var typeofT when typeofT == typeof(PlatformSteam) => GetAccountsInPath(PlatformSteam.PATH, PlatformSteam.ACCOUNT_PATTERN),
+        _ => [],
+    };
 
     /// <summary>
     /// Gets an enumerable of <see cref="DirectoryInfo"/> of all accounts in the specified path.
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    private static IEnumerable<DirectoryInfo> GetAccountsInPath(string path, string pattern)
-    {
-        return ValidatePath(path, out var directory) ? directory!.EnumerateDirectories(pattern) : [];
-    }
-
-    /// <summary>
-    /// Checks whether the specified path is valid.
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="directory"></param>
-    /// <returns></returns>
-    private static bool ValidatePath(string? path, out DirectoryInfo? directory)
-    {
-        directory = null;
-        if (string.IsNullOrWhiteSpace(path))
-            return false;
-
-        directory = new DirectoryInfo(path);
-        return directory.Exists;
-    }
+    private static IEnumerable<DirectoryInfo> GetAccountsInPath(string path, string pattern) => Analyze.ValidatePath(path, out var directory) ? directory!.EnumerateDirectories(pattern) : [];
 }

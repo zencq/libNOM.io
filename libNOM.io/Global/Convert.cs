@@ -46,7 +46,7 @@ public static class Convert
     public static void ToJson(string file, string? path, bool indented, bool deobfuscated)
     {
         // Method contains all relevant checks...
-        var container = PlatformCollection.AnalyzeFile(file);
+        var container = Analyze.AnalyzeFile(file);
 
         // ...so just throw an exception if container is null.
         if (container?.IsCompatible != true)
@@ -193,7 +193,7 @@ public static class Convert
         {
             try
             {
-                container = PlatformCollection.AnalyzeFile(input!);
+                container = Analyze.AnalyzeFile(input!);
             }
             catch (Exception ex) when (ex is OverflowException) { } // use fallback below
 
