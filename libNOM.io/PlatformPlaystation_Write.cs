@@ -145,34 +145,28 @@ public partial class PlatformPlaystation : Platform
     {
         var buffer = CreateMetaBuffer(container);
 
-        if (container.Exists)
-        {
-            var legacyOffset = container.IsAccount ? MEMORYDAT_OFFSET_DATA_ACCOUNTDATA : (uint)(MEMORYDAT_OFFSET_DATA_CONTAINER + (container.CollectionIndex * MEMORYDAT_LENGTH_CONTAINER));
-            var legacyLength = container.IsAccount ? MEMORYDAT_LENGTH_ACCOUNTDATA : MEMORYDAT_LENGTH_CONTAINER;
+        using (var writer = new BinaryWriter(new MemoryStream(buffer)))
+            if (container.Exists)
+            {
+                writer.Write(META_HEADER); // 4
+                writer.Write(Constants.META_FORMAT_2); // 4
+                writer.Write(container.Extra.SizeDisk); // 4
+                writer.Write(container.IsAccount ? MEMORYDAT_OFFSET_DATA_ACCOUNTDATA : (uint)(MEMORYDAT_OFFSET_DATA_CONTAINER + (container.CollectionIndex * MEMORYDAT_LENGTH_CONTAINER))); // 4 // offset
+                writer.Write(container.IsAccount ? MEMORYDAT_LENGTH_ACCOUNTDATA : MEMORYDAT_LENGTH_CONTAINER); // 4 // length
+                writer.Write(container.MetaIndex); // 4
+                writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
+                writer.Write(container.Extra.SizeDecompressed); // 4
 
-            using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-            writer.Write(META_HEADER); // 4
-            writer.Write(Constants.META_FORMAT_2); // 4
-            writer.Write(container.Extra.SizeDisk); // 4
-            writer.Write(legacyOffset); // 4
-            writer.Write(legacyLength); // 4
-            writer.Write(container.MetaIndex); // 4
-            writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
-            writer.Write(container.Extra.SizeDecompressed); // 4
-
-            if (_usesSaveWizard)
-                AppendLegacyWizardMeta(writer, container);
-        }
-        else
-        {
-            using var writer = new BinaryWriter(new MemoryStream(buffer));
-
-            writer.Write(META_HEADER); // 4
-            writer.Write(Constants.META_FORMAT_2); // 4
-            writer.Seek(0xC, SeekOrigin.Current); // skip empty
-            writer.Write(uint.MaxValue); // 4
-        }
+                if (_usesSaveWizard)
+                    AppendLegacyWizardMeta(writer, container);
+            }
+            else
+            {
+                writer.Write(META_HEADER); // 4
+                writer.Write(Constants.META_FORMAT_2); // 4
+                writer.Seek(0xC, SeekOrigin.Current); // skip empty
+                writer.Write(uint.MaxValue); // 4
+            }
 
         return buffer;
     }
