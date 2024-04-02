@@ -70,15 +70,15 @@ jobs:
       - name: Pack
         run: dotnet pack libNOM.io --configuration Release
       - name: Publish
-        run: dotnet publish libNOM.cli --configuration Release
+        run: dotnet publish libNOM.cli --configuration Release --framework net8.0
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: NuGet
+          name: Build
           path: |
             ./.github/changelogs/
+            ./libNOM.cli/bin/Release/publish/libNOM.io.cli.*
             ./libNOM.io/bin/Release/libNOM.io.*nupkg
-            ./libNOM.cli/bin/Release/puhlish/libNOM.io.exe
           if-no-files-found: error
   release:
     name: Release
@@ -90,7 +90,7 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v4
         with:
-          name: NuGet
+          name: Build
       - name: Version
         run: echo "nupkg_version=$((((Get-Item -Path ./libNOM.io/bin/Release/libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
         shell: pwsh
@@ -104,6 +104,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body_path: ./.github/changelogs/${{ github.ref_name }}.md
-          files: ./libNOM.io/bin/Release/libNOM.io.*nupkg
+          files: |
+            ./libNOM.cli/bin/Release/publish/libNOM.io.cli.*
+            ./libNOM.io/bin/Release/libNOM.io.*nupkg
       - name: Publish
         run: dotnet nuget push ./libNOM.io/bin/Release/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}

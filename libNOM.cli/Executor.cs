@@ -17,7 +17,7 @@ public partial class Executor
 
     #region Property
 
-    [HelpHook, ArgShortcut("-?"), ArgDescription("Shows this help. Please not that all file operations are executed without any further questions or checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only swap one with one from another slot).")]
+    [HelpHook, ArgShortcut("-?"), ArgDescription("Shows this help. Please not that all file operations are executed without any further questions or checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only do one with one from another slot).")]
     public bool Help { get; set; }
 
     #endregion
@@ -183,6 +183,8 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Create a backup of all specified saves. No old backups will be deleted in this process."),
+        ArgExample("-Input <path-to-save-location> -Indices 0 29", "Backup the saves Slot1Auto and Slot15Manual."), // directory
+        ArgExample("-Input <path-to-save-location>/save.hg", "Backup the save Slot1Auto."), // file
     ]
     public static void Backup(BackupArgs args)
     {
@@ -237,7 +239,9 @@ public partial class Executor
 
     [
         ArgActionMethod,
-        ArgDescription("Restores the specified backup."),
+        ArgDescription("Restore the specified backup."),
+        ArgExample("-Backup <path-to-backup-location>/backup.steam.02.20240402162157827.440.zip -Platform <path-to-save-location> -Index 5", "Restore to Slot3Manual."), // with index
+        ArgExample("-Backup <path-to-backup-location>/backup.steam.02.20240402162157827.440.zip -Platform <path-to-save-location>", "Restore to Slot1Auto."), // without index
     ]
     public static void Restore(RestoreArgs args)
     {
@@ -264,6 +268,8 @@ public partial class Executor
 
     #endregion
 
+    #region Convert
+
     [
         ArgActionMethod,
         ArgDescription("Adds the two operands"),
@@ -272,17 +278,68 @@ public partial class Executor
     {
     }
 
+    #endregion
+
+    #region Copy, Swap, Move
+
     [
         ArgActionMethod,
         ArgDescription("Copies the specified saves."),
         ArgExample("-s 1 2 -d 3 4", "Desc1"),
         ArgExample("-s 5 -d 6", "Desc2"),
     ]
-    public void Copy(FileOperationTwoOperandArgs args)
+    public static void Copy(FileOperationTwoOperandArgs args)
     {
-        if (!GuardArgsLength(args))
-            return;
+        PreprocessFileOperation(args, out var platform, out var data);
+        platform?.Copy(data);
     }
+
+    [
+        ArgActionMethod,
+        ArgDescription("Swap any two save files. They will be swapped without any further questions or additional checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only swap one with one from another slot)."),
+        ArgExample("--platform <path-to-steam> --source 1 2 --destination 3 4", "Swap 1 with 3 and 2 with 4 on Steam."),
+    ]
+    public static void Swap(FileOperationTwoOperandArgs args)
+    {
+        PreprocessFileOperation(args, out var platform, out var data);
+        platform?.Swap(data);
+    }
+
+    [
+        ArgActionMethod,
+        ArgDescription("Adds the two operands"),
+    ]
+    public static void Move(FileOperationTwoOperandArgs args)
+    {
+        PreprocessFileOperation(args, out var platform, out var data);
+        platform?.Move(data);
+    }
+
+    private static void PreprocessFileOperation(FileOperationTwoOperandArgs args, out IPlatform? platform, out IEnumerable<(Container Source, Container Destination)> operationData)
+    {
+        if (GuardArgsLength(args))
+        {
+            var collection = new PlatformCollection(args.Platform.FullName, GetCollectionSettings());
+
+            platform = collection.FirstOrDefault();
+            if (platform is not null)
+            {
+                var source = platform.GetSaveContainers().Where(i => args.Source.Contains(i.CollectionIndex));
+                var destination = platform.GetSaveContainers().Where(i => args.Destination.Contains(i.CollectionIndex));
+
+                operationData = source.Zip(destination);
+                return; // exit here, as all of the following is intended for unsuccessful cases
+            }
+
+            WriteLine("No valid platform found.", 1);
+        }
+        platform = null;
+        operationData = [];
+    }
+
+    #endregion
+
+    #region Delete
 
     //[
     //    ArgActionMethod,
@@ -293,50 +350,5 @@ public partial class Executor
     //    Console.WriteLine("Delete");
     //}
 
-    [
-        ArgActionMethod,
-        ArgDescription("Swap any two save files. They will be swapped without any further questions or additional checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only swap one with one from another slot)."),
-        ArgExample("--platform <path-to-steam> --source 1 2 --destination 3 4", "Swap 1 with 3 and 2 with 4 on Steam."),
-    ]
-    public void Swap(FileOperationTwoOperandArgs args)
-    {
-        if (!GuardArgsLength(args))
-            return;
-
-        var collection = new PlatformCollection(args.Platform.FullName, GetCollectionSettings());
-        var platform = collection.FirstOrDefault();
-        if (platform is null)
-        {
-            WriteLine("No valid platform found.", 1);
-            return;
-        }
-
-        var source = platform.GetSaveContainers().Where(i => args.Source.Contains(i.CollectionIndex));
-        var destination = platform.GetSaveContainers().Where(i => args.Destination.Contains(i.CollectionIndex));
-
-        platform.Swap(source.Zip(destination));
-    }
-
-    [
-        ArgActionMethod,
-        ArgDescription("Adds the two operands"),
-    ]
-    public void Move(FileOperationTwoOperandArgs args)
-    {
-        if (!GuardArgsLength(args))
-            return;
-
-        var collection = new PlatformCollection(args.Platform.FullName, GetCollectionSettings());
-        var platform = collection.FirstOrDefault();
-        if (platform is null)
-        {
-            WriteLine("No valid platform found.", 1);
-            return;
-        }
-
-        var source = platform.GetSaveContainers().Where(i => args.Source.Contains(i.CollectionIndex));
-        var destination = platform.GetSaveContainers().Where(i => args.Destination.Contains(i.CollectionIndex));
-
-        platform.Move(source.Zip(destination));
-    }
+    #endregion
 }
