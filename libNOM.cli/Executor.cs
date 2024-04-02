@@ -41,14 +41,40 @@ public partial class Executor
 
     #region Helper
 
-    private static bool GuardArgsLength(FileOperationTwoOperandArgs args)
+    private static bool GetPlatformFromDirectory(DirectoryInfo directory, out IPlatform? platform)
     {
-        if (args.Source.Length != args.Destination.Length)
+        var collection = new PlatformCollection(directory.FullName, GetCollectionSettings());
+
+        platform = collection.FirstOrDefault();
+        if (platform is null)
         {
-            WriteLine("You must specify the same number of saves for Source and Destination to perform this file operation.");
+            WriteLine("No valid platform found.", 1);
             return false;
         }
         return true;
+    }
+
+    private static bool GuardArgsLength(FileOperationSourceDestinationArgs args)
+    {
+        if (args.Source.Length != args.Destination.Length)
+        {
+            WriteLine("You must specify the same number of saves for Source and Destination to perform this file operation.", 1);
+            return false;
+        }
+        return true;
+    }
+
+    private static void PreprocessFileOperation(FileOperationSourceDestinationArgs args, out IPlatform? platform, out IEnumerable<(Container Source, Container Destination)> operationData)
+    {
+        if (GetPlatformFromDirectory(args.Platform, out platform) && GuardArgsLength(args)) // GatherPlatformFromCollection first to ensure platform is set
+        {
+            var source = platform!.GetSaveContainers().Where(i => args.Source.Contains(i.CollectionIndex));
+            var destination = platform.GetSaveContainers().Where(i => args.Destination.Contains(i.CollectionIndex));
+
+            operationData = source.Zip(destination);
+        }
+        else
+            operationData = [];
     }
 
     private static void WriteLine(string message) => WriteLine(message, 0);
@@ -183,8 +209,8 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Create a backup of all specified saves. No old backups will be deleted in this process."),
-        ArgExample("-Input <path-to-save-location> -Indices 0 29", "Backup the saves Slot1Auto and Slot15Manual."), // directory
-        ArgExample("-Input <path-to-save-location>/save.hg", "Backup the save Slot1Auto."), // file
+        ArgExample("-Input <path-to-save-location> -Indices 0 29", "Backup Slot1Auto and Slot15Manual."), // directory
+        ArgExample("-Input <path-to-save-location>/save.hg", "Backup Slot1Auto."), // file
     ]
     public static void Backup(BackupArgs args)
     {
@@ -280,15 +306,14 @@ public partial class Executor
 
     #endregion
 
-    #region Copy, Swap, Move
+    #region File Operation
 
     [
         ArgActionMethod,
-        ArgDescription("Copies the specified saves."),
-        ArgExample("-s 1 2 -d 3 4", "Desc1"),
-        ArgExample("-s 5 -d 6", "Desc2"),
+        ArgDescription("Copy any save files."),
+        ArgExample("--Platform <path-to-save-location> --Source 1 2 --Destination 3 4", "Copy Slot1Manual to Slot2Manual and Slot2Auto to Slot3Auto."),
     ]
-    public static void Copy(FileOperationTwoOperandArgs args)
+    public static void Copy(FileOperationSourceDestinationArgs args)
     {
         PreprocessFileOperation(args, out var platform, out var data);
         platform?.Copy(data);
@@ -296,10 +321,24 @@ public partial class Executor
 
     [
         ArgActionMethod,
-        ArgDescription("Swap any two save files. They will be swapped without any further questions or additional checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only swap one with one from another slot)."),
-        ArgExample("--platform <path-to-steam> --source 1 2 --destination 3 4", "Swap 1 with 3 and 2 with 4 on Steam."),
+        ArgDescription("Delete any save files."),
+        ArgExample("--Platform <path-to-save-location> --Indices 0 29", "Delete Slot1Auto and Slot15Manual."),
     ]
-    public static void Swap(FileOperationTwoOperandArgs args)
+    public static void Delete(FileOperationPlatformIndicesArgs args)
+    {
+        if (GetPlatformFromDirectory(args.Platform, out var platform))
+        {
+            var containers = platform!.GetSaveContainers().Where(i => args.Indices.Contains(i.CollectionIndex));
+            platform!.Delete(containers);
+        }
+    }
+
+    [
+        ArgActionMethod,
+        ArgDescription("Swap any save files."),
+        ArgExample("--Platform <path-to-save-location> --Source 1 2 --Destination 3 4", "Swap Slot1Manual with Slot2Manual and Slot2Auto with Slot3Auto."),
+    ]
+    public static void Swap(FileOperationSourceDestinationArgs args)
     {
         PreprocessFileOperation(args, out var platform, out var data);
         platform?.Swap(data);
@@ -307,48 +346,14 @@ public partial class Executor
 
     [
         ArgActionMethod,
-        ArgDescription("Adds the two operands"),
+        ArgDescription("Move any save files."),
+        ArgExample("--Platform <path-to-save-location> --Source 1 2 --Destination 3 4", "Move Slot1Manual to Slot2Manual and Slot2Auto to Slot3Auto."),
     ]
-    public static void Move(FileOperationTwoOperandArgs args)
+    public static void Move(FileOperationSourceDestinationArgs args)
     {
         PreprocessFileOperation(args, out var platform, out var data);
         platform?.Move(data);
     }
-
-    private static void PreprocessFileOperation(FileOperationTwoOperandArgs args, out IPlatform? platform, out IEnumerable<(Container Source, Container Destination)> operationData)
-    {
-        if (GuardArgsLength(args))
-        {
-            var collection = new PlatformCollection(args.Platform.FullName, GetCollectionSettings());
-
-            platform = collection.FirstOrDefault();
-            if (platform is not null)
-            {
-                var source = platform.GetSaveContainers().Where(i => args.Source.Contains(i.CollectionIndex));
-                var destination = platform.GetSaveContainers().Where(i => args.Destination.Contains(i.CollectionIndex));
-
-                operationData = source.Zip(destination);
-                return; // exit here, as all of the following is intended for unsuccessful cases
-            }
-
-            WriteLine("No valid platform found.", 1);
-        }
-        platform = null;
-        operationData = [];
-    }
-
-    #endregion
-
-    #region Delete
-
-    //[
-    //    ArgActionMethod,
-    //    ArgDescription("Adds the two operands"),
-    //]
-    //public void Delete(FileOperationOneOperandArgs args)
-    //{
-    //    Console.WriteLine("Delete");
-    //}
 
     #endregion
 }

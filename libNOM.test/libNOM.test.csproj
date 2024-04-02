@@ -28,6 +28,7 @@
 		<LangVersion>12.0</LangVersion>
 		<Deterministic>True</Deterministic>
 	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 		<IsPublishable>False</IsPublishable>
@@ -60,9 +61,6 @@
 
 	<!-- Dependencies -->
 	<ItemGroup>
-		<ProjectReference Include="..\libNOM.io\libNOM.io.csproj" />
-	</ItemGroup>
-	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
 		<PackageReference Include="MSTest.TestAdapter" Version="3.2.2" />
 		<PackageReference Include="MSTest.TestFramework" Version="3.2.2" />
@@ -71,6 +69,10 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="SharpCompress" Version="0.36.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\libNOM.io\libNOM.io.csproj" />
 	</ItemGroup>
 
 	<!-- Resources -->

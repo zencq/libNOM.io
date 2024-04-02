@@ -23,6 +23,7 @@
 	<PropertyGroup Label="Advanced">
 		<LangVersion>12.0</LangVersion>
 	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
 		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 	</PropertyGroup>

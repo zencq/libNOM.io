@@ -333,7 +333,7 @@ public abstract class CommonTestClass
     protected static void TestCommonAnalyzeFile(string path, ReadResults results, PlatformEnum platformResult)
     {
         // Act
-        var container = PlatformCollection.AnalyzeFile(path)!;
+        var container = libNOM.io.Global.Analyze.AnalyzeFile(path)!;
         var priject = new PrivateObject(container);
 
         // Assert
