@@ -49,7 +49,11 @@ jobs:
         run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }}
   build:
     name: Build
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        framwork: [net8.0]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -70,17 +74,14 @@ jobs:
       - name: Pack
         run: dotnet pack libNOM.io --configuration Release
       - name: Publish
-        run: dotnet publish libNOM.cli --configuration Release --framework net8.0
-      - name: Show Directory
-        run: dir -r ./libNOM.cli/bin/ | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
-        shell: pwsh
+        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }}
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: Build
           path: |
             ./.github/changelogs/
-            ./libNOM.cli/bin/Release/publish/libNOM.io.cli.*
+            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/linux-x64/publish/libNOM.io.cli
             ./libNOM.io/bin/Release/libNOM.io.*nupkg
           if-no-files-found: error
   release:
