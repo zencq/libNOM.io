@@ -49,9 +49,11 @@ jobs:
         run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }}
   build:
     name: Build
-    env:
-      FRAMEWORK: net8.0
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        framwork: [net8.0]
+        os: [{name: 'windows', runtime: 'win-x64'}, {name: 'macos', runtime: 'osx-x64'}, {name: 'ubuntu', runtime: 'linux-x64'}]
+    runs-on: ${{ matrix.os.name }}-latest
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -71,18 +73,22 @@ jobs:
         shell: pwsh
       - name: Pack
         run: dotnet pack libNOM.io --configuration Release
+        if: ${{ matrix.os.name == 'ubuntu' }} # only once
       - name: Publish
-        run: dotnet publish libNOM.cli --configuration Release --framework ${{ env.FRAMEWORK }}
-      - name: Show Publish Result
-        run: dir -r ./libNOM.cli/bin/Release/${{ env.FRAMEWORK }} | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
+        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime ${{ matrix.os.runtime }}
+      - name: Publish (Apple Silicon)
+        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime osx-arm64
+        if: ${{ matrix.os.name == 'macos' }} # do this as well to do both native
+      - name: Show Result
+        run: dir -r ./libNOM.cli/bin/Release/${{ matrix.framwork }} | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
         shell: pwsh
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: Build
+          name: Build (${{ matrix.os.runtime }})
           path: |
             ./.github/changelogs/
-            ./libNOM.cli/bin/Release/${{ env.FRAMEWORK }}/linux-x64/publish/libNOM.io.cli*
+            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli*
             ./libNOM.io/bin/Release/libNOM.io.*nupkg
           if-no-files-found: error
   release:
