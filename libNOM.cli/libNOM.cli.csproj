@@ -22,7 +22,6 @@
 	<PropertyGroup Label="Publish">
 		<!-- warning IL2104: Assembly 'PowerArgs' produced trim warnings -->
 		<!-- warning IL3053: Assembly 'PowerArgs' produced AOT analysis warnings -->
-		<PublishTrimmed>False</PublishTrimmed>
 		<PublishAot>False</PublishAot>
 		<PublishSingleFile>True</PublishSingleFile>
 	</PropertyGroup>
