@@ -22,6 +22,7 @@
 	<PropertyGroup Label="Publish">
 		<PublishTrimmed>True</PublishTrimmed>
 		<PublishAot>True</PublishAot>
+		<PublishSingleFile>true</PublishSingleFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
