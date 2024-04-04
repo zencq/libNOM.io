@@ -20,8 +20,8 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<PropertyGroup Label="Publish">
-		<PublishTrimmed>True</PublishTrimmed>
-		<PublishSingleFile>true</PublishSingleFile>
+		<PublishTrimmed>False</PublishTrimmed> <!-- error IL2104: Assembly 'PowerArgs' produced trim warnings -->
+		<PublishSingleFile>True</PublishSingleFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
@@ -48,10 +48,11 @@
 
 	<!-- Dependencies -->
 	<ItemGroup>
-		<ProjectReference Include="..\libNOM.io\libNOM.io.csproj" />
-	</ItemGroup>
-	<ItemGroup>
 		<PackageReference Include="PowerArgs" Version="4.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\libNOM.io\libNOM.io.csproj" />
 	</ItemGroup>
 
 </Project>
