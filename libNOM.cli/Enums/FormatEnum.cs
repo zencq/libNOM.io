@@ -4,8 +4,7 @@ namespace libNOM.cli.Enums;
 
 
 /// <summary>
-/// Specifies the different types of storage persistence used for meta/manifest encryption.
-/// Original found in NMS.exe as enum cTkStoragePersistent::Slot.
+/// Specifies the different formats a save can be converted into.
 /// </summary>
 public enum FormatEnum
 {

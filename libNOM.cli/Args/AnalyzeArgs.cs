@@ -1,6 +1,4 @@
-﻿using libNOM.cli.Enums;
-
-namespace libNOM.cli.Args;
+﻿namespace libNOM.cli.Args;
 
 
 public class AnalyzeArgs
