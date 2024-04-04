@@ -21,7 +21,6 @@
 	</PropertyGroup>
 	<PropertyGroup Label="Publish">
 		<PublishTrimmed>True</PublishTrimmed>
-		<PublishAot>True</PublishAot>
 		<PublishSingleFile>true</PublishSingleFile>
 	</PropertyGroup>
 
