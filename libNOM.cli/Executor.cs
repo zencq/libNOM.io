@@ -17,7 +17,7 @@ public partial class Executor
 
     #region Property
 
-    [HelpHook, ArgShortcut("-?"), ArgDescription("Shows this help. Please not that all file operations are executed without any further questions or checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only do one with one from another slot).")]
+    [HelpHook, ArgDescription("Shows this help. Please not that all file operations are executed without any further questions or checks (e.g. you can end up with two completely different saves in one slot if you have auto and manual but only do one with one from another slot).")]
     public bool Help { get; set; }
 
     #endregion
@@ -300,8 +300,15 @@ public partial class Executor
         ArgActionMethod,
         ArgDescription("Adds the two operands"),
     ]
-    public void Convert(ConvertArgs args)
+    public static void Convert(ConvertArgs args)
     {
+        if (args.Format == Enums.FormatEnum.Json)
+            io.Global.Convert.ToJson(args.Input.FullName, args.Output!.FullName, args.JsonIndented, args.JsonDeobfuscated);
+        else
+        {
+            var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());
+            io.Global.Convert.ToSaveFile(args.Input.FullName, platform, args.Output!.FullName);
+        }
     }
 
     #endregion
