@@ -20,7 +20,11 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<PropertyGroup Label="Publish">
-		<PublishAot>True</PublishAot>
+		<!-- warning IL2104: Assembly 'PowerArgs' produced trim warnings -->
+		<!-- warning IL3053: Assembly 'PowerArgs' produced AOT analysis warnings -->
+		<PublishTrimmed>False</PublishTrimmed>
+		<PublishAot>False</PublishAot>
+		<PublishSingleFile>True</PublishSingleFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
