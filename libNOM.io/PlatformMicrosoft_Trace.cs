@@ -39,7 +39,7 @@ public partial class PlatformMicrosoft : Platform
         };
 
         // Container
-        foreach (var container in SaveContainerCollection)
+        foreach (var container in SaveContainerCollection.Where(i => i.IsCompatible))
         {
             var identifier1 = reader.ReadBytes(reader.ReadInt32() * 2).AsSpan().Cast<byte, char>().ToString();
             var identifier2 = reader.ReadBytes(reader.ReadInt32() * 2).AsSpan().Cast<byte, char>().ToString();

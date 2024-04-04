@@ -153,7 +153,9 @@ public static class Convert
         // Set new files the converted content will be written to.
         container.DataFile = new FileInfo(Path.Combine(path, $"{name}.data"));
         container.MetaFile = new FileInfo(Path.Combine(path, $"{name}.meta"));
+
         container.Exists = true; // fake it be able to create the data
+        container.Extra = container.Extra with { MetaLength = 0 }; // reset to get the length of the target platform
         container.IsSynced = true;
         container.Platform = platform; // to get the right sizes
 
@@ -193,7 +195,7 @@ public static class Convert
         {
             try
             {
-                container = Analyze.AnalyzeFile(input!);
+                container = Analyze.AnalyzeFile(input!, platform.Settings);
             }
             catch (Exception ex) when (ex is OverflowException) { } // use fallback below
 

@@ -24,7 +24,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         };
 
         // Container
-        foreach (var container in SaveContainerCollection)
+        foreach (var container in SaveContainerCollection.Where(i => i.IsCompatible))
             container.Trace = new()
             {
                 BaseVersion = container.Extra.BaseVersion,
