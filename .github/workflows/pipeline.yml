@@ -71,6 +71,9 @@ jobs:
         run: dotnet pack libNOM.io --configuration Release
       - name: Publish
         run: dotnet publish libNOM.cli --configuration Release --framework net8.0
+      - name: Show Directory
+        run: dir -r ./libNOM.cli/bin/ | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
+        shell: pwsh
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -105,7 +108,7 @@ jobs:
         with:
           body_path: ./.github/changelogs/${{ github.ref_name }}.md
           files: |
-            ./libNOM.cli/bin/Release/publish/libNOM.io.cli.*
+            ./libNOM.cli/bin/Release/publish/libNOM.io.cli*
             ./libNOM.io/bin/Release/libNOM.io.*nupkg
       - name: Publish
         run: dotnet nuget push ./libNOM.io/bin/Release/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}

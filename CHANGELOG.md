@@ -8,13 +8,17 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
-* CLI to do file operations, convert single files and analyze single files or whole directories
+* CLI
+  * Analyze single files or whole directories and print information about it
+  * Convert between JSON and actual save formats
+  * Perform file operations
 * `PlatformCollectionSettings` to configure `PlatformCollection`
 * Support for game version **Orbital 4.60**
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is now unlimited and not unintentionally disabling the backup feature
 * `Container.ThrowHelperIsLoaded` now shows incompatibility if any
 * Replace preferred platform in constructors of `PlatformCollection` with new `PlatformCollectionSettings`
+* Moved `Settings` to its own namespace
 ### Deprecated
 ### Removed
 ### Fixed
