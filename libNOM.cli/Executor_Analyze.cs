@@ -1,7 +1,5 @@
 ﻿using libNOM.cli.Args;
 using libNOM.io;
-using libNOM.io.Interfaces;
-using libNOM.io.Settings;
 
 namespace libNOM.cli;
 
@@ -39,23 +37,28 @@ public partial class Executor
         WriteLine(info.Name, indentionLevel);
 
         var container = io.Global.Analyze.AnalyzeFile(info.FullName);
-
-        PrintContainerInformation(container, indentionLevel + 1);
+        if (container is null)
+            WriteLine("Analysis failed.", indentionLevel + 1);
+        else
+        {
+            PrintContainerInformationGeneral(container, indentionLevel + 1);
+            PrintContainerInformationFlags(container, indentionLevel + 1);
+            PrintContainerInformationFile(container, indentionLevel + 1);
+            PrintContainerInformationManifest(container, indentionLevel + 1);
+            PrintContainerInformationTrace(container, indentionLevel + 1);
+        }
     }
 
-    private static void PrintContainerInformation(Container? container, int indentionLevel)
+    private static void PrintContainerInformationGeneral(Container container, int indentionLevel)
     {
-        if (container is null)
-        {
-            WriteLine("Analysis failed.", indentionLevel);
-            return;
-        }
-
         WriteLine($"Backups: {container.BackupCollection.Count}", indentionLevel);
         WriteLine($"Identifier: {container.Identifier}", indentionLevel);
         WriteLine($"Incompatibility: {container.IncompatibilityException?.Message ?? container.IncompatibilityTag}", indentionLevel);
         WriteLine($"UnknownKeys: {string.Join(", ", container.UnknownKeys)}", indentionLevel);
+    }
 
+    private static void PrintContainerInformationFlags(Container container, int indentionLevel)
+    {
         WriteLine($"CanSwitchContext: {container.CanSwitchContext}", indentionLevel);
         WriteLine($"HasActiveExpedition: {container.HasActiveExpedition}", indentionLevel);
         WriteLine($"HasBase: {container.HasBase}", indentionLevel); // count of base / base parts
@@ -68,11 +71,17 @@ public partial class Executor
         WriteLine($"IsOld: {container.IsOld}", indentionLevel);
         WriteLine($"IsSave: {container.IsSave}", indentionLevel);
         WriteLine($"IsSynced: {container.IsSynced}", indentionLevel);
+    }
 
+    private static void PrintContainerInformationFile(Container container, int indentionLevel)
+    {
         WriteLine($"DataFile: {container.DataFile?.Length}", indentionLevel);
         WriteLine($"LastWriteTime: {container.LastWriteTime}", indentionLevel);
         WriteLine($"MetaFile: {container.MetaFile?.Length}", indentionLevel);
+    }
 
+    private static void PrintContainerInformationManifest(Container container, int indentionLevel)
+    {
         WriteLine($"ActiveContext: {container.ActiveContext}", indentionLevel);
         WriteLine($"Difficulty: {container.Difficulty}", indentionLevel);
         WriteLine($"GameVersion: {container.GameVersion}", indentionLevel);
@@ -81,7 +90,10 @@ public partial class Executor
         WriteLine($"SaveType: {container.SaveType}", indentionLevel);
         WriteLine($"Season: {container.Season}", indentionLevel);
         WriteLine($"TotalPlayTime: {container.TotalPlayTime}", indentionLevel);
+    }
 
+    private static void PrintContainerInformationTrace(Container container, int indentionLevel)
+    {
         //WriteLine($"Extra.: {container.Extra.}", indentionLevel);
 
         //WriteLine($"UserIdentification.: {container.UserIdentification.}", indentionLevel);
@@ -93,11 +105,6 @@ public partial class Executor
         //WriteLine($"SaveVersion: {container.SaveVersion}", indentionLevel);
         //WriteLine($"PersistentStorageSlot: {container.PersistentStorageSlot}", indentionLevel);
         //WriteLine($"Platform: {container.Platform}", indentionLevel);
-
-
-
-
-
     }
 
     private static void AnalyzeDirectory(DirectoryInfo info, int indentionLevel)
@@ -112,7 +119,6 @@ public partial class Executor
             return;
         }
 
+        // TODO: Print Information
     }
-
-
 }

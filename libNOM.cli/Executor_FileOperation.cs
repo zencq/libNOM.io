@@ -54,7 +54,7 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Copy any save files."),
-        ArgExample("--Platform <path-to-save-location> --Source 1 2 --Destination 3 4", "Copy Slot1Manual to Slot2Manual and Slot2Auto to Slot3Auto."),
+        ArgExample("--Platform <path-to-save-location-a> --Source 1 2 --Destination 3 4", "Copy Slot1Manual to Slot2Manual and Slot2Auto to Slot3Auto."),
     ]
     public static void Copy(FileOperationSourceDestinationArgs args)
     {
@@ -65,7 +65,7 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Delete any save files."),
-        ArgExample("--Platform <path-to-save-location> --Indices 0 29", "Delete Slot1Auto and Slot15Manual."),
+        ArgExample("--Platform <path-to-save-location-b> --Indices 0 29", "Delete Slot1Auto and Slot15Manual."),
     ]
     public static void Delete(FileOperationPlatformIndicesArgs args)
     {
@@ -79,7 +79,7 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Swap any save files."),
-        ArgExample("--Platform <path-to-save-location> --Source 1 2 --Destination 3 4", "Swap Slot1Manual with Slot2Manual and Slot2Auto with Slot3Auto."),
+        ArgExample("--Platform <path-to-save-location-c> --Source 3 4 --Destination 5 6", "Swap Slot2Manual with Slot3Manual and Slot3Auto with Slot4Auto."),
     ]
     public static void Swap(FileOperationSourceDestinationArgs args)
     {
@@ -90,7 +90,7 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Move any save files."),
-        ArgExample("--Platform <path-to-save-location> --Source 1 2 --Destination 3 4", "Move Slot1Manual to Slot2Manual and Slot2Auto to Slot3Auto."),
+        ArgExample("--Platform <path-to-save-location-d> --Source 5 6 --Destination 7 8", "Move Slot3Manual to Slot4Manual and Slot4Auto to Slot5Auto."),
     ]
     public static void Move(FileOperationSourceDestinationArgs args)
     {
