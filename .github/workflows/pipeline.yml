@@ -110,14 +110,16 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v4
       - name: Show Result
-        run: dir -r . | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
+        run: |
+          pwd
+          dir -r pwd | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
         shell: pwsh
       - name: Rename
         run: |
-          mv "./libNOM.io/libNOM.io/Build (macos)/osx-arm64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-arm64
-          mv "./libNOM.io/libNOM.io/Build (macos)/osx-x64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-x64
-          mv "./libNOM.io/libNOM.io/Build (ubuntu)/linux-x64/publish/libNOM.io.cli" ./libNOM.io.cli.linux-x64
-          mv "./libNOM.io/libNOM.io/Build (windows)/win-x64/publish/libNOM.io.cli.exe" ./libNOM.io.cli.win-x64.exe
+          mv "./Build (macos)/osx-arm64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-arm64
+          mv "./Build (macos)/osx-x64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-x64
+          mv "./Build (ubuntu)/linux-x64/publish/libNOM.io.cli" ./libNOM.io.cli.linux-x64
+          mv "./Build (windows)/win-x64/publish/libNOM.io.cli.exe" ./libNOM.io.cli.win-x64.exe
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -138,16 +140,16 @@ jobs:
           exit 1
       - name: Rename
         run: |
-          mv "./libNOM.io/libNOM.io/Build (macos)/osx-arm64/publish/libNOM.io.cli" ./libNOM.io.cli-macos-arm64
-          mv "./libNOM.io/libNOM.io/Build (macos)/osx-x64/publish/libNOM.io.cli" ./libNOM.io.cli-macos-x64
-          mv "./libNOM.io/libNOM.io/Build (ubuntu)/linux-x64/publish/libNOM.io.cli" ./libNOM.io.cli-linux-x64
-          mv "./libNOM.io/libNOM.io/Build (windows)/win-x64/publish/libNOM.io.cli.exe" ./libNOM.io.cli-win-x64.exe
+          mv "./Build (macos)/osx-arm64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-arm64
+          mv "./Build (macos)/osx-x64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-x64
+          mv "./Build (ubuntu)/linux-x64/publish/libNOM.io.cli" ./libNOM.io.cli.linux-x64
+          mv "./Build (windows)/win-x64/publish/libNOM.io.cli.exe" ./libNOM.io.cli.win-x64.exe
       - name: Create
         uses: softprops/action-gh-release@v2
         with:
           body_path: ./libNOM.io/libNOM.io/Release/${{ github.ref_name }}.md
           files: |
             ./libNOM.io.cli*
-            ./libNOM.io/libNOM.io/NuGet/libNOM.io.*nupkg
+            ./NuGet/libNOM.io.*nupkg
       - name: Publish
         run: dotnet nuget push ./libNOM.io/bin/Release/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
