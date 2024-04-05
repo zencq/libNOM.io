@@ -72,43 +72,37 @@ jobs:
         run: Get-ChildItem "./libNOM.io/Properties/" -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.STEAM_API_KEY }}","${{ secrets.STEAM_API_KEY }}" | Set-Content $_.FullName }
         shell: pwsh
       - name: Pack
+        if: ${{ matrix.os.name == 'macos' }} # only once
         run: dotnet pack libNOM.io --configuration Release
-        if: ${{ matrix.os.name == 'ubuntu' }} # only once
       - name: Publish
         run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime ${{ matrix.os.runtime }}
       - name: Publish (Apple Silicon)
-        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime osx-arm64
         if: ${{ matrix.os.name == 'macos' }} # do this as well to do both native
-      - name: Show Result
-        run: dir -r ./libNOM.cli/bin/Release/${{ matrix.framwork }} | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
-        shell: pwsh
-      - name: Upload
+        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime osx-arm64
+      - name: Upload (Release)
+        # if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once if tagged
+        if: ${{ matrix.os.name == 'macos' }} # only once if tagged
         uses: actions/upload-artifact@v4
         with:
-          name: Build (${{ matrix.os.runtime }})
-          path: |
-            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli.exe
+          name: Release
+          path: ./.github/changelogs/${{ github.ref_name }}.md
           if-no-files-found: error
-        if: ${{ matrix.os.name == 'windows' }}
-      - name: Upload
+      - name: Upload (NuGet)
+        if: ${{ matrix.os.name == 'macos' }} # only once
         uses: actions/upload-artifact@v4
         with:
-          name: Build (${{ matrix.os.runtime }})
-          path: |
+          name: NuGet
+          path: ./libNOM.io/bin/Release/libNOM.io.*nupkg
+          if-no-files-found: error
+      - name: Upload (Build)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build (${{ matrix.os.name }})
+          path: | # files not found are ignored
             ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli
+            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli.exe
             ./libNOM.cli/bin/Release/${{ matrix.framwork }}/osx-arm64/publish/libNOM.io.cli
           if-no-files-found: error
-        if: ${{ matrix.os.name == 'macos' }}
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build (${{ matrix.os.runtime }})
-          path: |
-            ./.github/changelogs/
-            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli
-            ./libNOM.io/bin/Release/libNOM.io.*nupkg
-          if-no-files-found: error
-        if: ${{ matrix.os.name == 'ubuntu' }}
   release-verify:
     name: Release (Verify)
     runs-on: ubuntu-latest
@@ -119,24 +113,18 @@ jobs:
       - name: Show Result
         run: dir -r . | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
         shell: pwsh
-      # - name: Rename files for release
-      #   run: |
-      #     mv MBINCompiler-Windows-net6.0/MBINCompiler.exe MBINCompiler.exe
-      #     mv MBINCompiler-Windows-net6.0/libMBIN.dll libMBIN.dll
-      #     mv MBINCompiler-Windows-net7.0/MBINCompiler.exe MBINCompiler-dotnet7.exe
-      #     mv MBINCompiler-Windows-net7.0/libMBIN.dll libMBIN-dotnet7.dll
-      #     mv MBINCompiler-Ubuntu-net6.0/MBINCompiler.exe MBINCompiler-linux
-      #     mv MBINCompiler-Ubuntu-net6.0/libMBIN.dll libMBIN-linux.dll
-      #     mv MBINCompiler-Ubuntu-net7.0/MBINCompiler.exe MBINCompiler-linux-dotnet7
-      #     mv MBINCompiler-Ubuntu-net7.0/libMBIN.dll libMBIN-linux-dotnet7.dll
-      #     mv savedata-mapping/mapping.json mapping.json
-      #     mv MBINCompiler-report/report.json report.json
+      - name: Rename
+        run: |
+          mv libNOM.io/libNOM.io/Build (linux-x64)/libNOM.cli/bin/Release/net8.0/linux-x64/publish/libNOM.io.cli libNOM.io.linux-x64.cli
+          mv libNOM.io/libNOM.io/Build (windows)/libNOM.io.cli.exe libNOM.io.win-x64.cli.exe
+          mv libNOM.io/libNOM.io/Build (osx-x64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-x64.cli
+          mv libNOM.io/libNOM.io/Build (osx-arm64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-arm64.cli
   release:
     name: Release
     runs-on: ubuntu-latest
     # Only if commit was tagged.
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    needs: [test, build]
+    needs: [test, release-verify]
     steps:
       - name: Download
         uses: actions/download-artifact@v4
@@ -149,18 +137,12 @@ jobs:
         run: |
           echo "There is a version mismatch between git tag (${{ github.ref_name }}) and nupkg version (${{ env.nupkg_version }})!"
           exit 1
-      - name: Rename files for release
+      - name: Rename
         run: |
-          mv MBINCompiler-Windows-net6.0/MBINCompiler.exe MBINCompiler.exe
-          mv MBINCompiler-Windows-net6.0/libMBIN.dll libMBIN.dll
-          mv MBINCompiler-Windows-net7.0/MBINCompiler.exe MBINCompiler-dotnet7.exe
-          mv MBINCompiler-Windows-net7.0/libMBIN.dll libMBIN-dotnet7.dll
-          mv MBINCompiler-Ubuntu-net6.0/MBINCompiler.exe MBINCompiler-linux
-          mv MBINCompiler-Ubuntu-net6.0/libMBIN.dll libMBIN-linux.dll
-          mv MBINCompiler-Ubuntu-net7.0/MBINCompiler.exe MBINCompiler-linux-dotnet7
-          mv MBINCompiler-Ubuntu-net7.0/libMBIN.dll libMBIN-linux-dotnet7.dll
-          mv savedata-mapping/mapping.json mapping.json
-          mv MBINCompiler-report/report.json report.json
+          mv libNOM.io/libNOM.io/Build (linux-x64)/libNOM.cli/bin/Release/net8.0/linux-x64/publish/libNOM.io.cli libNOM.io.linux-x64.cli
+          mv libNOM.io/libNOM.io/Build (win-x64)/libNOM.io.cli.exe libNOM.io.win-x64.cli.exe
+          mv libNOM.io/libNOM.io/Build (osx-x64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-x64.cli
+          mv libNOM.io/libNOM.io/Build (osx-arm64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-arm64.cli
       - name: Create
         uses: softprops/action-gh-release@v2
         with:
