@@ -85,7 +85,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Release
-          path: ./.github/changelogs/${{ github.ref_name }}.md
+          path: ./.github/changelogs/0.8.0.md
+          # path: ./.github/changelogs/${{ github.ref_name }}.md
           if-no-files-found: error
       - name: Upload (NuGet)
         if: ${{ matrix.os.name == 'macos' }} # only once
