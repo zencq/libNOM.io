@@ -77,7 +77,7 @@ jobs:
       - name: Publish
         run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime ${{ matrix.os.runtime }}
       - name: Publish (Apple Silicon)
-        if: ${{ matrix.os.name == 'macos' }} # do this as well to do both native
+        if: ${{ matrix.os.name == 'macos' }} # do this to have both native
         run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime osx-arm64
       - name: Upload (NuGet)
         if: ${{ matrix.os.name == 'macos' }} # only once
@@ -96,7 +96,7 @@ jobs:
             ./libNOM.cli/bin/Release/${{ matrix.framwork }}/osx-arm64/publish/libNOM.io.cli
           if-no-files-found: error
       - name: Upload (Release)
-        if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once if tagged
+        if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once and if tagged
         uses: actions/upload-artifact@v4
         with:
           name: Release
@@ -104,7 +104,7 @@ jobs:
           if-no-files-found: error
   release:
     name: Release
-    # If commit was tagged only.
+    # If commit was tagged.
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     needs: [test, build]
@@ -134,4 +134,4 @@ jobs:
             ./libNOM.io.cli*
             ./NuGet/libNOM.io.*nupkg
       - name: Publish
-        run: dotnet nuget push ./libNOM.io/bin/Release/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push ./NuGet/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
