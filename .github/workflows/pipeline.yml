@@ -80,13 +80,11 @@ jobs:
         if: ${{ matrix.os.name == 'macos' }} # do this as well to do both native
         run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime osx-arm64
       - name: Upload (Release)
-        # if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once if tagged
-        if: ${{ matrix.os.name == 'macos' }} # only once if tagged
+        if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once if tagged
         uses: actions/upload-artifact@v4
         with:
           name: Release
-          path: ./.github/changelogs/0.8.0.md
-          # path: ./.github/changelogs/${{ github.ref_name }}.md
+          path: ./.github/changelogs/${{ github.ref_name }}.md
           if-no-files-found: error
       - name: Upload (NuGet)
         if: ${{ matrix.os.name == 'macos' }} # only once
@@ -116,10 +114,10 @@ jobs:
         shell: pwsh
       - name: Rename
         run: |
-          mv libNOM.io/libNOM.io/Build (linux-x64)/libNOM.cli/bin/Release/net8.0/linux-x64/publish/libNOM.io.cli libNOM.io.linux-x64.cli
-          mv libNOM.io/libNOM.io/Build (windows)/libNOM.io.cli.exe libNOM.io.win-x64.cli.exe
-          mv libNOM.io/libNOM.io/Build (osx-x64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-x64.cli
-          mv libNOM.io/libNOM.io/Build (osx-arm64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-arm64.cli
+          mv "./libNOM.io/libNOM.io/Build (macos)/osx-arm64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-arm64
+          mv "./libNOM.io/libNOM.io/Build (macos)/osx-x64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-x64
+          mv "./libNOM.io/libNOM.io/Build (ubuntu)/linux-x64/publish/libNOM.io.cli" ./libNOM.io.cli.linux-x64
+          mv "./libNOM.io/libNOM.io/Build (windows)/win-x64/publish/libNOM.io.cli.exe" ./libNOM.io.cli.win-x64.exe
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -130,7 +128,7 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v4
       - name: Version
-        run: echo "nupkg_version=$((((Get-Item -Path ./libNOM.io/bin/Release/libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
+        run: echo "nupkg_version=$((((Get-Item -Path ./libNOM.io/libNOM.io/NuGet/libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
         shell: pwsh
       # Exit if version mismatch.
       - name: Mismatch
@@ -140,16 +138,16 @@ jobs:
           exit 1
       - name: Rename
         run: |
-          mv libNOM.io/libNOM.io/Build (linux-x64)/libNOM.cli/bin/Release/net8.0/linux-x64/publish/libNOM.io.cli libNOM.io.linux-x64.cli
-          mv libNOM.io/libNOM.io/Build (win-x64)/libNOM.io.cli.exe libNOM.io.win-x64.cli.exe
-          mv libNOM.io/libNOM.io/Build (osx-x64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-x64.cli
-          mv libNOM.io/libNOM.io/Build (osx-arm64)/osx-arm64/publish/libNOM.io.cli libNOM.io.macos-arm64.cli
+          mv "./libNOM.io/libNOM.io/Build (macos)/osx-arm64/publish/libNOM.io.cli" ./libNOM.io.cli-macos-arm64
+          mv "./libNOM.io/libNOM.io/Build (macos)/osx-x64/publish/libNOM.io.cli" ./libNOM.io.cli-macos-x64
+          mv "./libNOM.io/libNOM.io/Build (ubuntu)/linux-x64/publish/libNOM.io.cli" ./libNOM.io.cli-linux-x64
+          mv "./libNOM.io/libNOM.io/Build (windows)/win-x64/publish/libNOM.io.cli.exe" ./libNOM.io.cli-win-x64.exe
       - name: Create
         uses: softprops/action-gh-release@v2
         with:
-          body_path: ./.github/changelogs/${{ github.ref_name }}.md
+          body_path: ./libNOM.io/libNOM.io/Release/${{ github.ref_name }}.md
           files: |
-            ./libNOM.cli/bin/Release/publish/libNOM.io.cli*
-            ./libNOM.io/bin/Release/libNOM.io.*nupkg
+            ./libNOM.io.cli*
+            ./libNOM.io/libNOM.io/NuGet/libNOM.io.*nupkg
       - name: Publish
         run: dotnet nuget push ./libNOM.io/bin/Release/libNOM.io.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
