@@ -37,19 +37,22 @@ internal static partial class Json
     internal static string[] GetPaths(string identifier, JObject? jsonObject, SaveContextQueryEnum context)
     {
         var paths = GetPaths(identifier);
-        if (paths[0] == identifier || jsonObject?.IsRoot() != true) // without root it is not possible to determine obfuscation state and save format reliable
+        if (paths[0] == identifier || jsonObject?.IsRoot() != true) // without root it is not possible to determine obfuscation state and save structure reliable
             return paths;
 
-        var format = Constants.JSONPATH["ACTIVE_CONTEXT"].Any(jsonObject.ContainsKey) ? SaveStructureEnum.Omega : SaveStructureEnum.Vanilla;
-        var contextKey = (jsonObject.UsesMapping() ? Constants.JSONPATH_CONTEXT_PLAINTEXT : Constants.JSONPATH_CONTEXT_OBFUSCATED)[(int)(context)];
-        var index = ((int)(format) - 1) * 2 + jsonObject.UsesMapping().ToByte(); // 2 obfuscation states per save format
+        var usesMapping = jsonObject.UsesMapping();
+
+        var contextKey = (usesMapping ? Constants.JSONPATH_CONTEXT_PLAINTEXT : Constants.JSONPATH_CONTEXT_OBFUSCATED)[(int)(context)];
+        var saveStructure = Constants.JSONPATH["ACTIVE_CONTEXT"].Any(jsonObject.ContainsKey).ToByte(); // Vanilla = 0 // Omega = 1 // ? = 2 // ...
+
+        var index = saveStructure * 2 + usesMapping.ToByte();  // Vanilla = 0 + 1 // Omega = 2 + 3 // ? = 4 + 5 // ...
 
         while (index >= 0) // to not store unchanged paths multiple times
         {
-            if (paths.ContainsIndex(index) && !string.IsNullOrEmpty(paths[index])) // skip empty strings for Vanilla save format
+            if (paths.ContainsIndex(index) && !string.IsNullOrEmpty(paths[index])) // skip empty strings for Vanilla save structure
                 return string.IsNullOrEmpty(contextKey) ? [paths[index]] : [string.Format(paths[index], contextKey)]; // [] to have a consistent return type
 
-            index -= 2; // 2 obfuscation states per save format
+            index -= 2; // 2 obfuscation states per save structure
         }
 
         return [];

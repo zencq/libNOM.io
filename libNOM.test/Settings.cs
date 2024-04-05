@@ -115,17 +115,17 @@ public class SettingsTest : CommonTestClass
         var container = platform.GetSaveContainer(0);
         Guard.IsNotNull(container);
 
-        var backupPath = platform.Settings.Backup;
+        var backupDirectory = platform.Settings.BackupDirectory;
         var searchPattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.zip".ToLowerInvariant();
 
         platform.Backup(container);
-        var backups1 = Directory.GetFiles(backupPath, searchPattern).Length;
+        var backups1 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
         platform.Backup(container);
-        var backups2 = Directory.GetFiles(backupPath, searchPattern).Length;
+        var backups2 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
         platform.Backup(container);
-        var backups3 = Directory.GetFiles(backupPath, searchPattern).Length;
+        var backups3 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
         // Assert
         Assert.AreEqual(1, backups1);

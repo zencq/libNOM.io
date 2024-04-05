@@ -3,22 +3,30 @@
 namespace libNOM.io;
 
 
+// This partial class contains file operation related code.
 public partial class PlatformPlaystation : Platform
 {
-    #region PlatformExtra
+    #region Extra
 
-    protected override void CreatePlatformExtra(Container container, Container other)
+    protected override void CreateContainerExtra(Container container, Container other)
     {
         if (_usesSaveStreaming)
-            base.CreatePlatformExtra(container, other);
+            base.CreateContainerExtra(container, other);
         else
+        {
             // base.CreatePlatformExtra() resets Extra.Bytes but here we want keep it and therefore calling CopyPlatformExtra() directly.
-            CopyPlatformExtra(container, other);
+            CopyContainerExtra(container, other);
+
+            container.Extra = container.Extra with
+            {
+                MetaLength = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
+            };
+        }
     }
 
-    protected override void CopyPlatformExtra(Container container, Container other)
+    protected override void CopyContainerExtra(Container container, Container other)
     {
-        base.CopyPlatformExtra(container, other);
+        base.CopyContainerExtra(container, other);
 
         if (!_usesSaveStreaming)
             // Update bytes in platform extra as it is what will be written later.

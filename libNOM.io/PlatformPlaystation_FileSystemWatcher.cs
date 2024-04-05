@@ -1,6 +1,7 @@
 ﻿namespace libNOM.io;
 
 
+// This partial class contains FileSystemWatcher related code.
 public partial class PlatformPlaystation : Platform
 {
     #region Getter
@@ -36,7 +37,7 @@ public partial class PlatformPlaystation : Platform
             switch (metaIndex)
             {
                 case 0:
-                    UpdateAndRebuildContainer(AccountContainer);
+                    UpdateAndRebuildContainer(AccountContainer!);
                     break;
                 case 1:
                     break;
@@ -49,9 +50,8 @@ public partial class PlatformPlaystation : Platform
     private void UpdateAndRebuildContainer(Container container)
     {
         // Reset bytes as trigger to read the file again.
-        container.Extra = new PlatformExtra
+        container.Extra = new ContainerExtra
         {
-            MetaFormat = MetaFormatEnum.Unknown,
             Bytes = null,
         };
 

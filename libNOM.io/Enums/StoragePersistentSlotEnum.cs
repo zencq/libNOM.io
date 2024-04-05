@@ -5,7 +5,7 @@
 /// Specifies the different types of storage persistence used for meta/manifest encryption.
 /// Original found in NMS.exe as enum cTkStoragePersistent::Slot.
 /// </summary>
-internal enum StoragePersistentSlotEnum : uint
+public enum StoragePersistentSlotEnum : uint
 {
     UserSettings,
     AccountData,

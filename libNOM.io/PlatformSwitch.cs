@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.HighPerformance;
 
+using libNOM.io.Settings;
+
 namespace libNOM.io;
 
 
@@ -20,7 +22,7 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Flags
 
@@ -64,9 +66,7 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    #endregion
-
-    // //
+    // Accessor
 
     #region Getter
 
@@ -77,34 +77,34 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    // //
+    // Initialize
 
     #region Constructor
 
     public PlatformSwitch() : base() { }
 
-    public PlatformSwitch(string path) : base(path) { }
+    public PlatformSwitch(string? path) : base(path) { }
 
-    public PlatformSwitch(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformSwitch(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformSwitch(DirectoryInfo directory) : base(directory) { }
+    public PlatformSwitch(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformSwitch(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformSwitch(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformSwitch(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     #endregion
 
-    // //
-
     #region Initialize
 
-    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? _)
     {
         return new Container(metaIndex, this)
         {
             DataFile = new FileInfo(Path.Combine(Location.FullName, $"savedata{metaIndex:D2}.hg")),
             MetaFile = new FileInfo(Path.Combine(Location.FullName, $"manifest{metaIndex:D2}.hg")),
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="Platform.UpdateContainerWithDataInformation"/>.
-            Extra = extra ?? new(),
+            Extra = new(),
         };
     }
 
@@ -140,11 +140,13 @@ public partial class PlatformSwitch : Platform
 
         container.Extra = container.Extra with
         {
-            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Frontiers : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
             Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN..].ToArray(),
-            Size = (uint)(disk.Length),
+            MetaLength = (uint)(disk.Length),
             SizeDecompressed = decompressed[2],
         };
+
+        if (container.IsAccount)
+            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_3);
 
         if (container.IsSave)
         {
@@ -168,6 +170,8 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
+    // //
+
     #region Write
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
@@ -176,20 +180,22 @@ public partial class PlatformSwitch : Platform
 
         if (container.IsAccount)
         {
-            buffer = container.Extra.Bytes ?? new byte[container.MetaSize];
+            buffer = container.Extra.Bytes ?? CreateMetaBuffer(container);
 
             // Overwrite only SizeDecompressed.
             using var writer = new BinaryWriter(new MemoryStream(buffer));
+
             writer.Seek(0x8, SeekOrigin.Begin);
             writer.Write(container.Extra.SizeDecompressed); // 4
         }
         else
         {
-            buffer = new byte[container.MetaSize];
+            buffer = CreateMetaBuffer(container);
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
+
             writer.Write(META_HEADER); // 4
-            writer.Write(Constants.SAVE_FORMAT_3); // 4
+            writer.Write(Constants.META_FORMAT_3); // 4
             writer.Write(container.Extra.SizeDecompressed); // 4
             writer.Write(container.MetaIndex); // 4
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4

@@ -162,6 +162,15 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return encrypted;
     }
 
+    protected byte[] CreateMetaBuffer(Container container)
+    {
+        var capacity = (int)(container.Extra.MetaLength);
+        if (capacity == 0)
+            capacity = container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA;
+
+        return new byte[capacity];
+    }
+
     /// <summary>
     /// Creates binary meta file content with information from the <see cref="Container"/> and the JSON object.
     /// </summary>
@@ -181,7 +190,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         // Always append cached bytes but overwrite afterwards if Waypoint.
         writer.Write(container.Extra.Bytes ?? []); // length depends on platform
 
-        if (container.MetaFormat >= MetaFormatEnum.Waypoint)
+        if (container.IsVersion400Waypoint)
         {
             writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
             writer.Write(container.SaveName.GetBytesWithTerminator()); // 128

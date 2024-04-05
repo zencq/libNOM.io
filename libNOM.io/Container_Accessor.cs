@@ -76,11 +76,11 @@ public partial class Container : IContainer
         if (_jsonObject is not null && Platform is not null) // happens when the container is unloaded
             if (Platform.Settings.UseMapping)
             {
-                UnknownKeys = Mapping.Deobfuscate(_jsonObject);
+                UnknownKeys = Mapping.Deobfuscate(_jsonObject, IsAccount);
             }
             else
             {
-                Mapping.Obfuscate(_jsonObject);
+                Mapping.Obfuscate(_jsonObject, IsAccount);
             }
     }
 

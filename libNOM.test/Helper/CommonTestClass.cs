@@ -20,7 +20,7 @@ public abstract class CommonTestClass
 {
     #region Constant
 
-    protected const int FILESYSTEMWATCHER_SLEEP = 5000;
+    protected const int FILESYSTEMWATCHER_SLEEP = 10000; // 10 seconds
     protected const int OFFSET_INDEX = 2;
     protected const int TICK_DIVISOR = 10000;
 
@@ -139,7 +139,15 @@ public abstract class CommonTestClass
         Assert.AreEqual(results.Length, GetExistingContainers(platform).Count());
 
         if (expectAccountData)
+        {
             Assert.IsTrue(platform.HasAccountData);
+
+            var container = platform.GetAccountContainer()!;
+
+            Assert.AreEqual(-2, container.CollectionIndex);
+            Assert.AreEqual("AccountData", container.Identifier);
+            Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+        }
         else
             Assert.IsFalse(platform.HasAccountData);
 
@@ -325,7 +333,7 @@ public abstract class CommonTestClass
     protected static void TestCommonAnalyzeFile(string path, ReadResults results, PlatformEnum platformResult)
     {
         // Act
-        var container = PlatformCollection.AnalyzeFile(path)!;
+        var container = libNOM.io.Global.Analyze.AnalyzeFile(path)!;
         var priject = new PrivateObject(container);
 
         // Assert
@@ -373,7 +381,7 @@ public abstract class CommonTestClass
         Assert.AreEqual(platformResult, platform?.PlatformEnum);
     }
 
-    protected static void TestCommonBuildCollection(string path, PlatformEnum platformResult, PlatformEnum? platformPreferred)
+    protected static void TestCommonBuildCollection(string path, PlatformEnum platformResult, PlatformCollectionSettings collectionSettings)
     {
         // Arrange
         var settings = new PlatformSettings
@@ -382,7 +390,7 @@ public abstract class CommonTestClass
         };
 
         // Act
-        var collection = new PlatformCollection(path, settings, platformPreferred);
+        var collection = new PlatformCollection(path, settings, collectionSettings);
         var platform = collection.Get(path);
 
         // Assert
@@ -730,7 +738,9 @@ public abstract class CommonTestClass
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Full,
+            Trace = true,
             UseExternalSourcesForUserIdentification = false,
+            UseMapping = true, // to check UnknownKeys
         };
 
         // Act

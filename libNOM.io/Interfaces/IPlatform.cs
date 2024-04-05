@@ -1,11 +1,14 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using libNOM.io.Settings;
+using libNOM.io.Trace;
+
+using Newtonsoft.Json.Linq;
 
 namespace libNOM.io.Interfaces;
 
 
 public interface IPlatform
 {
-    #region Property
+    // Property
 
     #region Configuration
 
@@ -18,6 +21,12 @@ public interface IPlatform
     /// Settings used for this platform.
     /// </summary>
     public PlatformSettings Settings { get; }
+
+    /// <summary>
+    /// Exposes a lot of additional information that are usually not necessary while using this library but might useful for debugging purposes.
+    /// Not intended to show the end user.
+    /// </summary>
+    public PlatformTrace? Trace { get; }
 
     #endregion
 
@@ -95,9 +104,7 @@ public interface IPlatform
 
     #endregion
 
-    #endregion
-
-    // //
+    // Accessor
 
     #region Getter
 
@@ -138,15 +145,22 @@ public interface IPlatform
 
     #endregion
 
-    // // Read / Write
+    // //
 
-    #region Load
+    #region Initialize
 
     /// <summary>
     /// Loads data of a <see cref= "Container"/> in consideration of the loading strategy.
     /// </summary>
     /// <param name="container"></param>
     public void Load(Container container);
+
+    /// <summary>
+    /// Rebuilds the container with data from the specified JSON object.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="jsonObject"></param>
+    public void Rebuild(Container container, JObject jsonObject);
 
     /// <summary>
     /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
@@ -173,9 +187,17 @@ public interface IPlatform
 
     #endregion
 
-    // // File Operation
+    // FileOperation
 
     #region Backup
+
+    /// <summary>
+    /// Creates a backup <see cref="Container"/> based on the specified file.
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="metaIndex"></param>
+    /// <returns></returns>
+    public Container? CreateBackupContainer(string file, int metaIndex);
 
     /// <summary>
     /// Creates a backup file of the specified <see cref="Container"/>.
@@ -277,7 +299,7 @@ public interface IPlatform
 
     #endregion
 
-    // // FileSystemWatcher
+    // //
 
     #region FileSystemWatcher
 

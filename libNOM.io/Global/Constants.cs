@@ -20,11 +20,11 @@ public static class Constants
 
     /// <summary>
     /// To make the most out of <see cref="Container.GetJsonValue{T}(string, SaveContextQueryEnum)"/> and similar methods you can use this to extend the internal JSONPath dictionary.
-    /// You can then just pass an identifier and it will automatically use the right path depending on the <see cref="SaveStructureEnum"/> and the specified context if necessary.
+    /// You can then just pass an identifier and it will automatically use the right path depending on the save structure and the specified context if necessary.
     /// The format looks like this: <code>JSONPATH_EXTENSION["UPPERCASE_ID"] = ["vanilla-obfuscated-path", "vanilla-plaintext-path", "omega-obfuscated-path", "omega-plaintext-path"]</code>
     /// There are some <see cref="JSONPATH">predefined paths used within this library</see> which gives you some examples.
     /// </summary>
-    /// <seealso href="https://github.com/zencq/libNOM.io/blob/master/libNOM.io/Globals/Constants.cs"/>
+    /// <seealso href="https://github.com/zencq/libNOM.io/blob/master/libNOM.io/Global/Constants.cs#L44-L147"/>
     public static readonly Dictionary<string, string[]> JSONPATH_EXTENSION = [];
 
     // internal //
@@ -44,6 +44,8 @@ public static class Constants
     internal static readonly Dictionary<string, string[]> JSONPATH = new()
     {
         // absolute from root, common
+
+        { "ACCOUNT_USER_SETTINGS_DATA", ["B89", "UserSettingsData"] },
 
         { "ACTIVE_CONTEXT", ["", "", "XTp", "ActiveContext"] }, // no path in Vanilla
         { "BASE_CONTEXT", ["", "", "vLc", "BaseContext"] },
@@ -146,16 +148,16 @@ public static class Constants
     internal static readonly string[] JSONPATH_CONTEXT_OBFUSCATED = ["", "2YS", "vLc", "", ""]; // SaveContextQueryEnum
     internal static readonly string[] JSONPATH_CONTEXT_PLAINTEXT = ["", "ExpeditionContext", "BaseContext", "", ""];
 
+    internal const uint META_FORMAT_1 = 0x7D0; // 2000 (1.0)
+    internal const uint META_FORMAT_2 = 0x7D1; // 2001 (1.1)
+    internal const uint META_FORMAT_3 = 0x7D2; // 2002 (3.6)
+
     internal const int OFFSET_GAMEMODE = 512;
     internal const int OFFSET_INDEX = 2;
     internal const int OFFSET_SEASON = 128;
 
     internal const int OFFSET_GAMEMODE_SEASONAL = OFFSET_GAMEMODE * (int)(PresetGameModeEnum.Seasonal);
     internal const int OFFSET_MULTIPLICATION_GAMEMODE_SEASON = OFFSET_GAMEMODE * OFFSET_SEASON;
-
-    internal const uint SAVE_FORMAT_1 = 0x7D0; // 2000 (1.0) // not used but for completeness
-    internal const uint SAVE_FORMAT_2 = 0x7D1; // 2001 (1.1)
-    internal const uint SAVE_FORMAT_3 = 0x7D2; // 2002 (3.6)
 
     internal const int SAVE_RENAMING_LENGTH_MANIFEST = 0x80; // 128
     internal const int SAVE_RENAMING_LENGTH_INGAME = 0x2A; // 42

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "libNOM.cli": {
+      "commandName": "Project",
+      "commandLineArgs": "analyze -i C:\\Users\\Christian\\AppData\\Local\\Packages\\HelloGames.NoMansSky_bs190hzg1sesy\\SystemAppData\\wgs\\00090000025A963A_29070100B936489ABCE8B9AF3980429C\\containers.index"
+    }
+  }
+}

@@ -24,9 +24,9 @@ public partial class Container : IContainer
 
     #region Constructor
 
-    public Container(int metaIndex, Platform platform) : this(metaIndex, platform, new()) { }
+    public Container(int metaIndex, IPlatform platform) : this(metaIndex, platform, new()) { }
 
-    internal Container(int metaIndex, Platform platform, PlatformExtra extra)
+    internal Container(int metaIndex, IPlatform platform, ContainerExtra extra)
     {
         CollectionIndex = metaIndex - Constants.OFFSET_INDEX;
         Extra = extra;
@@ -117,6 +117,9 @@ public partial class Container : IContainer
     private void ThrowHelperIsLoaded()
     {
         if (!IsLoaded)
-            ThrowHelper.ThrowInvalidOperationException("Container is not loaded.");
+        {
+            var message = IsCompatible ? "Container is not loaded." : $"Container cannot be loaded due to incompatibilities: {IncompatibilityException?.Message ?? IncompatibilityTag}";
+            ThrowHelper.ThrowInvalidOperationException(message);
+        }
     }
 }

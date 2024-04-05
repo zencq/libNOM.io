@@ -1,8 +1,9 @@
-﻿using System.ComponentModel;
+﻿using libNOM.io.Settings;
 
 namespace libNOM.io;
 
 
+// This partial class contains initialization related code.
 public partial class PlatformPlaystation : Platform
 {
     #region Constructor
@@ -11,7 +12,7 @@ public partial class PlatformPlaystation : Platform
     /// Special case for <see cref="PlatformCollection.AnalyzeFile(string)"/> to be able to use selected methods with an empty initialization.
     /// </summary>
     /// <param name="usesSaveWizard"></param>
-    internal PlatformPlaystation(bool usesSaveWizard) : base()
+    internal PlatformPlaystation(bool usesSaveWizard, PlatformSettings? platformSettings) : base(platformSettings)
     {
         _usesSaveStreaming = true;
         _usesSaveWizard = usesSaveWizard;
@@ -19,13 +20,15 @@ public partial class PlatformPlaystation : Platform
 
     public PlatformPlaystation() : base() { }
 
-    public PlatformPlaystation(string path) : base(path) { }
+    public PlatformPlaystation(string? path) : base(path) { }
 
-    public PlatformPlaystation(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformPlaystation(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformPlaystation(DirectoryInfo directory) : base(directory) { }
+    public PlatformPlaystation(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformPlaystation(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformPlaystation(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformPlaystation(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     #endregion
 
@@ -52,7 +55,7 @@ public partial class PlatformPlaystation : Platform
         }
     }
 
-    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? _)
     {
         if (_usesSaveStreaming)
         {
@@ -66,7 +69,7 @@ public partial class PlatformPlaystation : Platform
                 DataFile = data,
                 MetaFile = metaIndex == 0 ? (meta.Exists ? meta : null) : (_usesSaveWizard ? data : null),
                 /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-                Extra = extra ?? new()
+                Extra = new()
                 {
                     LastWriteTime = data.LastWriteTime,
                 },
@@ -78,7 +81,7 @@ public partial class PlatformPlaystation : Platform
             DataFile = _memorydat,
             MetaFile = _memorydat,
             /// Additional values will be set in <see cref="UpdateContainerWithMetaInformation"/> and <see cref="UpdateContainerWithDataInformation"/>.
-            Extra = extra ?? new(),
+            Extra = new(),
         };
     }
 
@@ -105,19 +108,20 @@ public partial class PlatformPlaystation : Platform
         }
     }
 
-    private PlatformExtra GetAccountStreamingExtra(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    private ContainerExtra GetAccountStreamingExtra(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         return container.Extra with
         {
-            MetaFormat = MetaFormatEnum.Waypoint,
             Bytes = disk.ToArray(),
-            Size = decompressed[2],
+            MetaLength = decompressed[2],
             SizeDecompressed = decompressed[2],
             SizeDisk = decompressed[2],
+
+            PlaystationOffset = 0,
         };
     }
 
-    private PlatformExtra GetWizardStreamingExtra(Container container, ReadOnlySpan<uint> decompressed)
+    private ContainerExtra GetWizardStreamingExtra(Container container, ReadOnlySpan<uint> decompressed)
     {
         /**
           0. META HEADER          (  8) // here the same structure as used at the beginning of the memory.dat
@@ -137,8 +141,8 @@ public partial class PlatformPlaystation : Platform
          */
         return container.Extra with
         {
-            MetaFormat = MetaFormatEnum.Frontiers,
-            Size = decompressed[23],
+            Bytes = new byte[decompressed[23]],
+            MetaLength = (uint)(META_LENGTH_TOTAL_WAYPOINT),
             SizeDecompressed = decompressed[23],
             SizeDisk = decompressed[5],
 
@@ -146,7 +150,7 @@ public partial class PlatformPlaystation : Platform
         };
     }
 
-    private PlatformExtra GetLegacyExtra(Container container, ReadOnlySpan<uint> decompressed)
+    private ContainerExtra GetLegacyExtra(Container container, ReadOnlySpan<uint> decompressed)
     {
         /**
           0. META HEADER          ( 4)
@@ -164,17 +168,16 @@ public partial class PlatformPlaystation : Platform
          10. EMPTY                ( 8)
                                   (48)
          */
-
         if (decompressed.IsEmpty || decompressed[3] == 0)
         {
-            container.Exists = false;
+            container.Exists = false; // force false to overwrite existing of DataFile
             return container.Extra;
         }
 
         return container.Extra with
         {
-            MetaFormat = MetaFormatEnum.Foundation,
-            Size = decompressed[MEMORYDAT_META_INDEX_LENGTH], // either COMPRESSED SIZE or DECOMPRESSED SIZE depending on SaveWizard usage
+            Bytes = new byte[decompressed[MEMORYDAT_META_INDEX_LENGTH]], // either COMPRESSED SIZE or DECOMPRESSED SIZE depending on SaveWizard usage
+            MetaLength = (uint)(META_LENGTH_TOTAL_VANILLA),
             SizeDisk = decompressed[2],
             SizeDecompressed = decompressed[7],
             LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[6]).ToLocalTime(),
@@ -189,7 +192,6 @@ public partial class PlatformPlaystation : Platform
         if (container.IsAccount)
             container.Extra = container.Extra with
             {
-                Size = _usesSaveWizard ? (uint)(decompressed.Length) : (uint)(disk.Length),
                 SizeDecompressed = (uint)(decompressed.Length),
                 SizeDisk = (uint)(disk.Length),
             };

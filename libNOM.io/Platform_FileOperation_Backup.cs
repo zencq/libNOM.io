@@ -15,6 +15,30 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     #region Initialize
 
+    public Container? CreateBackupContainer(string file, int metaIndex)
+    {
+        var parts = Path.GetFileNameWithoutExtension(file).Split('.');
+
+        // The filename of a backup needs to have the following format: "backup.{PlatformEnum}.{MetaIndex}.{CreatedAt}.{VersionEnum}" + ".zip"
+        if (parts.Length < 5)
+            return null;
+
+        try
+        {
+            return new(metaIndex, this)
+            {
+                DataFile = new(file),
+                GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
+                IsBackup = true,
+                LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
+            };
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Generates a collection with all backups of the specified <see cref="Container"/> that matches the MetaIndex and this <see cref="Platform"/>.
     /// </summary>
@@ -24,28 +48,16 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.BackupCollection.Clear();
 
         // No directory, no backups.
-        if (!Directory.Exists(Settings.Backup))
+        if (!Directory.Exists(Settings.BackupDirectory))
             return;
 
-        foreach (var file in Directory.EnumerateFiles(Settings.Backup, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip".ToLowerInvariant()))
+        foreach (var file in Directory.EnumerateFiles(Settings.BackupDirectory, $"backup.{PlatformEnum}.{container.MetaIndex:D2}.*.*.zip".ToLowerInvariant()))
         {
-            var parts = Path.GetFileNameWithoutExtension(file).Split('.');
-
-            // The filename of a backup needs to have the following format: "backup.{PlatformEnum}.{MetaIndex}.{CreatedAt}.{VersionEnum}" + ".zip"
-            if (parts.Length < 5)
+            var backup = CreateBackupContainer(file, container.MetaIndex);
+            if (backup is null)
                 continue;
 
-            try
-            {
-                container.BackupCollection.Add(new(container.MetaIndex, this)
-                {
-                    DataFile = new(file),
-                    GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
-                    IsBackup = true,
-                    LastWriteTime = DateTimeOffset.ParseExact($"{parts[3]}", Constants.FILE_TIMESTAMP_FORMAT, CultureInfo.InvariantCulture),
-                });
-            }
-            catch (FormatException) { } // ignore
+            container.BackupCollection.Add(backup);
         }
     }
 
@@ -89,11 +101,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         Guard.IsNotNull(container.DataFile);
         Guard.IsTrue(container.DataFile.Exists);
 
-        Directory.CreateDirectory(Settings.Backup); // ensure directory exists
+        Directory.CreateDirectory(Settings.BackupDirectory); // ensure directory exists
 
         var createdAt = DateTime.Now;
         var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
-        var path = Path.Combine(Settings.Backup, name);
+        var path = Path.Combine(Settings.BackupDirectory, name);
 
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
@@ -111,13 +123,19 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         };
         container.BackupCollection.Add(backup);
 
+        if (Settings.MaxBackupCount > 0)
+            RemoveOldBackups(container);
+
+        container.BackupCreatedCallback.Invoke(backup);
+    }
+
+    private void RemoveOldBackups(Container container)
+    {
         // Remove the oldest backups above the maximum count.
         var outdated = container.BackupCollection.OrderByDescending(i => i.LastWriteTime).Skip(Settings.MaxBackupCount);
 
         Delete(outdated); // delete before sending outdated into nirvana
         _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
-
-        container.BackupCreatedCallback.Invoke(backup);
     }
 
     public void Restore(Container backup)

@@ -6,6 +6,8 @@ namespace libNOM.io;
 // This partial class contains FileSystemWatcher related code.
 public partial class PlatformMicrosoft : Platform
 {
+    // Accessor
+
     #region Getter
 
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
@@ -24,6 +26,8 @@ public partial class PlatformMicrosoft : Platform
     }
 
     #endregion
+
+    // //
 
     #region Events
 
@@ -72,7 +76,7 @@ public partial class PlatformMicrosoft : Platform
             switch (metaIndex)
             {
                 case 0:
-                    AccountContainer = GetOrResetContainer(containersIndex, AccountContainer);
+                    AccountContainer = GetOrResetContainer(containersIndex, AccountContainer!);
                     break;
                 case 1:
 #if NETSTANDARD2_0
@@ -89,7 +93,7 @@ public partial class PlatformMicrosoft : Platform
             }
     }
 
-    private Container GetOrResetContainer(Dictionary<int, PlatformExtra> containersIndex, Container container)
+    private Container GetOrResetContainer(Dictionary<int, ContainerExtra> containersIndex, Container container)
     {
         if (containersIndex.TryGetValue(container.MetaIndex, out var extra))
         {
@@ -112,7 +116,7 @@ public partial class PlatformMicrosoft : Platform
         return container;
     }
 
-    private Container GetRefreshedContainer(Container container, PlatformExtra extra)
+    private Container GetRefreshedContainer(Container container, ContainerExtra extra)
     {
         if (container.Exists)
         {

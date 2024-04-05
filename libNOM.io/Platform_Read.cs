@@ -39,6 +39,24 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return [];
     }
 
+    public void Rebuild(Container container, JObject jsonObject)
+    {
+        // Reset some properties to get them from the new JSON object.
+        container.Extra = container.Extra with
+        {
+            BaseVersion = 0,
+            DifficultyPreset = 0,
+            GameMode = 0,
+            SaveName = string.Empty,
+            SaveSummary = string.Empty,
+            Season = 0,
+            TotalPlayTime = 0,
+        };
+        container.GameVersion = GameVersionEnum.Unknown;
+        container.SaveVersion = 0;
+        UpdateContainerWithJsonInformation(container, jsonObject);
+    }
+
     public void Reload(Container container)
     {
         if (container.IsLoaded)

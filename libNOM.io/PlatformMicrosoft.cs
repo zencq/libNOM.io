@@ -44,11 +44,11 @@ public partial class PlatformMicrosoft : Platform
     private FileInfo _containersindex = null!; // will be set if valid
     private DateTimeOffset _lastWriteTime; // will be set when containers.index is parsed to store global timestamp
     private string _processIdentifier = null!; // will be set when containers.index is parsed
-    private PlatformExtra? _settingsContainer; // will be set when containers.index is parsed and exists
+    private ContainerExtra? _settingsContainer; // will be set when containers.index is parsed and exists
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Flags
 
@@ -93,7 +93,7 @@ public partial class PlatformMicrosoft : Platform
 
     #endregion
 
-    #endregion
+    // //
 
     #region UserIdentification
 

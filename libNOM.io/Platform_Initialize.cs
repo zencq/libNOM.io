@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
-using System.ComponentModel;
 
 using libNOM.io.Interfaces;
+using libNOM.io.Settings;
 
 using Newtonsoft.Json.Linq;
 
@@ -25,6 +25,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    // Accessor
+
     #region Getter
 
     /// <summary>
@@ -44,18 +46,22 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    // //
+
     #region Constructor
 
 #pragma warning disable CS8618 // Non-nullable property 'Settings' must contain a non-null value when exiting constructor. Property 'Settings' is set in InitializeComponent.
     public Platform() => InitializeComponent(null, null);
 
-    public Platform(string path) => InitializeComponent(new(path), null);
+    public Platform(string? path) => InitializeComponent(string.IsNullOrWhiteSpace(path) ? null : new(path), null);
 
-    public Platform(string path, PlatformSettings platformSettings) => InitializeComponent(new(path), platformSettings);
+    public Platform(string? path, PlatformSettings? platformSettings) => InitializeComponent(string.IsNullOrWhiteSpace(path) ? null : new(path), platformSettings);
 
-    public Platform(DirectoryInfo directory) => InitializeComponent(directory, null);
+    public Platform(PlatformSettings? platformSettings) => InitializeComponent(null, platformSettings);
 
-    public Platform(DirectoryInfo directory, PlatformSettings platformSettings) => InitializeComponent(directory, platformSettings);
+    public Platform(DirectoryInfo? directory) => InitializeComponent(directory, null);
+
+    public Platform(DirectoryInfo? directory, PlatformSettings? platformSettings) => InitializeComponent(directory, platformSettings);
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor.
 
     #endregion
@@ -81,6 +87,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         InitializePlatformSpecific();
         InitializePlatform();
+
+        if (!Settings.Trace)
+            return;
+
+        InitializeTrace();
     }
 
     protected virtual void InitializePlatformSpecific() { }
@@ -130,7 +141,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     private protected Container InitializeContainer(int metaIndex) => InitializeContainer(metaIndex, null);
 
-    private protected Container InitializeContainer(int metaIndex, PlatformExtra? extra)
+    private protected Container InitializeContainer(int metaIndex, ContainerExtra? extra)
     {
         var container = CreateContainer(metaIndex, extra);
 
@@ -150,7 +161,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="metaIndex"></param>
     /// <param name="extra">An optional object with additional data necessary for proper creation.</param>
     /// <returns></returns>
-    private protected abstract Container CreateContainer(int metaIndex, PlatformExtra? extra); // private protected as PlatformExtra is internal
+    private protected abstract Container CreateContainer(int metaIndex, ContainerExtra? extra); // private protected as PlatformExtra is internal
 
     public void Load(Container container)
     {

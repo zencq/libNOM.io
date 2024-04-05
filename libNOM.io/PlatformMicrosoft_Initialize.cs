@@ -2,6 +2,8 @@
 
 using CommunityToolkit.Diagnostics;
 
+using libNOM.io.Settings;
+
 namespace libNOM.io;
 
 
@@ -12,13 +14,15 @@ public partial class PlatformMicrosoft : Platform
 
     public PlatformMicrosoft() : base() { }
 
-    public PlatformMicrosoft(string path) : base(path) { }
+    public PlatformMicrosoft(string? path) : base(path) { }
 
-    public PlatformMicrosoft(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformMicrosoft(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformMicrosoft(DirectoryInfo directory) : base(directory) { }
+    public PlatformMicrosoft(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformMicrosoft(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformMicrosoft(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformMicrosoft(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     #endregion
 
@@ -67,7 +71,7 @@ public partial class PlatformMicrosoft : Platform
         return bag;
     }
 
-    private protected override Container CreateContainer(int metaIndex, PlatformExtra? extra)
+    private protected override Container CreateContainer(int metaIndex, ContainerExtra? extra)
     {
         if (extra is null)
             return new Container(metaIndex, this) { Extra = new() };
@@ -86,10 +90,10 @@ public partial class PlatformMicrosoft : Platform
     /// </summary>
     /// <returns></returns>
     /// <exception cref="InvalidDataException"/>
-    private Dictionary<int, PlatformExtra> ParseContainersIndex()
+    private Dictionary<int, ContainerExtra> ParseContainersIndex()
     {
         var offset = ParseGlobalIndex(out var bytes);
-        Dictionary<int, PlatformExtra> result = [];
+        Dictionary<int, ContainerExtra> result = [];
 
         for (var i = 0; i < bytes.Cast<long>(4); i++) // container count
         {
@@ -147,7 +151,7 @@ public partial class PlatformMicrosoft : Platform
         return offset + 8; // 8
     }
 
-    private int ParseBlobContainerIndex(ReadOnlySpan<byte> bytes, int offset, out string saveIdentifier, out PlatformExtra extra)
+    private int ParseBlobContainerIndex(ReadOnlySpan<byte> bytes, int offset, out string saveIdentifier, out ContainerExtra extra)
     {
         /**
          9. SAVE IDENTIFIER LENGTH          (  4)
@@ -189,7 +193,7 @@ public partial class PlatformMicrosoft : Platform
         return offset + 45; // 15, 16, 17, 18, 19, 20
     }
 
-    private static PlatformExtra ParseBlobContainer(PlatformExtra extra)
+    private static ContainerExtra ParseBlobContainer(ContainerExtra extra)
     {
         /**
          0. HEADER (4)                      (  4)
@@ -233,7 +237,7 @@ public partial class PlatformMicrosoft : Platform
         return extra;
     }
 
-    private static HashSet<FileInfo> GetPossibleBlobContainers(PlatformExtra extra)
+    private static HashSet<FileInfo> GetPossibleBlobContainers(ContainerExtra extra)
     {
         var files = new HashSet<FileInfo>();
 
@@ -247,7 +251,7 @@ public partial class PlatformMicrosoft : Platform
         return files;
     }
 
-    private static int UpdateExtraWithBlobInformation(ReadOnlySpan<char> blobIdentifier, ReadOnlySpan<byte> bytes, PlatformExtra extra, out PlatformExtra result)
+    private static int UpdateExtraWithBlobInformation(ReadOnlySpan<char> blobIdentifier, ReadOnlySpan<byte> bytes, ContainerExtra extra, out ContainerExtra result)
     {
         // Second Guid is the one to use as the first one is probably the current name in the cloud.
         var blobSyncGuid = bytes.GetGuid();
@@ -293,14 +297,16 @@ public partial class PlatformMicrosoft : Platform
         // Vanilla data always available.
         container.Extra = container.Extra with
         {
-            MetaFormat = disk.Length == META_LENGTH_TOTAL_VANILLA ? MetaFormatEnum.Foundation : (disk.Length == META_LENGTH_TOTAL_WAYPOINT ? MetaFormatEnum.Waypoint : MetaFormatEnum.Unknown),
             Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
-            Size = (uint)(disk.Length),
+            MetaLength = (uint)(disk.Length),
             BaseVersion = (int)(decompressed[0]),
             GameMode = disk.Cast<ushort>(4),
             Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
             TotalPlayTime = decompressed[2],
         };
+
+        if (container.IsAccount)
+            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
 
         // Extended data since Waypoint.
         UpdateContainerWithWaypointMetaInformation(container, disk);

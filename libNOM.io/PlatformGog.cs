@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using libNOM.io.Settings;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace libNOM.io;
@@ -26,7 +28,7 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    #region Property
+    // Property
 
     #region Platform Indicator
 
@@ -44,21 +46,21 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    #endregion
-
-    // //
+    // Initialize
 
     #region Constructor
 
     public PlatformGog() : base() { }
 
-    public PlatformGog(string path) : base(path) { }
+    public PlatformGog(string? path) : base(path) { }
 
-    public PlatformGog(string path, PlatformSettings platformSettings) : base(path, platformSettings) { }
+    public PlatformGog(string? path, PlatformSettings? platformSettings) : base(path, platformSettings) { }
 
-    public PlatformGog(DirectoryInfo directory) : base(directory) { }
+    public PlatformGog(PlatformSettings? platformSettings) : base(platformSettings) { }
 
-    public PlatformGog(DirectoryInfo directory, PlatformSettings platformSettings) : base(directory, platformSettings) { }
+    public PlatformGog(DirectoryInfo? directory) : base(directory) { }
+
+    public PlatformGog(DirectoryInfo? directory, PlatformSettings? platformSettings) : base(directory, platformSettings) { }
 
     protected override void InitializePlatformSpecific()
     {
@@ -72,7 +74,7 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    // // User Identification
+    // //
 
     #region User Identification
 

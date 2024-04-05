@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Application -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<AssemblyName>libNOM.io.cli</AssemblyName>
+	</PropertyGroup>
+
+	<!-- Global Usings -->
+	<PropertyGroup>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+	<ItemGroup>
+		<Using Include="PowerArgs" />
+	</ItemGroup>
+
+	<!-- Build -->
+	<PropertyGroup Label="General">
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup Label="Publish">
+		<!-- warning IL2104: Assembly 'PowerArgs' produced trim warnings -->
+		<!-- warning IL3053: Assembly 'PowerArgs' produced AOT analysis warnings -->
+		<PublishAot>False</PublishAot>
+		<PublishSingleFile>True</PublishSingleFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
+		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
+		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+	</PropertyGroup>
+
+	<!-- Package -->
+	<PropertyGroup Label="General">
+		<Version>1.0.0</Version>
+		<Authors>cengelha</Authors>
+		<Description>CLI for libNOM.io to analyze single files or whole directories and print information about it, convert between JSON and actual save formats and perform file operations.</Description>
+		<Copyright>Copyright (c) Christian Engelhardt 2024</Copyright>
+		<RepositoryUrl>https://github.com/zencq/libNOM.io</RepositoryUrl>
+		<PackageTags>NoMansSky;NMS;libNOM</PackageTags>
+	</PropertyGroup>
+	<PropertyGroup Label="License">
+		<PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<!-- Dependencies -->
+	<ItemGroup>
+		<PackageReference Include="PowerArgs" Version="4.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\libNOM.io\libNOM.io.csproj" />
+	</ItemGroup>
+
+</Project>

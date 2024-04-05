@@ -136,7 +136,7 @@ internal static class ReadOnlySpanExtensions
     internal static bool IsEmpty(this ReadOnlySpan<byte> self)
     {
 #if NETSTANDARD2_0_OR_GREATER
-        return self.IsEmpty || self.ToArray().IsEmpty();
+        return self.IsEmpty || self.ToArray().All(i => i == byte.MinValue);
 #else
         return self.IsEmpty || self.Trim(byte.MinValue).IsEmpty;
 #endif
@@ -170,7 +170,7 @@ internal static class SpanExtensions
     internal static bool IsEmpty(this Span<byte> self)
     {
 #if NETSTANDARD2_0_OR_GREATER
-        return self.IsEmpty || self.ToArray().IsEmpty();
+        return self.IsEmpty || self.ToArray().All(i => i == byte.MinValue);
 #else
         return self.IsEmpty || self.Trim(byte.MinValue).IsEmpty;
 #endif

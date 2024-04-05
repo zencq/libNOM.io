@@ -3,18 +3,42 @@
 namespace libNOM.io.Meta;
 
 
-internal static partial class GameVersion
+internal static class GameVersion
 {
     #region Getter
+
+    /// <summary>
+    /// Gets the game version for account data based on the read meta.
+    /// </summary>
+    /// <param name="platform"></param>
+    /// <param name="length"></param>
+    /// <param name="format"></param>
+    /// <returns></returns>
+    internal static GameVersionEnum Get(Platform platform, int length, uint format)
+    {
+        if (length == platform.META_LENGTH_TOTAL_WAYPOINT)
+            return GameVersionEnum.Waypoint; // Constants.META_FORMAT_3
+
+        if (length == platform.META_LENGTH_TOTAL_VANILLA)
+            return format switch
+            {
+                Constants.META_FORMAT_1 => GameVersionEnum.Vanilla,
+                Constants.META_FORMAT_2 => GameVersionEnum.Foundation,
+                Constants.META_FORMAT_3 => GameVersionEnum.Frontiers,
+                _ => GameVersionEnum.Unknown,
+            };
+
+        return GameVersionEnum.Unknown;
+    }
 
     /// <summary>
     /// Gets the game version for and purely from the specified baseVersion.
     /// </summary>
     /// <param name="baseVersion"></param>
-    /// <param name="jsonObject"></param>
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
         >= 4147 => GameVersionEnum.Omega, // 4.50
         >= 4146 => GameVersionEnum.Echoes, // 4.40
@@ -46,6 +70,7 @@ internal static partial class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
         >= 4147 => GameVersionEnum.Omega, // 4.50
         >= 4146 => GameVersionEnum.Echoes, // 4.40
@@ -73,6 +98,7 @@ internal static partial class GameVersion
     /// <param name="json"></param>
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
         >= 4147 => GameVersionEnum.Omega, // 4.50
         >= 4146 => GameVersionEnum.Echoes, // 4.40

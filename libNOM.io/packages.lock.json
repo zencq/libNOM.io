@@ -31,9 +31,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.6, )",
-        "resolved": "1.3.6",
-        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A==",
+        "requested": "[1.3.8, )",
+        "resolved": "1.3.8",
+        "contentHash": "LhwlPa7c1zs1OV2XadMtAWdImjLIsqFJPoRcIWAadSRn0Ri1DepK65UbWLPmt4riLqx2d40xjXRk0ogpqNtK7g==",
         "dependencies": {
           "System.Memory": "4.5.5",
           "System.Runtime.CompilerServices.Unsafe": "5.0.0"
@@ -51,9 +51,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.11.0, )",
-        "resolved": "0.11.0",
-        "contentHash": "snf/4TkFNiatHdwZujcUcV+cNQj92/5g7C8FwM/s4HIf5SJ21xIoDSw/Tnueu0ppvVejVKeE8k2jmxcE0OHjrg==",
+        "requested": "[0.12.0, )",
+        "resolved": "0.12.0",
+        "contentHash": "eJngrJb7i6AgDuwK9EAfpwKoE5vFoyTHAsloGtVSAC8+s2RWWx3pXSD/gJIUo6+O3/Rd9DshwswpT1tBiHyNqA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "10.0.0"
@@ -220,9 +220,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.6, )",
-        "resolved": "1.3.6",
-        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A==",
+        "requested": "[1.3.8, )",
+        "resolved": "1.3.8",
+        "contentHash": "LhwlPa7c1zs1OV2XadMtAWdImjLIsqFJPoRcIWAadSRn0Ri1DepK65UbWLPmt4riLqx2d40xjXRk0ogpqNtK7g==",
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
@@ -239,9 +239,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.11.0, )",
-        "resolved": "0.11.0",
-        "contentHash": "snf/4TkFNiatHdwZujcUcV+cNQj92/5g7C8FwM/s4HIf5SJ21xIoDSw/Tnueu0ppvVejVKeE8k2jmxcE0OHjrg==",
+        "requested": "[0.12.0, )",
+        "resolved": "0.12.0",
+        "contentHash": "eJngrJb7i6AgDuwK9EAfpwKoE5vFoyTHAsloGtVSAC8+s2RWWx3pXSD/gJIUo6+O3/Rd9DshwswpT1tBiHyNqA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "10.0.0"
@@ -374,9 +374,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.6, )",
-        "resolved": "1.3.6",
-        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A=="
+        "requested": "[1.3.8, )",
+        "resolved": "1.3.8",
+        "contentHash": "LhwlPa7c1zs1OV2XadMtAWdImjLIsqFJPoRcIWAadSRn0Ri1DepK65UbWLPmt4riLqx2d40xjXRk0ogpqNtK7g=="
       },
       "LazyCache": {
         "type": "Direct",
@@ -390,9 +390,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.11.0, )",
-        "resolved": "0.11.0",
-        "contentHash": "snf/4TkFNiatHdwZujcUcV+cNQj92/5g7C8FwM/s4HIf5SJ21xIoDSw/Tnueu0ppvVejVKeE8k2jmxcE0OHjrg==",
+        "requested": "[0.12.0, )",
+        "resolved": "0.12.0",
+        "contentHash": "eJngrJb7i6AgDuwK9EAfpwKoE5vFoyTHAsloGtVSAC8+s2RWWx3pXSD/gJIUo6+O3/Rd9DshwswpT1tBiHyNqA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "10.0.0"
@@ -510,9 +510,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.6, )",
-        "resolved": "1.3.6",
-        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A=="
+        "requested": "[1.3.8, )",
+        "resolved": "1.3.8",
+        "contentHash": "LhwlPa7c1zs1OV2XadMtAWdImjLIsqFJPoRcIWAadSRn0Ri1DepK65UbWLPmt4riLqx2d40xjXRk0ogpqNtK7g=="
       },
       "LazyCache": {
         "type": "Direct",
@@ -526,9 +526,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.11.0, )",
-        "resolved": "0.11.0",
-        "contentHash": "snf/4TkFNiatHdwZujcUcV+cNQj92/5g7C8FwM/s4HIf5SJ21xIoDSw/Tnueu0ppvVejVKeE8k2jmxcE0OHjrg==",
+        "requested": "[0.12.0, )",
+        "resolved": "0.12.0",
+        "contentHash": "eJngrJb7i6AgDuwK9EAfpwKoE5vFoyTHAsloGtVSAC8+s2RWWx3pXSD/gJIUo6+O3/Rd9DshwswpT1tBiHyNqA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "10.0.0"
@@ -646,9 +646,9 @@
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
-        "requested": "[1.3.6, )",
-        "resolved": "1.3.6",
-        "contentHash": "RxGhoJBjZCgGeZgDqOP4Krs1cR9PHInbz6d2N19Dic0Y6ZACzVKbR3uSpqfEZf4RiUbHk9aiog2eS22nQPTc2A=="
+        "requested": "[1.3.8, )",
+        "resolved": "1.3.8",
+        "contentHash": "LhwlPa7c1zs1OV2XadMtAWdImjLIsqFJPoRcIWAadSRn0Ri1DepK65UbWLPmt4riLqx2d40xjXRk0ogpqNtK7g=="
       },
       "LazyCache": {
         "type": "Direct",
@@ -662,9 +662,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.11.0, )",
-        "resolved": "0.11.0",
-        "contentHash": "snf/4TkFNiatHdwZujcUcV+cNQj92/5g7C8FwM/s4HIf5SJ21xIoDSw/Tnueu0ppvVejVKeE8k2jmxcE0OHjrg==",
+        "requested": "[0.12.0, )",
+        "resolved": "0.12.0",
+        "contentHash": "eJngrJb7i6AgDuwK9EAfpwKoE5vFoyTHAsloGtVSAC8+s2RWWx3pXSD/gJIUo6+O3/Rd9DshwswpT1tBiHyNqA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "10.0.0"
