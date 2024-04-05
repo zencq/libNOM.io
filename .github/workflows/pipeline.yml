@@ -79,13 +79,6 @@ jobs:
       - name: Publish (Apple Silicon)
         if: ${{ matrix.os.name == 'macos' }} # do this as well to do both native
         run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime osx-arm64
-      - name: Upload (Release)
-        if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once if tagged
-        uses: actions/upload-artifact@v4
-        with:
-          name: Release
-          path: ./.github/changelogs/${{ github.ref_name }}.md
-          if-no-files-found: error
       - name: Upload (NuGet)
         if: ${{ matrix.os.name == 'macos' }} # only once
         uses: actions/upload-artifact@v4
@@ -102,35 +95,24 @@ jobs:
             ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli.exe
             ./libNOM.cli/bin/Release/${{ matrix.framwork }}/osx-arm64/publish/libNOM.io.cli
           if-no-files-found: error
-  release-verify:
-    name: Release (Verify)
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - name: Download
-        uses: actions/download-artifact@v4
-      - name: Show Result
-        run: |
-          pwd
-          dir -r pwd | % { if ($_.PsIsContainer) { $_.FullName + "\" } else { $_.FullName } }
-        shell: pwsh
-      - name: Rename
-        run: |
-          mv "./Build (macos)/osx-arm64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-arm64
-          mv "./Build (macos)/osx-x64/publish/libNOM.io.cli" ./libNOM.io.cli.macos-x64
-          mv "./Build (ubuntu)/linux-x64/publish/libNOM.io.cli" ./libNOM.io.cli.linux-x64
-          mv "./Build (windows)/win-x64/publish/libNOM.io.cli.exe" ./libNOM.io.cli.win-x64.exe
+      - name: Upload (Release)
+        if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once if tagged
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release
+          path: ./.github/changelogs/${{ github.ref_name }}.md
+          if-no-files-found: error
   release:
     name: Release
-    runs-on: ubuntu-latest
-    # Only if commit was tagged.
+    # If commit was tagged only.
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
-    needs: [test, release-verify]
+    runs-on: ubuntu-latest
+    needs: [test, build]
     steps:
       - name: Download
         uses: actions/download-artifact@v4
       - name: Version
-        run: echo "nupkg_version=$((((Get-Item -Path ./libNOM.io/libNOM.io/NuGet/libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
+        run: echo "nupkg_version=$((((Get-Item -Path ./NuGet/libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
         shell: pwsh
       # Exit if version mismatch.
       - name: Mismatch
@@ -147,7 +129,7 @@ jobs:
       - name: Create
         uses: softprops/action-gh-release@v2
         with:
-          body_path: ./libNOM.io/libNOM.io/Release/${{ github.ref_name }}.md
+          body_path: ./Release/${{ github.ref_name }}.md
           files: |
             ./libNOM.io.cli*
             ./NuGet/libNOM.io.*nupkg
