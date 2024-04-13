@@ -4,9 +4,21 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.8.0)
+## Unreleased
 
 ### Known Issues
+### Added
+### Changed
+* `PlatformSettings.MaxBackupCount <= 0` is disabling the backup feature again
+  * Existing backups will be deleted the next time one would be created otherwise
+  * To make it unlimited (like) set it to `int.MaxValue`
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.8.0 (2024-04-05)
+
 ### Added
 * CLI
   * Analyze single files or whole directories and print information about it
@@ -14,15 +26,12 @@ since 1.0.0.
   * Perform file operations
 * `PlatformCollectionSettings` to configure `PlatformCollection`
 * Support for game version **Orbital 4.60**
+
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is now unlimited and not unintentionally disabling the backup feature
 * `Container.ThrowHelperIsLoaded` now shows incompatibility if any
 * Replace preferred platform in constructors of `PlatformCollection` with new `PlatformCollectionSettings`
 * Moved `Settings` to its own namespace
-### Deprecated
-### Removed
-### Fixed
-### Security
 
 ## 0.7.0 (2024-03-13)
 

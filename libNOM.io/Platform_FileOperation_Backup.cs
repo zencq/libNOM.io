@@ -97,6 +97,14 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     public void Backup(Container container)
     {
+        // Remove first, to get rid of all backups in case MaxBackupCount was changed to zero.
+        if (Settings.MaxBackupCount >= 0)
+            RemoveOldBackups(container);
+
+        // No backups if set to zero (or negative).
+        if (Settings.MaxBackupCount <= 0)
+            return;
+
         // Does not make sense without the data file.
         Guard.IsNotNull(container.DataFile);
         Guard.IsTrue(container.DataFile.Exists);
@@ -123,16 +131,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         };
         container.BackupCollection.Add(backup);
 
-        if (Settings.MaxBackupCount > 0)
-            RemoveOldBackups(container);
-
         container.BackupCreatedCallback.Invoke(backup);
     }
 
     private void RemoveOldBackups(Container container)
     {
         // Remove the oldest backups above the maximum count.
-        var outdated = container.BackupCollection.OrderByDescending(i => i.LastWriteTime).Skip(Settings.MaxBackupCount);
+        var outdated = container.BackupCollection.OrderByDescending(i => i.LastWriteTime).Skip(Settings.MaxBackupCount - 1);
 
         Delete(outdated); // delete before sending outdated into nirvana
         _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection

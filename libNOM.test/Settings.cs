@@ -134,6 +134,42 @@ public class SettingsTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T11_MaxBackupCount_None()
+    {
+        // Arrange
+        var path = GetCombinedPath("Steam", "st_76561198371877533");
+        var settings = new PlatformSettings
+        {
+            LoadingStrategy = LoadingStrategyEnum.Current,
+            MaxBackupCount = 2,
+        };
+
+        // Act
+        var platform = new PlatformSteam(path, settings);
+        var container = platform.GetSaveContainer(0);
+        Guard.IsNotNull(container);
+
+        var backupDirectory = platform.Settings.BackupDirectory;
+        var searchPattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.zip".ToLowerInvariant();
+
+        platform.Backup(container);
+        var backups1 = Directory.GetFiles(backupDirectory, searchPattern).Length;
+
+        platform.Backup(container);
+        var backups2 = Directory.GetFiles(backupDirectory, searchPattern).Length;
+
+        platform.SetSettings(settings with { MaxBackupCount = 0 });
+
+        platform.Backup(container);
+        var backups3 = Directory.GetFiles(backupDirectory, searchPattern).Length;
+
+        // Assert
+        Assert.AreEqual(1, backups1);
+        Assert.AreEqual(2, backups2);
+        Assert.AreEqual(0, backups3);
+    }
+
+    [TestMethod]
     public void T20_UseMapping_True()
     {
         // Arrange

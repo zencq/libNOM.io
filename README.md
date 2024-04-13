@@ -9,7 +9,6 @@
 [![GitHub Release](https://img.shields.io/github/v/release/zencq/libNOM.io?logo=github)](https://github.com/zencq/libNOM.io/releases/latest)
 [![NuGet Version](https://img.shields.io/nuget/v/libNOM.io?logo=nuget)](https://www.nuget.org/packages/libNOM.io/)
 
-
 ## Introduction
 
 The `libNOM` label is a collection of .NET class libraries originally developed

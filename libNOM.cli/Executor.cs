@@ -29,7 +29,7 @@ public partial class Executor
 
     private static PlatformSettings GetPlatformSettings(bool unlimited = true, bool trace = true) => new()
     {
-        MaxBackupCount = unlimited ? 0 : 3, // 3 is default 
+        MaxBackupCount = unlimited ? int.MaxValue : 3, // 3 is default 
         Trace = trace,
     };
 
