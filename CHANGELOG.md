@@ -4,14 +4,15 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased
+## Unreleased (0.9.0)
 
 ### Known Issues
 ### Added
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is disabling the backup feature again
   * Existing backups will be deleted the next time one would be created otherwise
-  * To make it unlimited (like) set it to `int.MaxValue`
+  * To make it unlimited-like set it to `int.MaxValue`
+* `Constants.LOWEST_SUPPORTED_VERSION` is publicly accessible
 ### Deprecated
 ### Removed
 ### Fixed
@@ -28,7 +29,7 @@ since 1.0.0.
 * Support for game version **Orbital 4.60**
 
 ### Changed
-* `PlatformSettings.MaxBackupCount <= 0` is now unlimited and not unintentionally disabling the backup feature
+* `PlatformSettings.MaxBackupCount <= 0` is unlimited and not unintentionally disabling the backup feature
 * `Container.ThrowHelperIsLoaded` now shows incompatibility if any
 * Replace preferred platform in constructors of `PlatformCollection` with new `PlatformCollectionSettings`
 * Moved `Settings` to its own namespace

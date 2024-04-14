@@ -1,4 +1,6 @@
-﻿namespace libNOM.io.Global;
+﻿using libNOM.io.Interfaces;
+
+namespace libNOM.io.Global;
 
 
 public static class Constants
@@ -27,6 +29,11 @@ public static class Constants
     /// <seealso href="https://github.com/zencq/libNOM.io/blob/master/libNOM.io/Global/Constants.cs#L44-L147"/>
     public static readonly Dictionary<string, string[]> JSONPATH_EXTENSION = [];
 
+    /// <summary>
+    /// Lowest version that can be determined for sure. All older saves will have set <see cref="IContainer.IsOld"/> to true. 
+    /// </summary>
+    public const GameVersionEnum LOWEST_SUPPORTED_VERSION = GameVersionEnum.BeyondWithVehicleCam;
+
     // internal //
 
     internal const int CACHE_EXPIRATION = 250; // milliseconds
@@ -38,8 +45,6 @@ public static class Constants
     internal static readonly Difficulty DIFFICULTY_PRESET_PERMADEATH = new(ActiveSurvivalBarsDifficultyEnum.All, HazardDrainDifficultyEnum.Fast, EnergyDrainDifficultyEnum.Fast, SubstanceCollectionDifficultyEnum.Low, SprintingCostDifficultyEnum.Full, ScannerRechargeDifficultyEnum.Normal, DamageReceivedDifficultyEnum.High, BreakTechOnDamageProbabilityEnum.High, DeathConsequencesDifficultyEnum.DestroySave, ChargingRequirementsDifficultyEnum.High, FuelUseDifficultyEnum.Expensive, LaunchFuelCostDifficultyEnum.High, false, CurrencyCostDifficultyEnum.Normal, ItemShopAvailabilityDifficultyEnum.Low, InventoryStackLimitsDifficultyEnum.Normal, DamageGivenDifficultyEnum.Normal, CombatTimerDifficultyOptionEnum.Fast, CombatTimerDifficultyOptionEnum.Fast, CreatureHostilityDifficultyEnum.FullEcosystem, false, true, false, ReputationGainDifficultyEnum.Normal);
 
     internal const string FILE_TIMESTAMP_FORMAT = "yyyyMMddHHmmssfff";
-
-    internal const GameVersionEnum LOWEST_SUPPORTED_VERSION = GameVersionEnum.BeyondWithVehicleCam;
 
     internal static readonly Dictionary<string, string[]> JSONPATH = new()
     {
