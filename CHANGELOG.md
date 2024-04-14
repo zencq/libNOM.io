@@ -8,6 +8,7 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
+* `PlatformCollection.Contains(string path)` overload
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is disabling the backup feature again
   * Existing backups will be deleted the next time one would be created otherwise

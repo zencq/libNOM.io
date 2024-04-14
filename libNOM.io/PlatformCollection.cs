@@ -123,6 +123,16 @@ public class PlatformCollection : IEnumerable<IPlatform>
 
     #region IEnumerable
 
+    /// <summary>
+    /// Determines whether the <see cref="PlatformCollection"/> contains a <see cref="IPlatform"/> with the specified path.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public bool Contains(string path)
+    {
+        return _collection.ContainsKey(path);
+    }
+
     public IEnumerator<IPlatform> GetEnumerator()
     {
         foreach (var pair in _collection)
