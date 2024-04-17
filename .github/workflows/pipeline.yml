@@ -9,7 +9,6 @@ on:
 
 env:
   dotnet: 8.0.x
-  injection: ./libNOM.io/Properties/
 
 jobs:
   test:
@@ -47,7 +46,7 @@ jobs:
       # - name: Large File Storage (Pull)
       #   run: git lfs pull
       - name: Secret Injector
-        run: Get-ChildItem ${{ env.injection }} -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
+        run: Get-ChildItem ./libNOM.test/Properties/ -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
         shell: pwsh
       - name: Unit Test
         run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }}
@@ -73,7 +72,7 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: ${{ runner.os }}-nuget-
       - name: Secret Injector
-        run: Get-ChildItem ${{ env.injection }} -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.STEAM_API_KEY }}","${{ secrets.STEAM_API_KEY }}" | Set-Content $_.FullName }
+        run: Get-ChildItem ./libNOM.io/Properties/ -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.STEAM_API_KEY }}","${{ secrets.STEAM_API_KEY }}" | Set-Content $_.FullName }
         shell: pwsh
       - name: Pack
         if: ${{ matrix.os.name == 'macos' }} # only once
