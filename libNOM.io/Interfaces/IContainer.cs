@@ -409,16 +409,4 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     public void SetWatcherChange(WatcherChangeTypes changeType);
 
     #endregion
-
-    // //
-
-    #region Delegate
-
-    public NotifyBackupCreatedEventHandler BackupCreatedCallback { get; set; }
-
-    public NotifyBackupRestoredEventHandler BackupRestoredCallback { get; set; }
-
-    public NotifyWriteEventHandler WriteCallback { get; set; }
-
-    #endregion
 }
