@@ -13,6 +13,25 @@ namespace libNOM.io.Interfaces;
 /// </summary>
 public interface IContainer : IComparable<Container>, IEquatable<Container>
 {
+    #region Delegate
+
+    /// <summary>
+    /// Gets triggered when a backup was created.
+    /// </summary>
+    public NotifyBackupCreatedEventHandler BackupCreatedCallback { get; set; }
+
+    /// <summary>
+    /// Gets triggered when a backup was restored.
+    /// </summary>
+    public NotifyBackupRestoredEventHandler BackupRestoredCallback { get; set; }
+
+    /// <summary>
+    /// Gets triggered when Write() was called with this <see cref="IContainer"/>.
+    /// </summary>
+    public NotifyWriteEventHandler WriteCallback { get; set; }
+
+    #endregion
+
     // Property
 
     #region Flags
