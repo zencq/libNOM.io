@@ -1,8 +1,4 @@
-﻿using CommunityToolkit.Diagnostics;
-
-using LazyCache;
-
-using libNOM.io.Interfaces;
+﻿using LazyCache;
 
 using Microsoft.Extensions.Caching.Memory;
 
@@ -162,24 +158,24 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         }
     }
 
-    public void OnWatcherDecision(Container container, bool execute)
+    public void OnWatcherDecision(IContainer container, bool execute)
     {
-        Guard.IsNotNull(container);
+        var nonIContainer = container.ToContainer();
 
         if (execute)
         {
-            Reload(container);
+            Reload(nonIContainer);
 
             // Only when executed to keep old timestamps.
-            container.RefreshFileInfo();
+            nonIContainer.RefreshFileInfo();
         }
         else
-            container.IsSynced = false;
+            nonIContainer.IsSynced = false;
 
-        container.ResolveWatcherChange();
+        nonIContainer.ResolveWatcherChange();
 
         // Invoke as it was written but from the outside.
-        container.WriteCallback.Invoke();
+        nonIContainer.WriteCallback.Invoke();
     }
 
     #endregion

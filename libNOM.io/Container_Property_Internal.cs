@@ -1,6 +1,4 @@
-﻿using libNOM.io.Interfaces;
-
-namespace libNOM.io;
+﻿namespace libNOM.io;
 
 
 // This partial class contains public properties.

@@ -109,20 +109,20 @@ public interface IPlatform
     #region Getter
 
     /// <summary>
-    /// Gets the <see cref="Container"/> with the account data.
+    /// Gets the <see cref="IContainer"/> with the account data.
     /// </summary>
     /// <returns></returns>
-    public Container? GetAccountContainer();
+    public IContainer? GetAccountContainer();
 
     /// <summary>
-    /// Gets a specific <see cref="Container"/> with save data.
+    /// Gets a specific <see cref="IContainer"/> with save data.
     /// </summary>
     /// <param name="index">The CollectionIndex of the save to get.</param>
     /// <returns></returns>
-    public Container? GetSaveContainer(int index);
+    public IContainer? GetSaveContainer(int index);
 
     /// <summary>
-    /// Gets all possible <see cref="Container"/> with save data, that then can be filtered further.
+    /// Gets all possible <see cref="IContainer"/> with save data, that then can be filtered further.
     /// Here are some examples:
     /// <code>Where(i => i.Exists)</code> to get those that are actually exist.
     /// <code>Where(i => i.IsLoaded)</code> to get those that are actually loaded.
@@ -131,7 +131,7 @@ public interface IPlatform
     /// <code>Where(i => i.HasWatcherChange)</code> to get those that have unresolved changes detected by the FileSystemWatcher.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<Container> GetSaveContainers();
+    public IEnumerable<IContainer> GetSaveContainers();
 
     #endregion
 
@@ -150,23 +150,23 @@ public interface IPlatform
     #region Initialize
 
     /// <summary>
-    /// Loads data of a <see cref= "Container"/> in consideration of the loading strategy.
+    /// Loads data of a <see cref= "IContainer"/> in consideration of the loading strategy.
     /// </summary>
     /// <param name="container"></param>
-    public void Load(Container container);
+    public void Load(IContainer container);
 
     /// <summary>
     /// Rebuilds the container with data from the specified JSON object.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="jsonObject"></param>
-    public void Rebuild(Container container, JObject jsonObject);
+    public void Rebuild(IContainer container, JObject jsonObject);
 
     /// <summary>
-    /// Fully reloads the specified <see cref="Container"/> and resets the data to those currently on the drive.
+    /// Fully reloads the specified <see cref="IContainer"/> and resets the data to those currently on the drive.
     /// </summary>
     /// <param name="container"></param>
-    public void Reload(Container container);
+    public void Reload(IContainer container);
 
     #endregion
 
@@ -176,14 +176,14 @@ public interface IPlatform
     /// Writes the data of the specified container to the drive and sets the timestamp to now.
     /// </summary>
     /// <param name="container"></param>
-    public void Write(Container container);
+    public void Write(IContainer container);
 
     /// <summary>
     /// Writes the data of the specified container to the drive and sets the timestamp to the specified value.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="writeTime"></param>
-    public void Write(Container container, DateTimeOffset writeTime);
+    public void Write(IContainer container, DateTimeOffset writeTime);
 
     #endregion
 
@@ -192,91 +192,92 @@ public interface IPlatform
     #region Backup
 
     /// <summary>
-    /// Creates a backup <see cref="Container"/> based on the specified file.
+    /// Creates a backup <see cref="IContainer"/> based on the specified file.
     /// </summary>
     /// <param name="file"></param>
     /// <param name="metaIndex"></param>
     /// <returns></returns>
-    public Container? CreateBackupContainer(string file, int metaIndex);
+    public IContainer? CreateBackupContainer(string file, int metaIndex);
 
     /// <summary>
-    /// Creates a backup file of the specified <see cref="Container"/>.
+    /// Creates a backup file of the specified <see cref="IContainer"/>.
     /// </summary>
     /// <param name="container"></param>
-    public void Backup(Container container);
+    public void Backup(IContainer container);
 
     /// <summary>
     /// Restores a backup container by extracting the archive content and reloading the data.
     /// </summary>
     /// <param name="backup"></param>
-    public void Restore(Container backup);
+    /// <exception cref="ArgumentException"></exception>
+    public void Restore(IContainer backup);
 
     #endregion
 
     #region Copy
 
     /// <summary>
-    /// Uses a pair of <see cref="Container"/>s to copy from one location to the other.
+    /// Uses a pair of <see cref="IContainer"/>s to copy from one location to the other.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="destination"></param>
-    public void Copy(Container source, Container destination);
+    public void Copy(IContainer source, IContainer destination);
 
     /// <summary>
-    /// Uses an enumerable of <see cref="Container"/> pairs to copy each from one location to the other.
+    /// Uses an enumerable of <see cref="IContainer"/> pairs to copy each from one location to the other.
     /// </summary>
     /// <param name="operationData"></param>
-    public void Copy(IEnumerable<(Container Source, Container Destination)> operationData);
+    public void Copy(IEnumerable<(IContainer Source, IContainer Destination)> operationData);
 
     #endregion
 
     #region Delete
 
     /// <summary>
-    /// Deletes all files of a single <see cref="Container"/>.
+    /// Deletes all files of a single <see cref="IContainer"/>.
     /// </summary>
     /// <param name="container"></param>
-    public void Delete(Container container);
+    public void Delete(IContainer container);
 
     /// <summary>
-    /// Deletes all files of all <see cref="Container"/>s in the specified enumerable.
+    /// Deletes all files of all <see cref="IContainer"/>s in the specified enumerable.
     /// </summary>
     /// <param name="containers"></param>
-    public void Delete(IEnumerable<Container> containers);
+    public void Delete(IEnumerable<IContainer> containers);
 
     #endregion
 
     #region Move
 
     /// <summary>
-    /// Uses a pair of <see cref="Container"/>s to move one location to the other.
+    /// Uses a pair of <see cref="IContainer"/>s to move one location to the other.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="destination"></param>
-    public void Move(Container source, Container destination);
+    public void Move(IContainer source, IContainer destination);
 
     /// <summary>
-    /// Uses an enumerable of <see cref="Container"/> pairs to move each from one location to the other.
+    /// Uses an enumerable of <see cref="IContainer"/> pairs to move each from one location to the other.
     /// </summary>
     /// <param name="operationData"></param>
-    public void Move(IEnumerable<(Container Source, Container Destination)> operationData);
+    public void Move(IEnumerable<(IContainer Source, IContainer Destination)> operationData);
 
     #endregion
 
     #region Swap
 
     /// <summary>
-    /// Uses a pair of <see cref="Container"/>s to swap their locations.
+    /// Uses a pair of <see cref="IContainer"/>s to swap their locations.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="destination"></param>
-    public void Swap(Container source, Container destination);
+    public void Swap(IContainer source, IContainer destination);
 
     /// <summary>
-    /// Uses an enumerable of <see cref="Container"/> pairs to swap their respective locations.
+    /// Uses an enumerable of <see cref="IContainer"/> pairs to swap their respective locations.
     /// </summary>
     /// <param name="operationData"></param>
-    public void Swap(IEnumerable<(Container Source, Container Destination)> operationData);
+    public void Swap(IEnumerable<(IContainer Source, IContainer Destination)> operationData);
 
     #endregion
 
@@ -308,7 +309,7 @@ public interface IPlatform
     /// </summary>
     /// <param name="container"></param>
     /// <param name="execute"></param>
-    public void OnWatcherDecision(Container container, bool execute);
+    public void OnWatcherDecision(IContainer container, bool execute);
 
     #endregion
 }

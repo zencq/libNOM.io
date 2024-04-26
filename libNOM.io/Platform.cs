@@ -1,7 +1,5 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
-using libNOM.io.Interfaces;
 using libNOM.io.Settings;
 
 using Newtonsoft.Json.Linq;
@@ -73,7 +71,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 return process is not null && !process.HasExited;
             }
             // Throws Win32Exception if the implementing program only targets x86 as the game is a x64 process.
-            catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
+            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
                 return false;
             }
@@ -116,11 +114,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     // public //
 
-    public Container? GetAccountContainer() => AccountContainer;
+    public IContainer? GetAccountContainer() => AccountContainer;
 
-    public Container? GetSaveContainer(int collectionIndex) => SaveContainerCollection.FirstOrDefault(i => i.CollectionIndex == collectionIndex);
+    public IContainer? GetSaveContainer(int collectionIndex) => SaveContainerCollection.FirstOrDefault(i => i.CollectionIndex == collectionIndex);
 
-    public IEnumerable<Container> GetSaveContainers() => SaveContainerCollection;
+    public IEnumerable<IContainer> GetSaveContainers() => SaveContainerCollection;
 
     // private //
 

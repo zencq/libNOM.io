@@ -1,5 +1,4 @@
-﻿using libNOM.io.Interfaces;
-using libNOM.io.Trace;
+﻿using libNOM.io.Trace;
 
 namespace libNOM.io;
 

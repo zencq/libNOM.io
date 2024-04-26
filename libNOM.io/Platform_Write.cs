@@ -1,29 +1,29 @@
 ﻿using CommunityToolkit.HighPerformance;
 
-using libNOM.io.Interfaces;
-
 namespace libNOM.io;
 
 
 // This partial class contains writing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    public void Write(Container container) => Write(container, DateTimeOffset.Now.LocalDateTime);
+    public void Write(IContainer container) => Write(container, DateTimeOffset.Now.LocalDateTime);
 
-    public void Write(Container container, DateTimeOffset writeTime)
+    public void Write(IContainer container, DateTimeOffset writeTime)
     {
         if (!CanUpdate || !container.IsLoaded)
             return;
 
+        var nonIContainer = container.ToContainer();
+
         DisableWatcher();
 
-        WritePlatformSpecific(container, writeTime);
+        WritePlatformSpecific(nonIContainer, writeTime);
 
         EnableWatcher();
 
         // Always refresh in case something above was executed.
-        container.RefreshFileInfo();
-        container.WriteCallback.Invoke();
+        nonIContainer.RefreshFileInfo();
+        nonIContainer.WriteCallback.Invoke();
     }
 
     protected virtual void WritePlatformSpecific(Container container, DateTimeOffset writeTime)

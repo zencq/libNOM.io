@@ -2,7 +2,6 @@
 
 using CommunityToolkit.Diagnostics;
 
-using libNOM.io.Interfaces;
 using libNOM.io.Trace;
 
 namespace libNOM.io;
@@ -18,7 +17,7 @@ public partial class Container : IContainer
 
     #endregion
 
-    public ObservableCollection<Container> BackupCollection { get; } = [];
+    public ObservableCollection<IContainer> BackupCollection { get; } = [];
 
     public string Identifier { get; }
 

@@ -1,7 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
 
-using libNOM.io.Interfaces;
-
 namespace libNOM.io;
 
 
@@ -64,13 +62,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Copy
 
-    public void Copy(Container source, Container destination) => Copy([(Source: source, Destination: destination)], true);
+    public void Copy(IContainer source, IContainer destination) => Copy([(Source: source, Destination: destination)], true);
 
-    public void Copy(IEnumerable<(Container Source, Container Destination)> operationData) => Copy(operationData, true);
+    public void Copy(IEnumerable<(IContainer Source, IContainer Destination)> operationData) => Copy(operationData, true);
 
-    protected virtual void Copy(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
+    protected virtual void Copy(IEnumerable<(IContainer Source, IContainer Destination)> operationData, bool write)
     {
-        foreach (var (Source, Destination) in operationData)
+        foreach (var (Source, Destination) in operationData.Select(i => (Source: i.Source.ToContainer(), Destination: i.Destination.ToContainer())))
             if (!Source.Exists)
             {
                 Delete(Destination, write);
@@ -105,19 +103,19 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Delete
 
-    public void Delete(Container container) => Delete([container], true);
+    public void Delete(IContainer container) => Delete([container], true);
 
-    protected void Delete(Container container, bool write) => Delete([container], write);
+    protected void Delete(IContainer container, bool write) => Delete([container], write);
 
-    public void Delete(IEnumerable<Container> containers) => Delete(containers, true);
+    public void Delete(IEnumerable<IContainer> containers) => Delete(containers, true);
 
-    protected virtual void Delete(IEnumerable<Container> containers, bool write)
+    protected virtual void Delete(IEnumerable<IContainer> containers, bool write)
     {
         Guard.IsTrue(CanDelete);
 
         DisableWatcher();
 
-        foreach (var container in containers)
+        foreach (var container in containers.Select(i => i.ToContainer()))
         {
             if (write)
             {
@@ -139,13 +137,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Move
 
-    public void Move(Container source, Container destination) => Move([(Source: source, Destination: destination)], true);
+    public void Move(IContainer source, IContainer destination) => Move([(Source: source, Destination: destination)], true);
 
-    protected void Move(Container source, Container destination, bool write) => Move([(Source: source, Destination: destination)], write);
+    protected void Move(IContainer source, IContainer destination, bool write) => Move([(Source: source, Destination: destination)], write);
 
-    public void Move(IEnumerable<(Container Source, Container Destination)> operationData) => Move(operationData, true);
+    public void Move(IEnumerable<(IContainer Source, IContainer Destination)> operationData) => Move(operationData, true);
 
-    protected virtual void Move(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
+    protected virtual void Move(IEnumerable<(IContainer Source, IContainer Destination)> operationData, bool write)
     {
         Copy(operationData, write);
         Delete(operationData.Select(i => i.Source), write);
@@ -155,13 +153,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Swap
 
-    public void Swap(Container source, Container destination) => Swap([(Source: source, Destination: destination)], true);
+    public void Swap(IContainer source, IContainer destination) => Swap([(Source: source, Destination: destination)], true);
 
-    public void Swap(IEnumerable<(Container Source, Container Destination)> operationData) => Swap(operationData, true);
+    public void Swap(IEnumerable<(IContainer Source, IContainer Destination)> operationData) => Swap(operationData, true);
 
-    protected virtual void Swap(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
+    protected virtual void Swap(IEnumerable<(IContainer Source, IContainer Destination)> operationData, bool write)
     {
-        foreach (var (Source, Destination) in operationData)
+        foreach (var (Source, Destination) in operationData.Select(i => (Source: i.Source.ToContainer(), Destination: i.Destination.ToContainer())))
         {
             if (Source.Exists)
             {

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using CommunityToolkit.HighPerformance;
+﻿using CommunityToolkit.HighPerformance;
 
 namespace libNOM.io;
 

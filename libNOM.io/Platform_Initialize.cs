@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 
-using libNOM.io.Interfaces;
 using libNOM.io.Settings;
 
 using Newtonsoft.Json.Linq;
@@ -163,12 +162,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     private protected abstract Container CreateContainer(int metaIndex, ContainerExtra? extra); // private protected as PlatformExtra is internal
 
-    public void Load(Container container)
+    public void Load(IContainer container)
     {
-        if (container.IsBackup)
-            LoadBackupContainer(container);
+        var nonIContainer = container.ToContainer();
+        if (nonIContainer.IsBackup)
+            LoadBackupContainer(nonIContainer);
         else
-            LoadSaveContainer(container);
+            LoadSaveContainer(nonIContainer);
     }
 
     /// <summary>

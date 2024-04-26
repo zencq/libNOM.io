@@ -228,7 +228,7 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     /// <summary>
     /// List of related backups.
     /// </summary>
-    public ObservableCollection<Container> BackupCollection { get; }
+    public ObservableCollection<IContainer> BackupCollection { get; }
 
     /// <summary>
     /// Identifier of the save containing the slot number and save type.

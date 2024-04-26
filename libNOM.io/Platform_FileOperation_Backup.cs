@@ -3,8 +3,6 @@ using System.IO.Compression;
 
 using CommunityToolkit.Diagnostics;
 
-using libNOM.io.Interfaces;
-
 using Newtonsoft.Json.Linq;
 
 namespace libNOM.io;
@@ -15,7 +13,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     #region Initialize
 
-    public Container? CreateBackupContainer(string file, int metaIndex)
+    public IContainer? CreateBackupContainer(string file, int metaIndex)
     {
         var parts = Path.GetFileNameWithoutExtension(file).Split('.');
 
@@ -25,7 +23,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         try
         {
-            return new(metaIndex, this)
+            return new Container(metaIndex, this)
             {
                 DataFile = new(file),
                 GameVersion = (GameVersionEnum)(System.Convert.ToInt32(parts[4])),
@@ -95,43 +93,45 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    public void Backup(Container container)
+    public void Backup(IContainer container)
     {
+        var nonIContainer = container.ToContainer();
+
         // Remove first, to get rid of all backups in case MaxBackupCount was changed to zero.
         if (Settings.MaxBackupCount >= 0)
-            RemoveOldBackups(container);
+            RemoveOldBackups(nonIContainer);
 
         // No backups if set to zero (or negative).
         if (Settings.MaxBackupCount <= 0)
             return;
 
         // Does not make sense without the data file.
-        Guard.IsNotNull(container.DataFile);
-        Guard.IsTrue(container.DataFile.Exists);
+        Guard.IsNotNull(nonIContainer.DataFile);
+        Guard.IsTrue(nonIContainer.DataFile.Exists);
 
         Directory.CreateDirectory(Settings.BackupDirectory); // ensure directory exists
 
         var createdAt = DateTime.Now;
-        var name = $"backup.{PlatformEnum}.{container.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(container.GameVersion)}.zip".ToLowerInvariant();
+        var name = $"backup.{PlatformEnum}.{nonIContainer.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(nonIContainer.GameVersion)}.zip".ToLowerInvariant();
         var path = Path.Combine(Settings.BackupDirectory, name);
 
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
-            container.DataFile!.CreateZipArchiveEntry(zipArchive, "data");
-            container.MetaFile?.CreateZipArchiveEntry(zipArchive, "meta");
+            nonIContainer.DataFile!.CreateZipArchiveEntry(zipArchive, "data");
+            nonIContainer.MetaFile?.CreateZipArchiveEntry(zipArchive, "meta");
         }
 
         // Create new backup container.
-        var backup = new Container(container.MetaIndex, this)
+        var backup = new Container(nonIContainer.MetaIndex, this)
         {
             DataFile = new(path),
-            GameVersion = container.GameVersion,
+            GameVersion = nonIContainer.GameVersion,
             IsBackup = true,
             LastWriteTime = createdAt,
         };
-        container.BackupCollection.Add(backup);
+        nonIContainer.BackupCollection.Add(backup);
 
-        container.BackupCreatedCallback.Invoke(backup);
+        nonIContainer.BackupCreatedCallback.Invoke(backup);
     }
 
     private void RemoveOldBackups(Container container)
@@ -143,23 +143,24 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
     }
 
-    public void Restore(Container backup)
+    public void Restore(IContainer backup)
     {
-        // Does not make sense without it being an existing backup.
         Guard.IsTrue(backup.Exists);
         Guard.IsTrue(backup.IsBackup);
 
-        if (!backup.IsLoaded)
-            LoadBackupContainer(backup);
+        var nonIContainer = backup.ToContainer();
 
-        if (!backup.IsCompatible)
-            ThrowHelper.ThrowInvalidOperationException(backup.IncompatibilityException?.Message ?? backup.IncompatibilityTag ?? $"{backup} is incompatible.");
+        if (!nonIContainer.IsLoaded)
+            LoadBackupContainer(nonIContainer);
 
-        var container = SaveContainerCollection.First(i => i.CollectionIndex == backup.CollectionIndex);
-        UpdateContainerWithJsonInformation(container!, backup.GetJsonObject()); // rebuild to container with the new data
+        if (!nonIContainer.IsCompatible)
+            ThrowHelper.ThrowInvalidOperationException(nonIContainer.IncompatibilityException?.Message ?? nonIContainer.IncompatibilityTag ?? $"{nonIContainer} is incompatible.");
+
+        var container = SaveContainerCollection.First(i => i.CollectionIndex == nonIContainer.CollectionIndex);
+        UpdateContainerWithJsonInformation(container, nonIContainer.GetJsonObject()); // rebuild to container with the new data
 
         // Set IsSynced to false as ProcessContainerData set it to true but it is not compared to the state on disk.
-        container!.IsSynced = false;
-        container!.BackupRestoredCallback.Invoke();
+        container.IsSynced = false;
+        container.BackupRestoredCallback.Invoke();
     }
 }

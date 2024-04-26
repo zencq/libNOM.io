@@ -41,7 +41,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Copy
 
-    protected override void Copy(IEnumerable<(Container Source, Container Destination)> operationData, bool write)
+    protected override void Copy(IEnumerable<(IContainer Source, IContainer Destination)> operationData, bool write)
     {
         base.Copy(operationData, _usesSaveStreaming);
 
@@ -53,7 +53,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Delete
 
-    protected override void Delete(IEnumerable<Container> containers, bool write)
+    protected override void Delete(IEnumerable<IContainer> containers, bool write)
     {
         if (_usesSaveStreaming)
         {
@@ -65,7 +65,7 @@ public partial class PlatformPlaystation : Platform
 
         DisableWatcher();
 
-        foreach (var container in containers)
+        foreach (var container in containers.Select(i => i.ToContainer()))
         {
             container.Reset();
             container.IncompatibilityTag = Constants.INCOMPATIBILITY_006;
@@ -84,7 +84,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Move
 
-    protected override void Move(IEnumerable<(Container Source, Container Destination)> containerOperationData, bool write)
+    protected override void Move(IEnumerable<(IContainer Source, IContainer Destination)> containerOperationData, bool write)
     {
         if (_usesSaveStreaming)
         {
@@ -103,7 +103,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Swap
 
-    protected override void Swap(IEnumerable<(Container Source, Container Destination)> containerOperationData, bool write)
+    protected override void Swap(IEnumerable<(IContainer Source, IContainer Destination)> containerOperationData, bool write)
     {
         base.Swap(containerOperationData, _usesSaveStreaming);
 

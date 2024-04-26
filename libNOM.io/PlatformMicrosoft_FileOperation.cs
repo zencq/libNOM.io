@@ -57,13 +57,13 @@ public partial class PlatformMicrosoft : Platform
 
     #region Delete
 
-    protected override void Delete(IEnumerable<Container> containers, bool write)
+    protected override void Delete(IEnumerable<IContainer> containers, bool write)
     {
         Guard.IsTrue(CanDelete);
 
         DisableWatcher();
 
-        foreach (var container in containers)
+        foreach (var container in containers.Select(i => i.ToContainer()))
         {
             if (write)
             {

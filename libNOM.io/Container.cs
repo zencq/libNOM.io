@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 
 using libNOM.io.Delegates;
-using libNOM.io.Interfaces;
 
 namespace libNOM.io;
 

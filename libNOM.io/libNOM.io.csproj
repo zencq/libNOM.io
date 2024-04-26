@@ -13,6 +13,7 @@
 		<Using Include="libNOM.io.Enums" />
 		<Using Include="libNOM.io.Extensions" />
 		<Using Include="libNOM.io.Global" />
+		<Using Include="libNOM.io.Interfaces" />
 		<Using Include="libNOM.io.Models" />
 	</ItemGroup>
 
@@ -57,7 +58,7 @@
 
 	<!-- Package -->
 	<PropertyGroup Label="General">
-		<Version>0.9.0-beta.3</Version>
+		<Version>0.9.0-beta.4</Version>
 		<Authors>cengelha</Authors>
 		<Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2021</Copyright>

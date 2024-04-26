@@ -1,7 +1,5 @@
 ﻿using CommunityToolkit.HighPerformance;
 
-using libNOM.io.Interfaces;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -39,10 +37,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return [];
     }
 
-    public void Rebuild(Container container, JObject jsonObject)
+    public void Rebuild(IContainer container, JObject jsonObject)
     {
+        var nonIContainer = container.ToContainer();
+
         // Reset some properties to get them from the new JSON object.
-        container.Extra = container.Extra with
+        nonIContainer.Extra = nonIContainer.Extra with
         {
             BaseVersion = 0,
             DifficultyPreset = 0,
@@ -52,17 +52,18 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             Season = 0,
             TotalPlayTime = 0,
         };
-        container.GameVersion = GameVersionEnum.Unknown;
-        container.SaveVersion = 0;
-        UpdateContainerWithJsonInformation(container, jsonObject);
+        nonIContainer.GameVersion = GameVersionEnum.Unknown;
+        nonIContainer.SaveVersion = 0;
+        UpdateContainerWithJsonInformation(nonIContainer, jsonObject);
     }
 
-    public void Reload(Container container)
+    public void Reload(IContainer container)
     {
-        if (container.IsLoaded)
-            RebuildContainerFull(container);
+        var nonIContainer = container.ToContainer();
+        if (nonIContainer.IsLoaded)
+            RebuildContainerFull(nonIContainer);
         else
-            RebuildContainerHollow(container);
+            RebuildContainerHollow(nonIContainer);
     }
 
     /// <summary>
