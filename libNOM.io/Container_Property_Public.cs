@@ -161,6 +161,8 @@ public partial class Container : IContainer
 
     public bool IsVersion460Orbital => IsVersion(GameVersionEnum.Orbital); // { get; }
 
+    public bool IsVersion470Adrift => IsVersion(GameVersionEnum.Adrift); // { get; }
+
     #endregion
 
     #region Save

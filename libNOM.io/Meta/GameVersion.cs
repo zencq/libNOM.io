@@ -38,6 +38,7 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
         >= 4147 => GameVersionEnum.Omega, // 4.50
@@ -70,6 +71,7 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
         >= 4147 => GameVersionEnum.Omega, // 4.50
@@ -98,6 +100,7 @@ internal static class GameVersion
     /// <param name="json"></param>
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
         >= 4147 => GameVersionEnum.Omega, // 4.50

@@ -221,6 +221,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion460Orbital { get; }
 
+    public bool IsVersion470Adrift { get; }
+
     #endregion
 
     #region Miscellaneous

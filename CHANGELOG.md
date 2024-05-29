@@ -9,11 +9,13 @@ since 1.0.0.
 ### Known Issues
 ### Added
 * `PlatformCollection.Contains(string path)` overload
+* Support for game version **Adrift 4.70**
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is disabling the backup feature again
   * Existing backups will be deleted the next time one would be created otherwise
   * To make it unlimited-like set it to `int.MaxValue`
 * `Constants.LOWEST_SUPPORTED_VERSION` is publicly accessible
+* Adrift Expedition
 ### Deprecated
 ### Removed
 ### Fixed

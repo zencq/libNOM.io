@@ -58,4 +58,5 @@ public enum GameVersionEnum : uint
     [Description(nameof(Omega))]
     OmegaWithV2 = 452,
     Orbital = 460,
+    Adrift = 470,
 }

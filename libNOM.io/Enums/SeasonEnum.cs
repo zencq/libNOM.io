@@ -32,5 +32,6 @@ public enum SeasonEnum : ushort
     VoyagersRedux,
     OmegaExperimental, // was part of a trial before the actual release
     Omega, // 12th
+    Adrift, // 13th
     Future,
 }
