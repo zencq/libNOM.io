@@ -32,7 +32,7 @@ public partial class Executor
         return true;
     }
 
-    private static void PreprocessFileOperation(FileOperationSourceDestinationArgs args, out IPlatform? platform, out IEnumerable<(Container Source, Container Destination)> operationData)
+    private static void PreprocessFileOperation(FileOperationSourceDestinationArgs args, out IPlatform? platform, out IEnumerable<(IContainer Source, IContainer Destination)> operationData)
     {
         if (GetPlatformFromDirectory(args.Platform, out platform) && GuardArgsLength(args)) // GatherPlatformFromCollection first to ensure platform is set
         {

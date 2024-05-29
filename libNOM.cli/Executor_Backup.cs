@@ -16,7 +16,7 @@ public partial class Executor
     public static void Backup(BackupArgs args)
     {
         IPlatform? platform = null;
-        IEnumerable<Container>? containers = null;
+        IEnumerable<IContainer>? containers = null;
 
         if (Directory.Exists(args.Input))
             GetBackupDataFromDirectory(args, out platform, out containers);
@@ -33,7 +33,7 @@ public partial class Executor
             platform!.Backup(container);
     }
 
-    private static void GetBackupDataFromDirectory(BackupArgs args, out IPlatform? platform, out IEnumerable<Container> containers)
+    private static void GetBackupDataFromDirectory(BackupArgs args, out IPlatform? platform, out IEnumerable<IContainer> containers)
     {
         if (args.Indices!.IsNullOrEmpty())
         {
@@ -49,7 +49,7 @@ public partial class Executor
         containers = platform?.GetSaveContainers().Where(i => args.Indices!.Contains(i.CollectionIndex)) ?? [];
     }
 
-    private static void GetBackupDataFromFile(BackupArgs args, out IPlatform? platform, out IEnumerable<Container> containers)
+    private static void GetBackupDataFromFile(BackupArgs args, out IPlatform? platform, out IEnumerable<IContainer> containers)
     {
         var container = io.Global.Analyze.AnalyzeFile(args.Input, GetPlatformSettings());
         if (container is null)

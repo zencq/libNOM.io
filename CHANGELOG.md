@@ -19,6 +19,7 @@ since 1.0.0.
 ### Deprecated
 ### Removed
 ### Fixed
+* Compile error in CLI due to a change in main library to use IContainer ([#51](https://github.com/zencq/libNOM.io/issues/51))
 ### Security
 
 ## 0.8.0 (2024-04-05)
