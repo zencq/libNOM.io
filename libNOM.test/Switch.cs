@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.HighPerformance;
 
 using libNOM.io;
+using libNOM.io.Interfaces;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,13 +27,13 @@ public class SwitchTest : CommonTestClass
 
     #region Meta
 
-    private static uint[] DecryptMeta(Container container)
+    private static uint[] DecryptMeta(IContainer container)
     {
         byte[] meta = File.ReadAllBytes(container.MetaFile!.FullName);
         return ToUInt32(meta);
     }
 
-    private static void AssertCommonMeta(Container _, uint[] metaA, uint[] metaB)
+    private static void AssertCommonMeta(IContainer _, uint[] metaA, uint[] metaB)
     {
         Assert.AreEqual(metaA.Length, metaB.Length);
 
@@ -47,7 +48,7 @@ public class SwitchTest : CommonTestClass
             throw new AssertFailedException();
     }
 
-    private static void AssertSpecificMeta(WriteResults results, Container containerA, Container containerB, uint[] metaA, uint[] metaB)
+    private static void AssertSpecificMeta(WriteResults results, IContainer containerA, IContainer containerB, uint[] metaA, uint[] metaB)
     {
         var bytesA = metaA.AsSpan().AsBytes().ToArray();
         var bytesB = metaB.AsSpan().AsBytes().ToArray();

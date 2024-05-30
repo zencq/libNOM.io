@@ -3,6 +3,7 @@
 using CommunityToolkit.Diagnostics;
 
 using libNOM.io;
+using libNOM.io.Interfaces;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -44,7 +45,7 @@ public class PlaystationTest : CommonTestClass
 
     #region Meta
 
-    private static uint[] DecryptMeta(Container container)
+    private static uint[] DecryptMeta(IContainer container)
     {
         byte[] meta = [];
 
@@ -68,7 +69,7 @@ public class PlaystationTest : CommonTestClass
         return ToUInt32(meta);
     }
 
-    private static void AssertCommonMeta(Container _, uint[] metaA, uint[] metaB)
+    private static void AssertCommonMeta(IContainer _, uint[] metaA, uint[] metaB)
     {
         Assert.AreEqual(metaA.Length, metaB.Length);
 
@@ -107,7 +108,7 @@ public class PlaystationTest : CommonTestClass
         }
     }
 
-    private static void AssertSpecificMeta(WriteResults results, Container containerA, Container containerB, uint[] metaA, uint[] metaB)
+    private static void AssertSpecificMeta(WriteResults results, IContainer containerA, IContainer containerB, uint[] metaA, uint[] metaB)
     {
         if (!_usesSaveStreaming)
             AssertAllAreEqual(results.MetaIndex, (uint)(containerA.MetaIndex), (uint)(containerB.MetaIndex), metaA[5], metaB[5]);

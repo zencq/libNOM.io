@@ -290,12 +290,12 @@ public abstract class CommonTestClass
         return Path.Combine([DIRECTORY_TESTSUITE_ARCHIVE, .. paths]);
     }
 
-    protected static IEnumerable<Container> GetExistingContainers(IPlatform platform)
+    protected static IEnumerable<IContainer> GetExistingContainers(IPlatform platform)
     {
         return platform.GetSaveContainers().Where(i => i.Exists);
     }
 
-    protected static FileOperationResults GetFileOperationResults(Container container)
+    protected static FileOperationResults GetFileOperationResults(IContainer container)
     {
         var priject = new PrivateObject(container);
         return new(priject.GetFieldOrProperty(nameof(FileOperationResults.GameMode)).ToString()!, container.Difficulty, container.Season, (int)(priject.GetFieldOrProperty(nameof(FileOperationResults.BaseVersion))), container.GameVersion, container.TotalPlayTime);
@@ -306,7 +306,7 @@ public abstract class CommonTestClass
         return new Guid(source.ToArray()).ToString("N").ToUpper();
     }
 
-    protected static IEnumerable<Container> GetLoadedContainers(IPlatform platform)
+    protected static IEnumerable<IContainer> GetLoadedContainers(IPlatform platform)
     {
         return platform.GetSaveContainers().Where(i => i.IsLoaded);
     }
@@ -321,7 +321,7 @@ public abstract class CommonTestClass
         return Encoding.Unicode.GetString(source.ToArray());
     }
 
-    protected static IEnumerable<Container> GetWatcherChangeContainers(IPlatform platform)
+    protected static IEnumerable<IContainer> GetWatcherChangeContainers(IPlatform platform)
     {
         return platform.GetSaveContainers().Where(i => i.HasWatcherChange);
     }
@@ -333,7 +333,7 @@ public abstract class CommonTestClass
     protected static void TestCommonAnalyzeFile(string path, ReadResults results, PlatformEnum platformResult)
     {
         // Act
-        var container = libNOM.io.Global.Analyze.AnalyzeFile(path)!;
+        var container = io.Global.Analyze.AnalyzeFile(path)!;
         var priject = new PrivateObject(container);
 
         // Assert
@@ -400,7 +400,7 @@ public abstract class CommonTestClass
     protected static void TestCommonFileOperationCopy<TPlatform>(string path, int[] overwrite, int[] create, int[] delete) where TPlatform : IPlatform
     {
         // Arrange
-        var containers = new Dictionary<int, Container>();
+        var containers = new Dictionary<int, IContainer>();
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -437,7 +437,7 @@ public abstract class CommonTestClass
     protected static void TestCommonFileOperationDelete<TPlatform>(string path, int[] delete) where TPlatform : IPlatform
     {
         // Arrange
-        var containers = new List<Container>();
+        var containers = new List<IContainer>();
         var settings = new PlatformSettings
         {
             LoadingStrategy = LoadingStrategyEnum.Hollow,
@@ -467,7 +467,7 @@ public abstract class CommonTestClass
     protected static void TestCommonFileOperationMove<TPlatform>(string path, int[] copy, int[] overwrite, int[] delete, int[] create) where TPlatform : IPlatform
     {
         // Arrange
-        var containers = new Dictionary<int, Container>();
+        var containers = new Dictionary<int, IContainer>();
         var results = new Dictionary<int, FileOperationResults>();
         var settings = new PlatformSettings
         {
@@ -750,7 +750,7 @@ public abstract class CommonTestClass
         AssertCommonRead(results, platform, expectAccountData, userIdentification);
     }
 
-    protected static void TestCommonWriteDefaultAccount<TPlatform>(string path, int originMusicVolume, long originUtcTicks, Func<Container, uint[]> DecryptMeta, Action<Container, uint[], uint[]> AssertCommonMeta) where TPlatform : IPlatform
+    protected static void TestCommonWriteDefaultAccount<TPlatform>(string path, int originMusicVolume, long originUtcTicks, Func<IContainer, uint[]> DecryptMeta, Action<IContainer, uint[], uint[]> AssertCommonMeta) where TPlatform : IPlatform
     {
         // Arrange
         var now = DateTimeOffset.UtcNow;
@@ -797,7 +797,7 @@ public abstract class CommonTestClass
         AssertCommonMeta(containerA, metaA, metaB);
     }
 
-    protected static void TestCommonWriteDefaultSave<TPlatform>(string path, int containerIndex, int originUnits, long originUtcTicks, WriteResults results, Func<Container, uint[]> DecryptMeta, Action<Container, uint[], uint[]> AssertCommonMeta, Action<WriteResults, Container, Container, uint[], uint[]> AssertSpecificMeta) where TPlatform : IPlatform
+    protected static void TestCommonWriteDefaultSave<TPlatform>(string path, int containerIndex, int originUnits, long originUtcTicks, WriteResults results, Func<IContainer, uint[]> DecryptMeta, Action<IContainer, uint[], uint[]> AssertCommonMeta, Action<WriteResults, IContainer, IContainer, uint[], uint[]> AssertSpecificMeta) where TPlatform : IPlatform
     {
         // Arrange
         var now = DateTimeOffset.UtcNow;
@@ -986,7 +986,7 @@ public abstract class CommonTestClass
 
     #region UserIdentification
 
-    protected static UserIdentification GetUserIdentification(Container container)
+    protected static UserIdentification GetUserIdentification(IContainer container)
     {
         var priject = new PrivateObject(new PrivateObject(container).GetFieldOrProperty("UserIdentification"));
         return new()
