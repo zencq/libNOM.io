@@ -7,23 +7,20 @@ on:
     branches: [ master ]
   create:
 
-env:
-  dotnet: 8.0.x
-
 jobs:
   test:
     name: Test
     strategy:
       matrix:
         # November, 2024 / May, 2024 / November, 2026
-        framwork: [net6.0, net7.0, net8.0]
+        framwork: [{dotnet: 'net6.0', version: '6.0.x'}, {dotnet: 'net7.0', version: '7.0.x'}, {dotnet: 'net8.0', version: '8.0.x'}]
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.dotnet }}
+          dotnet-version: ${{ matrix.framwork.version }}
           dotnet-quality: ga
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,19 +46,19 @@ jobs:
         run: Get-ChildItem ./libNOM.test/Properties/ -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
         shell: pwsh
       - name: Unit Test
-        run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork }}
+        run: dotnet test libNOM.test --configuration Debug --framework ${{ matrix.framwork.dotnet }}
   build:
     name: Build
     strategy:
       matrix:
-        framwork: [net8.0] # must match project file
+        framwork: [{dotnet: 'net8.0', version: '8.0.x'}] # must match project file
         os: [{display: 'windows', name: 'windows', runtime: 'win-x64'}, {display: 'macos', name: 'macos', runtime: 'osx-x64'}, {display: 'linux', name: 'ubuntu', runtime: 'linux-x64'}]
     runs-on: ${{ matrix.os.name }}-latest
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.dotnet }}
+          dotnet-version: ${{ matrix.framwork.version }}
           dotnet-quality: ga
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,10 +75,10 @@ jobs:
         if: ${{ matrix.os.name == 'macos' }} # only once
         run: dotnet pack libNOM.io --configuration Release
       - name: Publish
-        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime ${{ matrix.os.runtime }}
+        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork.dotnet }} --runtime ${{ matrix.os.runtime }}
       - name: Publish (Apple Silicon)
         if: ${{ matrix.os.name == 'macos' }} # do this to have both native
-        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork }} --runtime osx-arm64
+        run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framwork.dotnet }} --runtime osx-arm64
       - name: Upload (NuGet)
         if: ${{ matrix.os.name == 'macos' }} # only once
         uses: actions/upload-artifact@v4
@@ -94,9 +91,9 @@ jobs:
         with:
           name: Build (${{ matrix.os.display }})
           path: | # files not found are ignored
-            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli
-            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli.exe
-            ./libNOM.cli/bin/Release/${{ matrix.framwork }}/osx-arm64/publish/libNOM.io.cli
+            ./libNOM.cli/bin/Release/${{ matrix.framwork.dotnet }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli
+            ./libNOM.cli/bin/Release/${{ matrix.framwork.dotnet }}/${{ matrix.os.runtime }}/publish/libNOM.io.cli.exe
+            ./libNOM.cli/bin/Release/${{ matrix.framwork.dotnet }}/osx-arm64/publish/libNOM.io.cli
           if-no-files-found: error
       - name: Upload (Release)
         if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once and if tagged
