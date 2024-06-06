@@ -60,7 +60,7 @@ public static class Convert
     /// The result will be right next to the data file of the <see cref="Container"/>. If none is set, the current working directory is used.
     /// </summary>
     /// <param name="file"></param>
-    public static void ToJson(Container container) => ToJson(container, null, true, true);
+    public static void ToJson(IContainer container) => ToJson(container, null, true, true);
 
     /// <summary>
     /// Converts the specified container to a plaintext JSON file according to the specified flags.
@@ -69,7 +69,7 @@ public static class Convert
     /// <param name="container"></param>
     /// <param name="indented"></param>
     /// <param name="deobfuscated"></param>
-    public static void ToJson(Container container, bool indented, bool deobfuscated) => ToJson(container, null, indented, deobfuscated);
+    public static void ToJson(IContainer container, bool indented, bool deobfuscated) => ToJson(container, null, indented, deobfuscated);
 
     /// <summary>
     /// Converts the specified container to an indented and deobfuscated plaintext JSON file.
@@ -77,7 +77,7 @@ public static class Convert
     /// </summary>
     /// <param name="container"></param>
     /// <param name="path"></param>
-    public static void ToJson(Container container, string? path) => ToJson(container, path, true, true);
+    public static void ToJson(IContainer container, string? path) => ToJson(container, path, true, true);
 
     /// <summary>
     /// Converts the specified container to a plaintext JSON file according to the specified flags.
@@ -88,7 +88,7 @@ public static class Convert
     /// <param name="indented"></param>
     /// <param name="deobfuscated"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void ToJson(Container container, string? path, bool indented, bool deobfuscated)
+    public static void ToJson(IContainer container, string? path, bool indented, bool deobfuscated)
     {
         if (string.IsNullOrWhiteSpace(path))
             path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
@@ -169,7 +169,7 @@ public static class Convert
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    private static Container? GetContainer(string? input, Platform platform)
+    private static Container? GetContainer(string? input, IPlatform platform)
     {
         if (CreateContainer(input, platform) is Container container && container.Exists)
         {
@@ -187,7 +187,7 @@ public static class Convert
         return null;
     }
 
-    private static Container? CreateContainer(string? input, Platform platform)
+    private static Container? CreateContainer(string? input, IPlatform platform)
     {
         Container? container = null;
 
