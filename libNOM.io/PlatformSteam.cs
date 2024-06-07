@@ -75,7 +75,7 @@ public partial class PlatformSteam : Platform
 
     public override bool HasModding { get; } = true;
 
-    public override bool RestartToApply { get; } = false;
+    public override RestartRequirementEnum RestartToApply { get; } = RestartRequirementEnum.AccountOnly;
 
     // protected //
 

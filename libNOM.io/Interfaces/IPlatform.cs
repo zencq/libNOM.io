@@ -83,10 +83,10 @@ public interface IPlatform
     public bool IsValid { get; }
 
     /// <summary>
-    /// Whether modifying save data requires a restart of the game to see the changes.
+    /// In which scenarios modifying save data requires a restart of the game to see the changes.
     /// For account data this is always necessary.
     /// </summary>
-    public bool RestartToApply { get; }
+    public RestartRequirementEnum RestartToApply { get; }
 
     #endregion
 

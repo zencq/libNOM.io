@@ -40,7 +40,7 @@ public partial class PlatformSwitch : Platform
 
     public override bool IsValid => AnchorFileIndex == 0; // { get; }
 
-    public override bool RestartToApply { get; } = true;
+    public override RestartRequirementEnum RestartToApply { get; } = RestartRequirementEnum.Always;
 
     // protected //
 

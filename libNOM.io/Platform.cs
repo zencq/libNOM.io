@@ -80,7 +80,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     public virtual bool IsValid => PlatformAnchorFilePattern.ContainsIndex(AnchorFileIndex); // { get; }
 
-    public abstract bool RestartToApply { get; }
+    public abstract RestartRequirementEnum RestartToApply { get; }
 
     // protected //
 

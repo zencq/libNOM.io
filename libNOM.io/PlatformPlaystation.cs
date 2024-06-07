@@ -64,7 +64,7 @@ public partial class PlatformPlaystation : Platform
 
     public override bool HasModding { get; } = false;
 
-    public override bool RestartToApply { get; } = true;
+    public override RestartRequirementEnum RestartToApply { get; } = RestartRequirementEnum.Always;
 
     // protected //
 
