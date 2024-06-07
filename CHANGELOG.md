@@ -4,23 +4,36 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.9.0)
+## Unreleased
 
 ### Known Issues
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.9.0 (2024-06-07)
+
+### Added
 * `PlatformCollection.Contains(string path)` overload
 * Support for game version **Adrift 4.70**
+* Adrift Expedition
+
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is disabling the backup feature again
   * Existing backups will be deleted the next time one would be created otherwise
   * To make it unlimited-like set it to `int.MaxValue`
 * `Constants.LOWEST_SUPPORTED_VERSION` is publicly accessible
-* Adrift Expedition
-### Deprecated
-### Removed
+* Using the `IContainer` interface instead of `Container` directly, in interfaces
+  and other public methods
+* `Platform.RestartToApply` is now an enum for more precision on when a game restart
+  is required
+
 ### Fixed
-* Compile error in CLI due to a change in main library to use IContainer ([#51](https://github.com/zencq/libNOM.io/issues/51))
-### Security
+* The values for the properties `Container.ActiveContext` and `Container.CanSwitchContext`
+  are now properly set even if the `Container` is not fully loaded
 
 ## 0.8.0 (2024-04-05)
 
@@ -33,10 +46,14 @@ since 1.0.0.
 * Support for game version **Orbital 4.60**
 
 ### Changed
-* `PlatformSettings.MaxBackupCount <= 0` is unlimited and not unintentionally disabling the backup feature
+* `PlatformSettings.MaxBackupCount <= 0` is unlimited and not unintentionally disabling
+  the backup feature
 * `Container.ThrowHelperIsLoaded` now shows incompatibility if any
-* Replace preferred platform in constructors of `PlatformCollection` with new `PlatformCollectionSettings`
+* Replace preferred platform in constructors of `PlatformCollection` with new
+  `PlatformCollectionSettings`
 * Moved `Settings` to its own namespace
+* Bump *K4os.Compression.LZ4* from 1.3.6 to 1.3.8
+* Bump *libNOM.map* from 0.9.2 to 0.12.0
 
 ## 0.7.0 (2024-03-13)
 
