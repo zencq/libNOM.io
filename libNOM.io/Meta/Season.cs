@@ -11,21 +11,21 @@ internal static partial class Season
 
 #if NETSTANDARD2_0_OR_GREATER || NET6_0
 #pragma warning disable IDE0300 // Use collection expression for array
-    private static readonly Regex[] Regexes = new Regex[] { // keep this format to have Regex syntax highlighting
+    private static readonly Regex[] RegexesSeasonId = new Regex[] { // keep this format to have Regex syntax highlighting
         new("\\\"gou\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100)),
         new("\\\"SeasonId\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100)),
     };
 #pragma warning restore IDE0300
 #else
     [GeneratedRegex("\\\"gou\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, 100)]
-    private static partial Regex RegexObfuscated();
+    private static partial Regex RegexObfuscatedSeasonId();
 
     [GeneratedRegex("\\\"SeasonId\\\":\\\"(.*?)\\\",", RegexOptions.Compiled, 100)]
-    private static partial Regex RegexPlaintext();
+    private static partial Regex RegexPlaintextSeasonId();
 
-    private static readonly Regex[] Regexes = [
-        RegexObfuscated(),
-        RegexPlaintext(),
+    private static readonly Regex[] RegexesSeasonId = [
+        RegexObfuscatedSeasonId(),
+        RegexPlaintextSeasonId(),
     ];
 #endif
 
@@ -52,7 +52,7 @@ internal static partial class Season
     /// <param name="json"></param>
     internal static SeasonEnum Get(string? json)
     {
-        if (Regexes.Match(json)?.ToInt32Value() is int id)
+        if (RegexesSeasonId.Match(json)?.ToInt32Value() is int id)
             return SeasonIdToEnum(id);
 
         return SeasonEnum.None;

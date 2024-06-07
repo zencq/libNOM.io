@@ -276,6 +276,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             if (IsUpdateNecessary(container.Extra.SaveSummary, force))
                 container.SaveSummary = Meta.SaveSummary.Get(json);
         }
+
+        if (container.IsVersion450Omega) // needs GameVersion
+        {
+            container.CanSwitchContext = Meta.Context.CanSwitch(json);
+
+            container.ActiveContext = Meta.Context.GetActive(json); // needs CanSwitchContext
+        }
     }
 
     private static bool IsUpdateNecessary(int property, bool force) => force || property <= 0;

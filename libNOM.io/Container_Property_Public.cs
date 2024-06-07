@@ -12,6 +12,8 @@ public partial class Container : IContainer
 {
     #region Field
 
+    private SaveContextQueryEnum _activeContext = SaveContextQueryEnum.DontCare;
+    private bool _canSwitchContext;
     private bool? _exists;
     private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
 
@@ -31,7 +33,11 @@ public partial class Container : IContainer
 
     #region Flags
 
-    public bool CanSwitchContext => IsLoaded && _jsonObject!.ContainsKey(Json.GetPath("BASE_CONTEXT", _jsonObject)) && _jsonObject!.ContainsKey(Json.GetPath("EXPEDITION_CONTEXT", _jsonObject!)); // { get; }
+    public bool CanSwitchContext // { get; internal set; }
+    {
+        get => IsLoaded ? (_jsonObject!.ContainsKey(Json.GetPath("BASE_CONTEXT", _jsonObject)) && _jsonObject!.ContainsKey(Json.GetPath("EXPEDITION_CONTEXT", _jsonObject!))) : _canSwitchContext;
+        internal set => _canSwitchContext = value;
+    }
 
     public bool HasActiveExpedition => GameMode == PresetGameModeEnum.Seasonal || (IsLoaded && _jsonObject!.ContainsKey(Json.GetPath("EXPEDITION_CONTEXT", _jsonObject!))); // { get; }
 
@@ -169,12 +175,16 @@ public partial class Container : IContainer
 
     public SaveContextQueryEnum ActiveContext // { get; set; }
     {
-        get => _jsonObject?.GetValue<SaveContextQueryEnum>("ACTIVE_CONTEXT") ?? SaveContextQueryEnum.DontCare;
+        get => _jsonObject?.GetValue<SaveContextQueryEnum>("ACTIVE_CONTEXT") ?? _activeContext;
         set
         {
-            Guard.IsTrue(CanSwitchContext, nameof(CanSwitchContext)); // block switching if only one context
             if (IsLoaded && value is SaveContextQueryEnum.Season or SaveContextQueryEnum.Main)
+            {
+                Guard.IsTrue(CanSwitchContext, nameof(CanSwitchContext)); // block switching if only one context
                 SetJsonValue(value.ToString(), "ACTIVE_CONTEXT");
+            }
+
+            _activeContext = value;
         }
     }
 
