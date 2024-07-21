@@ -220,15 +220,15 @@ public partial class PlatformSteam : Platform
             }
             if (container.IsSave)
             {
-            // Extended metadata since Waypoint 4.00.
-            UpdateContainerWithWaypointMetaInformation(container, disk);
+                // Extended metadata since Waypoint 4.00.
+                UpdateContainerWithWaypointMetaInformation(container, disk);
 
                 // Extended metadata including a new META_FORMAT since Worlds 5.00.
                 UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
 
-            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
-            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
-        }
+                // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+                container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
+            }
         }
 
         // Size is save to write always.
@@ -299,7 +299,7 @@ public partial class PlatformSteam : Platform
 
                 uint i1 = (current >> 3) ^ (result[valueIndex] << 4);
                 uint i2 = (current * 4) ^ (result[valueIndex] >> 5);
-                uint i3 = (result[valueIndex] ^ key[keyIndex]);
+                uint i3 = (result[valueIndex] ^ key[keyIndex]); // [(0 & 3) ^ keyIndex] as in j3 to be precise (0 would be the last executed index) but (0 & 3) is always zero and therefore does not matter
                 uint i4 = (current ^ hash);
                 result[0] -= (i1 + i2) ^ (i3 + i4);
 
@@ -441,7 +441,7 @@ public partial class PlatformSteam : Platform
 
             uint i1 = (value[0] >> 3) ^ (current << 4);
             uint i2 = (value[0] * 4) ^ (current >> 5);
-            uint i3 = (current ^ key[keyIndex ^ 1]);
+            uint i3 = (current ^ key[(lastIndex & 3) ^ keyIndex]);
             uint i4 = (value[0] ^ hash);
             value[lastIndex] += (i1 + i2) ^ (i3 + i4);
             current = value[lastIndex];

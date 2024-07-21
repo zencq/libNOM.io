@@ -147,6 +147,28 @@ public class SteamTest : CommonTestClass
                 Assert.IsTrue(metaA.Skip(20).SequenceEqual(metaB.Skip(20)));
             }
         }
+        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS)
+        {
+            AssertAllAreEqual(META_FORMAT_4, metaA[1], metaB[1]);
+
+            if (container.IsAccount)
+            {
+                AssertAllNotZero(metaA.Skip(2).Take(4), metaB.Skip(2).Take(4));
+                AssertAllNotZero(metaA.Skip(6).Take(8), metaB.Skip(6).Take(8));
+                AssertAllZero(metaA.Skip(14), metaB.Skip(14));
+            }
+            else
+            {
+                AssertAllZero(metaA.Skip(2).Take(12), metaB.Skip(2).Take(12));
+                AssertAllNotZero(metaA.Skip(14).Take(2), metaB.Skip(14).Take(2));
+                AssertAllZero(metaA[16], metaB[16]);
+                Assert.IsTrue(metaA.Skip(20).Take(69).SequenceEqual(metaB.Skip(20).Take(69)));
+                AssertAllNotZero(metaA[89], metaB[89]);
+                AssertAllAreEqual(META_FORMAT_4, metaA[90], metaB[90]);
+                AssertAllZero(metaA.Skip(91), metaB.Skip(91));
+
+            }
+        }
         else
             throw new AssertFailedException();
     }
