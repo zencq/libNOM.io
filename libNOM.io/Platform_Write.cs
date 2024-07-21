@@ -157,7 +157,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         // 3. Encrypt
         var encrypted = EncryptMeta(container, data, CompressMeta(container, data, plain.AsBytes()));
         // 4. Update Container Information
-        UpdateContainerWithMetaInformation(container, encrypted, plain);
+        UpdateContainerWithMetaInformation(container, plain.AsBytes(), plain);
 
         return encrypted;
     }
@@ -166,7 +166,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         var capacity = (int)(container.Extra.MetaLength);
         if (capacity == 0)
-            capacity = container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA;
+            capacity = container.GameVersion switch {
+                >= GameVersionEnum.Worlds => META_LENGTH_TOTAL_WORLDS,
+                >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
+                _ => META_LENGTH_TOTAL_VANILLA,
+            };
 
         return new byte[capacity];
     }
@@ -185,20 +189,17 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <param name="writer"></param>
-    protected void AppendWaypointMeta(BinaryWriter writer, Container container)
+    protected void OverwriteWaypointMeta(BinaryWriter writer, Container container)
     {
-        // Always append cached bytes but overwrite afterwards if Waypoint.
-        writer.Write(container.Extra.Bytes ?? []); // length depends on platform
-
         if (container.IsVersion400Waypoint)
         {
-            writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_KNOWN_VANILLA, SeekOrigin.Begin);
             writer.Write(container.SaveName.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 1), SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
+            writer.Seek(META_LENGTH_KNOWN_NAME, SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
             writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2), SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
             writer.Write((byte)(container.Difficulty)); // 1
         }
     }

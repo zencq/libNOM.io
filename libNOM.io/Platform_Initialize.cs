@@ -119,7 +119,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         var bag = new ConcurrentBag<Container>();
 
-        var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) => Task.Run(() =>
+        var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + MAX_SAVE_TOTAL).Select((metaIndex) => Task.Run(() =>
         {
             switch (metaIndex)
             {
@@ -302,9 +302,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
             container.Extra = container.Extra with
             {
-                SaveName = disk.Slice(META_LENGTH_KNOWN, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-                SaveSummary = disk.Slice(META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 1), Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-                DifficultyPreset = disk[META_LENGTH_KNOWN + (Constants.SAVE_RENAMING_LENGTH_MANIFEST * 2)],
+                SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+                SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+                DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // just a single byte to be able to use a common method for all platforms
             };
     }
 

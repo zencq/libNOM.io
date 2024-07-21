@@ -55,17 +55,27 @@ public static class NewtonsoftExtensions
     /// <param name="indent">Whether the result will be indented.</param>
     /// <param name="obfuscate">Whether the result will be obfuscated.</param>
     /// <returns>A JSON string representation of the object.</returns>
-    public static string GetString(this JObject self, bool indent, bool obfuscate)
+    public static string GetString(this JObject self, bool indent, bool obfuscate) => $"{GetString(self, indent, obfuscate, useAccount: self.IsAccount())}\0";
+
+    /// <summary>
+    /// Serializes any JSON token to a JSON string according to the specified options.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="indent">Whether the result will be indented.</param>
+    /// <param name="obfuscate">Whether the result will be obfuscated.</param>
+    /// <param name="useAccount">Whether to use mapping for account data or save data.</param>
+    /// <returns>A JSON string representation of the object.</returns>
+    public static string GetString(this JToken self, bool indent, bool obfuscate, bool useAccount = false)
     {
-        var jsonObject = Common.DeepCopy(self);
+        var jsonToken = Common.DeepCopy(self);
 
         if (obfuscate)
-            Mapping.Obfuscate(jsonObject, self.IsAccount());
+            Mapping.Obfuscate(jsonToken, useAccount);
         else
-            Mapping.Deobfuscate(jsonObject, self.IsAccount());
+            Mapping.Deobfuscate(jsonToken, useAccount);
 
         var settings = new JsonSerializerSettings { Formatting = indent ? Formatting.Indented : Formatting.None };
-        var jsonString = $"{JsonConvert.SerializeObject(jsonObject, settings)}\0";
+        var jsonString = JsonConvert.SerializeObject(jsonToken, settings);
 
         return jsonString.Replace("/", "\\/");
     }

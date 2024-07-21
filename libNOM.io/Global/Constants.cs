@@ -26,13 +26,26 @@ public static class Constants
     /// The format looks like this: <code>JSONPATH_EXTENSION["UPPERCASE_ID"] = ["vanilla-obfuscated-path", "vanilla-plaintext-path", "omega-obfuscated-path", "omega-plaintext-path"]</code>
     /// There are some <see cref="JSONPATH">predefined paths used within this library</see> which gives you some examples.
     /// </summary>
-    /// <seealso href="https://github.com/zencq/libNOM.io/blob/master/libNOM.io/Global/Constants.cs#L44-L147"/>
+    /// <seealso href="https://github.com/zencq/libNOM.io/blob/master/libNOM.io/Global/Constants.cs#L49-L152"/>
     public static readonly Dictionary<string, string[]> JSONPATH_EXTENSION = [];
 
     /// <summary>
-    /// Lowest version that can be determined for sure. All older saves will have set <see cref="IContainer.IsOld"/> to true. 
+    /// Lowest version that can be determined for sure. All older saves will have set <see cref="IContainer.IsOld"/> to true.
     /// </summary>
     public const GameVersionEnum LOWEST_SUPPORTED_VERSION = GameVersionEnum.BeyondWithVehicleCam;
+
+    /// <summary>
+    /// Maximum number of slots in the latest game version. May differ for older versions and file formats.
+    /// </summary>
+    public const int MAX_SAVE_SLOTS = 15;
+    /// <summary>
+    /// Maximum number of save per slot in the latest game version. May differ for older versions and file formats.
+    /// </summary>
+    public const int MAX_SAVE_PER_SLOT = 2;
+    /// <summary>
+    /// Maximum total number of saves (<see cref="MAX_SAVE_SLOTS"/> * <see cref="MAX_SAVE_PER_SLOT"/>) in the latest game version. May differ for older versions and file formats.
+    /// </summary>
+    public const int MAX_SAVE_TOTAL = MAX_SAVE_SLOTS * MAX_SAVE_PER_SLOT;
 
     // internal //
 
@@ -153,9 +166,10 @@ public static class Constants
     internal static readonly string[] JSONPATH_CONTEXT_OBFUSCATED = ["", "2YS", "vLc", "", ""]; // SaveContextQueryEnum
     internal static readonly string[] JSONPATH_CONTEXT_PLAINTEXT = ["", "ExpeditionContext", "BaseContext", "", ""];
 
-    internal const uint META_FORMAT_1 = 0x7D0; // 2000 (1.0)
-    internal const uint META_FORMAT_2 = 0x7D1; // 2001 (1.1)
-    internal const uint META_FORMAT_3 = 0x7D2; // 2002 (3.6)
+    internal const uint META_FORMAT_1 = 0x7D0; // 2000 (1.00)
+    internal const uint META_FORMAT_2 = 0x7D1; // 2001 (1.10)
+    internal const uint META_FORMAT_3 = 0x7D2; // 2002 (3.60)
+    internal const uint META_FORMAT_4 = 0x7D3; // 2003 (5.00)
 
     internal const int OFFSET_GAMEMODE = 512;
     internal const int OFFSET_INDEX = 2;
@@ -167,9 +181,9 @@ public static class Constants
     internal const int SAVE_RENAMING_LENGTH_MANIFEST = 0x80; // 128
     internal const int SAVE_RENAMING_LENGTH_INGAME = 0x2A; // 42
 
-    internal const uint SAVE_STREAMING_HEADER = 0xFEEDA1E5; // 4276986341
+    internal const uint SAVE_STREAMING_HEADER = 0xFEEDA1E5; // 4,276,986,341
     internal const int SAVE_STREAMING_HEADER_TOTAL_LENGTH = 0x10; // 16
-    internal const int SAVE_STREAMING_CHUNK_MAX_LENGTH = 0x80000; // 524288
+    internal const int SAVE_STREAMING_CHUNK_MAX_LENGTH = 0x80000; // 524,288
 
     internal const int THRESHOLD_GAMEMODE_NORMAL = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Normal) * OFFSET_GAMEMODE);
     internal const int THRESHOLD_GAMEMODE_CREATIVE = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Creative) * OFFSET_GAMEMODE);

@@ -75,7 +75,7 @@ public partial class Container : IContainer
 
     public DateTimeOffset? LastWriteTime // { get; internal set; }
     {
-        get => Extra.LastWriteTime ?? (Exists ? DataFile?.LastWriteTime : null);
+        get => Extra.LastWriteTime ?? MetaFile?.LastWriteTime ?? DataFile?.CreationTime;
         internal set => Extra = Extra with { LastWriteTime = value };
     }
 
@@ -163,11 +163,13 @@ public partial class Container : IContainer
 
     public bool IsVersion450Omega => IsVersion(GameVersionEnum.Omega); // { get; }
 
-    public bool IsVersion452OmegaWithV2 => IsVersion(GameVersionEnum.OmegaWithV2); // { get; }
+    public bool IsVersion452OmegaWithMicrosoftV2 => IsVersion(GameVersionEnum.OmegaWithMicrosoftV2); // { get; }
 
     public bool IsVersion460Orbital => IsVersion(GameVersionEnum.Orbital); // { get; }
 
     public bool IsVersion470Adrift => IsVersion(GameVersionEnum.Adrift); // { get; }
+
+    public bool IsVersion500Worlds => IsVersion(GameVersionEnum.Worlds); // { get; }
 
     #endregion
 

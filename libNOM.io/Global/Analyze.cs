@@ -192,7 +192,7 @@ public static class Analyze
         var platform = GetCommonPlatform<T>(platformSettings);
         if (platform is not null)
         {
-            var possibleIndex = Constants.OFFSET_INDEX + platform.COUNT_SAVES_TOTAL - 1; // 31
+            var possibleIndex = Constants.OFFSET_INDEX + platform.MAX_SAVE_TOTAL - 1;
             if (metaIndex > possibleIndex)
                 metaIndex = Constants.OFFSET_INDEX;
         }

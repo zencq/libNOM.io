@@ -33,5 +33,6 @@ public enum SeasonEnum : ushort
     OmegaExperimental, // was part of a trial before the actual release
     Omega, // 12th
     Adrift, // 13th
+    Liquidators, // 14th
     Future,
 }

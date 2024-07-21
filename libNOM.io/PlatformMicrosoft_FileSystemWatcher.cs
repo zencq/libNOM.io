@@ -72,7 +72,7 @@ public partial class PlatformMicrosoft : Platform
     {
         var containersIndex = ParseContainersIndex();
 
-        foreach (var metaIndex in Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL))
+        foreach (var metaIndex in Enumerable.Range(0, Constants.OFFSET_INDEX + MAX_SAVE_TOTAL))
             switch (metaIndex)
             {
                 case 0:

@@ -49,7 +49,7 @@ public partial class PlatformMicrosoft : Platform
 
     protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)
     {
-        if (!container.IsSave || !container.IsVersion452OmegaWithV2)
+        if (!container.IsSave || !container.IsVersion452OmegaWithMicrosoftV2)
         {
             _ = LZ4.Encode(data, out var target);
             return target;
@@ -116,10 +116,13 @@ public partial class PlatformMicrosoft : Platform
             // Skip EMPTY.
             writer.Seek(0x4, SeekOrigin.Current); // 4
 
-            writer.Write(container.IsVersion452OmegaWithV2 ? container.Extra.SizeDisk : container.Extra.SizeDecompressed); // 4
+            // COMPRESSED SIZE or DECOMPRESSED SIZE depending on game version.
+            writer.Write(container.IsVersion452OmegaWithMicrosoftV2 ? container.Extra.SizeDisk : container.Extra.SizeDecompressed); // 4
 
-            // Insert trailing bytes and the extended Waypoint data.
-            AppendWaypointMeta(writer, container); // Extra.Bytes is 260 or 4
+            // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
+            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 4 or 260
+
+            OverwriteWaypointMeta(writer, container);
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

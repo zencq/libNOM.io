@@ -217,11 +217,13 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion450Omega { get; }
 
-    public bool IsVersion452OmegaWithV2 { get; }
+    public bool IsVersion452OmegaWithMicrosoftV2 { get; }
 
     public bool IsVersion460Orbital { get; }
 
     public bool IsVersion470Adrift { get; }
+
+    public bool IsVersion500Worlds { get; }
 
     #endregion
 

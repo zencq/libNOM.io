@@ -15,13 +15,17 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
     #region Constant
 
-    protected virtual int COUNT_SAVE_SLOTS { get; } = 15; // overridable for compatibility with old PlayStation format
-    protected virtual int COUNT_SAVES_PER_SLOT { get; } = 2; // overridable in case it will be necessary in the future
-    internal int COUNT_SAVES_TOTAL => COUNT_SAVE_SLOTS * COUNT_SAVES_PER_SLOT; // { get; }
+    protected virtual int MAX_SAVE_SLOTS { get; } = Constants.MAX_SAVE_SLOTS; // overridable for compatibility with old PlayStation format
+    protected virtual int MAX_SAVE_PER_SLOT { get; } = Constants.MAX_SAVE_PER_SLOT; // overridable in case it will be necessary in the future
+    internal int MAX_SAVE_TOTAL => MAX_SAVE_SLOTS * MAX_SAVE_PER_SLOT; // { get; } // compute here in case one of the values has been overridden
 
-    protected virtual int META_LENGTH_KNOWN { get; } = -1; // in fact, everything is known, but named as such because everything after that can contain additional junk data
+    protected virtual int META_LENGTH_KNOWN_VANILLA { get; } = -1; // all metadata at the beginning of a file before the first extension in Waypoint
+    protected int META_LENGTH_KNOWN_NAME => META_LENGTH_KNOWN_VANILLA + (1 * Constants.SAVE_RENAMING_LENGTH_MANIFEST); // { get; } // ? + 128
+    protected int META_LENGTH_KNOWN_SUMMARY => META_LENGTH_KNOWN_VANILLA + (2 * Constants.SAVE_RENAMING_LENGTH_MANIFEST); // { get; } // ? + 256
+
     internal abstract int META_LENGTH_TOTAL_VANILLA { get; }
     internal abstract int META_LENGTH_TOTAL_WAYPOINT { get; }
+    internal abstract int META_LENGTH_TOTAL_WORLDS { get; }
 
     #endregion
 
@@ -190,7 +194,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        return base.GetHashCode() + PlatformEnum.GetHashCode() + Location.GetHashCode();
     }
 
     #endregion

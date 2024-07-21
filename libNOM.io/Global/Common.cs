@@ -28,6 +28,8 @@ internal static partial class Common
         MicrosoftBlobMetaFile = original.MicrosoftBlobMetaFile,
     };
 
+    internal static Span<T> DeepCopy<T>(Span<T> original) => DeepCopy(original.ToArray());
+
     internal static T DeepCopy<T>(T original)
     {
         var serialized = JsonConvert.SerializeObject(original);

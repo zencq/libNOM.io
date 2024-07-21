@@ -86,7 +86,7 @@ public class PlaystationTest : CommonTestClass
                     AssertAllAreEqual(1, metaA[4], metaB[4]);
 
                     AssertAllZero(metaA.Skip(6).Take(11), metaB.Skip(6).Take(11));
-                    AssertAllAreEqual(SAVE_FORMAT_3, metaA[17], metaB[17]);
+                    AssertAllAreEqual(META_FORMAT_3, metaA[17], metaB[17]);
                     AssertAllZero(metaA.Skip(18).Take(5), metaB.Skip(6).Take(5));
 
                     AssertAllZero(metaA[24], metaB[24]);
@@ -133,7 +133,7 @@ public class PlaystationTest : CommonTestClass
             AssertAllAreEqual(SAVEWIZARD_HEADER_BINARY, memoryDatA.Take(SAVEWIZARD_HEADER.Length), memoryDatB.Take(SAVEWIZARD_HEADER.Length));
             //try
             //{
-            AssertAllAreEqual(SAVE_FORMAT_2, BitConverter.ToInt32(memoryDatA, 8), BitConverter.ToInt32(memoryDatB, 8));
+            AssertAllAreEqual(META_FORMAT_2, BitConverter.ToInt32(memoryDatA, 8), BitConverter.ToInt32(memoryDatB, 8));
             //}
             //catch (AssertFailedException)
             //{
@@ -165,7 +165,7 @@ public class PlaystationTest : CommonTestClass
             }
 
             AssertAllAreEqual(META_HEADER, metaA[i][0], metaB[i][0]);
-            AssertAllAreEqual(SAVE_FORMAT_2, metaA[i][1], metaB[i][1]);
+            AssertAllAreEqual(META_FORMAT_2, metaA[i][1], metaB[i][1]);
             if (i == 0)
             {
                 AssertAllAreEqual(0x20000U, metaA[i][3], metaB[i][3]); // MEMORYDAT_OFFSET_DATA
@@ -585,7 +585,7 @@ public class PlaystationTest : CommonTestClass
 
         // Fixed header and all equal except SizeDecompressed (meta[2]).
         Assert.AreEqual(META_HEADER, metaA[0], metaB[0]);
-        Assert.AreEqual(SAVE_FORMAT_3, metaA[1], metaB[1]);
+        Assert.AreEqual(META_FORMAT_3, metaA[1], metaB[1]);
         Assert.IsTrue(metaA.Skip(3).SequenceEqual(metaB.Skip(3)));
     }
 

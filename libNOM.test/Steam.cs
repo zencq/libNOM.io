@@ -24,9 +24,10 @@ public class SteamTest : CommonTestClass
     #region Constant
 
     private static readonly uint[] META_ENCRYPTION_KEY = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>().ToArray();
-    private const uint META_HEADER = 0xEEEEEEBE; // 4.008.636.094
+    private const uint META_HEADER = 0xEEEEEEBE; // 4,008,636,094
     private const int META_LENGTH_TOTAL_VANILLA = 0x68 / sizeof(uint); // 26
     private const int META_LENGTH_TOTAL_WAYPOINT = 0x168 / sizeof(uint); // 90
+    private const int META_LENGTH_TOTAL_WORLDS = 0x180 / sizeof(uint); // 96
 
     #endregion
 
@@ -37,7 +38,7 @@ public class SteamTest : CommonTestClass
         var meta = File.ReadAllBytes(container.MetaFile!.FullName);
         var value = ToUInt32(meta);
 
-        if (value.Length != META_LENGTH_TOTAL_VANILLA && value.Length != META_LENGTH_TOTAL_WAYPOINT)
+        if (value.Length != META_LENGTH_TOTAL_VANILLA && value.Length != META_LENGTH_TOTAL_WAYPOINT && value.Length != META_LENGTH_TOTAL_WORLDS)
             return value;
 
         // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
@@ -56,7 +57,7 @@ public class SteamTest : CommonTestClass
             int iterations = value.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
             int lastIndex = result.Length - 1;
 
-            // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
+            // Results in 0xF1BBCDC8 for META_FORMAT_2 as in the original algorithm.
             for (int i = 0; i < iterations; i++)
                 hash += 0x9E3779B9;
 
@@ -110,7 +111,7 @@ public class SteamTest : CommonTestClass
             if (container.IsAccount || container.IsSave && !container.IsVersion360Frontiers)
             {
                 // Editing account data is possible since Frontiers and therefore has always the new format but otherwise uses the old format.
-                AssertAllAreEqual(container.IsAccount ? SAVE_FORMAT_3 : SAVE_FORMAT_2, metaA[1], metaB[1]);
+                AssertAllAreEqual(container.IsAccount ? META_FORMAT_3 : META_FORMAT_2, metaA[1], metaB[1]);
 
                 AssertAllNotZero(metaA.Skip(2).Take(4), metaB.Skip(2).Take(4));
                 AssertAllNotZero(metaA.Skip(6).Take(8), metaB.Skip(6).Take(8));
@@ -118,7 +119,7 @@ public class SteamTest : CommonTestClass
             }
             else if (container.IsVersion360Frontiers)
             {
-                AssertAllAreEqual(SAVE_FORMAT_3, metaA[1], metaB[1]);
+                AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
 
                 AssertAllZero(metaA.Skip(2).Take(12), metaB.Skip(2).Take(12));
                 AssertAllNotZero(metaA[14], metaB[14]);
@@ -130,7 +131,7 @@ public class SteamTest : CommonTestClass
         }
         else if (metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
-            AssertAllAreEqual(SAVE_FORMAT_3, metaA[1], metaB[1]);
+            AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
 
             if (container.IsAccount)
             {
@@ -189,8 +190,8 @@ public class SteamTest : CommonTestClass
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4142, 4654, GameVersionEnum.WaypointWithSuperchargedSlots, "Playground", "Within Rigonn-Enve Outpost", 902),
             new(3, "Slot2Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, 4655, GameVersionEnum.Fractal, "Playground", "Within Rigonn-Enve Outpost", 919),
 
-            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, 6702, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony", 2961),
-            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, 6702, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony", 2964),
+            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "Im Hebino XVIII-System", 5495),
+            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "An Bord von „Hebino XVIII“-Treffpunkt", 5521),
 
             new(8, "Slot5Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4147, 6707, GameVersionEnum.Omega, "Omega Permadeath", "Auf dem Planeten (Treeph)", 52),
 
@@ -210,7 +211,25 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T102_Read_76561198043217184()
+    public void T102_Read_76561198042453834_0x7D3_Worlds()
+    {
+        // Arrange
+        var expectAccountData = true;
+        var path = GetCombinedPath("Steam", "st_76561198042453834_Worlds");
+        var results = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287227),
+            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287234),
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
+    }
+
+    [TestMethod]
+    public void T103_Read_76561198043217184()
     {
         // Arrange
         var expectAccountData = false;
@@ -240,7 +259,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T103_Read_76561198371877533()
+    public void T104_Read_76561198371877533()
     {
         // Arrange
         var expectAccountData = true;
@@ -263,7 +282,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T104_Read_76561198093556678()
+    public void T105_Read_76561198093556678()
     {
         // Arrange
         var expectAccountData = false;
@@ -281,7 +300,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T105_Read_76561199278291995()
+    public void T106_Read_76561199278291995()
     {
         // Arrange
         var expectAccountData = false;
@@ -310,7 +329,7 @@ public class SteamTest : CommonTestClass
     /// Same as <see cref="T103_Read_76561198371877533"/>.
     /// </summary>
     [TestMethod]
-    public void T106_Read_NoAccountInDirectory()
+    public void T107_Read_NoAccountInDirectory()
     {
         // Arrange
         var expectAccountData = true;
@@ -393,10 +412,41 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var originUnits = 1199342306; // 1.199.342.306
+        var originUnits = 1199342306; // 1,199,342,306
         var originUtcTicks = 638234536920000000; // 2023-06-27 09:08:12 +00:00
         var path = GetCombinedPath("Steam", "st_76561198042453834");
         var results = new WriteResults(uint.MaxValue, 4145, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1253526, "Iteration 1", "Aboard the Space Anomaly", (byte)(DifficultyPresetTypeEnum.Custom));
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultSave<PlatformSteam>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+    }
+
+    /// <summary>
+    /// No changes compared to <see cref="T220_Write_Default_0x7D2_Waypoint_Account"/>.
+    /// </summary>
+    [TestMethod]
+    public void T222_Write_Default_0x7D3_Worlds_Account()
+    {
+        // Arrange
+        var originMusicVolume = 80; // 80
+        var originUtcTicks = 638569393020000000; // 2024-07-18 22:41:42 +00:00
+        var path = GetCombinedPath("Steam", "st_76561198042453834_Worlds");
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultAccount<PlatformSteam>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+    }
+
+    [TestMethod]
+    public void T223_Write_Default_0x7D3_Worlds()
+    {
+        // Arrange
+        var containerIndex = 0;
+        var originUnits = 1230523743; // 1,230,523,743
+        var originUtcTicks = 638569393610000000; // 2024-07-18 22:42:41 +00:00
+        var path = GetCombinedPath("Steam", "st_76561198042453834_Worlds");
+        var results = new WriteResults(uint.MaxValue, 4153, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1287227, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", (byte)(DifficultyPresetTypeEnum.Custom));
 
         // Act
         // Assert
@@ -618,8 +668,8 @@ public class SteamTest : CommonTestClass
         var pathSteam = GetCombinedPath("Steam", "st_76561198042453834");
         var resultsSteam = new ReadResults[]
         {
-            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, 6702, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony", 2961),
-            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4142, 6702, GameVersionEnum.WaypointWithSuperchargedSlots, "The Final Frontier", "Within Wemexb Colony", 2964),
+            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "Im Hebino XVIII-System", 5495),
+            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "An Bord von „Hebino XVIII“-Treffpunkt", 5521),
         };
         var slotSteam = 3; // get Slot4
         var userDecisionsSteam = 1;

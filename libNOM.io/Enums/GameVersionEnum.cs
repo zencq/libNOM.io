@@ -56,7 +56,8 @@ public enum GameVersionEnum : uint
     Echoes = 440,
     Omega = 450,
     [Description(nameof(Omega))]
-    OmegaWithV2 = 452,
+    OmegaWithMicrosoftV2 = 452,
     Orbital = 460,
     Adrift = 470,
+    Worlds = 500,
 }

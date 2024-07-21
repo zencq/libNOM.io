@@ -40,7 +40,7 @@ public class PlatformGog : PlatformSteam
 
     protected override string? PlatformArchitecture { get; } = "Win|Final";
 
-    protected override string? PlatformProcessPath { get; } = @"GOG Galaxy\No Man's Sky\Binaries\NMS.exe";
+    protected override string? PlatformProcessPath { get; } = @"GOG Galaxy\Games\No Man's Sky\Binaries\NMS.exe";
 
     protected override string PlatformToken { get; } = "GX";
 

@@ -40,10 +40,11 @@ public partial class PlatformSteam : Platform
     }))();
 
     protected static readonly uint[] META_ENCRYPTION_KEY = Encoding.ASCII.GetBytes("NAESEVADNAYRTNRG").AsSpan().Cast<byte, uint>().ToArray();
-    protected const uint META_HEADER = 0xEEEEEEBE; // 4.008.636.094
-    protected override int META_LENGTH_KNOWN => 0x58; // 88
+    protected const uint META_HEADER = 0xEEEEEEBE; // 4,008,636,094
+    protected override int META_LENGTH_KNOWN_VANILLA => 0x58; // 88
     internal override int META_LENGTH_TOTAL_VANILLA => 0x68; // 104
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x168; // 360
+    internal override int META_LENGTH_TOTAL_WORLDS => 0x180; // 384
 
     #endregion
 
@@ -140,13 +141,8 @@ public partial class PlatformSteam : Platform
     protected override void InitializePlatformSpecific()
     {
         // Extract UID from directory name if possible.
-#if NETSTANDARD2_0
-        if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN.Substring(0, ACCOUNT_PATTERN.Length - 1)) && Location.Name.Substring(ACCOUNT_PATTERN.Length - 1).All(char.IsDigit)) // implicit directory is not null
-            _uid = Location.Name.Substring(3); // remove "st_"
-#else
         if (Location.Name.Length == 20 && Location.Name.StartsWith(ACCOUNT_PATTERN[..^1]) && Location.Name[(ACCOUNT_PATTERN.Length - 1)..].All(char.IsDigit))
             _uid = Location.Name[3..]; // remove "st_"
-#endif
     }
 
     private protected override Container CreateContainer(int metaIndex, ContainerExtra? _)
@@ -175,34 +171,42 @@ public partial class PlatformSteam : Platform
         /**
           0. META HEADER          (  4)
           1. META FORMAT          (  4)
-          2. SPOOKY HASH          ( 16) // SAVE_FORMAT_2
-          6. SHA256 HASH          ( 32) // SAVE_FORMAT_2
-         14. DECOMPRESSED SIZE    (  4) // SAVE_FORMAT_3
-         15. COMPRESSED SIZE      (  4) // SAVE_FORMAT_1
-         16. PROFILE HASH         (  4) // SAVE_FORMAT_1
-         17. BASE VERSION         (  4) // SAVE_FORMAT_3
-         18. GAME MODE            (  2) // SAVE_FORMAT_3
-         18. SEASON               (  2) // SAVE_FORMAT_3
-         19. TOTAL PLAY TIME      (  4) // SAVE_FORMAT_3
+          2. SPOOKY HASH          ( 16) // META_FORMAT_2
+          6. SHA256 HASH          ( 32) // META_FORMAT_2
+         14. DECOMPRESSED SIZE    (  4) // META_FORMAT_4
+         15. COMPRESSED SIZE      (  4) // META_FORMAT_4
+         16. PROFILE HASH         (  4) // META_FORMAT_1
+         17. BASE VERSION         (  4) // META_FORMAT_4
+         18. GAME MODE            (  2) // META_FORMAT_4
+         18. SEASON               (  2) // META_FORMAT_4
+         19. TOTAL PLAY TIME      (  4) // META_FORMAT_4
          20. EMPTY                (  8)
 
-         22. EMPTY                ( 16) // SAVE_FORMAT_2
+         22. EMPTY                ( 16) // META_FORMAT_2
                                   (104)
 
-         22. SAVE NAME            (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
-         54. SAVE SUMMARY         (128) // SAVE_FORMAT_3 // may contain additional junk data after null terminator
-         86. DIFFICULTY PRESET    (  1) // SAVE_FORMAT_3
-         86. EMPTY                ( 15) // SAVE_FORMAT_3 // may contain additional junk data
+         22. SAVE NAME            (128) // META_FORMAT_4 // may contain additional junk data after null terminator
+         54. SAVE SUMMARY         (128) // META_FORMAT_4 // may contain additional junk data after null terminator
+
+         86. DIFFICULTY PRESET    (  1) // META_FORMAT_3
+         86. EMPTY                ( 15) // META_FORMAT_3 // may contain additional junk data
                                   (360)
+
+         86. DIFFICULTY PRESET    (  4) // META_FORMAT_4
+         87. ???                  (  8) // META_FORMAT_4 // maybe a slot identifier
+         89. TIMESTAMP            (  4) // META_FORMAT_4
+         90. META FORMAT          (  4) // META_FORMAT_4
+         91. EMPTY                ( 20) // META_FORMAT_4
+                                  (384)
          */
 
         // Do not write wrong data in case a step before failed.
         if (decompressed.TryGetValue(0, out var header) && header == META_HEADER)
         {
-            // Vanilla data always available but not always set depending on the SAVE_FORMAT.
+            // Vanilla metadata always available but not always set depending on the META_FORMAT.
             container.Extra = container.Extra with
             {
-                Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
+                Bytes = disk[META_LENGTH_KNOWN_VANILLA..].ToArray(),
                 SizeDecompressed = decompressed[14],
                 BaseVersion = (int)(decompressed[17]),
                 GameMode = disk.Cast<ushort>(72),
@@ -211,17 +215,36 @@ public partial class PlatformSteam : Platform
             };
 
             if (container.IsAccount)
+            {
                 container.GameVersion = Meta.GameVersion.Get(this, disk.Length, decompressed[1]);
-
-            // Extended data since Waypoint.
+            }
+            if (container.IsSave)
+            {
+            // Extended metadata since Waypoint 4.00.
             UpdateContainerWithWaypointMetaInformation(container, disk);
+
+                // Extended metadata including a new META_FORMAT since Worlds 5.00.
+                UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
 
             // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
             container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
         }
+        }
 
         // Size is save to write always.
         container.Extra = container.Extra with { MetaLength = (uint)(disk.Length) };
+    }
+
+    protected void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+            container.Extra = container.Extra with
+            {
+                SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+                SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+                DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // keep it a single byte to get the correct value if migrated but not updated
+                LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[89]).ToLocalTime(),
+            };
     }
 
     #endregion
@@ -232,9 +255,9 @@ public partial class PlatformSteam : Platform
 
     protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
     {
-        var value = base.DecryptMeta(container, meta).ToArray(); // needs to be an array for the deep copy
+        var value = base.DecryptMeta(container, meta);
 
-        if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT)
+        if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT && meta.Length != META_LENGTH_TOTAL_WORLDS)
             return value;
 
         // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
@@ -252,7 +275,7 @@ public partial class PlatformSteam : Platform
             int iterations = meta.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
             int lastIndex = result.Length - 1;
 
-            // Results in 0xF1BBCDC8 for SAVE_FORMAT_2 as in the original algorithm.
+            // Results in 0xF1BBCDC8 for META_FORMAT_2 as in the original algorithm.
             for (int i = 0; i < iterations; i++)
                 hash += 0x9E3779B9;
 
@@ -311,9 +334,14 @@ public partial class PlatformSteam : Platform
         using var writer = new BinaryWriter(new MemoryStream(buffer));
 
         writer.Write(META_HEADER); // 4
-        writer.Write(container.IsVersion360Frontiers ? Constants.META_FORMAT_3 : Constants.META_FORMAT_2); // 4
+        writer.Write(container.GameVersion switch // 4
+        {
+            >= GameVersionEnum.Worlds => Constants.META_FORMAT_4,
+            >= GameVersionEnum.Frontiers => Constants.META_FORMAT_3,
+            _ => Constants.META_FORMAT_2,
+        });
 
-        if (container.IsSave && container.IsVersion360Frontiers) // SAVE_FORMAT_3
+        if (container.IsSave && container.IsVersion360Frontiers) // META_FORMAT_3 and META_FORMAT_4
         {
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current); // 16 + 32 = 48
@@ -331,19 +359,39 @@ public partial class PlatformSteam : Platform
             // Skip EMPTY bytes.
             writer.Seek(0x8, SeekOrigin.Current); // 8
 
-            // Insert trailing bytes and the extended Waypoint data.
-            AppendWaypointMeta(writer, container); // Extra.Bytes is 272 or 16
+            // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
+            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 272 or 296
+
+            OverwriteWaypointMeta(writer, container);
+            OverwriteWorldsMeta(writer, container);
         }
-        else // SAVE_FORMAT_2
+        else // META_FORMAT_2
         {
             AppendHashes(writer, data); // 8 + 8 + 32 = 48
 
             // Seek to position of last known byte and append the cached bytes.
-            writer.Seek(META_LENGTH_KNOWN, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_KNOWN_VANILLA, SeekOrigin.Begin);
             writer.Write(container.Extra.Bytes ?? []); // 16
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
+    }
+
+    private void OverwriteWorldsMeta(BinaryWriter writer, Container container)
+    {
+        if (container.IsVersion500Worlds)
+        {
+            // COMPRESSED SIZE is used again.
+            writer.Seek(0x3C, SeekOrigin.Begin); // 4 + 4 + 16 + 32 = 48
+            writer.Write(container.Extra.SizeDisk); // 4
+
+            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
+            writer.Write((uint)(container.Difficulty)); // 4
+
+            // Skip next 8 bytes that is maybe a slot identifier. 
+            writer.Seek(0x8, SeekOrigin.Current);
+            writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
+        }
     }
 
     private static void AppendHashes(BinaryWriter writer, ReadOnlySpan<byte> data)
@@ -370,7 +418,7 @@ public partial class PlatformSteam : Platform
         uint hash = 0;
         int iterations = container.IsVersion400Waypoint ? 6 : 8;
         ReadOnlySpan<uint> key = [(((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
-        Span<uint> value = meta.Cast<byte, uint>();
+        Span<uint> value = Common.DeepCopy(meta.Cast<byte, uint>());
 
         int lastIndex = value.Length - 1;
 

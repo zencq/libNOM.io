@@ -462,8 +462,8 @@ public class MicrosoftTest : CommonTestClass
         var path = GetCombinedPath("Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
         var results = new ReadResults[]
         {
-            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithV2, "", "On freighter (Spear of Benevolence)", 169127),
-            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithV2, "", "On freighter (Spear of Benevolence)", 169144),
+            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithMicrosoftV2, "", "On freighter (Spear of Benevolence)", 169127),
+            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithMicrosoftV2, "", "On freighter (Spear of Benevolence)", 169144),
         };
         var userIdentification = ReadUserIdentification(path);
 

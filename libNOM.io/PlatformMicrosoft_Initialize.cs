@@ -49,7 +49,7 @@ public partial class PlatformMicrosoft : Platform
 
         if (containersIndex.Count != 0)
         {
-            var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + COUNT_SAVES_TOTAL).Select((metaIndex) => Task.Run(() =>
+            var tasks = Enumerable.Range(0, Constants.OFFSET_INDEX + MAX_SAVE_TOTAL).Select((metaIndex) => Task.Run(() =>
             {
                 _ = containersIndex.TryGetValue(metaIndex, out var extra);
                 switch (metaIndex)
@@ -294,25 +294,15 @@ public partial class PlatformMicrosoft : Platform
         if (disk.IsEmpty())
             return;
 
-        // Vanilla data always available.
+        // Vanilla metadata always available.
         container.Extra = container.Extra with
         {
-            Bytes = disk[META_LENGTH_KNOWN..].ToArray(),
+            Bytes = disk[META_LENGTH_KNOWN_VANILLA..].ToArray(),
             MetaLength = (uint)(disk.Length),
-            BaseVersion = (int)(decompressed[0]),
-            GameMode = disk.Cast<ushort>(4),
-            Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
-            TotalPlayTime = decompressed[2],
         };
 
-        if (container.IsAccount)
-            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
-
-        // Extended data since Waypoint.
-        UpdateContainerWithWaypointMetaInformation(container, disk);
-
         // As data has a save streaming like format since Omega 4.52, the disk size now stored.
-        if (Meta.GameVersion.Get(container.Extra.BaseVersion) < GameVersionEnum.OmegaWithV2)
+        if (Meta.GameVersion.Get(container.Extra.BaseVersion) < GameVersionEnum.OmegaWithMicrosoftV2)
             container.Extra = container.Extra with
             {
                 SizeDecompressed = decompressed[4],
@@ -323,8 +313,26 @@ public partial class PlatformMicrosoft : Platform
                 SizeDisk = decompressed[4],
             };
 
-        // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
-        container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
+        if (container.IsAccount)
+        {
+            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
+        }
+        if (container.IsSave)
+        {
+            container.Extra = container.Extra with
+            {
+                BaseVersion = (int)(decompressed[0]),
+                GameMode = disk.Cast<ushort>(4),
+                Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
+                TotalPlayTime = decompressed[2],
+            };
+
+            // Extended metadata since Waypoint 4.00.
+            UpdateContainerWithWaypointMetaInformation(container, disk);
+
+            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
+        }
     }
 
     #endregion

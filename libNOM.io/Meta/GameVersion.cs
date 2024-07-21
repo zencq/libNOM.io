@@ -16,6 +16,9 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(Platform platform, int length, uint format)
     {
+        if (length == platform.META_LENGTH_TOTAL_WORLDS)
+            return GameVersionEnum.Worlds; // Constants.META_FORMAT_4
+
         if (length == platform.META_LENGTH_TOTAL_WAYPOINT)
             return GameVersionEnum.Waypoint; // Constants.META_FORMAT_3
 
@@ -38,9 +41,10 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4153 => GameVersionEnum.Worlds, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
-        >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
+        >= 4149 => GameVersionEnum.OmegaWithMicrosoftV2, // 4.52
         >= 4147 => GameVersionEnum.Omega, // 4.50
         >= 4146 => GameVersionEnum.Echoes, // 4.40
         >= 4144 => GameVersionEnum.Interceptor, // (4.30/4.25), 4.20
@@ -71,9 +75,10 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4153 => GameVersionEnum.Worlds, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
-        >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
+        >= 4149 => GameVersionEnum.OmegaWithMicrosoftV2, // 4.52
         >= 4147 => GameVersionEnum.Omega, // 4.50
         >= 4146 => GameVersionEnum.Echoes, // 4.40
         >= 4144 => GetSingularity(jsonObject) ?? GameVersionEnum.Interceptor, // 4.30/4.25, 4.20
@@ -100,9 +105,10 @@ internal static class GameVersion
     /// <param name="json"></param>
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4153 => GameVersionEnum.Worlds, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
-        >= 4149 => GameVersionEnum.OmegaWithV2, // 4.52 (Microsoft)
+        >= 4149 => GameVersionEnum.OmegaWithMicrosoftV2, // 4.52
         >= 4147 => GameVersionEnum.Omega, // 4.50
         >= 4146 => GameVersionEnum.Echoes, // 4.40
         >= 4144 => GetSingularity(json) ?? GameVersionEnum.Interceptor, // 4.30/4.25, 4.20

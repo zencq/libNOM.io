@@ -16,9 +16,10 @@ public partial class PlatformSwitch : Platform
     internal static readonly string[] ANCHOR_FILE_PATTERN = ["manifest??.hg", "savedata??.hg"];
 
     protected const uint META_HEADER = 0xCA55E77E;
-    protected override int META_LENGTH_KNOWN => 0x28; // 40
+    protected override int META_LENGTH_KNOWN_VANILLA => 0x28; // 40
     internal override int META_LENGTH_TOTAL_VANILLA => 0x64; // 100
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x164; // 356
+    internal override int META_LENGTH_TOTAL_WORLDS => META_LENGTH_TOTAL_WAYPOINT; // no changes for this platform
 
     #endregion
 
@@ -131,8 +132,8 @@ public partial class PlatformSwitch : Platform
 
          10. SAVE NAME            (128) // may contain additional junk data after null terminator
          42. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
-         74. DIFFICULTY PRESET    (  1)
-         74. EMPTY                ( 59) // may contain additional junk data
+         74. DIFFICULTY PRESET    (  4)
+         75. EMPTY                ( 56)
                                   (356)
          */
         if (disk.IsEmpty())
@@ -140,14 +141,15 @@ public partial class PlatformSwitch : Platform
 
         container.Extra = container.Extra with
         {
-            Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN..].ToArray(),
+            Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN_VANILLA..].ToArray(),
             MetaLength = (uint)(disk.Length),
             SizeDecompressed = decompressed[2],
         };
 
         if (container.IsAccount)
+        {
             container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_3);
-
+        }
         if (container.IsSave)
         {
             // Vanilla data always available.
@@ -207,8 +209,10 @@ public partial class PlatformSwitch : Platform
             // Skip EMPTY.
             writer.Seek(0x8, SeekOrigin.Current); // 8
 
-            // Insert trailing bytes and the extended Waypoint data.
-            AppendWaypointMeta(writer, container); // Extra.Bytes is 272 or 60
+            // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
+            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 60 or 272
+
+            OverwriteWaypointMeta(writer, container);
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

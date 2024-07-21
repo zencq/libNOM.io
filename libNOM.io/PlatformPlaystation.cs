@@ -11,11 +11,12 @@ public partial class PlatformPlaystation : Platform
 
     internal static readonly string[] ANCHOR_FILE_PATTERN = ["savedata??.hg", "memory.dat"];
 
-    protected override int COUNT_SAVE_SLOTS => _usesSaveStreaming ? base.COUNT_SAVE_SLOTS : 5;
+    protected override int MAX_SAVE_SLOTS => _usesSaveStreaming ? base.MAX_SAVE_SLOTS : 5;
 
     protected const uint META_HEADER = 0xCA55E77E;
     internal override int META_LENGTH_TOTAL_VANILLA => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
     internal override int META_LENGTH_TOTAL_WAYPOINT => _usesSaveWizard ? 0x70 : 0x0; // 112 : 0 // actually _FRONTIERS would be more accurate as there was no changed in Waypoint for PlayStation but reusing it as it has to be implemented anyway and would have no use otherwise
+    internal override int META_LENGTH_TOTAL_WORLDS => META_LENGTH_TOTAL_WAYPOINT; // no changes for this platform
 
     private const uint MEMORYDAT_LENGTH_ACCOUNTDATA = 0x40000U;
     private const uint MEMORYDAT_LENGTH_CONTAINER = 0x300000U;

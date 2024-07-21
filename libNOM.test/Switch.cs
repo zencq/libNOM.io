@@ -40,7 +40,7 @@ public class SwitchTest : CommonTestClass
         if (metaA.Length == META_LENGTH_TOTAL_VANILLA || metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
             AssertAllAreEqual(META_HEADER, metaA[0], metaB[0]);
-            AssertAllAreEqual(SAVE_FORMAT_3, metaA[1], metaB[1]);
+            AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
 
             Assert.IsTrue(metaA.Skip(32).SequenceEqual(metaB.Skip(32)));
         }
@@ -169,7 +169,7 @@ public class SwitchTest : CommonTestClass
     {
         // Arrange
         var originMusicVolume = 80; // 80
-        var originUtcTicks = 638006823320000000; // 2022-10-06 19:45:32 +00:00
+        var originUtcTicks = 638006787240000000; // 2022-10-06 18:45:24 +00:00
         var path = GetCombinedPath("Switch", "4");
 
         // Act
