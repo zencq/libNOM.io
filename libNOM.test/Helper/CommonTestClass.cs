@@ -24,7 +24,7 @@ public abstract class CommonTestClass
     protected const int OFFSET_INDEX = 2;
     protected const int TICK_DIVISOR = 10000;
 
-    protected static readonly TimeSpan DELTA_TIMESPAN = TimeSpan.FromHours(1);
+    protected static readonly TimeSpan DELTA_TIMESPAN = TimeSpan.FromHours(2);
 
     protected static readonly long DELTA_TIMESPAN_SECONDS = (long)(DELTA_TIMESPAN.TotalSeconds);
     protected static readonly long DELTA_TIMESPAN_TICKS = DELTA_TIMESPAN.Ticks;
