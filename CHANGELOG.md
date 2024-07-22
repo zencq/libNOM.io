@@ -4,21 +4,30 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.10.0)
+## Unreleased
 
 ### Known Issues
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.10.0 (2024-07-22)
+
 ### Added
 * `GetString` extension for `JToken` that is now used by the one for `JObject`
 * Support for game version **Worlds 5.00**
 * Liquidators Expedition
+
 ### Changed
 * Renamed `IsVersion452OmegaWithV2` in `IContainer` to `IsVersion452OmegaWithMicrosoftV2`
 * Renamed `COUNT_SAVE*` constants to `MAX_SAVE*` and made them publicly available
-### Deprecated
-### Removed
+* Bump *libNOM.map* from 0.12.0 to 0.12.1
+
 ### Fixed
 * Crash if `Platform.GetHashCode()` is used
-### Security
 
 ## 0.9.0 (2024-06-07)
 
