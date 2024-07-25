@@ -1,6 +1,4 @@
-﻿using libNOM.io.Interfaces;
-
-namespace libNOM.io.Global;
+﻿namespace libNOM.io.Global;
 
 
 public static class Constants
@@ -181,9 +179,9 @@ public static class Constants
     internal const int SAVE_RENAMING_LENGTH_MANIFEST = 0x80; // 128
     internal const int SAVE_RENAMING_LENGTH_INGAME = 0x2A; // 42
 
-    internal const uint SAVE_STREAMING_HEADER = 0xFEEDA1E5; // 4,276,986,341
-    internal const int SAVE_STREAMING_HEADER_TOTAL_LENGTH = 0x10; // 16
-    internal const int SAVE_STREAMING_CHUNK_MAX_LENGTH = 0x80000; // 524,288
+    internal static readonly byte[] SAVE_STREAMING_HEADER = [0xE5, 0xA1, 0xED, 0xFE];
+    internal const int SAVE_STREAMING_HEADER_LENGTH = 0x10; // 16
+    internal const int SAVE_STREAMING_CHUNK_LENGTH_MAX = 0x80000; // 524,288
 
     internal const int THRESHOLD_GAMEMODE_NORMAL = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Normal) * OFFSET_GAMEMODE);
     internal const int THRESHOLD_GAMEMODE_CREATIVE = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Creative) * OFFSET_GAMEMODE);

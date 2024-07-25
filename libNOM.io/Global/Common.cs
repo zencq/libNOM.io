@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 namespace libNOM.io.Global;
 
 
-internal static partial class Common
+public static partial class Common
 {
     // No real DeepCopy but good enough to swap and that case is only using this.
     internal static Container DeepCopy(Container original)
@@ -28,9 +28,9 @@ internal static partial class Common
         MicrosoftBlobMetaFile = original.MicrosoftBlobMetaFile,
     };
 
-    internal static Span<T> DeepCopy<T>(Span<T> original) => DeepCopy(original.ToArray());
+    public static Span<T> DeepCopy<T>(Span<T> original) => DeepCopy(original.ToArray());
 
-    internal static T DeepCopy<T>(T original)
+    public static T DeepCopy<T>(T original)
     {
         var serialized = JsonConvert.SerializeObject(original);
         return JsonConvert.DeserializeObject<T>(serialized)!;

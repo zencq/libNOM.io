@@ -100,19 +100,18 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         while (position < data.Length)
         {
-            var source = data.Slice(position, Math.Min(Constants.SAVE_STREAMING_CHUNK_MAX_LENGTH, data.Length - position));
+            var source = data.Slice(position, Math.Min(Constants.SAVE_STREAMING_CHUNK_LENGTH_MAX, data.Length - position));
             _ = LZ4.Encode(source, out var target);
             position += source.Length;
 
             var chunkHeader = new ReadOnlySpan<uint>(
             [
-                Constants.SAVE_STREAMING_HEADER,
                 (uint)(target.Length),
                 (uint)(source.Length),
                 0,
             ]);
 
-            result = result.Concat(chunkHeader.Cast<uint, byte>()).Concat(target);
+            result = result.Concat(Constants.SAVE_STREAMING_HEADER).Concat(chunkHeader.Cast<uint, byte>()).Concat(target);
         }
 
         return result;
@@ -184,7 +183,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     protected abstract Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data);
 
     /// <summary>
-    /// Appends meta data that were added with Waypoint.
+    /// Appends metadata that were added or overwrite those that were changed with Waypoint 4.00.
     /// Contrary to the leading data, this is the same for all platforms.
     /// </summary>
     /// <param name="container"></param>
@@ -201,6 +200,25 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
             writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
             writer.Write((byte)(container.Difficulty)); // 1
+        }
+    }
+
+    /// <summary>
+    /// Appends metadata that were added or overwrite those that were changed with Worlds 5.00.
+    /// Appended data is the same for all platforms.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="writer"></param>
+    protected virtual void OverwriteWorldsMeta(BinaryWriter writer, Container container)
+    {
+        if (container.IsVersion500Worlds)
+        {
+            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
+            writer.Write((uint)(container.Difficulty)); // 4
+
+            // Skip next 8 bytes with SLOT IDENTIFIER. 
+            writer.Seek(0x8, SeekOrigin.Current);
+            writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
         }
     }
 

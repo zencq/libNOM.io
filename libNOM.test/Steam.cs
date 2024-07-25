@@ -453,7 +453,7 @@ public class SteamTest : CommonTestClass
         // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638569393020000000; // 2024-07-18 22:41:42 +00:00
-        var path = GetCombinedPath("Steam", "st_76561198042453834_Worlds");
+        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3_Worlds");
 
         // Act
         // Assert
@@ -467,7 +467,7 @@ public class SteamTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 1230523743; // 1,230,523,743
         var originUtcTicks = 638569393610000000; // 2024-07-18 22:42:41 +00:00
-        var path = GetCombinedPath("Steam", "st_76561198042453834_Worlds");
+        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3_Worlds");
         var results = new WriteResults(uint.MaxValue, 4153, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1287227, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", (byte)(DifficultyPresetTypeEnum.Custom));
 
         // Act

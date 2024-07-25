@@ -22,7 +22,7 @@ public partial class PlatformMicrosoft : Platform
     protected override int META_LENGTH_KNOWN_VANILLA => 0x14; // 20
     internal override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x118; // 280
-    internal override int META_LENGTH_TOTAL_WORLDS => META_LENGTH_TOTAL_WAYPOINT; // no changes for this platform
+    internal override int META_LENGTH_TOTAL_WORLDS => 0x128; // 296
 
     private const int BLOBCONTAINER_HEADER = 0x4; // 4
     private const int BLOBCONTAINER_COUNT = 0x2; // 2
@@ -33,9 +33,9 @@ public partial class PlatformMicrosoft : Platform
     private const long CONTAINERSINDEX_FOOTER = 0x10000000; // 268,435,456
     private const int CONTAINERSINDEX_OFFSET_BLOBCONTAINER_LIST = 0xC8; // 200
 
-    internal static readonly byte[] SAVE_V2_HEADER = [.. Encoding.ASCII.GetBytes("HGSAVEV2"), 0x00];
-    internal const int SAVE_V2_HEADER_PARTIAL_LENGTH = 0x8; // 8
-    internal const int SAVE_V2_CHUNK_MAX_LENGTH = 0x100000; // 1,048,576
+    internal static readonly byte[] HGSAVEV2_HEADER = [.. Encoding.ASCII.GetBytes("HGSAVEV2"), 0x00];
+    internal const int HGSAVEV2_HEADER_LENGTH = 0x8; // 8
+    internal const int HGSAVEV2_CHUNK_LENGTH_MAX = 0x100000; // 1,048,576
 
     #endregion
 

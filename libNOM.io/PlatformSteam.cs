@@ -193,7 +193,7 @@ public partial class PlatformSteam : Platform
                                   (360)
 
          86. DIFFICULTY PRESET    (  4) // META_FORMAT_4
-         87. ???                  (  8) // META_FORMAT_4 // maybe a slot identifier
+         87. SLOT IDENTIFIER      (  8) // META_FORMAT_4
          89. TIMESTAMP            (  4) // META_FORMAT_4
          90. META FORMAT          (  4) // META_FORMAT_4
          91. EMPTY                ( 20) // META_FORMAT_4
@@ -221,10 +221,12 @@ public partial class PlatformSteam : Platform
             if (container.IsSave)
             {
                 // Extended metadata since Waypoint 4.00.
-                UpdateContainerWithWaypointMetaInformation(container, disk);
+                if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
+                    UpdateContainerWithWaypointMetaInformation(container, disk);
 
-                // Extended metadata including a new META_FORMAT since Worlds 5.00.
-                UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
+                // Extended metadata since Worlds 5.00.
+                if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+                    UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
 
                 // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
                 container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
@@ -235,16 +237,14 @@ public partial class PlatformSteam : Platform
         container.Extra = container.Extra with { MetaLength = (uint)(disk.Length) };
     }
 
-    protected void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    protected override void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
-        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
-            container.Extra = container.Extra with
-            {
-                SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-                SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-                DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // keep it a single byte to get the correct value if migrated but not updated
-                LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[89]).ToLocalTime(),
-            };
+        base.UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
+
+        container.Extra = container.Extra with
+        {
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[89]).ToLocalTime(),
+        };
     }
 
     #endregion
@@ -377,20 +377,17 @@ public partial class PlatformSteam : Platform
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    private void OverwriteWorldsMeta(BinaryWriter writer, Container container)
+    protected override void OverwriteWorldsMeta(BinaryWriter writer, Container container)
     {
+        // Write appended.
+        base.OverwriteWorldsMeta(writer, container);
+
+        // Overwrite changed.
         if (container.IsVersion500Worlds)
         {
             // COMPRESSED SIZE is used again.
             writer.Seek(0x3C, SeekOrigin.Begin); // 4 + 4 + 16 + 32 = 48
             writer.Write(container.Extra.SizeDisk); // 4
-
-            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
-            writer.Write((uint)(container.Difficulty)); // 4
-
-            // Skip next 8 bytes that is maybe a slot identifier. 
-            writer.Seek(0x8, SeekOrigin.Current);
-            writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
         }
     }
 

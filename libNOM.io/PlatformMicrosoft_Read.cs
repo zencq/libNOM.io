@@ -29,22 +29,27 @@ public partial class PlatformMicrosoft : Platform
 
     protected override ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)
     {
-        if (container.IsAccount || !data.StartsWith(SAVE_V2_HEADER)) // single chunk compression for Account and before Omega 4.52
+        // Single chunk compression for Account and before Omega 4.52.
+        if (container.IsAccount || (!data.StartsWith(HGSAVEV2_HEADER) && !data.StartsWith(Constants.SAVE_STREAMING_HEADER)))
         {
             _ = LZ4.Decode(data, out var target, (int)(container.Extra.SizeDecompressed));
             return target;
         }
 
-        // New format is similar to the save streaming introduced with Frontiers.
-        var offset = SAVE_V2_HEADER.Length;
+        // Since Worlds 5.00, the standard save streaming is used.
+        if (data.StartsWith(Constants.SAVE_STREAMING_HEADER))
+            return base.DecompressData(container, data);
+
+        // Special format (similar to the standard streaming) used between Omega 4.52 and Worlds 5.00.
+        var offset = HGSAVEV2_HEADER.Length;
         ReadOnlySpan<byte> result = [];
 
         while (offset < data.Length)
         {
-            var chunkHeader = data.Slice(offset, SAVE_V2_HEADER_PARTIAL_LENGTH).Cast<byte, uint>();
+            var chunkHeader = data.Slice(offset, HGSAVEV2_HEADER_LENGTH).Cast<byte, uint>();
             var sizeCompressed = (int)(chunkHeader[1]);
 
-            offset += SAVE_V2_HEADER_PARTIAL_LENGTH;
+            offset += HGSAVEV2_HEADER_LENGTH;
             _ = LZ4.Decode(data.Slice(offset, sizeCompressed), out var target, (int)(chunkHeader[0]));
             offset += sizeCompressed;
 

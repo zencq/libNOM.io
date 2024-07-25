@@ -202,7 +202,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual ReadOnlySpan<byte> DecompressData(Container container, ReadOnlySpan<byte> data)
     {
-        if (container.IsAccount || data.Cast<uint>(0) != Constants.SAVE_STREAMING_HEADER) // no compression before Frontiers
+        if (container.IsAccount || !data.StartsWith(Constants.SAVE_STREAMING_HEADER)) // no compression before Frontiers
             return data;
 
         var offset = 0;
@@ -210,10 +210,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         while (offset < data.Length)
         {
-            var chunkHeader = data.Slice(offset, Constants.SAVE_STREAMING_HEADER_TOTAL_LENGTH).Cast<byte, uint>();
+            var chunkHeader = data.Slice(offset, Constants.SAVE_STREAMING_HEADER_LENGTH).Cast<byte, uint>();
             var sizeCompressed = (int)(chunkHeader[1]);
 
-            offset += Constants.SAVE_STREAMING_HEADER_TOTAL_LENGTH;
+            offset += Constants.SAVE_STREAMING_HEADER_LENGTH;
             _ = LZ4.Decode(data.Slice(offset, sizeCompressed), out var target, (int)(chunkHeader[2]));
             offset += sizeCompressed;
 

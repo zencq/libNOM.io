@@ -1,5 +1,4 @@
-﻿using libNOM.io.Interfaces;
-using libNOM.io.Settings;
+﻿using libNOM.io.Settings;
 
 namespace libNOM.io.Global;
 
@@ -8,7 +7,7 @@ public static class Analyze
 {
     #region Field
 
-    private static uint _headerInteger = uint.MaxValue;
+    private static byte[] _headerByte = [];
     private static string? _headerString0x08;
     private static string? _headerString0x20;
     private static string? _headerString0xA0;
@@ -35,7 +34,8 @@ public static class Analyze
             return null;
 
         FileInfo data = new(path);
-        UpdateHeader(data);
+        if (!UpdateHeader(data))
+            return null;
 
         // Define variables and fill them while generating a platform.
         FileInfo? meta;
@@ -43,12 +43,12 @@ public static class Analyze
         Platform? platform;
 
         // Select a platform below to convert the file with, based on the content.
-        if (_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (_headerInteger == Constants.SAVE_STREAMING_HEADER && _headerString0xA0!.Contains("PS4|Final")))
+        if (_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) && _headerString0xA0!.Contains("PS4|Final")))
         {
             platform = GenerateCommonPlatform<PlatformPlaystation>(data, platformSettings, out metaIndex, out meta);
         }
         // StartsWith for uncompressed saves and plaintext JSON.
-        else if (_headerInteger == Constants.SAVE_STREAMING_HEADER || _headerString0x20!.StartsWith("{\"F2P\":") || _headerString0x20.StartsWith("{\"Version\":"))
+        else if (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) || _headerString0x20!.StartsWith("{\"F2P\":") || _headerString0x20.StartsWith("{\"Version\":"))
         {
             if (_headerString0xA0!.Contains("NX1|Final"))
                 platform = GenerateCommonPlatform<PlatformSwitch>(data, platformSettings, out metaIndex, out meta);
@@ -69,15 +69,19 @@ public static class Analyze
 
     // private //
 
-    private static void UpdateHeader(FileInfo data)
+    private static bool UpdateHeader(FileInfo data)
     {
         ReadOnlySpan<byte> bytes = data.ReadAllBytes();
+        if (bytes.Length < 0xA0)
+            return false;
 
         // Convert header with different lengths.
-        _headerInteger = bytes.Cast<uint>(0);
+        _headerByte = bytes[..0x4].ToArray();
         _headerString0x08 = bytes[..0x08].GetString();
         _headerString0x20 = bytes[..0x20].GetString();
         _headerString0xA0 = bytes[..0xA0].GetString();
+
+        return true;
     }
 
     #endregion

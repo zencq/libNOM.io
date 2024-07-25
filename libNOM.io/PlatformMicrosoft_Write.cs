@@ -11,6 +11,13 @@ public partial class PlatformMicrosoft : Platform
         // Writing all Microsoft Store files at once in the same way as the game itself does.
         if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
         {
+            // Timestamp must be set before creating meta.
+            if (Settings.SetLastWriteTime)
+            {
+                _lastWriteTime = writeTime; // global timestamp has full accuracy
+                container.LastWriteTime = _lastWriteTime.NullifyTicks(4);
+            }
+
             if (Settings.WriteAlways || !container.IsSynced)
             {
                 container.Exists = true;
@@ -31,11 +38,9 @@ public partial class PlatformMicrosoft : Platform
                 WriteBlobContainer(container, blob, copy);
             }
 
+            // Must be set after files have been created.
             if (Settings.SetLastWriteTime)
             {
-                _lastWriteTime = writeTime; // global timestamp has full accuracy
-                container.LastWriteTime = _lastWriteTime.NullifyTicks(4);
-
                 container.DataFile?.SetFileTime(container.LastWriteTime);
                 container.MetaFile?.SetFileTime(container.LastWriteTime);
             }
@@ -49,22 +54,26 @@ public partial class PlatformMicrosoft : Platform
 
     protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)
     {
-        if (!container.IsSave || !container.IsVersion452OmegaWithMicrosoftV2)
+        if (!container.IsSave || !container.IsVersion452OmegaWithMicrosoftV2) // if not Omega 4.52, also not Worlds 5.00
         {
             _ = LZ4.Encode(data, out var target);
             return target;
         }
 
-        // New format is similar to the save streaming introduced with Frontiers.
+        // Since Worlds 5.00, the standard save streaming is used.
+        if (container.IsVersion500Worlds)
+            return base.CompressData(container, data);
+
+        // Special format (similar to the standard streaming) used between Omega 4.52 and Worlds 5.00.
         var position = 0;
-        ReadOnlySpan<byte> result = SAVE_V2_HEADER;
+        ReadOnlySpan<byte> result = HGSAVEV2_HEADER;
 
         while (position < data.Length)
         {
             var maxLength = data.Length - position;
 
             // The tailing \0 needs to compressed separately and must not be part of the actual JSON chunks.
-            var source = data.Slice(position, Math.Min(SAVE_V2_CHUNK_MAX_LENGTH, maxLength == 1 ? 1 : maxLength - 1));
+            var source = data.Slice(position, Math.Min(HGSAVEV2_CHUNK_LENGTH_MAX, maxLength == 1 ? 1 : maxLength - 1));
             _ = LZ4.Encode(source, out var target);
             position += source.Length;
 
@@ -120,9 +129,10 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(container.IsVersion452OmegaWithMicrosoftV2 ? container.Extra.SizeDisk : container.Extra.SizeDecompressed); // 4
 
             // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
-            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 4 or 260
+            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 4 or 260 or 276
 
             OverwriteWaypointMeta(writer, container);
+            OverwriteWorldsMeta(writer, container);
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

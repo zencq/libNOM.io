@@ -299,13 +299,22 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     protected void UpdateContainerWithWaypointMetaInformation(Container container, ReadOnlySpan<byte> disk)
     {
-        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-            container.Extra = container.Extra with
-            {
-                SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-                SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-                DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // just a single byte to be able to use a common method for all platforms
-            };
+        container.Extra = container.Extra with
+        {
+            SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // just a single byte to be able to use a common method for all platforms
+        };
+    }
+
+    protected virtual void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        container.Extra = container.Extra with
+        {
+            SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // keep it a single byte to get the correct value if migrated but not updated
+        };
     }
 
     /// <summary>

@@ -163,7 +163,8 @@ public partial class PlatformSwitch : Platform
             };
 
             // Extended data since Waypoint.
-            UpdateContainerWithWaypointMetaInformation(container, disk);
+            if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
+                UpdateContainerWithWaypointMetaInformation(container, disk);
 
             // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
             container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));

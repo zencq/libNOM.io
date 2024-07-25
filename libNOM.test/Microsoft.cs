@@ -28,6 +28,7 @@ public class MicrosoftTest : CommonTestClass
 
     protected const int META_LENGTH_TOTAL_VANILLA = 0x18 / sizeof(uint); // 6
     protected const int META_LENGTH_TOTAL_WAYPOINT = 0x118 / sizeof(uint); // 70
+    protected const int META_LENGTH_TOTAL_WORLDS = 0x128 / sizeof(uint); // 74
 
     #endregion
 
@@ -50,9 +51,27 @@ public class MicrosoftTest : CommonTestClass
                 AssertAllAreEqual(1, metaA[0], metaB[0]);
                 AssertAllZero(metaA.Skip(1).Take(3), metaB.Skip(1).Take(3));
                 AssertAllNotZero(metaA[4], metaB[4]);
+                AssertAllZero(metaA.Skip(5), metaB.Skip(5));
             }
-
-            Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
+            else
+            {
+                Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
+            }
+        }
+        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS)
+        {
+            if (container.IsAccount)
+            {
+                AssertAllAreEqual(1, metaA[0], metaB[0]);
+                AssertAllZero(metaA.Skip(1).Take(3), metaB.Skip(1).Take(3));
+                AssertAllNotZero(metaA[4], metaB[4]);
+                AssertAllZero(metaA.Skip(5), metaB.Skip(5));
+            }
+            else
+            {
+                Assert.IsTrue(metaA.Skip(5).Take(67).SequenceEqual(metaB.Skip(5).Take(67)));
+                AssertAllAreEqual(META_FORMAT_4, metaA[73], metaB[73]);
+            }
         }
         else
             throw new AssertFailedException();
@@ -455,7 +474,37 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T108_Read_000900000104066F()
+    public void T108_Read_00090000025A963A_0x7D3_Worlds()
+    {
+        // Arrange
+        var expectAccountData = true;
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D3_Worlds");
+        var results = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 378),
+            new(1, "Slot1Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 388),
+
+            new(2, "Slot2Auto", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes,"Voyagers", "Auf dem Planeten (Lehave)", 6072),
+            new(3, "Slot2Manual", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes,"Voyagers", "Auf dem Planeten (Lehave)", 5936),
+
+            new(4, "Slot3Auto", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes, "Reisende", "Auf dem Planeten (Leigha Yamak)", 425),
+            new(5, "Slot3Manual", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes, "Reisende","Auf dem Planeten (Leigha Yamak)", 416),
+
+            new(6, "Slot4Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "�\u0001", "", 773474),
+            new(7, "Slot4Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4124, 4636, GameVersionEnum.LivingShip, "", "", 771852),
+
+            new(8, "Slot5Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4149, 6709, GameVersionEnum.OmegaWithMicrosoftV2, "The Final Frontier","Within Wemexb Colony", 2964),
+            new(9, "Slot5Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4149, 6709, GameVersionEnum.OmegaWithMicrosoftV2, "The Final Frontier", "Innerhalb von Wemexb Colony", 3003),
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonRead<PlatformMicrosoft>(path, results, expectAccountData, userIdentification);
+    }
+
+    [TestMethod]
+    public void T109_Read_000900000104066F()
     {
         // Arrange
         var expectAccountData = true;
@@ -476,7 +525,7 @@ public class MicrosoftTest : CommonTestClass
     /// Same as <see cref="T106_Read_000901FFCAB85905"/>.
     /// </summary>
     [TestMethod]
-    public void T109_Read_NoAccountInDirectory()
+    public void T110_Read_NoAccountInDirectory()
     {
         // Arrange
         var expectAccountData = false;
@@ -565,7 +614,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 0;
-        var originUnits = 1504909789; // 1.504.909.789
+        var originUnits = 1504909789; // 1,504,909,789
         var originUtcTicks = 638126763444620000; // 2023-02-22 15:25:44 +00:00
         var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
         var results = new WriteResults(uint.MaxValue, 4143, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 635119, "1. Haupt", "Auf dem Frachter (WF-4 Dawajima)", (byte)(DifficultyPresetTypeEnum.Custom));
@@ -576,11 +625,11 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T203_Write_Default_V2()
+    public void T203_Write_Default_HGSAVEV2_Omega()
     {
         // Arrange
         var containerIndex = 0;
-        var originUnits = 252495937; // 252.495.937
+        var originUnits = 252495937; // 252,495,937
         var originUtcTicks = 638452693524090000; // 2023-03-05 21:02:32 +00:00
         var path = GetCombinedPath("Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
         var results = new WriteResults(uint.MaxValue, 4149, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 169127, "", "On freighter (Spear of Benevolence)", (byte)(DifficultyPresetTypeEnum.Normal));
@@ -591,11 +640,26 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T204_Write_Default_0x7D3_Worlds()
+    {
+        // Arrange
+        var containerIndex = 0;
+        var originUnits = 20221021; // 20,221,021
+        var originUtcTicks = 638575130110000000; // 2024-07-25 14:03:31 +00:00
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D3_Worlds");
+        var results = new WriteResults(uint.MaxValue, 4153, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 378, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", (byte)(DifficultyPresetTypeEnum.Creative));
+    
+        // Act
+        // Assert
+        TestCommonWriteDefaultSave<PlatformMicrosoft>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+    }
+
+    [TestMethod]
     public void T210_Write_SetLastWriteTime_False()
     {
         // Arrange
         var containerIndex = 0;
-        var originUnits = 1504909789; // 1.504.909.789
+        var originUnits = 1504909789; // 1,504,909,789
         var originUtcTicks = 638126763444620000; // 2023-02-22 15:25:44 +00:00
         var path = GetCombinedPath("Microsoft", "wgs", "000901F8A36808E0_29070100B936489ABCE8B9AF3980429C");
 

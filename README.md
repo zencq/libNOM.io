@@ -55,6 +55,8 @@ into the selected directory. This must be in or one level below the selected one
       * SteamDeck: **~/.local/share/Steam/steamapps/compatdata/275850/pfx/drive_c/users/steamuser/Application Data/HelloGames/NMS/st\_\<SteamID\>**
       * macOS: **~/Library/Application Support/HelloGames/NMS/st\_\<SteamID\>**
     * File Patterns: **save\*.hg**
+    * Notes: If you use a cloud gaming service like GeForce NOW you can still use
+      it by starting the game to trigger synchronization from/to the cloud.
 * [Microsoft Store](https://www.microsoft.com/p/no-mans-sky/bqvqtl3pch05) (Windows PC)
     * Location: **%LocalAppData%\Packages\HelloGames.NoMansSky_bs190hzg1sesy\SystemAppData\wgs\\<XboxID\>_29070100B936489ABCE8B9AF3980429C**
     * File Patterns: **containers.index**
@@ -67,7 +69,7 @@ into the selected directory. This must be in or one level below the selected one
 * [Xbox One/Series X\|S](https://www.microsoft.com/p/no-mans-sky/bqvqtl3pch05)
     * Notes: Not directly supported but can easily achieved with cloud sync via
       the Microsoft Store. The synchronization is triggered short after you close
-      the game (no need to load a save).
+      the game (no need to load a save). This also works for Xbox Cloud Gaming.
 
 ### Usage
 

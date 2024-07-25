@@ -180,6 +180,7 @@ public abstract class CommonTestClass
             Assert.AreEqual(expected.Season, container.Season);
             Assert.AreEqual(expected.BaseVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.BaseVersion))));
             Assert.AreEqual(expected.SaveVersion, (int)(priject.GetFieldOrProperty(nameof(ReadResults.SaveVersion))));
+            Assert.AreEqual(expected.GameVersion, container.GameVersion);
             Assert.AreEqual(expected.SaveName, container.SaveName);
             Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
             Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
