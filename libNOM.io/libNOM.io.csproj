@@ -58,7 +58,7 @@
 
 	<!-- Package -->
 	<PropertyGroup Label="General">
-		<Version>0.10.1-beta.4</Version>
+		<Version>0.10.1</Version>
 		<Authors>cengelha</Authors>
 		<Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2021</Copyright>
