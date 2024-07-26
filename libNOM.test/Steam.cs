@@ -237,7 +237,7 @@ public class SteamTest : CommonTestClass
     {
         // Arrange
         var expectAccountData = true;
-        var path = GetCombinedPath("Steam", "st_76561198042453834_Worlds");
+        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3_Worlds");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287227),

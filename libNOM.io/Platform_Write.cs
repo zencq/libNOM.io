@@ -163,14 +163,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     protected byte[] CreateMetaBuffer(Container container)
     {
-        var capacity = (int)(container.Extra.MetaLength);
-        if (capacity == 0)
-            capacity = container.GameVersion switch {
-                >= GameVersionEnum.Worlds => META_LENGTH_TOTAL_WORLDS,
-                >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
-                _ => META_LENGTH_TOTAL_VANILLA,
-            };
-
+        var capacity = container.GameVersion switch
+        {
+            >= GameVersionEnum.Worlds => META_LENGTH_TOTAL_WORLDS,
+            >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
+            _ => META_LENGTH_TOTAL_VANILLA,
+        };
         return new byte[capacity];
     }
 

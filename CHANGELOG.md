@@ -4,14 +4,17 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased
+## Unreleased (0.10.1)
 
 ### Known Issues
 ### Added
+* Support for changed save format on Microsoft platform in Worlds 5.01.1
 ### Changed
+* Make `Common.DeepCopy()` public
 ### Deprecated
 ### Removed
 ### Fixed
+* Wrong metadata size when transferring save to container with other size
 ### Security
 
 ## 0.10.0 (2024-07-22)
