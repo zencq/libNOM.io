@@ -441,7 +441,7 @@ public class PlaystationTest : CommonTestClass
         var path = GetCombinedPath("Playstation", "0x7D2", "SaveWizard", "6");
         var results = new ReadResults[]
         {
-            new(9, "Slot5Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, 4658, GameVersionEnum.Interceptor, "Purfex", "On freighter (Normandy SR3)", 2469490),
+            new(9, "Slot5Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4146, 4658, GameVersionEnum.Echoes, "Purfex", "On freighter (Normandy SR3)", 2469490),
         };
         var userIdentification = ReadUserIdentification(path);
 
