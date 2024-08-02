@@ -224,7 +224,7 @@ public partial class PlatformSteam : Platform
                 if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
                     UpdateContainerWithWaypointMetaInformation(container, disk);
 
-                // Extended metadata since Worlds 5.00.
+                // Extended metadata since Worlds Part I 5.00.
                 if (disk.Length == META_LENGTH_TOTAL_WORLDS)
                     UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
 
@@ -336,7 +336,7 @@ public partial class PlatformSteam : Platform
         writer.Write(META_HEADER); // 4
         writer.Write(container.GameVersion switch // 4
         {
-            >= GameVersionEnum.Worlds => Constants.META_FORMAT_4,
+            >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_4,
             >= GameVersionEnum.Frontiers => Constants.META_FORMAT_3,
             _ => Constants.META_FORMAT_2,
         });
@@ -383,7 +383,7 @@ public partial class PlatformSteam : Platform
         base.OverwriteWorldsMeta(writer, container);
 
         // Overwrite changed.
-        if (container.IsVersion500Worlds)
+        if (container.IsVersion500WorldsPartI)
         {
             // COMPRESSED SIZE is used again.
             writer.Seek(0x3C, SeekOrigin.Begin); // 4 + 4 + 16 + 32 = 48

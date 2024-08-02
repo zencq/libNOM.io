@@ -59,5 +59,5 @@ public enum GameVersionEnum : uint
     OmegaWithMicrosoftV2 = 452,
     Orbital = 460,
     Adrift = 470,
-    Worlds = 500,
+    WorldsPartI = 500,
 }

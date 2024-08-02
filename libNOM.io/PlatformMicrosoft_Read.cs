@@ -36,11 +36,11 @@ public partial class PlatformMicrosoft : Platform
             return target;
         }
 
-        // Since Worlds 5.00, the standard save streaming is used.
+        // Since Worlds Part I 5.00, the standard save streaming is used.
         if (data.StartsWith(Constants.SAVE_STREAMING_HEADER))
             return base.DecompressData(container, data);
 
-        // Special format (similar to the standard streaming) used between Omega 4.52 and Worlds 5.00.
+        // Special format (similar to the standard streaming) used between Omega 4.52 and Worlds Part I 5.00.
         var offset = HGSAVEV2_HEADER.Length;
         ReadOnlySpan<byte> result = [];
 

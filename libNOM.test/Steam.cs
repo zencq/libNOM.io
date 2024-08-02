@@ -212,8 +212,8 @@ public class SteamTest : CommonTestClass
             new(2, "Slot2Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4142, 4654, GameVersionEnum.WaypointWithSuperchargedSlots, "Playground", "Within Rigonn-Enve Outpost", 902),
             new(3, "Slot2Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4143, 4655, GameVersionEnum.Fractal, "Playground", "Within Rigonn-Enve Outpost", 919),
 
-            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "Im Hebino XVIII-System", 5495),
-            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "An Bord von „Hebino XVIII“-Treffpunkt", 5521),
+            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.WorldsPartI, "The Final Frontier", "Im Hebino XVIII-System", 5495),
+            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.WorldsPartI, "The Final Frontier", "An Bord von „Hebino XVIII“-Treffpunkt", 5521),
 
             new(8, "Slot5Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4147, 6707, GameVersionEnum.Omega, "Omega Permadeath", "Auf dem Planeten (Treeph)", 52),
 
@@ -240,8 +240,8 @@ public class SteamTest : CommonTestClass
         var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3_Worlds");
         var results = new ReadResults[]
         {
-            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287227),
-            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287234),
+            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287227),
+            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287234),
         };
         var userIdentification = ReadUserIdentification(path);
 
@@ -690,8 +690,8 @@ public class SteamTest : CommonTestClass
         var pathSteam = GetCombinedPath("Steam", "st_76561198042453834");
         var resultsSteam = new ReadResults[]
         {
-            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "Im Hebino XVIII-System", 5495),
-            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.Worlds, "The Final Frontier", "An Bord von „Hebino XVIII“-Treffpunkt", 5521),
+            new(6, "Slot4Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.WorldsPartI, "The Final Frontier", "Im Hebino XVIII-System", 5495),
+            new(7, "Slot4Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4153, 6713, GameVersionEnum.WorldsPartI, "The Final Frontier", "An Bord von „Hebino XVIII“-Treffpunkt", 5521),
         };
         var slotSteam = 3; // get Slot4
         var userDecisionsSteam = 1;

@@ -17,7 +17,7 @@ internal static class GameVersion
     internal static GameVersionEnum Get(Platform platform, int length, uint format)
     {
         if (length == platform.META_LENGTH_TOTAL_WORLDS)
-            return GameVersionEnum.Worlds; // Constants.META_FORMAT_4
+            return GameVersionEnum.WorldsPartI; // Constants.META_FORMAT_4
 
         if (length == platform.META_LENGTH_TOTAL_WAYPOINT)
             return GameVersionEnum.Waypoint; // Constants.META_FORMAT_3
@@ -41,7 +41,7 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
-        >= 4153 => GameVersionEnum.Worlds, // 5.00
+        >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithMicrosoftV2, // 4.52
@@ -75,7 +75,7 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
-        >= 4153 => GameVersionEnum.Worlds, // 5.00
+        >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithMicrosoftV2, // 4.52
@@ -105,7 +105,7 @@ internal static class GameVersion
     /// <param name="json"></param>
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
-        >= 4153 => GameVersionEnum.Worlds, // 5.00
+        >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
         >= 4149 => GameVersionEnum.OmegaWithMicrosoftV2, // 4.52

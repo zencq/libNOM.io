@@ -223,7 +223,7 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion470Adrift { get; }
 
-    public bool IsVersion500Worlds { get; }
+    public bool IsVersion500WorldsPartI { get; }
 
     #endregion
 

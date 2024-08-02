@@ -290,7 +290,7 @@ public partial class PlatformMicrosoft : Platform
          69. DIFFICULTY PRESET              (  1)
          69. EMPTY                          (  3) // may contain additional junk data
                                             (280)
-        
+
          70. SLOT IDENTIFIER                (  8)
          72. TIMESTAMP                      (  4)
          73. META FORMAT                    (  4)
@@ -336,7 +336,7 @@ public partial class PlatformMicrosoft : Platform
             if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
                 UpdateContainerWithWaypointMetaInformation(container, disk);
 
-            // Extended metadata since Worlds 5.00.
+            // Extended metadata since Worlds Part I 5.00.
             if (disk.Length == META_LENGTH_TOTAL_WORLDS)
                 UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
 

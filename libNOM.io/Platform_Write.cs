@@ -165,7 +165,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         var capacity = container.GameVersion switch
         {
-            >= GameVersionEnum.Worlds => META_LENGTH_TOTAL_WORLDS,
+            >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
             >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
             _ => META_LENGTH_TOTAL_VANILLA,
         };
@@ -202,19 +202,19 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Appends metadata that were added or overwrite those that were changed with Worlds 5.00.
+    /// Appends metadata that were added or overwrite those that were changed with Worlds Part I 5.00.
     /// Appended data is the same for all platforms.
     /// </summary>
     /// <param name="container"></param>
     /// <param name="writer"></param>
     protected virtual void OverwriteWorldsMeta(BinaryWriter writer, Container container)
     {
-        if (container.IsVersion500Worlds)
+        if (container.IsVersion500WorldsPartI)
         {
             writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
             writer.Write((uint)(container.Difficulty)); // 4
 
-            // Skip next 8 bytes with SLOT IDENTIFIER. 
+            // Skip next 8 bytes with SLOT IDENTIFIER.
             writer.Seek(0x8, SeekOrigin.Current);
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
         }

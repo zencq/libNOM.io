@@ -169,7 +169,7 @@ public partial class Container : IContainer
 
     public bool IsVersion470Adrift => IsVersion(GameVersionEnum.Adrift); // { get; }
 
-    public bool IsVersion500Worlds => IsVersion(GameVersionEnum.Worlds); // { get; }
+    public bool IsVersion500WorldsPartI => IsVersion(GameVersionEnum.WorldsPartI); // { get; }
 
     #endregion
 

@@ -481,8 +481,8 @@ public class MicrosoftTest : CommonTestClass
         var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D3_Worlds");
         var results = new ReadResults[]
         {
-            new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 378),
-            new(1, "Slot1Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.Worlds, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 388),
+            new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 378),
+            new(1, "Slot1Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 388),
 
             new(2, "Slot2Auto", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes,"Voyagers", "Auf dem Planeten (Lehave)", 6072),
             new(3, "Slot2Manual", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes,"Voyagers", "Auf dem Planeten (Lehave)", 5936),

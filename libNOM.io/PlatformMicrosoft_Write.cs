@@ -54,17 +54,17 @@ public partial class PlatformMicrosoft : Platform
 
     protected override ReadOnlySpan<byte> CompressData(Container container, ReadOnlySpan<byte> data)
     {
-        if (!container.IsSave || !container.IsVersion452OmegaWithMicrosoftV2) // if not Omega 4.52, also not Worlds 5.00
+        if (!container.IsSave || !container.IsVersion452OmegaWithMicrosoftV2) // if not Omega 4.52, also not Worlds Part I 5.00
         {
             _ = LZ4.Encode(data, out var target);
             return target;
         }
 
-        // Since Worlds 5.00, the standard save streaming is used.
-        if (container.IsVersion500Worlds)
+        // Since Worlds Part I 5.00, the standard save streaming is used.
+        if (container.IsVersion500WorldsPartI)
             return base.CompressData(container, data);
 
-        // Special format (similar to the standard streaming) used between Omega 4.52 and Worlds 5.00.
+        // Special format (similar to the standard streaming) used between Omega 4.52 and Worlds Part I 5.00.
         var position = 0;
         ReadOnlySpan<byte> result = HGSAVEV2_HEADER;
 
