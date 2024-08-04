@@ -101,7 +101,7 @@ public partial class PlatformMicrosoft : Platform
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
-        var buffer = CreateMetaBuffer(container);
+        var buffer = new byte[GetMetaBufferLength(container)];
 
         using var writer = new BinaryWriter(new MemoryStream(buffer));
 

@@ -291,6 +291,7 @@ public partial class PlatformMicrosoft : Platform
          69. EMPTY                          (  3) // may contain additional junk data
                                             (280)
 
+         69. DIFFICULTY PRESET              (  4)
          70. SLOT IDENTIFIER                (  8)
          72. TIMESTAMP                      (  4)
          73. META FORMAT                    (  4)
@@ -343,16 +344,6 @@ public partial class PlatformMicrosoft : Platform
             // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
             container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
         }
-    }
-
-    protected override void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
-    {
-        base.UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
-
-        container.Extra = container.Extra with
-        {
-            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[72]).ToLocalTime(),
-        };
     }
 
     #endregion

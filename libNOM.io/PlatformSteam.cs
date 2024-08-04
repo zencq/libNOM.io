@@ -237,16 +237,6 @@ public partial class PlatformSteam : Platform
         container.Extra = container.Extra with { MetaLength = (uint)(disk.Length) };
     }
 
-    protected override void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
-    {
-        base.UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
-
-        container.Extra = container.Extra with
-        {
-            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[89]).ToLocalTime(),
-        };
-    }
-
     #endregion
 
     // //
@@ -328,7 +318,7 @@ public partial class PlatformSteam : Platform
 
     protected override Span<uint> CreateMeta(Container container, ReadOnlySpan<byte> data)
     {
-        var buffer = CreateMetaBuffer(container);
+        var buffer = new byte[GetMetaBufferLength(container)];
 
         // Editing account data is possible since Frontiers and therefore has always the new format.
         using var writer = new BinaryWriter(new MemoryStream(buffer));

@@ -314,6 +314,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
             SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
             DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // keep it a single byte to get the correct value if migrated but not updated
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[META_LENGTH_KNOWN_TIMESTAMP / 4]).ToLocalTime(),
         };
     }
 

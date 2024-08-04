@@ -19,7 +19,7 @@ public partial class PlatformSwitch : Platform
     protected override int META_LENGTH_KNOWN_VANILLA => 0x28; // 40
     internal override int META_LENGTH_TOTAL_VANILLA => 0x64; // 100
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x164; // 356
-    internal override int META_LENGTH_TOTAL_WORLDS => META_LENGTH_TOTAL_WAYPOINT; // no changes for this platform
+    internal override int META_LENGTH_TOTAL_WORLDS => 0x174; // 372
 
     #endregion
 
@@ -135,6 +135,12 @@ public partial class PlatformSwitch : Platform
          74. DIFFICULTY PRESET    (  4)
          75. EMPTY                ( 56)
                                   (356)
+
+         75. SLOT IDENTIFIER      (  8)
+         77. TIMESTAMP            (  4)
+         78. META FORMAT          (  4)
+         79. EMPTY                ( 56)
+                                  (372)
          */
         if (disk.IsEmpty())
             return;
@@ -162,9 +168,13 @@ public partial class PlatformSwitch : Platform
                 TotalPlayTime = decompressed[7],
             };
 
-            // Extended data since Waypoint.
+            // Extended metadata since Waypoint 4.00.
             if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
                 UpdateContainerWithWaypointMetaInformation(container, disk);
+
+            // Extended metadata since Worlds Part I 5.00.
+            if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+                UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
 
             // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
             container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
@@ -183,7 +193,7 @@ public partial class PlatformSwitch : Platform
 
         if (container.IsAccount)
         {
-            buffer = container.Extra.Bytes ?? CreateMetaBuffer(container);
+            buffer = container.Extra.Bytes ?? new byte[GetMetaBufferLength(container)];
 
             // Overwrite only SizeDecompressed.
             using var writer = new BinaryWriter(new MemoryStream(buffer));
@@ -193,12 +203,16 @@ public partial class PlatformSwitch : Platform
         }
         else
         {
-            buffer = CreateMetaBuffer(container);
+            buffer = new byte[GetMetaBufferLength(container)];
 
             using var writer = new BinaryWriter(new MemoryStream(buffer));
 
             writer.Write(META_HEADER); // 4
-            writer.Write(Constants.META_FORMAT_3); // 4
+            writer.Write(container.GameVersion switch // 4
+            {
+                >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_4,
+                _ => Constants.META_FORMAT_3,
+            });
             writer.Write(container.Extra.SizeDecompressed); // 4
             writer.Write(container.MetaIndex); // 4
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
@@ -214,6 +228,7 @@ public partial class PlatformSwitch : Platform
             writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 60 or 272
 
             OverwriteWaypointMeta(writer, container);
+            OverwriteWorldsMeta(writer, container);
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

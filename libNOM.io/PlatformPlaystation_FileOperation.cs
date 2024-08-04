@@ -19,7 +19,12 @@ public partial class PlatformPlaystation : Platform
 
             container.Extra = container.Extra with
             {
-                MetaLength = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
+                MetaLength = (uint)(container.GameVersion switch
+                {
+                    >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
+                    >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
+                    _ => META_LENGTH_TOTAL_WAYPOINT,
+                }),
             };
         }
     }

@@ -22,6 +22,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     protected virtual int META_LENGTH_KNOWN_VANILLA { get; } = -1; // all metadata at the beginning of a file before the first extension in Waypoint
     protected int META_LENGTH_KNOWN_NAME => META_LENGTH_KNOWN_VANILLA + (1 * Constants.SAVE_RENAMING_LENGTH_MANIFEST); // { get; } // ? + 128
     protected int META_LENGTH_KNOWN_SUMMARY => META_LENGTH_KNOWN_VANILLA + (2 * Constants.SAVE_RENAMING_LENGTH_MANIFEST); // { get; } // ? + 256
+    protected int META_LENGTH_KNOWN_TIMESTAMP => META_LENGTH_KNOWN_SUMMARY + 4 + 8; // { get; } // ? + 268
 
     internal abstract int META_LENGTH_TOTAL_VANILLA { get; }
     internal abstract int META_LENGTH_TOTAL_WAYPOINT { get; }

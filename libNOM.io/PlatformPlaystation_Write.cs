@@ -143,7 +143,7 @@ public partial class PlatformPlaystation : Platform
 
     private byte[] GetLegacyMeta(Container container)
     {
-        var buffer = CreateMetaBuffer(container);
+        var buffer = new byte[GetMetaBufferLength(container)];
 
         using (var writer = new BinaryWriter(new MemoryStream(buffer)))
             if (container.Exists)

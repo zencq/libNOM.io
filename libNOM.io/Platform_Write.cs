@@ -161,15 +161,17 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         return encrypted;
     }
 
-    protected byte[] CreateMetaBuffer(Container container)
+    protected int GetMetaBufferLength(Container container, bool force = false)
     {
-        var capacity = container.GameVersion switch
-        {
-            >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
-            >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
-            _ => META_LENGTH_TOTAL_VANILLA,
-        };
-        return new byte[capacity];
+        var capacity = force ? 0 : (int)(container.Extra.MetaLength);
+        if (capacity == 0)
+            capacity = container.GameVersion switch
+            {
+                >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
+                >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
+                _ => META_LENGTH_TOTAL_VANILLA,
+            };
+        return capacity;
     }
 
     /// <summary>
@@ -217,6 +219,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             // Skip next 8 bytes with SLOT IDENTIFIER.
             writer.Seek(0x8, SeekOrigin.Current);
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
+            writer.Write(Constants.META_FORMAT_4); // 4
         }
     }
 

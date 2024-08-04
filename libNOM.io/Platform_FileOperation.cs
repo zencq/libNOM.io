@@ -22,7 +22,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.Extra = container.Extra with
         {
             Bytes = null,
-            MetaLength = (uint)(container.IsVersion400Waypoint ? META_LENGTH_TOTAL_WAYPOINT : META_LENGTH_TOTAL_VANILLA),
+            MetaLength = (uint)(GetMetaBufferLength(container, force: true)),
         };
     }
 
