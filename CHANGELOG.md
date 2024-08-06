@@ -14,6 +14,18 @@ since 1.0.0.
 ### Fixed
 ### Security
 
+## 0.11.0 (2024-08-06)
+
+### Added
+* Proper support for Worlds Part I on Nintendo Switch
+
+### Changed
+* Bump *libNOM.map* from 0.12.1 to 0.13.0
+* Renamed `GameVersionEnum.Worlds` to `WorldsPartI` to better match to official naming
+
+### Fixed
+* Wrong metadata size in some case
+
 ## 0.10.1 (2024-07-26)
 
 ### Added
