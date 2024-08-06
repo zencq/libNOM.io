@@ -20,8 +20,9 @@ as well as performing related actions.
 
 ## Getting Started
 
-Currently save format `2001` (**Foundation 1.10** to **Prisms 3.53**) and `2002`
-(**Frontiers 3.60** and up) as well as the extension in **Waypoint 4.00** are supported.
+Currently save formats `2001` (**Foundation 1.10** to **Prisms 3.53**), `2002`
+(**Frontiers 3.60** to **Adrift 4.72**) including the extension made in **Waypoint 4.00**,
+and `2003` (**Worlds Part I 5.00** and up) are supported.
 The original format `2000` that was used in the vanilla game is not supported. If
 you are interested in it, have a look at the [nms-savetool by MetaIdea](https://github.com/MetaIdea/nms-savetool).
 
