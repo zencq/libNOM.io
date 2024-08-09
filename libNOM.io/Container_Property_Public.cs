@@ -101,6 +101,7 @@ public partial class Container : IContainer
 
     #endregion
 
+    // EXTERNAL RELEASE: Add new IsVersion flag.
     #region IsVersion
 
     public bool IsVersion211BeyondWithVehicleCam => IsVersion(GameVersionEnum.BeyondWithVehicleCam); // { get; }

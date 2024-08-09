@@ -3,6 +3,7 @@
 namespace libNOM.io.Global;
 
 
+// EXTERNAL RELEASE: If any, add the new platform here as well.
 public static class Analyze
 {
     #region Field

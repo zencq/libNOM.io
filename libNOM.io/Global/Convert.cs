@@ -130,6 +130,7 @@ public static class Convert
     /// <param name="targetPlatform"></param>
     /// <param name="path"></param>
     /// <exception cref="InvalidDataException"></exception>
+    // EXTERNAL RELEASE: If any, add the new platform here as well.
     public static void ToSaveFile(string file, PlatformEnum targetPlatform, string? path)
     {
         Platform platform = targetPlatform switch

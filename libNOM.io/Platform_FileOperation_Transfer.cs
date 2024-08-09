@@ -175,6 +175,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
+    // EXTERNAL RELEASE: Update if new objects with an ownership have been added.
     #region Transfer Ownership
 
     /// <summary>

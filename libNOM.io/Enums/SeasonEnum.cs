@@ -4,6 +4,7 @@
 /// <summary>
 /// Specifies all known expeditions including a placeholder for future ones.
 /// </summary>
+// EXTERNAL RELEASE: If any, add new season.
 public enum SeasonEnum : ushort
 {
     None = 0,

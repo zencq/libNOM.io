@@ -3,6 +3,7 @@
 namespace libNOM.io.Meta;
 
 
+// EXTERNAL RELEASE: Update if any changes related to the difficulty have been made.
 internal static class DifficultyPreset
 {
     #region Getter

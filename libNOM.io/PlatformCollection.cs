@@ -99,6 +99,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
     /// Initializes the collection.
     /// Only on a PC, platforms have a default path and can be located directly on the machine.
     /// </summary>
+    // EXTERNAL RELEASE: If any, add the new platform here as well (PC only).
     public void Reinitialize()
     {
         _collection.Clear();

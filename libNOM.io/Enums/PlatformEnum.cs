@@ -8,6 +8,7 @@ namespace libNOM.io.Enums;
 /// PlayStation is last as it has the least specific identification characteristics (only Steam like save file in worst case).
 /// Otherwise ordered by assumed player base.
 /// </summary>
+// EXTERNAL RELEASE: If any, add new platform including the whole implementation.
 public enum PlatformEnum : uint
 {
     Unknown,
