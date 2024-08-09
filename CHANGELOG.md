@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased
+## Unreleased (0.11.1)
 
 ### Known Issues
 ### Added
+* Extension to get actual expedition number from `SeasonEnum` (e.g. Cartographers is always 3rd, Liquidators 14th)
 ### Changed
 ### Deprecated
 ### Removed
