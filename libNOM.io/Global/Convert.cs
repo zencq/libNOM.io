@@ -2,6 +2,7 @@
 
 using CommunityToolkit.Diagnostics;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace libNOM.io.Global;
@@ -174,6 +175,9 @@ public static class Convert
     {
         if (CreateContainer(input, platform) is Container container && container.Exists)
         {
+            // Clear incompatibility to ensure that IsLoaded does not fail due to any.
+            container.ClearIncompatibility();
+
             // Try original save files first.
             if (!container.IsLoaded)
                 container.SetJsonObject(ReadAllBytes(input!)); // input is an existing file as container would be null otherwise
@@ -213,7 +217,7 @@ public static class Convert
             ReadOnlySpan<byte> bytes = File.ReadAllBytes(input);
             return bytes.GetJson();
         }
-        catch (Exception ex) when (ex is ArgumentOutOfRangeException)
+        catch (Exception ex) when (ex is ArgumentOutOfRangeException or JsonReaderException)
         {
             return null;
         }

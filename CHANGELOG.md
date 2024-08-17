@@ -14,6 +14,7 @@ since 1.0.0.
 ### Removed
 ### Fixed
 * Always invoked `IContainer.WriteCallback` even if `OnWatcherDecision` was not executed
+* Importing plaintext JSON files
 ### Security
 
 ## 0.11.0 (2024-08-06)
