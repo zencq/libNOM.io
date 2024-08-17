@@ -64,24 +64,7 @@ public partial class Container : IContainer
 
     #region Setter
 
-    public void SetJsonObject(JObject? value)
-    {
-        // No ThrowHelperIsLoaded as setting this will determine the result.
-        _jsonObject = value;
-
-        IsSynced = false;
-
-        // Make sure the data are always in the format that was set in the settings.
-        if (_jsonObject is not null && Platform is not null) // happens when the container is unloaded
-            if (Platform.Settings.UseMapping)
-            {
-                UnknownKeys = Mapping.Deobfuscate(_jsonObject, IsAccount);
-            }
-            else
-            {
-                Mapping.Obfuscate(_jsonObject, IsAccount);
-            }
-    }
+    // public //
 
     public void SetJsonValue(JToken value, ReadOnlySpan<int> indices)
     {
@@ -119,6 +102,30 @@ public partial class Container : IContainer
     {
         HasWatcherChange = true;
         WatcherChangeType = changeType;
+    }
+
+    // internal //
+
+    /// <summary>
+    /// Sets the entire JSON object. This can affect numerous properties.
+    /// </summary>
+    internal void SetJsonObject(JObject? value)
+    {
+        // No ThrowHelperIsLoaded as setting this will determine the result.
+        _jsonObject = value;
+
+        IsSynced = false;
+
+        // Make sure the data are always in the format that was set in the settings.
+        if (_jsonObject is not null && Platform is not null) // happens when the container is unloaded
+            if (Platform.Settings.UseMapping)
+            {
+                UnknownKeys = Mapping.Deobfuscate(_jsonObject, IsAccount);
+            }
+            else
+            {
+                Mapping.Obfuscate(_jsonObject, IsAccount);
+            }
     }
 
     #endregion

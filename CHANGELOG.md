@@ -16,6 +16,7 @@ since 1.0.0.
 * Renamed `IPlatform.Backup` to `CreateBackup` and `IPlatform.Restore` to `RestoreBackup`
 ### Deprecated
 ### Removed
+* Removed `IContainer.SetJsonObject` from the public API, use `IPlatform.Rebuild` instead which will update and invoke everything properly
 * Removed `IContainer.BackupRestoredCallback` in favor of new callback combination
 ### Fixed
 * Always invoked `IContainer.WriteCallback` even if `OnWatcherDecision` was not executed
