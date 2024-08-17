@@ -168,14 +168,14 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
             // Only when executed to keep old timestamps.
             nonIContainer.RefreshFileInfo();
+
+            // Invoke only if executing, to send signal that it was written (from the outside).
+            nonIContainer.WriteCallback.Invoke();
         }
         else
             nonIContainer.IsSynced = false;
 
         nonIContainer.ResolveWatcherChange();
-
-        // Invoke as it was written but from the outside.
-        nonIContainer.WriteCallback.Invoke();
     }
 
     #endregion

@@ -13,6 +13,7 @@ since 1.0.0.
 ### Deprecated
 ### Removed
 ### Fixed
+* Always invoked `IContainer.WriteCallback` even if `OnWatcherDecision` was not executed
 ### Security
 
 ## 0.11.0 (2024-08-06)
