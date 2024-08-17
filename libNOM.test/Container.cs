@@ -85,7 +85,7 @@ public class ContainerTest : CommonTestClass
         var container = platform.GetSaveContainer(0);
         Guard.IsNotNull(container);
 
-        container.BackupRestoredCallback += () =>
+        container.JsonChangedCallback += () =>
         {
             backupRestoredCallback = true;
         };
