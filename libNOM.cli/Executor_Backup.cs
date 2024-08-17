@@ -30,7 +30,7 @@ public partial class Executor
         }
 
         foreach (var container in containers!)
-            platform!.Backup(container);
+            platform!.CreateBackup(container);
     }
 
     private static void GetBackupDataFromDirectory(BackupArgs args, out IPlatform? platform, out IEnumerable<IContainer> containers)
@@ -90,6 +90,6 @@ public partial class Executor
             return;
         }
 
-        platform.Restore(backup);
+        platform.RestoreBackup(backup);
     }
 }

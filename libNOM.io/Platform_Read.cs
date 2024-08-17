@@ -55,6 +55,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         nonIContainer.GameVersion = GameVersionEnum.Unknown;
         nonIContainer.SaveVersion = 0;
         UpdateContainerWithJsonInformation(nonIContainer, jsonObject);
+
+        // As it is unclear where the JSON is coming from, assume it is not synced anymore.
+        container.IsSynced = false;
+
+        // It is very likely that the new values are different than the current ones.
+        container.JsonChangedCallback.Invoke();
+        container.PropertiesChangedCallback.Invoke();
     }
 
     public void Reload(IContainer container)
@@ -70,7 +77,14 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by deserializing the data.
     /// </summary>
     /// <param name="container"></param>
-    protected void RebuildContainerFull(Container container) => BuildContainerFull(container);
+    protected void RebuildContainerFull(Container container) 
+    {
+        BuildContainerFull(container);
+
+        // The current values probably have been altered before reloading.
+        container.JsonChangedCallback.Invoke();
+        container.PropertiesChangedCallback.Invoke();
+    }
 
     /// <summary>
     /// Rebuilds a <see cref="Container"/> by loading from disk and processing it by extracting from the string representation.
@@ -82,6 +96,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         if (container.IsCompatible)
             UpdateContainerWithJsonInformation(container, binary.GetString(), true); // force
+
+        // No data, only properties.
+        container.PropertiesChangedCallback.Invoke();
     }
 
     #endregion

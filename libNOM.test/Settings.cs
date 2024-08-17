@@ -118,13 +118,13 @@ public class SettingsTest : CommonTestClass
         var backupDirectory = platform.Settings.BackupDirectory;
         var searchPattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.zip".ToLowerInvariant();
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups1 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups2 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups3 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
         // Assert
@@ -152,15 +152,15 @@ public class SettingsTest : CommonTestClass
         var backupDirectory = platform.Settings.BackupDirectory;
         var searchPattern = $"backup.{platform.PlatformEnum}.{container.MetaIndex:D2}.*.zip".ToLowerInvariant();
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups1 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups2 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
         platform.SetSettings(settings with { MaxBackupCount = 0 });
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups3 = Directory.GetFiles(backupDirectory, searchPattern).Length;
 
         // Assert

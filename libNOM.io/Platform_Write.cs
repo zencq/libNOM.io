@@ -23,7 +23,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         // Always refresh in case something above was executed.
         nonIContainer.RefreshFileInfo();
-        nonIContainer.WriteCallback.Invoke();
     }
 
     protected virtual void WritePlatformSpecific(Container container, DateTimeOffset writeTime)

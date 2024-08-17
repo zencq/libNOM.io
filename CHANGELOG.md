@@ -4,14 +4,19 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.11.1)
+## Unreleased (0.12.0)
 
 ### Known Issues
 ### Added
 * Extension to get actual expedition number from `SeasonEnum` (e.g. Cartographers is always 3rd, Liquidators 14th)
+* Another callback `IContainer.JsonChangedCallback` that gets invoked whenever the JSON inside changed (via the available API)
+* New overload for `IPlatform.RestoreBackup` to enable writing directly to disk
 ### Changed
+* Renamed `IContainer.WriteCallback` to `PropertiesChangedCallback` to be more precise when it gets invoked
+* Renamed `IPlatform.Backup` to `CreateBackup` and `IPlatform.Restore` to `RestoreBackup`
 ### Deprecated
 ### Removed
+* Removed `IContainer.BackupRestoredCallback` in favor of new callback combination
 ### Fixed
 * Always invoked `IContainer.WriteCallback` even if `OnWatcherDecision` was not executed
 * Importing plaintext JSON files

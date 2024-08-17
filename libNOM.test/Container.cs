@@ -47,11 +47,11 @@ public class ContainerTest : CommonTestClass
         var backups0Container = container.BackupCollection.Count;
         var backups0File = Directory.Exists(settings.BackupDirectory);
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups1Container = container.BackupCollection.Count;
         var backups1File = Directory.GetFiles(settings.BackupDirectory, pattern).Length;
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
         var backups2Container = container.BackupCollection.Count;
         var backups2File = Directory.GetFiles(settings.BackupDirectory, pattern).Length;
 
@@ -90,10 +90,10 @@ public class ContainerTest : CommonTestClass
             backupRestoredCallback = true;
         };
 
-        platform.Backup(container);
+        platform.CreateBackup(container);
 
         var backup = container.BackupCollection.First();
-        platform.Restore(backup);
+        platform.RestoreBackup(backup);
 
         // Assert
         Assert.AreEqual(1, container.BackupCollection.Count);

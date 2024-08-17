@@ -676,7 +676,7 @@ public class PlaystationTest : CommonTestClass
         var containerA = platformA.GetSaveContainer(containerIndex);
         Guard.IsNotNull(containerA);
 
-        containerA.WriteCallback += () =>
+        containerA.PropertiesChangedCallback += () =>
         {
             writeCallback = true;
         };

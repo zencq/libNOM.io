@@ -769,7 +769,7 @@ public abstract class CommonTestClass
         Guard.IsNotNull(containerA);
         var metaA = DecryptMeta(containerA);
 
-        containerA.WriteCallback += () =>
+        containerA.PropertiesChangedCallback += () =>
         {
             writeCallback = true;
         };
@@ -818,7 +818,7 @@ public abstract class CommonTestClass
         Guard.IsNotNull(containerA);
         var metaA = DecryptMeta(containerA);
 
-        containerA.WriteCallback += () =>
+        containerA.PropertiesChangedCallback += () =>
         {
             writeCallback = true;
         };
@@ -867,7 +867,7 @@ public abstract class CommonTestClass
         var containerA = platformA.GetSaveContainer(containerIndex);
         Guard.IsNotNull(containerA);
 
-        containerA.WriteCallback += () =>
+        containerA.PropertiesChangedCallback += () =>
         {
             writeCallback = true;
         };
@@ -910,7 +910,7 @@ public abstract class CommonTestClass
         var containerA = platformA.GetSaveContainer(containerIndex);
         Guard.IsNotNull(containerA);
 
-        containerA.WriteCallback += () =>
+        containerA.PropertiesChangedCallback += () =>
         {
             writeCallback = true;
         };
@@ -954,7 +954,7 @@ public abstract class CommonTestClass
         var containerA = platformA.GetSaveContainer(containerIndex);
         Guard.IsNotNull(containerA);
 
-        containerA.WriteCallback += () =>
+        containerA.PropertiesChangedCallback += () =>
         {
             writeCallback = true;
         };

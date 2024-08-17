@@ -15,9 +15,9 @@ public partial class Container : IContainer
 
     public NotifyBackupCreatedEventHandler BackupCreatedCallback { get; set; } = delegate { };
 
-    public NotifyBackupRestoredEventHandler BackupRestoredCallback { get; set; } = delegate { };
+    public NotifyJsonChangedEventHandler JsonChangedCallback { get; set; } = delegate { };
 
-    public NotifyWriteEventHandler WriteCallback { get; set; } = delegate { };
+    public NotifyPropertiesChangedEventHandler PropertiesChangedCallback { get; set; } = delegate { };
 
     #endregion
 
@@ -60,6 +60,8 @@ public partial class Container : IContainer
     {
         IncompatibilityException = null;
         IncompatibilityTag = null;
+
+        PropertiesChangedCallback.Invoke();
     }
 
     /// <summary>
@@ -74,6 +76,9 @@ public partial class Container : IContainer
         Extra.MicrosoftBlobDirectory?.Refresh();
         Extra.MicrosoftBlobDataFile?.Refresh();
         Extra.MicrosoftBlobMetaFile?.Refresh();
+
+        // Invoke whenever these values update.
+        PropertiesChangedCallback.Invoke();
     }
 
     /// <summary>
@@ -93,8 +98,10 @@ public partial class Container : IContainer
         UnknownKeys.Clear();
 
         ClearIncompatibility();
-        RefreshFileInfo();
         ResolveWatcherChange();
+
+        // Last so PropertiesChangedCallback includes everything.
+        RefreshFileInfo();
     }
 
     /// <summary>

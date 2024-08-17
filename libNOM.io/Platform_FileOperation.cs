@@ -93,9 +93,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 // Due to this CanCreate can be true.
                 CopyContainerExtra(Destination, Source);
 
-                // This "if" is not really useful in this method but properly implemented nonetheless.
+                // Write() or/and Invoke().
                 if (write)
                     Write(Destination, Source.LastWriteTime ?? DateTimeOffset.Now);
+                else
+                    Destination.PropertiesChangedCallback.Invoke();
+                Destination.JsonChangedCallback.Invoke();
             }
     }
 

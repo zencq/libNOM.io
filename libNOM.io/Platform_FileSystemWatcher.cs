@@ -164,13 +164,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         if (execute)
         {
-            Reload(nonIContainer);
-
             // Only when executed to keep old timestamps.
             nonIContainer.RefreshFileInfo();
 
-            // Invoke only if executing, to send signal that it was written (from the outside).
-            nonIContainer.WriteCallback.Invoke();
+            Reload(nonIContainer);
         }
         else
             nonIContainer.IsSynced = false;

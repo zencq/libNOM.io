@@ -203,14 +203,18 @@ public interface IPlatform
     /// Creates a backup file of the specified <see cref="IContainer"/>.
     /// </summary>
     /// <param name="container"></param>
-    public void Backup(IContainer container);
+    public void CreateBackup(IContainer container);
+
+    /// <inheritdoc cref="RestoreBackup(IContainer, bool)" />
+    public void RestoreBackup(IContainer backup);
 
     /// <summary>
     /// Restores a backup container by extracting the archive content and reloading the data.
     /// </summary>
     /// <param name="backup"></param>
+    /// <param name="write">Whether it should be written directly to disk after restoring.</param>
     /// <exception cref="ArgumentException"></exception>
-    public void Restore(IContainer backup);
+    public void RestoreBackup(IContainer backup, bool write);
 
     #endregion
 

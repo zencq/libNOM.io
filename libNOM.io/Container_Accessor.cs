@@ -86,8 +86,16 @@ public partial class Container : IContainer
     public void SetJsonValue(JToken value, ReadOnlySpan<int> indices)
     {
         ThrowHelperIsLoaded();
+
+        var cache = IsSynced;
+        var result = !_jsonObject!.SetValue(value, indices);
+
         // If setting the value was successful, it is not synced anymore.
-        IsSynced = !_jsonObject!.SetValue(value, indices);
+        IsSynced = result;
+
+        if (cache != result)
+            PropertiesChangedCallback.Invoke();
+        JsonChangedCallback.Invoke();
     }
 
     public void SetJsonValue(JToken value, string pathIdentifier) => SetJsonValue(value, pathIdentifier, ActiveContext);
@@ -95,8 +103,16 @@ public partial class Container : IContainer
     public void SetJsonValue(JToken value, string pathIdentifier, SaveContextQueryEnum context)
     {
         ThrowHelperIsLoaded();
+
+        var cache = IsSynced;
+        var result = !_jsonObject!.SetValue(value, pathIdentifier, context);
+
         // If setting the value was successful, it is not synced anymore.
-        IsSynced = !_jsonObject!.SetValue(value, pathIdentifier, context);
+        IsSynced = result;
+
+        if (cache != result)
+            PropertiesChangedCallback.Invoke();
+        JsonChangedCallback.Invoke();
     }
 
     public void SetWatcherChange(WatcherChangeTypes changeType)

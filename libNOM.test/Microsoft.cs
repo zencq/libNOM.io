@@ -566,7 +566,7 @@ public class MicrosoftTest : CommonTestClass
         Guard.IsNotNull(containerA);
         var containersIndexA = File.ReadAllBytes(Path.Combine(path, "containers.index"));
 
-        containerA.WriteCallback += () =>
+        containerA.PropertiesChangedCallback += () =>
         {
             writeCallback = true;
         };

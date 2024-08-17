@@ -21,14 +21,14 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     public NotifyBackupCreatedEventHandler BackupCreatedCallback { get; set; }
 
     /// <summary>
-    /// Gets triggered when a backup was restored.
+    /// Gets triggered when the JSON of this <see cref="IContainer"/> was changed.
     /// </summary>
-    public NotifyBackupRestoredEventHandler BackupRestoredCallback { get; set; }
+    public NotifyJsonChangedEventHandler JsonChangedCallback { get; set; }
 
-    /// <summary>
-    /// Gets triggered when Write() was called with this <see cref="IContainer"/>.
+    /// <summary> 
+    /// Gets triggered when properties may have changed (internal or external).
     /// </summary>
-    public NotifyWriteEventHandler WriteCallback { get; set; }
+    public NotifyPropertiesChangedEventHandler PropertiesChangedCallback { get; set; }
 
     #endregion
 
@@ -380,11 +380,6 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     #endregion
 
     #region Setter
-
-    /// <summary>
-    /// Sets the entire JSON object. This can affect numerous properties.
-    /// </summary>
-    public void SetJsonObject(JObject? value);
 
     /// <summary>
     /// Sets the value of the JSON element that matches the path of indices.

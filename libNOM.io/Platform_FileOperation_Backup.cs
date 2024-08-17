@@ -93,7 +93,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #endregion
 
-    public void Backup(IContainer container)
+    public void CreateBackup(IContainer container)
     {
         var nonIContainer = container.ToContainer();
 
@@ -143,7 +143,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
     }
 
-    public void Restore(IContainer backup)
+    public void RestoreBackup(IContainer backup) => RestoreBackup(backup, false);
+
+    public void RestoreBackup(IContainer backup, bool write)
     {
         Guard.IsTrue(backup.Exists);
         Guard.IsTrue(backup.IsBackup);
@@ -156,11 +158,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         if (!nonIContainer.IsCompatible)
             ThrowHelper.ThrowInvalidOperationException(nonIContainer.IncompatibilityException?.Message ?? nonIContainer.IncompatibilityTag ?? $"{nonIContainer} is incompatible.");
 
-        var container = SaveContainerCollection.First(i => i.CollectionIndex == nonIContainer.CollectionIndex);
-        UpdateContainerWithJsonInformation(container, nonIContainer.GetJsonObject()); // rebuild to container with the new data
+        var container = SaveContainerCollection.FirstOrDefault(i => i.CollectionIndex == nonIContainer.CollectionIndex);
+        if (container is null)
+            ThrowHelper.ThrowInvalidOperationException($"There is no {nameof(IContainer)} with index {nonIContainer.CollectionIndex} to restore to.");
 
-        // Set IsSynced to false as ProcessContainerData set it to true but it is not compared to the state on disk.
-        container.IsSynced = false;
-        container.BackupRestoredCallback.Invoke();
+        Rebuild(container, nonIContainer.GetJsonObject());
+        if (write)
+            Write(nonIContainer);
     }
 }
