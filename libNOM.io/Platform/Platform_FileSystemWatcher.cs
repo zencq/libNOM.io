@@ -8,6 +8,8 @@ namespace libNOM.io;
 // This partial class contains FileSystemWatcher related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    // Field
+
     #region Field
 
     protected readonly IAppCache _cache = new CachingService();
@@ -15,6 +17,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     protected readonly FileSystemWatcher _watcher = new();
 
     #endregion
+
+    // Accessor
 
     #region Getter
 
@@ -29,6 +33,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     #endregion
+
+    // //
 
     #region Initialize
 
@@ -49,6 +55,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     #endregion
+
+    // //
 
     #region Events
 

@@ -13,6 +13,8 @@ namespace libNOM.io;
 // This partial class contains some general code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    // Constant
+
     #region Constant
 
     protected virtual int MAX_SAVE_SLOTS { get; } = Constants.MAX_SAVE_SLOTS; // overridable for compatibility with old PlayStation format

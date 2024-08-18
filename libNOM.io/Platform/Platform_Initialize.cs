@@ -10,6 +10,8 @@ namespace libNOM.io;
 // This partial class contains initialization related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    // Property
+
     #region Property
 
     // public //

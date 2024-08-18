@@ -7,6 +7,8 @@
 // This partial class contains some general code.
 public partial class PlatformPlaystation : Platform
 {
+    // Constant
+
     #region Constant
 
     internal static readonly string[] ANCHOR_FILE_PATTERN = ["savedata??.hg", "memory.dat"];
@@ -37,6 +39,8 @@ public partial class PlatformPlaystation : Platform
 #pragma warning restore IDE0051
 
     #endregion
+
+    // Field
 
     #region Field
 

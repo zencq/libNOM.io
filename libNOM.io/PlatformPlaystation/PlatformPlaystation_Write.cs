@@ -6,6 +6,10 @@ namespace libNOM.io;
 // This partial class contains writing related code.
 public partial class PlatformPlaystation : Platform
 {
+    // //
+
+    #region Write
+
     protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
         if (_usesSaveStreaming)
@@ -32,6 +36,8 @@ public partial class PlatformPlaystation : Platform
             }
         }
     }
+
+    #endregion
 
     #region Data
 

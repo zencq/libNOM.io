@@ -12,6 +12,8 @@ namespace libNOM.io;
 // This partial class contains file operation related code, especially for transfer between platform instances.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    // Accessor
+
     #region Getter
 
     /// <summary>
@@ -56,6 +58,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     ];
 
     #endregion
+
+    // //
 
     #region Prepare
 

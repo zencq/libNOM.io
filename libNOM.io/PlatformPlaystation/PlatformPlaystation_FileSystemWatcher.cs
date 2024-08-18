@@ -4,6 +4,8 @@
 // This partial class contains FileSystemWatcher related code.
 public partial class PlatformPlaystation : Platform
 {
+    // Accessor
+
     #region Getter
 
     protected override IEnumerable<Container> GetCacheEvictionContainers(string name)
@@ -25,6 +27,8 @@ public partial class PlatformPlaystation : Platform
     }
 
     #endregion
+
+    // //
 
     #region Refresh
 

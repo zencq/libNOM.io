@@ -11,6 +11,8 @@ namespace libNOM.io;
 // This partial class contains file operation related code, especially for backups.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    // //
+
     #region Initialize
 
     public IContainer? CreateBackupContainer(string file, int metaIndex)
@@ -59,10 +61,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         }
     }
 
-    #endregion
-
-    #region Load
-
     private void LoadBackupContainer(Container container)
     {
         Guard.IsTrue(container.Exists);
@@ -92,6 +90,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     #endregion
+
+    // //
+
+    #region Backup
 
     public void CreateBackup(IContainer container)
     {
@@ -166,4 +168,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         if (write)
             Write(nonIContainer);
     }
+
+    #endregion
 }

@@ -6,6 +6,10 @@ namespace libNOM.io;
 // This partial class contains writing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    // //
+
+    #region Write
+
     public void Write(IContainer container) => Write(container, DateTimeOffset.Now.LocalDateTime);
 
     public void Write(IContainer container, DateTimeOffset writeTime)
@@ -52,6 +56,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         WriteMeta(container, meta);
         WriteData(container, data);
     }
+
+    #endregion
 
     #region Data
 

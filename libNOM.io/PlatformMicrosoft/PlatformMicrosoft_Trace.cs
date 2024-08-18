@@ -6,7 +6,9 @@ namespace libNOM.io;
 // This partial class contains tracing related code.
 public partial class PlatformMicrosoft : Platform
 {
-    #region Trace
+    // //
+
+    #region Initialize
 
     protected override void InitializeTrace()
     {

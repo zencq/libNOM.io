@@ -9,6 +9,8 @@ namespace libNOM.io;
 // This partial class contains reading and processing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
+    // //
+
     #region Container
 
     /// <summary>

@@ -12,6 +12,8 @@ namespace libNOM.io;
 // This partial class contains all related code.
 public class PlatformGog : PlatformSteam
 {
+    // Constant
+
     #region Constant
 
     internal new const string ACCOUNT_PATTERN = "DefaultUser";
@@ -21,6 +23,8 @@ public class PlatformGog : PlatformSteam
     internal static new readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");
 
     #endregion
+
+    // Field
 
     #region Field
 
@@ -46,7 +50,7 @@ public class PlatformGog : PlatformSteam
 
     #endregion
 
-    // Initialize
+    // //
 
     #region Constructor
 

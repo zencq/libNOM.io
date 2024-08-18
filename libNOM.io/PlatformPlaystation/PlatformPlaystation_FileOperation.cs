@@ -6,6 +6,8 @@ namespace libNOM.io;
 // This partial class contains file operation related code.
 public partial class PlatformPlaystation : Platform
 {
+    // //
+
     #region Extra
 
     protected override void CreateContainerExtra(Container container, Container other)
@@ -117,6 +119,8 @@ public partial class PlatformPlaystation : Platform
     }
 
     #endregion
+
+    // //
 
     #region Transfer
 

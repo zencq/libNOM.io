@@ -11,6 +11,8 @@ namespace libNOM.io;
 // This partial class contains some general code.
 public partial class PlatformMicrosoft : Platform
 {
+    // Constant
+
     #region Constant
 
     internal const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
@@ -38,6 +40,8 @@ public partial class PlatformMicrosoft : Platform
     internal const int HGSAVEV2_CHUNK_LENGTH_MAX = 0x100000; // 1,048,576
 
     #endregion
+
+    // Field
 
     #region Field
 

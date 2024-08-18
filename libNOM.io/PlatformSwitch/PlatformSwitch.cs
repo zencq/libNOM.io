@@ -11,6 +11,8 @@ namespace libNOM.io;
 // This partial class contains all related code.
 public partial class PlatformSwitch : Platform
 {
+    // Constant
+
     #region Constant
 
     internal static readonly string[] ANCHOR_FILE_PATTERN = ["manifest??.hg", "savedata??.hg"];
@@ -78,7 +80,7 @@ public partial class PlatformSwitch : Platform
 
     #endregion
 
-    // Initialize
+    // //
 
     #region Constructor
 

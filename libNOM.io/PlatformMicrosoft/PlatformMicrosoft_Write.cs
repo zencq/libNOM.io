@@ -6,6 +6,10 @@ namespace libNOM.io;
 // This partial class contains writing related code.
 public partial class PlatformMicrosoft : Platform
 {
+    // //
+
+    #region Write
+
     protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
         // Writing all Microsoft Store files at once in the same way as the game itself does.
@@ -49,6 +53,8 @@ public partial class PlatformMicrosoft : Platform
             WriteContainersIndex();
         }
     }
+
+    #endregion
 
     #region Data
 

@@ -4,7 +4,9 @@
 // This partial class contains tracing related code.
 public partial class PlatformPlaystation : Platform
 {
-    #region Trace
+    // //
+
+    #region Initialize
 
     protected override void InitializeTrace()
     {

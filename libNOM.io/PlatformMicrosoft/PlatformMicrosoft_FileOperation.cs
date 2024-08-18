@@ -6,6 +6,8 @@ namespace libNOM.io;
 // This partial class contains file operation related code.
 public partial class PlatformMicrosoft : Platform
 {
+    // //
+
     #region Extra
 
     protected override void CopyContainerExtra(Container destination, Container source)

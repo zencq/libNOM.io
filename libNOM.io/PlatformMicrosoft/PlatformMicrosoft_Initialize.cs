@@ -10,6 +10,8 @@ namespace libNOM.io;
 // This partial class contains initialization related code.
 public partial class PlatformMicrosoft : Platform
 {
+    // //
+
     #region Constructor
 
     public PlatformMicrosoft() : base() { }
