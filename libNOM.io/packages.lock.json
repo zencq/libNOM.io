@@ -4,18 +4,18 @@
     ".NETStandard,Version=v2.0": {
       "CommunityToolkit.Diagnostics": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "iILVyo7VvzTlQT7b2qOs1ZDcneKsmuy2mTuxCCaBWEfg3tjw35B/ImO9Xw6It7xi2ie8/2PWfXhFn+Prztg03w==",
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "U3b9YjLckOc2TVRTh5Np+tCICrzlp7zSi+jNk6wlsZUA6woURtNnMxq6bK718lF1E2PyskjUWqoemBOBVZC9gA==",
         "dependencies": {
           "System.Memory": "4.5.5"
         }
       },
       "CommunityToolkit.HighPerformance": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "+zIp8d3sbtYaRbM6hqDs4Ui/z34j7DcUmleruZlYLE4CVxXq+MO8XJyIs42vzeTYFX+k0Iq1dEbBUnQ4z/Gnrw==",
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "2zc0Wfr9OtEbLqm6J1Jycim/nKmYv+v12CytJ3tZGNzw7n3yjh1vNCMX0kIBaFBk3sw8g0pMR86QJGXGlArC+A==",
         "dependencies": {
           "Microsoft.Bcl.HashCode": "1.1.1",
           "System.Memory": "4.5.5",
@@ -51,9 +51,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.0, )",
-        "resolved": "0.13.0",
-        "contentHash": "WmGFsA1Cr3SuhEUdfm4vtj1MM697F0Y4szIfUIlw3o1j/h6eH+cPsfkKRdb02dtC2qJDBIEG0r5wS+hbbrsniw==",
+        "requested": "[0.13.1, )",
+        "resolved": "0.13.1",
+        "contentHash": "nikNGSWpL1QPjZphxG7JZtjzx+hHnEX3f/4OqvscDF5UbwrZlh5BOzJIrvZut02sEwhokhDoIBnJnam2GbbsGQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "13.0.1"
@@ -202,18 +202,18 @@
     ".NETStandard,Version=v2.1": {
       "CommunityToolkit.Diagnostics": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "iILVyo7VvzTlQT7b2qOs1ZDcneKsmuy2mTuxCCaBWEfg3tjw35B/ImO9Xw6It7xi2ie8/2PWfXhFn+Prztg03w==",
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "U3b9YjLckOc2TVRTh5Np+tCICrzlp7zSi+jNk6wlsZUA6woURtNnMxq6bK718lF1E2PyskjUWqoemBOBVZC9gA==",
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
       "CommunityToolkit.HighPerformance": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "+zIp8d3sbtYaRbM6hqDs4Ui/z34j7DcUmleruZlYLE4CVxXq+MO8XJyIs42vzeTYFX+k0Iq1dEbBUnQ4z/Gnrw==",
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "2zc0Wfr9OtEbLqm6J1Jycim/nKmYv+v12CytJ3tZGNzw7n3yjh1vNCMX0kIBaFBk3sw8g0pMR86QJGXGlArC+A==",
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
@@ -239,9 +239,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.0, )",
-        "resolved": "0.13.0",
-        "contentHash": "WmGFsA1Cr3SuhEUdfm4vtj1MM697F0Y4szIfUIlw3o1j/h6eH+cPsfkKRdb02dtC2qJDBIEG0r5wS+hbbrsniw==",
+        "requested": "[0.13.1, )",
+        "resolved": "0.13.1",
+        "contentHash": "nikNGSWpL1QPjZphxG7JZtjzx+hHnEX3f/4OqvscDF5UbwrZlh5BOzJIrvZut02sEwhokhDoIBnJnam2GbbsGQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "13.0.1"
@@ -362,15 +362,15 @@
     "net6.0": {
       "CommunityToolkit.Diagnostics": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "iILVyo7VvzTlQT7b2qOs1ZDcneKsmuy2mTuxCCaBWEfg3tjw35B/ImO9Xw6It7xi2ie8/2PWfXhFn+Prztg03w=="
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "U3b9YjLckOc2TVRTh5Np+tCICrzlp7zSi+jNk6wlsZUA6woURtNnMxq6bK718lF1E2PyskjUWqoemBOBVZC9gA=="
       },
       "CommunityToolkit.HighPerformance": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "+zIp8d3sbtYaRbM6hqDs4Ui/z34j7DcUmleruZlYLE4CVxXq+MO8XJyIs42vzeTYFX+k0Iq1dEbBUnQ4z/Gnrw=="
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "2zc0Wfr9OtEbLqm6J1Jycim/nKmYv+v12CytJ3tZGNzw7n3yjh1vNCMX0kIBaFBk3sw8g0pMR86QJGXGlArC+A=="
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
@@ -390,9 +390,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.0, )",
-        "resolved": "0.13.0",
-        "contentHash": "WmGFsA1Cr3SuhEUdfm4vtj1MM697F0Y4szIfUIlw3o1j/h6eH+cPsfkKRdb02dtC2qJDBIEG0r5wS+hbbrsniw==",
+        "requested": "[0.13.1, )",
+        "resolved": "0.13.1",
+        "contentHash": "nikNGSWpL1QPjZphxG7JZtjzx+hHnEX3f/4OqvscDF5UbwrZlh5BOzJIrvZut02sEwhokhDoIBnJnam2GbbsGQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "13.0.1"
@@ -498,15 +498,15 @@
     "net7.0": {
       "CommunityToolkit.Diagnostics": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "iILVyo7VvzTlQT7b2qOs1ZDcneKsmuy2mTuxCCaBWEfg3tjw35B/ImO9Xw6It7xi2ie8/2PWfXhFn+Prztg03w=="
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "U3b9YjLckOc2TVRTh5Np+tCICrzlp7zSi+jNk6wlsZUA6woURtNnMxq6bK718lF1E2PyskjUWqoemBOBVZC9gA=="
       },
       "CommunityToolkit.HighPerformance": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "+zIp8d3sbtYaRbM6hqDs4Ui/z34j7DcUmleruZlYLE4CVxXq+MO8XJyIs42vzeTYFX+k0Iq1dEbBUnQ4z/Gnrw=="
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "2zc0Wfr9OtEbLqm6J1Jycim/nKmYv+v12CytJ3tZGNzw7n3yjh1vNCMX0kIBaFBk3sw8g0pMR86QJGXGlArC+A=="
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
@@ -526,9 +526,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.0, )",
-        "resolved": "0.13.0",
-        "contentHash": "WmGFsA1Cr3SuhEUdfm4vtj1MM697F0Y4szIfUIlw3o1j/h6eH+cPsfkKRdb02dtC2qJDBIEG0r5wS+hbbrsniw==",
+        "requested": "[0.13.1, )",
+        "resolved": "0.13.1",
+        "contentHash": "nikNGSWpL1QPjZphxG7JZtjzx+hHnEX3f/4OqvscDF5UbwrZlh5BOzJIrvZut02sEwhokhDoIBnJnam2GbbsGQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "13.0.1"
@@ -634,15 +634,15 @@
     "net8.0": {
       "CommunityToolkit.Diagnostics": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "iILVyo7VvzTlQT7b2qOs1ZDcneKsmuy2mTuxCCaBWEfg3tjw35B/ImO9Xw6It7xi2ie8/2PWfXhFn+Prztg03w=="
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "U3b9YjLckOc2TVRTh5Np+tCICrzlp7zSi+jNk6wlsZUA6woURtNnMxq6bK718lF1E2PyskjUWqoemBOBVZC9gA=="
       },
       "CommunityToolkit.HighPerformance": {
         "type": "Direct",
-        "requested": "[8.2.2, )",
-        "resolved": "8.2.2",
-        "contentHash": "+zIp8d3sbtYaRbM6hqDs4Ui/z34j7DcUmleruZlYLE4CVxXq+MO8XJyIs42vzeTYFX+k0Iq1dEbBUnQ4z/Gnrw=="
+        "requested": "[8.3.0, )",
+        "resolved": "8.3.0",
+        "contentHash": "2zc0Wfr9OtEbLqm6J1Jycim/nKmYv+v12CytJ3tZGNzw7n3yjh1vNCMX0kIBaFBk3sw8g0pMR86QJGXGlArC+A=="
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
@@ -662,9 +662,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.0, )",
-        "resolved": "0.13.0",
-        "contentHash": "WmGFsA1Cr3SuhEUdfm4vtj1MM697F0Y4szIfUIlw3o1j/h6eH+cPsfkKRdb02dtC2qJDBIEG0r5wS+hbbrsniw==",
+        "requested": "[0.13.1, )",
+        "resolved": "0.13.1",
+        "contentHash": "nikNGSWpL1QPjZphxG7JZtjzx+hHnEX3f/4OqvscDF5UbwrZlh5BOzJIrvZut02sEwhokhDoIBnJnam2GbbsGQ==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "13.0.1"
