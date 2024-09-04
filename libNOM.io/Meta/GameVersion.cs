@@ -39,8 +39,10 @@ internal static class GameVersion
     /// </summary>
     /// <param name="baseVersion"></param>
     /// <returns></returns>
+    // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4155 => GameVersionEnum.Aquarius, // 5.10
         >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
@@ -73,8 +75,10 @@ internal static class GameVersion
     /// <param name="baseVersion"></param>
     /// <param name="jsonObject"></param>
     /// <returns></returns>
+    // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4155 => GameVersionEnum.Aquarius, // 5.10
         >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60
@@ -103,8 +107,10 @@ internal static class GameVersion
 
     /// <inheritdoc cref="Get(int, JObject)"/>
     /// <param name="json"></param>
+    // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4155 => GameVersionEnum.Aquarius, // 5.10
         >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
         >= 4151 => GameVersionEnum.Adrift, // 4.70
         >= 4150 => GameVersionEnum.Orbital, // 4.60

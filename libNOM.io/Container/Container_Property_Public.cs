@@ -172,6 +172,8 @@ public partial class Container : IContainer
 
     public bool IsVersion500WorldsPartI => IsVersion(GameVersionEnum.WorldsPartI); // { get; }
 
+    public bool IsVersion510Aquarius => IsVersion(GameVersionEnum.Aquarius); // { get; }
+
     #endregion
 
     #region Save

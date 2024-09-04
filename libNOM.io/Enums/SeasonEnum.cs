@@ -35,5 +35,6 @@ public enum SeasonEnum : ushort
     Omega, // 12th
     Adrift, // 13th
     Liquidators, // 14th
+    Aquarius, // 15th
     Future,
 }

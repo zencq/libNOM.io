@@ -226,6 +226,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion500WorldsPartI { get; }
 
+    public bool IsVersion510Aquarius { get; }
+
     #endregion
 
     #region Miscellaneous

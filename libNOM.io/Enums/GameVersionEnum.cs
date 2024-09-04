@@ -25,7 +25,7 @@ public enum GameVersionEnum : uint
     SynthesisWithJetpack = 226,
     LivingShip = 230,
     ExoMech = 240,
-    Crossplay = 250,
+    Crossplay = 251,
     Desolation = 260,
     Origins = 300,
     NextGeneration = 310,
@@ -61,4 +61,5 @@ public enum GameVersionEnum : uint
     Orbital = 460,
     Adrift = 470,
     WorldsPartI = 500,
+    Aquarius = 510,
 }
