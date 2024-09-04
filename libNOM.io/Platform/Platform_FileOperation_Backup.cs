@@ -119,8 +119,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
-            nonIContainer.DataFile!.CreateZipArchiveEntry(zipArchive, "data");
-            nonIContainer.MetaFile?.CreateZipArchiveEntry(zipArchive, "meta");
+            // Checked above and aborted if it does not exist.
+            nonIContainer.DataFile.CreateZipArchiveEntry(zipArchive, "data");
+
+            // Must be not null and exist to be added to the archive.
+            if (nonIContainer.MetaFile?.Exists == true)
+                nonIContainer.MetaFile.CreateZipArchiveEntry(zipArchive, "meta");
         }
 
         // Create new backup container.
