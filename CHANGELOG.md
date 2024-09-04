@@ -4,24 +4,38 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.12.0)
+## Unreleased
 
 ### Known Issues
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.12.0 (2024-09-04)
+
 ### Added
 * Extension to get actual expedition number from `SeasonEnum` (e.g. Cartographers is always 3rd, Liquidators 14th)
 * Another callback `IContainer.JsonChangedCallback` that gets invoked whenever the JSON inside changed (via the available API)
 * New overload for `IPlatform.RestoreBackup` to enable writing directly to disk
+* Support for game version **Aquarius 5.10**
+* Aquarius Expedition
+
 ### Changed
 * Renamed `IContainer.WriteCallback` to `PropertiesChangedCallback` to be more precise when it gets invoked
 * Renamed `IPlatform.Backup` to `CreateBackup` and `IPlatform.Restore` to `RestoreBackup`
-### Deprecated
+* Bump *CommunityToolkit* from 8.2.2 to 8.3.0
+* Bump *libNOM.map* from 0.13.0 to 0.13.1
+
 ### Removed
 * Removed `IContainer.SetJsonObject` from the public API, use `IPlatform.Rebuild` instead which will update and invoke everything properly
 * Removed `IContainer.BackupRestoredCallback` in favor of new callback combination
+
 ### Fixed
 * Always invoked `IContainer.WriteCallback` even if `OnWatcherDecision` was not executed
 * Importing plaintext JSON files
-### Security
 
 ## 0.11.0 (2024-08-06)
 
