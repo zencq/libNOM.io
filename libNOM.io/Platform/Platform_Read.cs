@@ -43,7 +43,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         var nonIContainer = container.ToContainer();
 
-        // Reset some properties to get them from the new JSON object.
+        // Reset some properties to its initial values to get them from the new JSON object.
         nonIContainer.Extra = nonIContainer.Extra with
         {
             BaseVersion = 0,
@@ -55,7 +55,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             TotalPlayTime = 0,
         };
         nonIContainer.GameVersion = GameVersionEnum.Unknown;
-        nonIContainer.SaveVersion = 0;
+        nonIContainer.SaveVersion = -1;
         UpdateContainerWithJsonInformation(nonIContainer, jsonObject);
 
         // As it is unclear where the JSON is coming from, assume it is not synced anymore.

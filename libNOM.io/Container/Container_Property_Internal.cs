@@ -53,7 +53,6 @@ public partial class Container : IContainer
         set
         {
             Extra = Extra with { GameMode = (ushort)(value) };
-
             if (IsLoaded)
                 SaveVersion = Meta.SaveVersion.Calculate(this);
         }
@@ -63,7 +62,7 @@ public partial class Container : IContainer
     {
         get
         {
-            if (_saveVersion <= 0)
+            if (_saveVersion < 0)
                 _saveVersion = _jsonObject?.GetValue<int>("VERSION") ?? -1;
 
             return _saveVersion;
@@ -71,8 +70,7 @@ public partial class Container : IContainer
         set
         {
             _saveVersion = value;
-
-            if (IsLoaded)
+            if (IsLoaded && value >= 0) // only positive to not overwrite in JSON when resetting
                 SetJsonValue(value, "VERSION");
         }
     }
