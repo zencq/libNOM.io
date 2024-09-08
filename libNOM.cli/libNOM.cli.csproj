@@ -37,7 +37,7 @@
 
 	<!-- Package -->
 	<PropertyGroup Label="General">
-		<Version>1.0.5</Version>
+		<Version>1.0.6</Version>
 		<Authors>cengelha</Authors>
 		<Description>CLI for libNOM.io to analyze single files or whole directories and print information about it, convert between JSON and actual save formats and perform file operations.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2024</Copyright>
