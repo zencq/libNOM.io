@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.12.1)
+## Unreleased
 
 ### Known Issues
 ### Added
@@ -12,9 +12,16 @@ since 1.0.0.
 ### Deprecated
 ### Removed
 ### Fixed
+### Security
+
+## 0.12.1 (2024-09-08)
+
+### Changed
+* Bump *libNOM.map* from 0.13.1 to 0.13.2
+
+### Fixed
 * Creating a backup when the meta file does not exist
 * Rebuild sets SaveVersion in JSON when resetting and therefore preventing other properties from being calculated correctly
-### Security
 
 ## 0.12.0 (2024-09-04)
 
