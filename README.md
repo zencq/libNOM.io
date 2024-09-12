@@ -8,6 +8,7 @@
 [![C# 12](https://img.shields.io/badge/C%23-12-lightgrey)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![GitHub Release](https://img.shields.io/github/v/release/zencq/libNOM.io?logo=github)](https://github.com/zencq/libNOM.io/releases/latest)
 [![NuGet Version](https://img.shields.io/nuget/v/libNOM.io?logo=nuget)](https://www.nuget.org/packages/libNOM.io/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/libNOM.io?logo=nuget)](https://www.nuget.org/packages/libNOM.io/)
 
 ## Introduction
 
