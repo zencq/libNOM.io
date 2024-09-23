@@ -7,7 +7,7 @@
 [![.NET | Standard 2.0 - 2.1 | 6 - 8](https://img.shields.io/badge/.NET-Standard%202.0%20--%202.1%20%7C%206%20--%208-lightgrey)](https://dotnet.microsoft.com/en-us/)
 [![C# 12](https://img.shields.io/badge/C%23-12-lightgrey)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![GitHub Release](https://img.shields.io/github/v/release/zencq/libNOM.io?logo=github)](https://github.com/zencq/libNOM.io/releases/latest)
-[![NuGet Version](https://img.shields.io/nuget/v/libNOM.io?logo=nuget)](https://www.nuget.org/packages/libNOM.io/)
+[![NuGet Version](https://img.shields.io/nuget/v/libNOM.io?logo=nuget&label=release)](https://www.nuget.org/packages/libNOM.io/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/libNOM.io?logo=nuget)](https://www.nuget.org/packages/libNOM.io/)
 
 ## Introduction
@@ -34,6 +34,8 @@ it will be marked as `IsOld`.
 
 Each platform has anchor file patterns to check whether it is worth to look further
 into the selected directory. This must be in or one level below the selected one.
+
+### Compatibility
 
 * Apple
     * Notes: Currently only available via Steam (see below).

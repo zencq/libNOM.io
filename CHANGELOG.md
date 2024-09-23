@@ -9,6 +9,7 @@ since 1.0.0.
 ### Known Issues
 ### Added
 ### Changed
+* Bump *CommunityToolkit.HighPerformance* from 8.3.0 to 8.3.2
 * Remove explicit type (uint) from custom Enums
 ### Deprecated
 ### Removed
