@@ -4,7 +4,7 @@
 /// <summary>
 /// Specifies strategies how to load and keep containers in a <see cref="Platform"/>.
 /// </summary>
-public enum LoadingStrategyEnum : uint
+public enum LoadingStrategyEnum
 {
     /// <summary>
     /// No save information and data loaded.

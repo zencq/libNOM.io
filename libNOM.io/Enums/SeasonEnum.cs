@@ -5,7 +5,7 @@
 /// Specifies all known expeditions including a placeholder for future ones.
 /// </summary>
 // EXTERNAL RELEASE: If any, add new season.
-public enum SeasonEnum : ushort
+public enum SeasonEnum
 {
     None = 0,
     Pioneers = None, // 1st

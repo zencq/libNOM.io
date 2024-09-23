@@ -9,7 +9,7 @@ namespace libNOM.io.Enums;
 /// Otherwise ordered by assumed player base.
 /// </summary>
 // EXTERNAL RELEASE: If any, add new platform including the whole implementation.
-public enum PlatformEnum : uint
+public enum PlatformEnum
 {
     Unknown,
     Steam,

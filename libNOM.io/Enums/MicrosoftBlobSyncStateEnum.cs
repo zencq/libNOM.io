@@ -4,7 +4,7 @@
 /// <summary>
 /// Specifies sync states used in the containers.index of the <see cref="PlatformMicrosoft"/> for single blobs.
 /// </summary>
-internal enum MicrosoftBlobSyncStateEnum : uint
+internal enum MicrosoftBlobSyncStateEnum
 {
     Unknown_Zero = 0,
     Synced = 1,

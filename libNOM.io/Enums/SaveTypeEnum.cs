@@ -4,7 +4,7 @@
 /// <summary>
 /// Specifies the different types of a save per slot.
 /// </summary>
-public enum SaveTypeEnum : uint
+public enum SaveTypeEnum
 {
     Auto,
     Manual,
