@@ -10,6 +10,7 @@ since 1.0.0.
 ### Added
 ### Changed
 * Bump *CommunityToolkit.HighPerformance* from 8.3.0 to 8.3.2
+* Bump *CommunityToolkit.Diagnostics* from 8.3.0 to 8.3.2
 * Remove explicit type (uint) from custom Enums
 ### Deprecated
 ### Removed
