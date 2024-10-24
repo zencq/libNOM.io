@@ -8,6 +8,8 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
+* Support for game version **The Cursed 5.20**
+* The Cursed Expedition
 ### Changed
 * Bump *CommunityToolkit.HighPerformance* from 8.3.0 to 8.3.2
 * Bump *CommunityToolkit.Diagnostics* from 8.3.0 to 8.3.2

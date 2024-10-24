@@ -36,5 +36,6 @@ public enum SeasonEnum
     Adrift, // 13th
     Liquidators, // 14th
     Aquarius, // 15th
+    Cursed, // 16th
     Future,
 }

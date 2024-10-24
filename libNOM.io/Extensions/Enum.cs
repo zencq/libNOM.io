@@ -47,6 +47,7 @@ public static class EnumExtensions
             >= SeasonEnum.ExobiologyRedux => (int)(season) - 8,
             >= SeasonEnum.PioneersRedux => (int)(season) - 4,
             >= SeasonEnum.Pioneers => (int)(season) + 1,
+            _ => 0,
         };
     }
 

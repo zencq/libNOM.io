@@ -62,4 +62,5 @@ public enum GameVersionEnum
     Adrift = 470,
     WorldsPartI = 500,
     Aquarius = 510,
+    TheCursed = 520,
 }

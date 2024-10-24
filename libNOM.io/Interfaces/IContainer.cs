@@ -228,6 +228,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
 
     public bool IsVersion510Aquarius { get; }
 
+    public bool IsVersion520TheCursed { get; }
+
     #endregion
 
     #region Miscellaneous
