@@ -11,9 +11,9 @@ since 1.0.0.
 * Support for game version **The Cursed 5.20**
 * The Cursed Expedition
 ### Changed
-* Bump *CommunityToolkit.HighPerformance* from 8.3.0 to 8.3.2
-* Bump *CommunityToolkit.Diagnostics* from 8.3.0 to 8.3.2
 * Remove explicit type (uint) from custom Enums
+* Bump *CommunityToolkit* from 8.3.0 to 8.3.2
+* Bump *libNOM.map* from 0.13.2 to 0.13.3
 ### Deprecated
 ### Removed
 ### Fixed
