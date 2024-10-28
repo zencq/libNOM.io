@@ -4,20 +4,28 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.12.2)
+## Unreleased
 
 ### Known Issues
 ### Added
-* Support for game version **The Cursed 5.20**
-* The Cursed Expedition
 ### Changed
-* Remove explicit type (uint) from custom Enums
-* Bump *CommunityToolkit* from 8.3.0 to 8.3.2
-* Bump *libNOM.map* from 0.13.2 to 0.13.3
 ### Deprecated
 ### Removed
 ### Fixed
 ### Security
+
+## 0.12.2 (2024-10-28)
+
+### Added
+* Support for game version **The Cursed 5.20**
+* The Cursed Expedition
+
+### Changed
+* Bump *CommunityToolkit* from 8.3.0 to 8.3.2
+* Bump *libNOM.map* from 0.13.2 to 0.13.3
+
+### Removed
+* Explicit type (uint) from custom Enums
 
 ## 0.12.1 (2024-09-08)
 
