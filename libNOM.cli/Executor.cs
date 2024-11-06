@@ -56,22 +56,28 @@ public partial class Executor
 
     // //
 
-    #region Convert
 
-    [
-        ArgActionMethod,
-        ArgDescription("Convert a save file from any format to any format."),
-    ]
-    public static void Convert(ConvertArgs args)
-    {
-        if (args.Format == Enums.FormatEnum.Json)
-            io.Global.Convert.ToJson(args.Input.FullName, args.Output!.FullName, args.JsonIndented, args.JsonDeobfuscated);
-        else
+        #region Convert
+
+        [
+            ArgActionMethod,
+            ArgDescription("Convert a save file from any format to any format."),
+        ]
+        public static void Convert(ConvertArgs args)
         {
-            var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());
-            io.Global.Convert.ToSaveFile(args.Input.FullName, platform, args.Output!.FullName);
-        }
-    }
+            if (args.Format == Enums.FormatEnum.Json)
 
-    #endregion
+            //io.Global.Convert.ToJson(args.Input.FullName, args.Output!.FullName, args.JsonIndented, args.JsonDeobfuscated, args.StdoutOutput);
+            io.Global.Convert.ToJson(args.Input.FullName, args.Output?.FullName, args.JsonIndented, args.JsonDeobfuscated, args.StdoutOutput);
+            else
+            {
+                var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());
+                io.Global.Convert.ToSaveFile(args.Input.FullName, platform, args.Output!.FullName);
+            }
+        }
+
+        #endregion
+   
+
+
 }
