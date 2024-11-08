@@ -40,13 +40,15 @@ public static class EnumExtensions
     {
         return season switch
         {
-            >= SeasonEnum.Omega => (int)(season) - 13,
-            >= SeasonEnum.VoyagersRedux => (int)(season) - 12,
-            >= SeasonEnum.CartographersRedux2023 => (int)(season) - 15,
-            >= SeasonEnum.UtopiaRedux => (int)(season) - 11,
-            >= SeasonEnum.ExobiologyRedux => (int)(season) - 8,
-            >= SeasonEnum.PioneersRedux => (int)(season) - 4,
-            >= SeasonEnum.Pioneers => (int)(season) + 1,
+            >= SeasonEnum.Future => (int)(season) - 14, // 31 > 17 // TODO: assuming next season is 17th and not more redux
+            >= SeasonEnum.BeachheadRedux2024 => (int)(season) - 28, // 30 > 2
+            >= SeasonEnum.Omega => (int)(season) - 13, // 25 > 12
+            >= SeasonEnum.VoyagersRedux => (int)(season) - 12, // 23 > 11
+            >= SeasonEnum.CartographersRedux2023 => (int)(season) - 19, // 22 > 3
+            >= SeasonEnum.UtopiaRedux => (int)(season) - 11, // 20 > 9
+            >= SeasonEnum.ExobiologyRedux => (int)(season) - 8, // 13 > 5
+            >= SeasonEnum.PioneersRedux => (int)(season) - 4, // 5 > 1
+            >= SeasonEnum.Pioneers => (int)(season) + 1, // 0 > 1
             _ => 0,
         };
     }
