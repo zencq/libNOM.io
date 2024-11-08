@@ -96,19 +96,19 @@ internal static class ReadOnlySpanExtensions
     {
         var result = input;
 
-        foreach (var pair in Constants.BINARY_MAPPING)
+        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
         {
-            var indices = result.IndicesOf(pair.Key).ToArray();
+            var indices = result.IndicesOf(Raw).ToArray();
             if (indices.Length > 0)
             {
-                var value = pair.Value.AsSpan();
+                var value = Escaped.AsSpan();
 
                 for (int i = 0; i < indices.Length; i++)
                 {
-                    var index = indices[i] + ((pair.Value.Length - pair.Key.Length) * i);
+                    var index = indices[i] + ((Escaped.Length - Raw.Length) * i);
 
                     var before = result[..index];
-                    var after = result.Slice(index + pair.Key.Length, result.Length - before.Length - pair.Key.Length);
+                    var after = result.Slice(index + Raw.Length, result.Length - before.Length - Raw.Length);
 
                     result = Concat(before, value, after);
                 }
@@ -317,19 +317,19 @@ internal static class SpanExtensions
     {
         var result = input;
 
-        foreach (var pair in Constants.BINARY_MAPPING)
+        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
         {
-            var indices = result.IndicesOf(pair.Value).ToArray();
+            var indices = result.IndicesOf(Escaped).ToArray();
             if (indices.Length > 0)
             {
-                var value = pair.Key.AsSpan();
+                var value = Raw.AsSpan();
 
                 for (int i = 0; i < indices.Length; i++)
                 {
-                    var index = indices[i] + ((pair.Key.Length - pair.Value.Length) * i);
+                    var index = indices[i] + ((Raw.Length - Escaped.Length) * i);
 
                     var before = result[..index];
-                    var after = result.Slice(index + pair.Value.Length, result.Length - before.Length - pair.Value.Length);
+                    var after = result.Slice(index + Escaped.Length, result.Length - before.Length - Escaped.Length);
 
                     result = Concat(before, value, after);
                 }

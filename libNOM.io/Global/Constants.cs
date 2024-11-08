@@ -49,7 +49,7 @@ public static class Constants
 
     // internal //
 
-    internal static Dictionary<byte[], byte[]> BINARY_MAPPING => _binaryMapping ??= CreateBinaryMapping();
+    internal static (byte[] Raw, byte[] Escaped)[] BINARY_MAPPING => _binaryMapping ??= CreateBinaryMapping();
     internal static readonly byte BINARY_TERMINATOR = 0;
 
     internal const int CACHE_EXPIRATION = 250; // milliseconds
@@ -200,27 +200,30 @@ public static class Constants
 
     #region Binary Mapping
 
-    private static Dictionary<byte[], byte[]>? _binaryMapping;
+    private static (byte[] Raw, byte[] Escaped)[]? _binaryMapping;
 
-    private static Dictionary<byte[], byte[]> CreateBinaryMapping()
+    private static (byte[] Raw, byte[] Escaped)[] CreateBinaryMapping()
     {
-        ReadOnlySpan<byte> binary = Properties.Resources.HashedTechnology;
+        ReadOnlySpan<byte> resource = Properties.Resources.HashedTechnology;
 
         // Add prefix and suffix of the ids to make the binary patterns more accurate.
-        var indices = binary.IndicesOf([BINARY_TERMINATOR]).ToArray();
+        var indices = resource.IndicesOf([BINARY_TERMINATOR]).ToArray();
         var prefix = '^';
-        var result = new Dictionary<byte[], byte[]>();
         var suffix = '#';
+
+        var result = new (byte[] Raw, byte[] Escaped)[indices.Length];
 
         for (var i = -1; i < indices.Length - 1; i++)
         {
             var start = i < 0 ? 0 : indices[i] + 1;
             var end = indices[i + 1];
 
-            var hash = binary[start..end].ToArray();
+            var binary = resource[start..end].ToArray();
 
-            byte[] key = [(byte)(prefix), .. hash, (byte)(suffix)];
-            result[key] = $"{prefix}{string.Concat(hash.Select(i => i.ToString("X2")))}{suffix}".GetUTF8Bytes();
+            byte[] raw = [(byte)(prefix), .. binary, (byte)(suffix)];
+            byte[] escaped = $"{prefix}{string.Concat(binary.Select(i => i.ToString("X2")))}{suffix}".GetUTF8Bytes();
+
+            result[i + 1] = (Raw: raw, Escaped: escaped);
         }
 
         return result;
