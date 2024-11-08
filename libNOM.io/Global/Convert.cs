@@ -215,7 +215,7 @@ public static class Convert
         try
         {
             ReadOnlySpan<byte> bytes = File.ReadAllBytes(input);
-            return bytes.GetJson();
+            return bytes.GetJson(escapeHashedIds: true); // assume account is not used here 
         }
         catch (Exception ex) when (ex is ArgumentOutOfRangeException or JsonReaderException)
         {

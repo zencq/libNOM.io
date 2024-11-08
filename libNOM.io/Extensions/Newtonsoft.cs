@@ -42,7 +42,7 @@ public static class NewtonsoftExtensions
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-    internal static ReadOnlySpan<byte> GetBytes(this JObject self) => self.GetString(false, true).GetUTF8Bytes();
+    internal static ReadOnlySpan<byte> GetBytes(this JObject self) => self.GetString(false, true).GetUTF8Bytes().AsSpan().UnescapeHashedIds();
 
     #endregion
 

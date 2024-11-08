@@ -253,7 +253,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         JObject? jsonObject = null;
         try
         {
-            jsonObject = binary.GetJson();
+            jsonObject = binary.GetJson(escapeHashedIds: container.IsSave);
         }
         catch (Exception ex) when (ex is ArgumentOutOfRangeException or JsonReaderException or JsonSerializationException)
         {
