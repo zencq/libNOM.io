@@ -10,6 +10,8 @@ since 1.0.0.
 ### Added
 * Beachhead Expedition Redux (2024)
 ### Changed
+* Now also targeting .NET 9 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
+* No longer targeting .NET 6 and .NET 7 (can be still used thanks to .NET Standard)
 ### Deprecated
 ### Removed
 ### Fixed
@@ -143,7 +145,7 @@ since 1.0.0.
 ## 0.7.0 (2024-03-13)
 
 ### Added
-* Now targeting .NET 8 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
+* Now also targeting .NET 8 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * Holiday 2023 Expeditions
 * Support for game version **Omega 4.50**
     * `IsExpedition` flag has been replaced in favor of `HasActiveExpedition`
@@ -175,7 +177,7 @@ since 1.0.0.
 ## 0.6.0 (2023-09-11)
 
 ### Added
-* Now targeting .NET 7 as per the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
+* Now also targeting .NET 7 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * Now publishing to [NuGet Gallery](https://www.nuget.org/packages/libNOM.io)
 * A setting `WriteAlways` to choose between writing always or only if a container
   is not synced

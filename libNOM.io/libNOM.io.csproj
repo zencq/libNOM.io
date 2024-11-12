@@ -2,7 +2,7 @@
 
 	<!-- Application -->
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<!-- Global Usings -->
@@ -22,7 +22,7 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<PropertyGroup Label="Advanced">
-		<LangVersion>12.0</LangVersion>
+		<LangVersion>13.0</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -58,7 +58,7 @@
 
 	<!-- Package -->
 	<PropertyGroup Label="General">
-		<Version>0.12.3-beta.3</Version>
+		<Version>0.12.3-beta.4</Version>
 		<Authors>cengelha</Authors>
 		<Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2021</Copyright>

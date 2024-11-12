@@ -4,8 +4,8 @@
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zencq/libNOM.io/pipeline.yml?logo=github)](https://github.com/zencq/libNOM.io/actions/workflows/pipeline.yml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/5f2e527d62758832d38b/maintainability)](https://codeclimate.com/github/zencq/libNOM.io/maintainability)
 
-[![.NET | Standard 2.0 - 2.1 | 6 - 8](https://img.shields.io/badge/.NET-Standard%202.0%20--%202.1%20%7C%206%20--%208-lightgrey)](https://dotnet.microsoft.com/en-us/)
-[![C# 12](https://img.shields.io/badge/C%23-12-lightgrey)](https://docs.microsoft.com/en-us/dotnet/csharp/)
+[![.NET | Standard 2.0 - 2.1 | 8 - 9](https://img.shields.io/badge/.NET-Standard%202.0%20--%202.1%20%7C%208%20--%209-lightgrey)](https://dotnet.microsoft.com/en-us/)
+[![C# 13](https://img.shields.io/badge/C%23-13-lightgrey)](https://docs.microsoft.com/en-us/dotnet/csharp/)
 [![GitHub Release](https://img.shields.io/github/v/release/zencq/libNOM.io?logo=github)](https://github.com/zencq/libNOM.io/releases/latest)
 [![NuGet Version](https://img.shields.io/nuget/v/libNOM.io?logo=nuget&label=release)](https://www.nuget.org/packages/libNOM.io/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/libNOM.io?logo=nuget)](https://www.nuget.org/packages/libNOM.io/)
