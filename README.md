@@ -75,6 +75,11 @@ into the selected directory. This must be in or one level below the selected one
       the Microsoft Store. The synchronization is triggered short after you close
       the game (no need to load a save). This also works for Xbox Cloud Gaming.
 
+With the [cross-save](https://cloud.nomanssky.com/cross-save) feature added in The
+Cursed patch 5.25 it is now easier than ever to edit your saves and play them on
+any platform. If you have it on any PC platform you can easily edit it those and
+then upload to use on another platform.
+
 ### Usage
 
 Here you'll find an example usage.
