@@ -44,7 +44,7 @@ public static class Convert
     /// <param name="indented"></param>
     /// <param name="deobfuscated"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void ToJson(string file, string? path, bool indented, bool deobfuscated)
+    public static void ToJson(string file, string? path, bool indented, bool deobfuscated, bool stdoutOutput = false)
     {
         // Method contains all relevant checks...
         var container = Analyze.AnalyzeFile(file);
@@ -53,7 +53,7 @@ public static class Convert
         if (container?.IsCompatible != true)
             ThrowHelper.ThrowInvalidOperationException("The specified file does not contain valid data.");
 
-        ToJson(container, path, indented, deobfuscated);
+        ToJson(container, path, indented, deobfuscated, stdoutOutput);
     }
 
     /// <summary>
@@ -88,8 +88,9 @@ public static class Convert
     /// <param name="path"></param>
     /// <param name="indented"></param>
     /// <param name="deobfuscated"></param>
+    /// <param name="stdoutOutput"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void ToJson(IContainer container, string? path, bool indented, bool deobfuscated)
+    public static void ToJson(IContainer container, string? path, bool indented, bool deobfuscated, bool stdoutOutput = false)
     {
         if (string.IsNullOrWhiteSpace(path))
             path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
@@ -99,7 +100,10 @@ public static class Convert
         var result = container.GetJsonObject().GetString(indented, !deobfuscated); // throws InvalidOperationException if not loaded
         var file = Path.Combine(path, $"{name}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json");
 
-        File.WriteAllText(file, result);
+        if (stdoutOutput)
+            Console.Write(result);
+        else
+            File.WriteAllText(file, result);
     }
 
     #endregion
@@ -172,9 +176,9 @@ public static class Convert
     /// <param name="input"></param>
     /// <returns></returns>
     private static Container? GetContainer(string? input, IPlatform platform)
-    {
+    {       
         if (CreateContainer(input, platform) is Container container && container.Exists)
-        {
+        {   
             // Clear incompatibility to ensure that IsLoaded does not fail due to any.
             container.ClearIncompatibility();
 
@@ -185,13 +189,12 @@ public static class Convert
             // If it is a plaintext JSON file, the first try above fails.
             if (!container.IsLoaded)
                 container.SetJsonObject(ReadAllText(input!));
-
+      
             return container.IsLoaded ? container : null;
         }
 
         return null;
     }
-
     private static Container? CreateContainer(string? input, IPlatform platform)
     {
         Container? container = null;
@@ -231,3 +234,4 @@ public static class Convert
 
     #endregion
 }
+
