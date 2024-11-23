@@ -61,6 +61,16 @@ namespace libNOM.io.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] HashedTechnology {
+            get {
+                object obj = ResourceManager.GetObject("HashedTechnology", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {{ secrets.STEAM_API_KEY }}.
         /// </summary>
         internal static string STEAM_API_KEY {

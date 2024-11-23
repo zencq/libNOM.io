@@ -12,8 +12,8 @@ jobs:
     name: Test
     strategy:
       matrix:
-        # November, 2024 / May, 2024 / November, 2026
-        framwork: [{dotnet: 'net6.0', version: '6.0.x'}, {dotnet: 'net7.0', version: '7.0.x'}, {dotnet: 'net8.0', version: '8.0.x'}]
+        # November, 2026 / May, 2026
+        framwork: [{dotnet: 'net8.0', version: '8.0.x'}, {dotnet: 'net9.0', version: '9.0.x'}]
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -51,7 +51,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        framwork: [{dotnet: 'net8.0', version: '8.0.x'}] # must match project file
+        framwork: [{dotnet: 'net9.0', version: '9.0.x'}] # must match project file
         os: [{display: 'windows', name: 'windows', runtime: 'win-x64'}, {display: 'macos', name: 'macos', runtime: 'osx-x64'}, {display: 'linux', name: 'ubuntu', runtime: 'linux-x64'}]
     runs-on: ${{ matrix.os.name }}-latest
     steps:

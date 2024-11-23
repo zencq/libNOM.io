@@ -63,4 +63,6 @@ public enum GameVersionEnum
     WorldsPartI = 500,
     Aquarius = 510,
     TheCursed = 520,
+    [Description(nameof(TheCursed))]
+    TheCursedWithCrossSave = 525,
 }

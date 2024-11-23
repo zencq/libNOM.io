@@ -42,6 +42,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4164 => GameVersionEnum.TheCursedWithCrossSave, // 5.25
         >= 4161 => GameVersionEnum.TheCursed, // 5.20
         >= 4155 => GameVersionEnum.Aquarius, // 5.10
         >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
@@ -79,6 +80,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4164 => GameVersionEnum.TheCursedWithCrossSave, // 5.25
         >= 4161 => GameVersionEnum.TheCursed, // 5.20
         >= 4155 => GameVersionEnum.Aquarius, // 5.10
         >= 4153 => GameVersionEnum.WorldsPartI, // 5.00
@@ -112,6 +114,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4164 => GameVersionEnum.TheCursedWithCrossSave, // 5.25
         >= 4161 => GameVersionEnum.TheCursed, // 5.20
         >= 4155 => GameVersionEnum.Aquarius, // 5.10
         >= 4153 => GameVersionEnum.WorldsPartI, // 5.00

@@ -1,4 +1,6 @@
-﻿namespace libNOM.io.Global;
+﻿using System.Text;
+
+namespace libNOM.io.Global;
 
 
 public static class Constants
@@ -46,6 +48,9 @@ public static class Constants
     public const int MAX_SAVE_TOTAL = MAX_SAVE_SLOTS * MAX_SAVE_PER_SLOT;
 
     // internal //
+
+    internal static (byte[] Raw, byte[] Escaped)[] BINARY_MAPPING => _binaryMapping ??= CreateBinaryMapping();
+    internal static readonly byte BINARY_TERMINATOR = 0;
 
     internal const int CACHE_EXPIRATION = 250; // milliseconds
 
@@ -190,4 +195,39 @@ public static class Constants
     internal const int THRESHOLD_GAMEMODE_SEASONAL = THRESHOLD_VANILLA + ((int)(PresetGameModeEnum.Seasonal) * OFFSET_GAMEMODE);
     internal const int THRESHOLD_VANILLA = 4098;
     internal const int THRESHOLD_WAYPOINT = 4140;
+
+    // private //
+
+    #region Binary Mapping
+
+    private static (byte[] Raw, byte[] Escaped)[]? _binaryMapping;
+
+    private static (byte[] Raw, byte[] Escaped)[] CreateBinaryMapping()
+    {
+        ReadOnlySpan<byte> resource = Properties.Resources.HashedTechnology;
+
+        // Add prefix and suffix of the ids to make the binary patterns more accurate.
+        var indices = resource.IndicesOf([BINARY_TERMINATOR]).ToArray();
+        var prefix = '^';
+        var suffix = '#';
+
+        var result = new (byte[] Raw, byte[] Escaped)[indices.Length];
+
+        for (var i = -1; i < indices.Length - 1; i++)
+        {
+            var start = i < 0 ? 0 : indices[i] + 1;
+            var end = indices[i + 1];
+
+            var binary = resource[start..end].ToArray();
+
+            byte[] raw = [(byte)(prefix), .. binary, (byte)(suffix)];
+            byte[] escaped = $"{prefix}{string.Concat(binary.Select(i => i.ToString("X2")))}{suffix}".GetUTF8Bytes();
+
+            result[i + 1] = (Raw: raw, Escaped: escaped);
+        }
+
+        return result;
+    }
+
+    #endregion
 }

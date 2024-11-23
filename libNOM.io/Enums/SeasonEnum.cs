@@ -37,5 +37,6 @@ public enum SeasonEnum
     Liquidators, // 14th
     Aquarius, // 15th
     Cursed, // 16th
+    BeachheadRedux2024,
     Future,
 }
