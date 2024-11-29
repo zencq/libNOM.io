@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.12.3)
+## Unreleased (0.13.0)
 
 ### Known Issues
 ### Added
@@ -12,6 +12,9 @@ since 1.0.0.
 ### Changed
 * Now also targeting .NET 9 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * No longer targeting .NET 6 and .NET 7 (can be still used thanks to .NET Standard)
+* `PlatformCollection.AnalyzePath` now also checks direct subfolders if path itself has no valid platform data
+  * Similar to how default locations for PC platforms are added
+  * Now returns `IEnumerable<IPlatform>` instead of `IPlatform?`
 ### Deprecated
 ### Removed
 ### Fixed

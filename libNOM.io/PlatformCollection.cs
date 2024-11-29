@@ -148,57 +148,81 @@ public class PlatformCollection : IEnumerable<IPlatform>
     #region Analyze
 
     /// <summary>
-    /// Analyzes a path to get the <see cref="Platform"/> it contains.
+    /// Analyzes a path to get the <see cref="Platform"/>s it contains.
     /// <see cref="PlatformSettings"/> and <see cref="CollectionSettings"/> are used to populate undefined parameters.
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string? path) => AnalyzePath(path, PlatformSettings, CollectionSettings.PreferredPlatform);
+    public IEnumerable<IPlatform> AnalyzePath(string? path) => AnalyzePath(path, PlatformSettings, CollectionSettings.PreferredPlatform);
 
     /// <summary>
-    /// Analyzes a path to get the <see cref="Platform"/> it contains.
+    /// Analyzes a path to get the <see cref="Platform"/>s it contains.
     /// <see cref="PlatformSettings"/> are used to populate undefined parameters.
     /// </summary>
     /// <param name="path"></param>
     /// <param name="platformPreferred"></param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string? path, PlatformEnum? platformPreferred) => AnalyzePath(path, null, platformPreferred);
+    public IEnumerable<IPlatform> AnalyzePath(string? path, PlatformEnum? platformPreferred) => AnalyzePath(path, null, platformPreferred);
 
     /// <summary>
-    /// Analyzes a path to get the <see cref="Platform"/> it contains.
+    /// Analyzes a path to get the <see cref="Platform"/> sit contains.
     /// <see cref="CollectionSettings"/> are used to populate undefined parameters.
     /// </summary>
     /// <param name="path"></param>
     /// <param name="platformSettings"></param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string? path, PlatformSettings? platformSettings) => AnalyzePath(path, platformSettings, CollectionSettings.PreferredPlatform);
+    public IEnumerable<IPlatform> AnalyzePath(string? path, PlatformSettings? platformSettings) => AnalyzePath(path, platformSettings, CollectionSettings.PreferredPlatform);
 
     /// <summary>
-    /// Analyzes a path to get the <see cref="Platform"/> it contains.
+    /// Analyzes a path to get the <see cref="Platform"/>s it contains.
     /// </summary>
     /// <param name="path"></param>
     /// <param name="platformSettings">Settings for the platform.</param>
     /// <param name="platformPreferred">Platform that will be checked first.</param>
     /// <returns></returns>
-    public IPlatform? AnalyzePath(string? path, PlatformSettings? platformSettings, PlatformEnum? platformPreferred)
+    public IEnumerable<IPlatform> AnalyzePath(string? path, PlatformSettings? platformSettings, PlatformEnum? platformPreferred)
     {
         if (!Analyze.ValidatePath(path, out _))
-            return null;
+            return [];
 
         platformSettings ??= PlatformSettings;
 
         if (platformSettings.LoadingStrategy == LoadingStrategyEnum.Empty)
             platformSettings = platformSettings with { LoadingStrategy = LoadingStrategyEnum.Hollow };
 
-        if (_collection.TryGetValue(path!, out var platform))
-        {
-            platform.SetSettings(platformSettings);
-            return platform;
-        }
+        IEnumerable<IPlatform> result = [];
 
-        var result = Analyze.AnalyzePath(path, platformSettings, platformPreferred);
-        if (result is not null)
-            _collection.TryAdd(path!, result);
+        // Check whether path is already in the collection.
+        if (_collection.TryGetValue(path!, out var platformInCollection))
+        {
+            platformInCollection.SetSettings(platformSettings);
+            result = [platformInCollection];
+        }
+        // Check whether path is a direct hit and contains save files.
+        else if (Analyze.AnalyzePath(path!, platformSettings, platformPreferred) is IPlatform platformInPath && platformInPath.IsValid)
+        {
+            _collection.TryAdd(path!, platformInPath);
+            result = [platformInPath];
+        }
+        // Check all direct subfolders whether they contain a valid platform.
+        else
+        {
+            var bag = new ConcurrentBag<IPlatform>();
+            var tasks = new List<Task>();
+
+            foreach (var directory in GetAccountsInPath(path!, "*")) // The default pattern is "*", which returns all directories.
+                tasks.Add(Task.Run(() =>
+                {
+                    if (Analyze.AnalyzePath(directory.FullName, platformSettings, platformPreferred) is IPlatform platformInSubfolder && platformInSubfolder.IsValid)
+                    {
+                        _collection.TryAdd(directory.FullName, platformInSubfolder);
+                        bag.Add(platformInSubfolder);
+                    }
+                }));
+
+            Task.WaitAll([.. tasks]);
+            result = [.. bag];
+        }
 
         return result;
     }
