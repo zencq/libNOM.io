@@ -27,7 +27,7 @@ public partial class PlatformSteam : Platform
 
     internal static readonly string[] ANCHOR_FILE_PATTERN = ["save??.hg"];
 
-    internal static readonly string PATH = ((Func<string>)(() =>
+    public static readonly string PATH = ((Func<string>)(() =>
     {
         if (Common.IsWindows())
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HelloGames", "NMS");

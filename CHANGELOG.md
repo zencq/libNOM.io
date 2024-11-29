@@ -15,6 +15,7 @@ since 1.0.0.
 * `PlatformCollection.AnalyzePath` now also checks direct subfolders if path itself has no valid platform data
   * Similar to how default locations for PC platforms are added
   * Now returns `IEnumerable<IPlatform>` instead of `IPlatform?`
+* `PATH` of PC platforms is not publicly accessible
 ### Deprecated
 ### Removed
 ### Fixed

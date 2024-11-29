@@ -19,7 +19,7 @@ public partial class PlatformMicrosoft : Platform
 
     internal static readonly string[] ANCHOR_FILE_PATTERN = ["containers.index"];
 
-    internal static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
+    public static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
 
     protected override int META_LENGTH_KNOWN_VANILLA => 0x14; // 20
     internal override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
