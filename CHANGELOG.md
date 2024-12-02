@@ -4,12 +4,22 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.13.0)
+## Unreleased
 
 ### Known Issues
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.13.0 (2024-12-02)
+
+### Added
 * Beachhead Expedition Redux (2024)
 * Holiday 2024 Expeditions
+
 ### Changed
 * Now also targeting .NET 9 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * No longer targeting .NET 6 and .NET 7 (can be still used thanks to .NET Standard)
@@ -17,11 +27,10 @@ since 1.0.0.
   * Similar to how default locations for PC platforms are added
   * Now returns `IEnumerable<IPlatform>` instead of `IPlatform?`
 * `PATH` of PC platforms is not publicly accessible
-### Deprecated
-### Removed
+* Bump *libNOM.map* from 0.13.3 to 0.13.4
+
 ### Fixed
 * Technology packages gone after saving due to the hashes no being UTF-8 conform ([#210 in the NomNom repository](https://github.com/zencq/NomNom/issues/210))
-### Security
 
 ## 0.12.2 (2024-10-28)
 

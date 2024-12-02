@@ -77,8 +77,8 @@ into the selected directory. This must be in or one level below the selected one
 
 With the [cross-save](https://cloud.nomanssky.com/cross-save) feature added in The
 Cursed patch 5.25 it is now easier than ever to edit your saves and play them on
-any platform. If you have it on any PC platform you can easily edit it those and
-then upload to use on another platform.
+any platform. If you have No Man's Sky on any PC platform you can easily edit saves
+there and use them on another platform after uploading.
 
 ### Usage
 
