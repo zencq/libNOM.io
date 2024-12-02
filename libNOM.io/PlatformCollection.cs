@@ -213,6 +213,15 @@ public class PlatformCollection : IEnumerable<IPlatform>
             foreach (var directory in GetAccountsInPath(path!, "*")) // The default pattern is "*", which returns all directories.
                 tasks.Add(Task.Run(() =>
                 {
+                    // Improve preferred platform in case the directory name matches the pattern of a PC platform.
+                    platformPreferred = directory.Name switch
+                    {
+                        var name when name.Contains(PlatformGog.ACCOUNT_PATTERN.Trim('*')) => PlatformEnum.Gog,
+                        var name when name.Contains(PlatformSteam.ACCOUNT_PATTERN.Trim('*')) => PlatformEnum.Steam,
+                        var name when name.Contains(PlatformMicrosoft.ACCOUNT_PATTERN.Trim('*')) => PlatformEnum.Microsoft,
+                        _ => platformPreferred,
+                    };
+
                     if (Analyze.AnalyzePath(directory.FullName, platformSettings, platformPreferred) is IPlatform platformInSubfolder && platformInSubfolder.IsValid)
                     {
                         _collection.TryAdd(directory.FullName, platformInSubfolder);
