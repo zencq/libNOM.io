@@ -40,7 +40,7 @@ public static class EnumExtensions
     {
         return season switch
         {
-            >= SeasonEnum.Future => (int)(season) - 14, // 31 > 17 // TODO: assuming next season is 17th and not more redux
+            >= SeasonEnum.OmegaRedux => (int)(season) - 19, // 31 > 12
             >= SeasonEnum.BeachheadRedux2024 => (int)(season) - 28, // 30 > 2
             >= SeasonEnum.Omega => (int)(season) - 13, // 25 > 12
             >= SeasonEnum.VoyagersRedux => (int)(season) - 12, // 23 > 11

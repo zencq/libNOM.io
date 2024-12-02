@@ -9,6 +9,7 @@ since 1.0.0.
 ### Known Issues
 ### Added
 * Beachhead Expedition Redux (2024)
+* Holiday 2024 Expeditions
 ### Changed
 * Now also targeting .NET 9 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * No longer targeting .NET 6 and .NET 7 (can be still used thanks to .NET Standard)

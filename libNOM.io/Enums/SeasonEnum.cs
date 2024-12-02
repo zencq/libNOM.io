@@ -38,5 +38,10 @@ public enum SeasonEnum
     Aquarius, // 15th
     Cursed, // 16th
     BeachheadRedux2024,
+    OmegaRedux,
+    AdriftRedux,
+    LiquidatorsRedux,
+    AquariusRedux,
+    CursedRedux,
     Future,
 }
