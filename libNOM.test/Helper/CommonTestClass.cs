@@ -375,7 +375,7 @@ public abstract class CommonTestClass
         var collection = new PlatformCollection();
         var countOrigin = collection.Count();
 
-        var platform = collection.AnalyzePath(path, settings, platformPreferred);
+        var platform = collection.AnalyzePath(path, settings, platformPreferred).FirstOrDefault();
         var countResult = collection.Count();
 
         // Assert
