@@ -65,7 +65,7 @@ public partial class Executor
     public static void Convert(ConvertArgs args)
     {
         if (args.Format == Enums.FormatEnum.Json)
-            io.Global.Convert.ToJson(args.Input.FullName, args.Output!.FullName, args.JsonIndented, args.JsonDeobfuscated);
+            io.Global.Convert.ToJson(args.Input.FullName, args.Output?.FullName, args.JsonIndented, args.JsonDeobfuscated);
         else
         {
             var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());

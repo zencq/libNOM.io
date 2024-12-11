@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased
+## Unreleased (0.13.1)
 
 ### Known Issues
 ### Added
@@ -12,6 +12,8 @@ since 1.0.0.
 ### Deprecated
 ### Removed
 ### Fixed
+* CLI
+    * An exception when using `Convert` without specifying an output
 ### Security
 
 ## 0.13.0 (2024-12-02)
