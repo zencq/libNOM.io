@@ -1,6 +1,7 @@
 ﻿namespace libNOM.io.Enums;
 
 
+// EXTERNAL RELEASE: if any, apply changes from libMBIN.
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcActiveSurvivalBarsDifficultyOption.cs#L7
 internal enum ActiveSurvivalBarsDifficultyEnum : uint
 {
