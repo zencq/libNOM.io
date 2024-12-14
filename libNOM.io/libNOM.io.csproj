@@ -52,7 +52,7 @@
 
 	<!-- Package -->
 	<PropertyGroup Label="General">
-		<Version>0.13.0</Version>
+		<Version>0.14.0-beta.3</Version>
 		<Authors>cengelha</Authors>
 		<Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2021</Copyright>

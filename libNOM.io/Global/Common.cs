@@ -28,7 +28,7 @@ public static partial class Common
         MicrosoftBlobMetaFile = original.MicrosoftBlobMetaFile,
     };
 
-    public static Span<T> DeepCopy<T>(Span<T> original) => DeepCopy(original.ToArray());
+    public static Span<T> DeepCopy<T>(ReadOnlySpan<T> original) => original.AsSpan(); // CopyTo a new one Span<T>
 
     public static T DeepCopy<T>(T original)
     {

@@ -5,26 +5,34 @@ namespace libNOM.io.Extensions;
 
 internal static class ZipArchiveExtensions
 {
+    #region Archive
+
     /// <summary>
-    /// Reads the specified entry without extracting it.
+    /// Archives a file by compressing it and adding it to the specified zip archive.
     /// </summary>
     /// <param name="self"></param>
-    /// <param name="entryName"></param>
-    /// <param name="result"></param>
+    /// <param name="sourceFile"></param>
+    /// <param name="prefix">Additional information that the entry will be prefixed with.</param>
     /// <returns></returns>
-    internal static bool ReadEntry(this ZipArchive self, string entryName, out byte[] result)
+    internal static ZipArchiveEntry CreateEntryFromFile(this ZipArchive self, FileInfo sourceFile, string prefix) => self.CreateEntryFromFile(sourceFile.FullName, $"{prefix}.{sourceFile.Name}");
+
+    #endregion
+
+    #region Entry
+
+    /// <summary>
+    /// Reads the content without extracting it.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    internal static byte[] Read(this ZipArchiveEntry self)
     {
-        if (self.GetEntry(entryName) is ZipArchiveEntry entry)
-        {
-            using var memory = new MemoryStream();
-            using var stream = entry.Open();
+        using var memory = new MemoryStream();
+        using var stream = self.Open();
 
-            stream.CopyTo(memory);
-            result = memory.ToArray();
-            return true;
-        }
-
-        result = [];
-        return false;
+        stream.CopyTo(memory);
+        return memory.ToArray();
     }
+
+    #endregion
 }

@@ -70,6 +70,12 @@ public static class IEnumerableExtensions
         return 0 <= index && index < self.Count();
     }
 
+    /// <inheritdoc cref="System.MemoryExtensions.AsSpan{T}(T[]?)"/>
+    public static ReadOnlySpan<T> AsReadOnlySpan<T>(this T[]? self)
+    {
+        return new ReadOnlySpan<T>(self);
+    }
+
     #endregion
 
     #region typeof(string)
