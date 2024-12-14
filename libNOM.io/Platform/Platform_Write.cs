@@ -86,7 +86,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual ReadOnlySpan<byte> CreateData(Container container)
     {
-        return container.GetJsonObject().GetString(false, true, useAccount: container.IsAccount).GetBytesWithTerminator().AsReadOnlySpan().UnescapeHashedIds();
+        var binary = container.GetJsonObject().GetString(false, true, useAccount: container.IsAccount).GetBytesWithTerminator().AsReadOnlySpan();
+
+        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
+            binary = Common.ConvertHashedIds(binary, Escaped, Raw);
+
+        return binary;
     }
 
     /// <summary>

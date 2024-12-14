@@ -73,26 +73,6 @@ internal static class ReadOnlySpanExtensions
         return self.Slice(start, Marshal.SizeOf<T>()).Cast<byte, T>()[0];
     }
 
-    internal static ReadOnlySpan<byte> EscapeHashedIds(this ReadOnlySpan<byte> input)
-    {
-        var result = input;
-
-        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
-            result = ConvertHashedIds(result, Raw, Escaped);
-
-        return result;
-    }
-
-    internal static ReadOnlySpan<byte> UnescapeHashedIds(this ReadOnlySpan<byte> input)
-    {
-        var result = input;
-
-        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
-            result = ConvertHashedIds(result, Escaped, Raw);
-
-        return result;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="Guid"/> structure by using this bytes.
     /// </summary>
@@ -114,7 +94,11 @@ internal static class ReadOnlySpanExtensions
     /// <returns>The deserialized object from the bytes.</returns>
     internal static JObject? GetJson(this ReadOnlySpan<byte> self, bool escapeHashedIds = false)
     {
-        var binary = escapeHashedIds ? self.EscapeHashedIds() : self;
+        var binary = self;
+
+        if (escapeHashedIds)
+            foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
+                binary = Common.ConvertHashedIds(binary, Raw, Escaped);
 
         // Account has no proper decompressed size in the initial Fractal update (4.10) and therefore we look for the first.
         // Escaping gone wrong by HG. The backslash is in the file but instead of one of the chars below, still the unescaped control char.
@@ -209,33 +193,6 @@ internal static class ReadOnlySpanExtensions
     {
         result = self.Slice(start, length).Cast<byte, char>().TrimEnd('\0');
         return length;
-    }
-
-    #endregion
-
-    #region Helper
-
-    private static ReadOnlySpan<byte> ConvertHashedIds(ReadOnlySpan<byte> input, ReadOnlySpan<byte> source, ReadOnlySpan<byte> target)
-    {
-        var result = input;
-
-        var indices = result.IndicesOf(source).ToArray();
-        if (indices.Length > 0)
-        {
-            var value = target.AsSpan();
-
-            for (int i = 0; i < indices.Length; i++)
-            {
-                var index = indices[i] + ((target.Length - source.Length) * i);
-
-                var before = result[..index];
-                var after = result.Slice(index + source.Length, result.Length - before.Length - source.Length);
-
-                result = before.Concat(value).Concat(after);
-            }
-        }
-
-        return result;
     }
 
     #endregion
