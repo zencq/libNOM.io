@@ -8,12 +8,6 @@ namespace libNOM.io;
 // This partial class contains accessor related code.
 public partial class Container : IContainer
 {
-    #region Field
-
-    private JObject? _jsonObject;
-
-    #endregion
-
     #region Getter
 
     public JObject GetJsonObject()

@@ -14,8 +14,6 @@ public partial class Container : IContainer
 
     private SaveContextQueryEnum _activeContext = SaveContextQueryEnum.DontCare;
     private bool _canSwitchContext;
-    private bool? _exists;
-    private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
 
     #endregion
 
@@ -176,6 +174,8 @@ public partial class Container : IContainer
 
     public bool IsVersion520TheCursed => IsVersion(GameVersionEnum.TheCursed); // { get; }
 
+    public bool IsVersion525TheCursedWithCrossSave => IsVersion(GameVersionEnum.TheCursedWithCrossSave); // { get; }
+
     #endregion
 
     #region Save
@@ -185,9 +185,9 @@ public partial class Container : IContainer
         get => _jsonObject?.GetValue<SaveContextQueryEnum>("ACTIVE_CONTEXT") ?? _activeContext;
         set
         {
-            if (IsLoaded && value is SaveContextQueryEnum.Season or SaveContextQueryEnum.Main)
+            if (IsLoaded && value is SaveContextQueryEnum.Main or SaveContextQueryEnum.Season)
             {
-                Guard.IsTrue(CanSwitchContext, nameof(CanSwitchContext)); // block switching if only one context
+                Guard.IsTrue(CanSwitchContext, nameof(CanSwitchContext)); // prevent switching context if only one exists
                 SetJsonValue(value.ToString(), "ACTIVE_CONTEXT");
             }
 

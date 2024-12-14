@@ -8,12 +8,14 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
+* Missing `IsVersion525TheCursedWithCrossSave` to `IContainer`
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
 * CLI
     * An exception when using `Convert` without specifying an output
+* Use `IContainer` to implement `IComparable` and `IEquatable` of `IContainer` instead of `Container`
 ### Security
 
 ## 0.13.0 (2024-12-02)

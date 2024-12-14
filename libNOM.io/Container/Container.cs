@@ -2,6 +2,8 @@
 
 using libNOM.io.Delegates;
 
+using Newtonsoft.Json.Linq;
+
 namespace libNOM.io;
 
 
@@ -11,6 +13,15 @@ namespace libNOM.io;
 // This partial class contains some general code.
 public partial class Container : IContainer
 {
+    #region Field
+
+    private bool? _exists;
+    private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
+    private JObject? _jsonObject;
+    private int _saveVersion = -1;
+
+    #endregion
+
     #region Delegate
 
     public NotifyBackupCreatedEventHandler BackupCreatedCallback { get; set; } = delegate { };
@@ -36,7 +47,7 @@ public partial class Container : IContainer
         SaveType = (SaveTypeEnum)(CollectionIndex % 2);
         SlotIndex = CollectionIndex / 2; // integer division
 
-        Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveType}";
+        Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveType}"; // ignore 1 as it will not used here
     }
 
     #endregion
@@ -45,11 +56,28 @@ public partial class Container : IContainer
 
     public override string ToString()
     {
-        var e = Exists ? (IsBackup ? "Backup" : (IsAccount ? "Account" : (IsSave ? "Save" : null))) : null;
-        if (e is not null)
-            e = $" // {e}";
+        string? type = null;
 
-        return $"{nameof(Container)} {PersistentStorageSlot} {Identifier}{(e ?? string.Empty)}";
+        if (Exists)
+        {
+            if (IsBackup) // potentially to most (multiple per Container)
+            {
+                type = "Backup";
+            }
+            else if (IsSave) // multiple per Platform
+            {
+                type = "Save";
+            }
+            else if (IsAccount) // one per Platform
+            {
+                type = "Account";
+            }
+
+            if (type is not null)
+                type = $" // {type}";
+        }
+
+        return $"{nameof(Container)} {PersistentStorageSlot} {Identifier}{(type ?? string.Empty)}";
     }
 
     #endregion
