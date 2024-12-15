@@ -368,9 +368,9 @@ public partial class PlatformSteam : Platform
         writer.Write(META_HEADER); // 4
         writer.Write(container.GameVersion switch // 4
         {
-            >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_4,
-            >= GameVersionEnum.Frontiers => Constants.META_FORMAT_3,
-            _ => Constants.META_FORMAT_2,
+            >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_3,
+            >= GameVersionEnum.Frontiers => Constants.META_FORMAT_2,
+            _ => Constants.META_FORMAT_1,
         });
 
         if (container.IsSave && container.IsVersion360Frontiers) // META_FORMAT_3 and META_FORMAT_4

@@ -32,7 +32,7 @@ public partial class PlatformMicrosoft : Platform
 
     protected override void InitializePlatformSpecific()
     {
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
+#if NETSTANDARD2_0_OR_GREATER
         Func<char, bool> IsAsciiHexDigit = "0123456789ABCDEFabcdef".Contains;
 #else
         Func<char, bool> IsAsciiHexDigit = char.IsAsciiHexDigit;
@@ -323,7 +323,7 @@ public partial class PlatformMicrosoft : Platform
 
         if (container.IsAccount)
         {
-            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
+            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_1);
         }
         if (container.IsSave)
         {

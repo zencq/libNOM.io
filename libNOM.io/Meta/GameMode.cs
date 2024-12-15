@@ -7,7 +7,7 @@ internal static partial class GameMode
 {
     #region Regex
 
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
+#if NETSTANDARD2_0_OR_GREATER
 #pragma warning disable IDE0300 // Use collection expression for array
     private static readonly Regex[] RegexesGameMode = new Regex[] { // keep this format to have Regex syntax highlighting
         new("\\\"idA\\\":\\\"(\\d{1})\\\",", RegexOptions.Compiled, TimeSpan.FromMilliseconds(1000)),

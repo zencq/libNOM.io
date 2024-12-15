@@ -116,7 +116,7 @@ public partial class PlatformPlaystation : Platform
         // Overwrite only SizeDecompressed.
         using var writer = new BinaryWriter(new MemoryStream(buffer));
         writer.Write(META_HEADER); // 4
-        writer.Write(Constants.META_FORMAT_3); // 4
+        writer.Write(Constants.META_FORMAT_2); // 4
         writer.Write(container.Extra.SizeDecompressed); // 4
 
         return buffer;
@@ -138,7 +138,7 @@ public partial class PlatformPlaystation : Platform
 
         // Here the same structure as the old memory.dat format starts but with many empty values.
         writer.Seek(0x4, SeekOrigin.Current); // skip META HEADER
-        writer.Write(Constants.META_FORMAT_3); // 4
+        writer.Write(Constants.META_FORMAT_2); // 4
         writer.Seek(0x14, SeekOrigin.Current); // skip COMPRESSED SIZE, CHUNK OFFSET, CHUNK SIZE, META INDEX, TIMESTAMP
         writer.Write(container.Extra.SizeDecompressed); // 4
         writer.Seek(0x4, SeekOrigin.Current); // skip SAVEWIZARD OFFSET
@@ -155,7 +155,7 @@ public partial class PlatformPlaystation : Platform
             if (container.Exists)
             {
                 writer.Write(META_HEADER); // 4
-                writer.Write(Constants.META_FORMAT_2); // 4
+                writer.Write(Constants.META_FORMAT_1); // 4
                 writer.Write(container.Extra.SizeDisk); // 4
                 writer.Write(container.IsAccount ? MEMORYDAT_OFFSET_DATA_ACCOUNTDATA : (uint)(MEMORYDAT_OFFSET_DATA_CONTAINER + (container.CollectionIndex * MEMORYDAT_LENGTH_CONTAINER))); // 4 // offset
                 writer.Write(container.IsAccount ? MEMORYDAT_LENGTH_ACCOUNTDATA : MEMORYDAT_LENGTH_CONTAINER); // 4 // length
@@ -169,7 +169,7 @@ public partial class PlatformPlaystation : Platform
             else
             {
                 writer.Write(META_HEADER); // 4
-                writer.Write(Constants.META_FORMAT_2); // 4
+                writer.Write(Constants.META_FORMAT_1); // 4
                 writer.Seek(0xC, SeekOrigin.Current); // skip empty
                 writer.Write(uint.MaxValue); // 4
             }
@@ -248,7 +248,7 @@ public partial class PlatformPlaystation : Platform
     private void AppendWizardPreamble(BinaryWriter writer)
     {
         writer.Write(SAVEWIZARD_HEADER_BINARY);
-        writer.Write(Constants.META_FORMAT_2);
+        writer.Write(Constants.META_FORMAT_1);
         writer.Write(MEMORYDAT_OFFSET_META);
         writer.Write(SaveContainerCollection.Where(i => i.Exists).Count() + 1); // + 1 for AccountData that ia always present in memory.dat
         writer.Write(MEMORYDAT_LENGTH_TOTAL);

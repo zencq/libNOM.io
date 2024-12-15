@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 namespace libNOM.io.Global;
 
 
-public static partial class Common
+internal static partial class Common
 {
     internal static ReadOnlySpan<byte> ConvertHashedIds(ReadOnlySpan<byte> input, ReadOnlySpan<byte> source, ReadOnlySpan<byte> target)
     {
@@ -30,7 +30,7 @@ public static partial class Common
         return result;
     }
 
-    // No real DeepCopy but good enough to swap and that case is only using this.
+    // No real copy but good enough to swap and that case is only using this.
     internal static Container DeepCopy(Container original)
     {
         var copy = new Container(-1, null!, original.Extra)
@@ -43,7 +43,7 @@ public static partial class Common
         return copy;
     }
 
-    // No real DeepCopy but good enough to cache it for Microsoft.Write() and that case is only using this.
+    // No real copy but good enough to cache it for Microsoft.Write() and that case is only using this.
     internal static ContainerExtra DeepCopy(ContainerExtra original) => new()
     {
         MicrosoftBlobContainerExtension = original.MicrosoftBlobContainerExtension,
@@ -51,9 +51,9 @@ public static partial class Common
         MicrosoftBlobMetaFile = original.MicrosoftBlobMetaFile,
     };
 
-    public static Span<T> DeepCopy<T>(ReadOnlySpan<T> original) => original.AsSpan(); // CopyTo a new one Span<T>
+    internal static Span<T> DeepCopy<T>(ReadOnlySpan<T> original) => original.AsSpan(); // CopyTo a new one Span<T>
 
-    public static T DeepCopy<T>(T original)
+    internal static T DeepCopy<T>(T original)
     {
         var serialized = JsonConvert.SerializeObject(original);
         return JsonConvert.DeserializeObject<T>(serialized)!;

@@ -25,9 +25,9 @@ internal static class GameVersion
         if (length == platform.META_LENGTH_TOTAL_VANILLA)
             return format switch
             {
-                Constants.META_FORMAT_1 => GameVersionEnum.Vanilla,
-                Constants.META_FORMAT_2 => GameVersionEnum.Foundation,
-                Constants.META_FORMAT_3 => GameVersionEnum.Frontiers,
+                Constants.META_FORMAT_0 => GameVersionEnum.Vanilla,
+                Constants.META_FORMAT_1 => GameVersionEnum.Foundation,
+                Constants.META_FORMAT_2 => GameVersionEnum.Frontiers,
                 _ => GameVersionEnum.Unknown,
             };
 

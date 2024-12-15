@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace libNOM.io.Global;
+﻿namespace libNOM.io.Global;
 
 
 public static class Constants
@@ -169,10 +167,10 @@ public static class Constants
     internal static readonly string[] JSONPATH_CONTEXT_OBFUSCATED = ["", "2YS", "vLc", "", ""]; // SaveContextQueryEnum
     internal static readonly string[] JSONPATH_CONTEXT_PLAINTEXT = ["", "ExpeditionContext", "BaseContext", "", ""];
 
-    internal const uint META_FORMAT_1 = 0x7D0; // 2000 (1.00)
-    internal const uint META_FORMAT_2 = 0x7D1; // 2001 (1.10)
-    internal const uint META_FORMAT_3 = 0x7D2; // 2002 (3.60)
-    internal const uint META_FORMAT_4 = 0x7D3; // 2003 (5.00)
+    internal const uint META_FORMAT_0 = 0x7D0; // 2000 (1.00)
+    internal const uint META_FORMAT_1 = 0x7D1; // 2001 (1.10)
+    internal const uint META_FORMAT_2 = 0x7D2; // 2002 (3.60)
+    internal const uint META_FORMAT_3 = 0x7D3; // 2003 (5.00)
 
     internal const int OFFSET_GAMEMODE = 512;
     internal const int OFFSET_INDEX = 2;

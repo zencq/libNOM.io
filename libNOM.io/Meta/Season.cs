@@ -9,7 +9,7 @@ internal static partial class Season
 {
     #region Regex
 
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
+#if NETSTANDARD2_0_OR_GREATER
 #pragma warning disable IDE0300 // Use collection expression for array
     private static readonly Regex[] RegexesSeasonId = new Regex[] { // keep this format to have Regex syntax highlighting
         new("\\\"gou\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100)),

@@ -229,7 +229,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             // Skip next 8 bytes with SLOT IDENTIFIER.
             writer.Seek(0x8, SeekOrigin.Current);
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
-            writer.Write(Constants.META_FORMAT_4); // 4
+            writer.Write(Constants.META_FORMAT_3); // 4
         }
     }
 

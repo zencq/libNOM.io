@@ -22,6 +22,17 @@ public static class IEnumerableExtensions
     #region typeof(RegEx)
 
     /// <summary>
+    /// Checks whether there is a match with any of the specified expressions.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    internal static bool HasMatch(this IEnumerable<Regex> self, string? json)
+    {
+        return self.Match(json)?.Success == true;
+    }
+
+    /// <summary>
     /// Searches the input string for the first occurrence of the specified regular expressions.
     /// </summary>
     /// <param name="self"></param>

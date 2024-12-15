@@ -7,7 +7,7 @@ internal static partial class SaveVersion
 {
     #region Regex
 
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
+#if NETSTANDARD2_0_OR_GREATER
 #pragma warning disable IDE0300 // Use collection expression for array
     private static readonly Regex[] RegexesVersion = new Regex[] { // keep this format to have Regex syntax highlighting
         new("\\\"F2P\\\":(\\d{4,}),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100)),

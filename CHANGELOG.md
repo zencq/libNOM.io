@@ -11,6 +11,7 @@ since 1.0.0.
 * Missing `IsVersion525TheCursedWithCrossSave` to `IContainer`
 ### Changed
 * Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
+* The static class `libNOM.io.Global.Common` is no longer public accessible
 ### Deprecated
 ### Removed
 * `JObject.GetString(this JToken self, bool indent, bool obfuscate)` extension

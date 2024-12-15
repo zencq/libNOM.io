@@ -156,7 +156,7 @@ public partial class PlatformSwitch : Platform
 
         if (container.IsAccount)
         {
-            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_3);
+            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
         }
         if (container.IsSave)
         {
@@ -212,8 +212,8 @@ public partial class PlatformSwitch : Platform
             writer.Write(META_HEADER); // 4
             writer.Write(container.GameVersion switch // 4
             {
-                >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_4,
-                _ => Constants.META_FORMAT_3,
+                >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_3,
+                _ => Constants.META_FORMAT_2,
             });
             writer.Write(container.Extra.SizeDecompressed); // 4
             writer.Write(container.MetaIndex); // 4
