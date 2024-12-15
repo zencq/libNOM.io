@@ -6,15 +6,6 @@ namespace libNOM.io.Extensions;
 internal static class FileInfoExtensions
 {
     /// <summary>
-    /// Archives a file by compressing it and adding it to the specified zip archive.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <param name="zipArchive"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    internal static ZipArchiveEntry CreateZipArchiveEntry(this FileInfo self, ZipArchive zipArchive, string name) => zipArchive.CreateEntryFromFile(self.FullName, name);
-
-    /// <summary>
     /// Reads the contents of this file into a byte array.
     /// </summary>
     /// <param name="self"></param>

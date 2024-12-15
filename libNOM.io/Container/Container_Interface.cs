@@ -6,12 +6,12 @@ public partial class Container : IContainer
 {
     #region IComparable, IEquatable
 
-    public int CompareTo(Container? other)
+    public int CompareTo(IContainer? other)
     {
         return MetaIndex.CompareTo(other?.MetaIndex);
     }
 
-    public bool Equals(Container? other)
+    public bool Equals(IContainer? other)
     {
         if (other is null)
             return this is null;
@@ -21,7 +21,7 @@ public partial class Container : IContainer
 
     public override bool Equals(object? other)
     {
-        return other is Container otherContainer && Equals(otherContainer);
+        return other is IContainer otherContainer && Equals(otherContainer);
     }
 
     public override int GetHashCode()

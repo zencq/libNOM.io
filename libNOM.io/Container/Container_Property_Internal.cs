@@ -4,12 +4,6 @@
 // This partial class contains public properties.
 public partial class Container : IContainer
 {
-    #region Field
-
-    private int _saveVersion = -1;
-
-    #endregion
-
     internal ContainerExtra Extra { get; set; }
 
     internal UserIdentification? UserIdentification { get; set; }

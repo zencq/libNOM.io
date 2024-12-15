@@ -247,7 +247,7 @@ public partial class PlatformSteam : Platform
 
     #region Read
 
-    protected override Span<uint> DecryptMeta(Container container, Span<byte> meta)
+    protected override ReadOnlySpan<uint> DecryptMeta(Container container, ReadOnlySpan<byte> meta)
     {
         var value = base.DecryptMeta(container, meta);
 
@@ -447,7 +447,7 @@ public partial class PlatformSteam : Platform
         uint hash = 0;
         int iterations = container.IsVersion400Waypoint ? 6 : 8;
         ReadOnlySpan<uint> key = [(((uint)(container.PersistentStorageSlot) ^ 0x1422CB8C).RotateLeft(13) * 5) + 0xE6546B64, META_ENCRYPTION_KEY[1], META_ENCRYPTION_KEY[2], META_ENCRYPTION_KEY[3]];
-        Span<uint> value = Common.DeepCopy(meta.Cast<byte, uint>());
+        Span<uint> value = Common.DeepCopy<uint>(meta.Cast<byte, uint>());
 
         int lastIndex = value.Length - 1;
 

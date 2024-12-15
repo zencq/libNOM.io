@@ -13,13 +13,6 @@ public static class NewtonsoftExtensions
     #region Flags
 
     /// <summary>
-    /// Whether the specified object contains account data.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static bool IsAccount(this JObject self) => Constants.JSONPATH["ACCOUNT_USER_SETTINGS_DATA"].Any(self.ContainsKey);
-
-    /// <summary>
     /// Whether the specified object is the root object.
     /// </summary>
     /// <param name="self"></param>
@@ -35,27 +28,7 @@ public static class NewtonsoftExtensions
 
     #endregion
 
-    #region GetBytes
-
-    /// <summary>
-    /// Serializes and encodes the object into a sequence of bytes in UTF-8 format.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static ReadOnlySpan<byte> GetBytes(this JObject self) => self.GetString(false, true).GetUTF8Bytes().AsSpan().UnescapeHashedIds();
-
-    #endregion
-
     #region GetString
-
-    /// <summary>
-    /// Serializes the object to a JSON string according to the specified options.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <param name="indent">Whether the result will be indented.</param>
-    /// <param name="obfuscate">Whether the result will be obfuscated.</param>
-    /// <returns>A JSON string representation of the object.</returns>
-    public static string GetString(this JObject self, bool indent, bool obfuscate) => $"{GetString(self, indent, obfuscate, useAccount: self.IsAccount())}\0";
 
     /// <summary>
     /// Serializes any JSON token to a JSON string according to the specified options.
@@ -65,7 +38,7 @@ public static class NewtonsoftExtensions
     /// <param name="obfuscate">Whether the result will be obfuscated.</param>
     /// <param name="useAccount">Whether to use mapping for account data or save data.</param>
     /// <returns>A JSON string representation of the object.</returns>
-    public static string GetString(this JToken self, bool indent, bool obfuscate, bool useAccount = false)
+    public static string GetString(this JToken self, bool indent, bool obfuscate, bool useAccount)
     {
         var jsonToken = Common.DeepCopy(self);
 

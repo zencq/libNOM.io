@@ -7,6 +7,29 @@ namespace libNOM.io.Global;
 
 public static partial class Common
 {
+    internal static ReadOnlySpan<byte> ConvertHashedIds(ReadOnlySpan<byte> input, ReadOnlySpan<byte> source, ReadOnlySpan<byte> target)
+    {
+        var result = input;
+
+        var indices = result.IndicesOf(source).ToArray();
+        if (indices.Length > 0)
+        {
+            var value = target.AsSpan();
+
+            for (int i = 0; i < indices.Length; i++)
+            {
+                var index = indices[i] + ((target.Length - source.Length) * i);
+
+                var before = result[..index];
+                var after = result.Slice(index + source.Length, result.Length - before.Length - source.Length);
+
+                result = before.Concat(value).Concat(after);
+            }
+        }
+
+        return result;
+    }
+
     // No real DeepCopy but good enough to swap and that case is only using this.
     internal static Container DeepCopy(Container original)
     {
@@ -28,7 +51,7 @@ public static partial class Common
         MicrosoftBlobMetaFile = original.MicrosoftBlobMetaFile,
     };
 
-    public static Span<T> DeepCopy<T>(Span<T> original) => DeepCopy(original.ToArray());
+    public static Span<T> DeepCopy<T>(ReadOnlySpan<T> original) => original.AsSpan(); // CopyTo a new one Span<T>
 
     public static T DeepCopy<T>(T original)
     {

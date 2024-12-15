@@ -70,9 +70,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.ClearIncompatibility();
 
         using var zipArchive = ZipFile.Open(container.DataFile!.FullName, ZipArchiveMode.Read);
-        if (zipArchive.ReadEntry("data", out var data))
+        if (zipArchive.Entries.FirstOrDefault(i => i.Name.StartsWith("data"))?.Read() is byte[] data)
         {
-            _ = zipArchive.ReadEntry("meta", out var meta);
+            var meta = zipArchive.Entries.FirstOrDefault(i => i.Name.StartsWith("meta"))?.Read();
 
             // Loads all meta information into the extra property.
             LoadMeta(container, meta);
@@ -120,11 +120,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
             // Checked above and aborted if it does not exist.
-            nonIContainer.DataFile.CreateZipArchiveEntry(zipArchive, "data");
+            zipArchive.CreateEntryFromFile(nonIContainer.DataFile, "data");
 
             // Must be not null and exist to be added to the archive.
             if (nonIContainer.MetaFile?.Exists == true)
-                nonIContainer.MetaFile.CreateZipArchiveEntry(zipArchive, "meta");
+                zipArchive.CreateEntryFromFile(nonIContainer.MetaFile, "meta");
         }
 
         // Create new backup container.
