@@ -29,28 +29,28 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     }
 
     /// <summary>
-    /// Copies the platform extra from the source container.
+    /// Copies the platform extra from the source into the destination container.
     /// </summary>
     /// <param name="container"></param>
-    /// <param name="other"></param>
+    /// <param name="source"></param>
     /// <returns></returns>
-    protected virtual void CopyContainerExtra(Container container, Container other)
+    protected virtual void CopyContainerExtra(Container destination, Container source)
     {
         // Overwrite all general values but keep platform specific stuff unchanged.
-        container.Extra = container.Extra with
+        destination.Extra = destination.Extra with
         {
-            Bytes = other.Extra.Bytes,
-            MetaLength = other.Extra.MetaLength,
-            SizeDecompressed = other.Extra.SizeDecompressed,
-            SizeDisk = other.Extra.SizeDisk,
-            LastWriteTime = other.Extra.LastWriteTime,
-            BaseVersion = other.Extra.BaseVersion,
-            GameMode = other.Extra.GameMode,
-            Season = other.Extra.Season,
-            TotalPlayTime = other.Extra.TotalPlayTime,
-            SaveName = other.Extra.SaveName,
-            SaveSummary = other.Extra.SaveSummary,
-            DifficultyPreset = other.Extra.DifficultyPreset,
+            Bytes = source.Extra.Bytes,
+            MetaLength = source.Extra.MetaLength,
+            SizeDecompressed = source.Extra.SizeDecompressed,
+            SizeDisk = source.Extra.SizeDisk,
+            LastWriteTime = source.Extra.LastWriteTime,
+            BaseVersion = source.Extra.BaseVersion,
+            GameMode = source.Extra.GameMode,
+            Season = source.Extra.Season,
+            TotalPlayTime = source.Extra.TotalPlayTime,
+            SaveName = source.Extra.SaveName,
+            SaveSummary = source.Extra.SaveSummary,
+            DifficultyPreset = source.Extra.DifficultyPreset,
         };
     }
 
@@ -88,13 +88,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
-
-                // Faking relevant properties to force it to Write().
-                Destination.Exists = true;
-
-                // Additional properties required to properly rebuild the container.
-                Destination.GameVersion = Source.GameVersion;
-                Destination.SaveVersion = Source.SaveVersion;
+                Destination.CopyImportantProperties(Source);
 
                 // Due to this CanCreate can be true.
                 CopyContainerExtra(Destination, Source);

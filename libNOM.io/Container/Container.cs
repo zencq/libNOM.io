@@ -92,6 +92,16 @@ public partial class Container : IContainer
         PropertiesChangedCallback.Invoke();
     }
 
+    internal void CopyImportantProperties(Container other)
+    {
+        // Faking properties to force it to Write().
+        Exists = true;
+
+        // Additional properties required to properly rebuild the container.
+        GameVersion = other.GameVersion;
+        SaveVersion = other.SaveVersion;
+    }
+
     /// <summary>
     /// Refreshes all <see cref="FileInfo"/> used for this save.
     /// </summary>

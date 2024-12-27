@@ -158,29 +158,32 @@ public partial class PlatformSwitch : Platform
         {
             container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
         }
-        if (container.IsSave)
+        else if (container.IsSave)
+            UpdateSaveContainerWithMetaInformation(container, disk, decompressed);
+    }
+
+    protected override void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        // Vanilla data always available.
+        container.Extra = container.Extra with
         {
-            // Vanilla data always available.
-            container.Extra = container.Extra with
-            {
-                LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[4]).ToLocalTime(),
-                BaseVersion = (int)(decompressed[5]),
-                GameMode = disk.Cast<ushort>(24),
-                Season = disk.Cast<ushort>(26),
-                TotalPlayTime = decompressed[7],
-            };
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[4]).ToLocalTime(),
+            BaseVersion = (int)(decompressed[5]),
+            GameMode = disk.Cast<ushort>(24),
+            Season = disk.Cast<ushort>(26),
+            TotalPlayTime = decompressed[7],
+        };
 
-            // Extended metadata since Waypoint 4.00.
-            if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-                UpdateContainerWithWaypointMetaInformation(container, disk);
+        // Extended metadata since Waypoint 4.00.
+        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
+            UpdateSaveContainerWithWaypointMetaInformation(container, disk);
 
-            // Extended metadata since Worlds Part I 5.00.
-            if (disk.Length == META_LENGTH_TOTAL_WORLDS)
-                UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
+        // Extended metadata since Worlds Part I 5.00.
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+            UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
 
-            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
-            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
-        }
+        // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+        container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
     }
 
     #endregion

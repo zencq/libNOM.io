@@ -222,24 +222,28 @@ public partial class PlatformSteam : Platform
             {
                 container.GameVersion = Meta.GameVersion.Get(this, disk.Length, decompressed[1]);
             }
-            if (container.IsSave)
-            {
-                // Extended metadata since Waypoint 4.00.
-                if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-                    UpdateContainerWithWaypointMetaInformation(container, disk);
-
-                // Extended metadata since Worlds Part I 5.00.
-                if (disk.Length == META_LENGTH_TOTAL_WORLDS)
-                    UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
-
-                // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
-                container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
-            }
+            else if (container.IsSave)
+                UpdateSaveContainerWithMetaInformation(container, disk, decompressed);
         }
 
         // Size is save to write always.
         container.Extra = container.Extra with { MetaLength = (uint)(disk.Length) };
     }
+
+    protected override void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        // Extended metadata since Waypoint 4.00.
+        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
+            UpdateSaveContainerWithWaypointMetaInformation(container, disk);
+
+        // Extended metadata since Worlds Part I 5.00.
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+            UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
+
+        // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+        container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
+    }
+
 
     #endregion
 
@@ -346,7 +350,7 @@ public partial class PlatformSteam : Platform
     }
 
     #endregion
-    
+
     // //
 
     #region Write

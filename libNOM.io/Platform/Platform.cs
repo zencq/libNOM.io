@@ -60,7 +60,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     public abstract bool HasModding { get; }
 
-    public bool IsLoaded => SaveContainerCollection.Count != 0; // { get; }
+    public bool IsLoaded => SaveContainerCollection.Count > 0; // { get; }
 
     public bool IsRunning // { get; }
     {

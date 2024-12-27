@@ -114,8 +114,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         Directory.CreateDirectory(Settings.BackupDirectory); // ensure directory exists
 
         var createdAt = DateTime.Now;
-        var name = $"backup.{PlatformEnum}.{nonIContainer.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(nonIContainer.GameVersion)}.zip".ToLowerInvariant();
-        var path = Path.Combine(Settings.BackupDirectory, name);
+        var path = Path.Combine(Settings.BackupDirectory, $"backup.{PlatformEnum}.{nonIContainer.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(nonIContainer.GameVersion)}.zip".ToLowerInvariant());
 
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {

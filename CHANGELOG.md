@@ -9,6 +9,7 @@ since 1.0.0.
 ### Known Issues
 ### Added
 * Missing `IsVersion525TheCursedWithCrossSave` to `IContainer`
+* Parameter for `Transfer` to ignore incomplete user identification
 ### Changed
 * Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
 * The static class `libNOM.io.Global.Common` is no longer public accessible

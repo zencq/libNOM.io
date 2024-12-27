@@ -221,6 +221,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Process
 
+    // Json
+
     /// <summary>
     /// Processes the read JSON object and fills the properties of the container.
     /// </summary>
@@ -270,26 +272,35 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         if (IsUpdateNecessary((int)(container.Extra.DifficultyPreset), force))
             container.Difficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
 
+        // Extend with values added in later versions.
         if (container.IsVersion400Waypoint) // needs GameVersion
-        {
-            if (IsUpdateNecessary(container.Extra.SaveName, force))
-                container.SaveName = Meta.SaveName.Get(json);
-
-            if (IsUpdateNecessary(container.Extra.SaveSummary, force))
-                container.SaveSummary = Meta.SaveSummary.Get(json);
-        }
+            UpdateContainerWithWaypointJsonInformation(container, json, force);
 
         if (container.IsVersion450Omega) // needs GameVersion
-        {
-            container.CanSwitchContext = Meta.Context.CanSwitch(json);
+            UpdateContainerWithOmegaMetaInformation(container, json);
+    }
 
-            container.ActiveContext = Meta.Context.GetActive(json); // needs CanSwitchContext
-        }
+    protected static void UpdateContainerWithWaypointJsonInformation(Container container, string json, bool force)
+    {
+        if (IsUpdateNecessary(container.Extra.SaveName, force))
+            container.SaveName = Meta.SaveName.Get(json);
+
+        if (IsUpdateNecessary(container.Extra.SaveSummary, force))
+            container.SaveSummary = Meta.SaveSummary.Get(json);
+    }
+
+    protected static void UpdateContainerWithOmegaMetaInformation(Container container, string json)
+    {
+        container.CanSwitchContext = Meta.Context.CanSwitch(json);
+
+        container.ActiveContext = Meta.Context.GetActive(json); // needs CanSwitchContext
     }
 
     private static bool IsUpdateNecessary(int property, bool force) => force || property <= 0;
 
     private static bool IsUpdateNecessary(string property, bool force) => force || string.IsNullOrEmpty(property);
+
+    // Meta
 
     /// <summary>
     /// Updates the specified container with information from the meta file.
@@ -299,7 +310,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="decompressed"></param>
     protected abstract void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
 
-    protected void UpdateContainerWithWaypointMetaInformation(Container container, ReadOnlySpan<byte> disk)
+    protected abstract void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
+
+    protected void UpdateSaveContainerWithWaypointMetaInformation(Container container, ReadOnlySpan<byte> disk)
     {
         container.Extra = container.Extra with
         {
@@ -309,7 +322,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         };
     }
 
-    protected virtual void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    protected virtual void UpdateSaveContainerWithWorldsPart1MetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         container.Extra = container.Extra with
         {
@@ -319,6 +332,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[META_LENGTH_KNOWN_TIMESTAMP / 4]).ToLocalTime(),
         };
     }
+
+    // Data
 
     /// <summary>
     /// Updates the specified container with information from the data file.
