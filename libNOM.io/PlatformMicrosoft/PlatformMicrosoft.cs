@@ -1,7 +1,5 @@
 ﻿using System.Text;
 
-using Newtonsoft.Json.Linq;
-
 namespace libNOM.io;
 
 
@@ -11,8 +9,6 @@ namespace libNOM.io;
 // This partial class contains some general code.
 public partial class PlatformMicrosoft : Platform
 {
-    // Constant
-
     #region Constant
 
     internal const string ACCOUNT_PATTERN = "*_29070100B936489ABCE8B9AF3980429C";
@@ -41,8 +37,6 @@ public partial class PlatformMicrosoft : Platform
 
     #endregion
 
-    // Field
-
     #region Field
 
     private string _accountGuid = null!; // will be set when containers.index is parsed
@@ -50,65 +44,6 @@ public partial class PlatformMicrosoft : Platform
     private DateTimeOffset _lastWriteTime; // will be set when containers.index is parsed to store global timestamp
     private string _processIdentifier = null!; // will be set when containers.index is parsed
     private ContainerExtra? _settingsContainer; // will be set when containers.index is parsed and exists
-
-    #endregion
-
-    // Property
-
-    #region Flags
-
-    // public //
-
-    public override bool CanCreate { get; } = true;
-
-    public override bool CanRead { get; } = true;
-
-    public override bool CanUpdate { get; } = true;
-
-    public override bool CanDelete { get; } = true;
-
-    public override bool Exists => base.Exists && _containersindex.Exists; // { get; }
-
-    public override bool HasModding { get; } = false;
-
-    public override RestartRequirementEnum RestartToApply { get; } = RestartRequirementEnum.Always;
-
-    // protected //
-
-    protected override bool IsConsolePlatform { get; } = false;
-
-    #endregion
-
-    #region Platform Indicator
-
-    // public //
-
-    public override PlatformEnum PlatformEnum { get; } = PlatformEnum.Microsoft;
-
-    // protected //
-
-    protected override string[] PlatformAnchorFilePattern { get; } = ANCHOR_FILE_PATTERN;
-
-    protected override string? PlatformArchitecture { get; } = "XB1|Final";
-
-    // Looks like "C:\\Program Files\\WindowsApps\\HelloGames.NoMansSky_4.38.0.0_x64__bs190hzg1sesy\\Binaries\\NMS.exe"
-    protected override string? PlatformProcessPath { get; } = @"bs190hzg1sesy\Binaries\NMS.exe";
-
-    protected override string PlatformToken { get; } = "XB";
-
-    #endregion
-
-    // //
-
-    #region UserIdentification
-
-    protected override string GetUserIdentification(JObject jsonObject, string key)
-    {
-        if (key is "UID" && _uid is not null)
-            return _uid;
-
-        return base.GetUserIdentification(jsonObject, key);
-    }
 
     #endregion
 }

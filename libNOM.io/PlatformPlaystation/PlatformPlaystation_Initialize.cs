@@ -188,6 +188,8 @@ public partial class PlatformPlaystation : Platform
         };
     }
 
+    // Data
+
     protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
     {
         // Sizes other than for AccountData need to be set directly in CompressData() as the compressed data wont be returned if _usesSaveWizard.

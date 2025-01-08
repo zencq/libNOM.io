@@ -6,9 +6,7 @@ namespace libNOM.io;
 // This partial class contains writing related code.
 public partial class PlatformPlaystation : Platform
 {
-    // //
-
-    #region Write
+    #region Container
 
     protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
@@ -194,7 +192,9 @@ public partial class PlatformPlaystation : Platform
 
     #endregion
 
-    #region memory.dat
+    // //
+
+    #region Helper (memory.dat)
 
     /// <summary>
     /// Writes the memory.dat file for the previous format.

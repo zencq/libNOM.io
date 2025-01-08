@@ -10,45 +10,6 @@ namespace libNOM.io;
 // This partial class contains initialization related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // Property
-
-    #region Property
-
-    // public //
-
-    public DirectoryInfo Location { get; protected set; }
-
-    public PlatformSettings Settings { get; protected set; }
-
-    // protected //
-
-    protected int AnchorFileIndex { get; set; } = -1;
-
-    #endregion
-
-    // Accessor
-
-    #region Getter
-
-    /// <summary>
-    /// Gets the index of the matching anchor.
-    /// </summary>
-    /// <param name="directory"></param>
-    /// <returns></returns>
-    protected int GetAnchorFileIndex(DirectoryInfo? directory)
-    {
-        if (directory is not null)
-            for (var i = 0; i < PlatformAnchorFilePattern.Length; i++)
-                if (directory.GetFiles(PlatformAnchorFilePattern[i]).Length != 0)
-                    return i;
-
-        return -1;
-    }
-
-    #endregion
-
-    // //
-
     #region Constructor
 
 #pragma warning disable CS8618 // Non-nullable property 'Settings' must contain a non-null value when exiting constructor. Property 'Settings' is set in InitializeComponent.
@@ -309,8 +270,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="disk"></param>
     /// <param name="decompressed"></param>
     protected abstract void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
-
-    protected abstract void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
 
     protected void UpdateSaveContainerWithWaypointMetaInformation(Container container, ReadOnlySpan<byte> disk)
     {

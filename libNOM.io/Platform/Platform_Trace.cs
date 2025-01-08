@@ -6,9 +6,7 @@ namespace libNOM.io;
 // This partial class contains tracing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // //
-
-    #region Configuration
+    #region Property
 
     public PlatformTrace? Trace { get; protected set; }
 

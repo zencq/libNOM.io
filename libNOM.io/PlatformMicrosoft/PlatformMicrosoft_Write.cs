@@ -6,9 +6,7 @@ namespace libNOM.io;
 // This partial class contains writing related code.
 public partial class PlatformMicrosoft : Platform
 {
-    // //
-
-    #region Write
+    #region Container
 
     protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
@@ -153,7 +151,9 @@ public partial class PlatformMicrosoft : Platform
 
     #endregion
 
-    #region containers.index
+    // //
+
+    #region Helper (containers.index)
 
     /// <summary>
     /// Updates the data and meta file information for the new writing.

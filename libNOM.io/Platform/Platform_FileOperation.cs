@@ -6,66 +6,6 @@ namespace libNOM.io;
 // This partial class contains file operation related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // //
-
-    #region Extra
-
-    /// <summary>
-    /// Creates the platform extra for the destination container.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="other"></param>
-    /// <returns></returns>
-    protected virtual void CreateContainerExtra(Container container, Container other)
-    {
-        CopyContainerExtra(container, other);
-
-        // Reset bytes as from another platform it would not be right.
-        container.Extra = container.Extra with
-        {
-            Bytes = null,
-            MetaLength = (uint)(GetMetaBufferLength(container, force: true)),
-        };
-    }
-
-    /// <summary>
-    /// Copies the platform extra from the source into the destination container.
-    /// </summary>
-    /// <param name="container"></param>
-    /// <param name="source"></param>
-    /// <returns></returns>
-    protected virtual void CopyContainerExtra(Container destination, Container source)
-    {
-        // Overwrite all general values but keep platform specific stuff unchanged.
-        destination.Extra = destination.Extra with
-        {
-            Bytes = source.Extra.Bytes,
-            MetaLength = source.Extra.MetaLength,
-            SizeDecompressed = source.Extra.SizeDecompressed,
-            SizeDisk = source.Extra.SizeDisk,
-            LastWriteTime = source.Extra.LastWriteTime,
-            BaseVersion = source.Extra.BaseVersion,
-            GameMode = source.Extra.GameMode,
-            Season = source.Extra.Season,
-            TotalPlayTime = source.Extra.TotalPlayTime,
-            SaveName = source.Extra.SaveName,
-            SaveSummary = source.Extra.SaveSummary,
-            DifficultyPreset = source.Extra.DifficultyPreset,
-        };
-    }
-
-    #endregion
-
-    #region Ensure Is Loaded
-
-    private void EnsureIsLoaded(Container container)
-    {
-        if (!container.IsLoaded)
-            BuildContainerFull(container);
-    }
-
-    #endregion
-
     #region Copy
 
     public void Copy(IContainer source, IContainer destination) => Copy([(Source: source, Destination: destination)], true);
@@ -205,6 +145,66 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             Write(container, other.LastWriteTime ?? DateTimeOffset.Now);
             RebuildContainerFull(container);
         }
+    }
+
+    #endregion
+
+    // //
+
+    #region Extra
+
+    /// <summary>
+    /// Creates the platform extra for the destination container.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="other"></param>
+    /// <returns></returns>
+    protected virtual void CreateContainerExtra(Container container, Container other)
+    {
+        CopyContainerExtra(container, other);
+
+        // Reset bytes as from another platform it would not be right.
+        container.Extra = container.Extra with
+        {
+            Bytes = null,
+            MetaLength = (uint)(GetMetaBufferLength(container, force: true)),
+        };
+    }
+
+    /// <summary>
+    /// Copies the platform extra from the source into the destination container.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    protected virtual void CopyContainerExtra(Container destination, Container source)
+    {
+        // Overwrite all general values but keep platform specific stuff unchanged.
+        destination.Extra = destination.Extra with
+        {
+            Bytes = source.Extra.Bytes,
+            MetaLength = source.Extra.MetaLength,
+            SizeDecompressed = source.Extra.SizeDecompressed,
+            SizeDisk = source.Extra.SizeDisk,
+            LastWriteTime = source.Extra.LastWriteTime,
+            BaseVersion = source.Extra.BaseVersion,
+            GameMode = source.Extra.GameMode,
+            Season = source.Extra.Season,
+            TotalPlayTime = source.Extra.TotalPlayTime,
+            SaveName = source.Extra.SaveName,
+            SaveSummary = source.Extra.SaveSummary,
+            DifficultyPreset = source.Extra.DifficultyPreset,
+        };
+    }
+
+    #endregion
+
+    #region Helper
+
+    private void EnsureIsLoaded(Container container)
+    {
+        if (!container.IsLoaded)
+            BuildContainerFull(container);
     }
 
     #endregion

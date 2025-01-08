@@ -10,8 +10,6 @@ namespace libNOM.io;
 // This partial class contains initialization related code.
 public partial class PlatformMicrosoft : Platform
 {
-    // //
-
     #region Constructor
 
     public PlatformMicrosoft() : base() { }
@@ -322,7 +320,7 @@ public partial class PlatformMicrosoft : Platform
             UpdateSaveContainerWithMetaInformation(container, disk, decompressed);
     }
 
-    protected override void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    protected void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         container.Extra = container.Extra with
         {

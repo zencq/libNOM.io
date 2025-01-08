@@ -11,8 +11,6 @@ namespace libNOM.io;
 // This partial class contains file operation related code, especially for backups.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // //
-
     #region Initialize
 
     public IContainer? CreateBackupContainer(string file, int metaIndex)
@@ -93,7 +91,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     // //
 
-    #region Backup
+    #region Create
 
     public void CreateBackup(IContainer container)
     {
@@ -139,6 +137,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         nonIContainer.BackupCreatedCallback.Invoke(backup);
     }
 
+    #endregion
+
+    #region Remove
+
     private void RemoveOldBackups(Container container)
     {
         // Remove the oldest backups above the maximum count.
@@ -147,6 +149,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         Delete(outdated); // delete before sending outdated into nirvana
         _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
     }
+
+    #endregion
+
+    #region Restore
 
     public void RestoreBackup(IContainer backup) => RestoreBackup(backup, false);
 
