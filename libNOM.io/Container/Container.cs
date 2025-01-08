@@ -15,10 +15,7 @@ public partial class Container : IContainer
 {
     #region Field
 
-    private bool? _exists;
-    private GameVersionEnum _gameVersion = GameVersionEnum.Unknown;
     private JObject? _jsonObject;
-    private int _saveVersion = -1;
 
     #endregion
 
@@ -48,6 +45,66 @@ public partial class Container : IContainer
         SlotIndex = CollectionIndex / 2; // integer division
 
         Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveType}"; // ignore 1 as it will not used here
+    }
+
+    #endregion
+
+    #region IComparable, IEquatable
+
+    public int CompareTo(IContainer? other)
+    {
+        return MetaIndex.CompareTo(other?.MetaIndex);
+    }
+
+    public bool Equals(IContainer? other)
+    {
+        if (other is null)
+            return this is null;
+
+        return GetHashCode() == other.GetHashCode();
+    }
+
+    public override bool Equals(object? other)
+    {
+        return other is IContainer otherContainer && Equals(otherContainer);
+    }
+
+    public override int GetHashCode()
+    {
+        return DataFile?.GetHashCode() ?? MetaIndex.GetHashCode();
+    }
+
+    public static bool operator ==(Container left, Container right)
+    {
+        if (left is null)
+            return right is null;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Container left, Container right)
+    {
+        return !(left == right);
+    }
+
+    public static bool operator <(Container left, Container right)
+    {
+        return left is null ? right is not null : left.CompareTo(right) < 0;
+    }
+
+    public static bool operator <=(Container left, Container right)
+    {
+        return left is null || left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >(Container left, Container right)
+    {
+        return left is not null && left.CompareTo(right) > 0;
+    }
+
+    public static bool operator >=(Container left, Container right)
+    {
+        return left is null ? right is null : left.CompareTo(right) >= 0;
     }
 
     #endregion

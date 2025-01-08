@@ -95,7 +95,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         InitializeTrace();
     }
 
-    protected virtual void InitializePlatformSpecific() { }
+    protected virtual void InitializePlatformSpecific() { } // empty as not used by all platforms
 
     /// <summary>
     /// Generates all related containers as well as the user identification.
