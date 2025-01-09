@@ -190,7 +190,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         if (platformSettings.LoadingStrategy == LoadingStrategyEnum.Empty)
             platformSettings = platformSettings with { LoadingStrategy = LoadingStrategyEnum.Hollow };
 
-        IEnumerable<IPlatform> result = [];
+        IEnumerable<IPlatform> result;
 
         // Check whether path is already in the collection.
         if (_collection.TryGetValue(path!, out var platformInCollection))
@@ -206,32 +206,7 @@ public class PlatformCollection : IEnumerable<IPlatform>
         }
         // Check all direct subfolders whether they contain a valid platform.
         else
-        {
-            var bag = new ConcurrentBag<IPlatform>();
-            var tasks = new List<Task>();
-
-            foreach (var directory in GetAccountsInPath(path!, "*")) // The default pattern is "*", which returns all directories.
-                tasks.Add(Task.Run(() =>
-                {
-                    // Improve preferred platform in case the directory name matches the pattern of a PC platform.
-                    platformPreferred = directory.Name switch
-                    {
-                        var name when name.Contains(PlatformGog.ACCOUNT_PATTERN.Trim('*')) => PlatformEnum.Gog,
-                        var name when name.Contains(PlatformSteam.ACCOUNT_PATTERN.Trim('*')) => PlatformEnum.Steam,
-                        var name when name.Contains(PlatformMicrosoft.ACCOUNT_PATTERN.Trim('*')) => PlatformEnum.Microsoft,
-                        _ => platformPreferred,
-                    };
-
-                    if (Analyze.AnalyzePath(directory.FullName, platformSettings, platformPreferred) is IPlatform platformInSubfolder && platformInSubfolder.IsValid)
-                    {
-                        _collection.TryAdd(directory.FullName, platformInSubfolder);
-                        bag.Add(platformInSubfolder);
-                    }
-                }));
-
-            Task.WaitAll([.. tasks]);
-            result = [.. bag];
-        }
+            result = GetAllPlatformInPath(path!, platformSettings, platformPreferred);
 
         return result;
     }
@@ -249,7 +224,14 @@ public class PlatformCollection : IEnumerable<IPlatform>
     {
         var tasks = new List<Task>();
 
-        foreach (var directory in GetAccountsInPlatform<T>())
+        var directories = typeof(T) switch
+        {
+            var typeofT when typeofT == typeof(PlatformGog) => GetDirectoriesInPath(PlatformGog.PATH, PlatformGog.ACCOUNT_PATTERN),
+            var typeofT when typeofT == typeof(PlatformMicrosoft) => GetDirectoriesInPath(PlatformMicrosoft.PATH, PlatformMicrosoft.ACCOUNT_PATTERN),
+            var typeofT when typeofT == typeof(PlatformSteam) => GetDirectoriesInPath(PlatformSteam.PATH, PlatformSteam.ACCOUNT_PATTERN),
+            _ => [],
+        };
+        foreach (var directory in directories)
             tasks.Add(Task.Run(() =>
             {
                 var platform = (T)(Activator.CreateInstance(typeof(T), directory))!;
@@ -262,23 +244,38 @@ public class PlatformCollection : IEnumerable<IPlatform>
         return tasks;
     }
 
-    /// <summary>
-    /// Gets an enumerable of <see cref="DirectoryInfo"/> of all accounts of the specified <see cref="Platform"/>.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    private static IEnumerable<DirectoryInfo> GetAccountsInPlatform<T>() where T : IPlatform => typeof(T) switch
+    private ConcurrentBag<IPlatform> GetAllPlatformInPath(string path, PlatformSettings platformSettings, PlatformEnum? platformPreferred)
     {
-        var typeofT when typeofT == typeof(PlatformGog) => GetAccountsInPath(PlatformGog.PATH, PlatformGog.ACCOUNT_PATTERN),
-        var typeofT when typeofT == typeof(PlatformMicrosoft) => GetAccountsInPath(PlatformMicrosoft.PATH, PlatformMicrosoft.ACCOUNT_PATTERN),
-        var typeofT when typeofT == typeof(PlatformSteam) => GetAccountsInPath(PlatformSteam.PATH, PlatformSteam.ACCOUNT_PATTERN),
-        _ => [],
-    };
+        var bag = new ConcurrentBag<IPlatform>();
+        var tasks = new List<Task>();
+
+        foreach (var directory in GetDirectoriesInPath(path, "*")) // The default pattern is "*", which returns all directories.
+            tasks.Add(Task.Run(() =>
+            {
+                // Improve preferred platform in case the directory name matches the pattern of a PC platform.
+                platformPreferred = directory.Name switch
+                {
+                    var name when name.Contains(PlatformGog.ACCOUNT_PATTERN) => PlatformEnum.Gog,
+                    var name when name.Contains(PlatformSteam.ACCOUNT_PATTERN[..^1]) => PlatformEnum.Steam, // remove * suffix
+                    var name when name.Contains(PlatformMicrosoft.ACCOUNT_PATTERN[1..]) => PlatformEnum.Microsoft, // remove * prefix
+                    _ => platformPreferred,
+                };
+
+                if (Analyze.AnalyzePath(directory.FullName, platformSettings, platformPreferred) is IPlatform platformInSubfolder && platformInSubfolder.IsValid)
+                {
+                    _collection.TryAdd(directory.FullName, platformInSubfolder);
+                    bag.Add(platformInSubfolder);
+                }
+            }));
+
+        Task.WaitAll([.. tasks]);
+        return bag;
+    }
 
     /// <summary>
     /// Gets an enumerable of <see cref="DirectoryInfo"/> of all accounts in the specified path.
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    private static IEnumerable<DirectoryInfo> GetAccountsInPath(string path, string pattern) => Analyze.ValidatePath(path, out var directory) ? directory!.EnumerateDirectories(pattern) : [];
+    private static IEnumerable<DirectoryInfo> GetDirectoriesInPath(string path, string pattern) => Analyze.ValidatePath(path, out var directory) ? directory!.EnumerateDirectories(pattern) : [];
 }
