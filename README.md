@@ -1,6 +1,6 @@
 # libNOM.io
 
-![Maintained](https://img.shields.io/maintenance/yes/2024)
+![Maintained](https://img.shields.io/maintenance/yes/2025)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zencq/libNOM.io/pipeline.yml?logo=github)](https://github.com/zencq/libNOM.io/actions/workflows/pipeline.yml)
 [![Maintainability](https://api.codeclimate.com/v1/badges/5f2e527d62758832d38b/maintainability)](https://codeclimate.com/github/zencq/libNOM.io/maintainability)
 
