@@ -312,15 +312,15 @@ public partial class PlatformMicrosoft : Platform
             SizeDisk = isV2 ? decompressed[4] : container.Extra.SizeDisk,
         };
 
-        if (container.IsAccount)
-        {
-            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_1);
-        }
-        else if (container.IsSave)
-            UpdateSaveContainerWithMetaInformation(container, disk, decompressed);
+        base.UpdateContainerWithMetaInformation(container, disk, decompressed);
     }
 
-    protected void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    protected override void UpdateAccountContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_1);
+    }
+
+    protected override void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         container.Extra = container.Extra with
         {

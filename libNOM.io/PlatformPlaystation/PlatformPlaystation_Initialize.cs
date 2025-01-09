@@ -91,6 +91,8 @@ public partial class PlatformPlaystation : Platform
 
     #region Process
 
+    // Meta
+
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         if (_usesSaveStreaming)

@@ -117,19 +117,19 @@ public partial class PlatformSteam : Platform
                 TotalPlayTime = decompressed[19],
             };
 
-            if (container.IsAccount)
-            {
-                container.GameVersion = Meta.GameVersion.Get(this, disk.Length, decompressed[1]);
-            }
-            else if (container.IsSave)
-                UpdateSaveContainerWithMetaInformation(container, disk, decompressed);
+            base.UpdateContainerWithMetaInformation(container, disk, decompressed);
         }
 
         // Size is save to write always.
         container.Extra = container.Extra with { MetaLength = (uint)(disk.Length) };
     }
 
-    protected void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    protected override void UpdateAccountContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        container.GameVersion = Meta.GameVersion.Get(this, disk.Length, decompressed[1]);
+    }
+
+    protected override void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         // Extended metadata since Waypoint 4.00.
         if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
@@ -142,7 +142,6 @@ public partial class PlatformSteam : Platform
         // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
         container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
     }
-
 
     #endregion
 }

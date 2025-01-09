@@ -35,4 +35,12 @@ internal static class StringExtensions
     /// <param name="self"></param>
     /// <returns>A byte array containing the results of encoding the set of characters.</returns>
     internal static byte[] GetUTF8Bytes(this string self) => Encoding.UTF8.GetBytes(self);
+
+    /// <summary>
+    /// Whether this has no proper value in terms of <see cref="Container"/> information.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="force"></param>
+    /// <returns></returns>
+    internal static bool IsUpdateNecessary(this string self, bool force) => force || string.IsNullOrEmpty(self);
 }
