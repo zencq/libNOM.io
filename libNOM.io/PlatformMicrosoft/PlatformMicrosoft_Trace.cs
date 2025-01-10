@@ -29,7 +29,8 @@ public partial class PlatformMicrosoft : Platform
         // Count (8)
         // _processIdentifier (int * 2)
         // _lastWriteTime (8)
-        reader.BaseStream.Seek(8 + reader.ReadInt32() * 2 + 8, SeekOrigin.Current);
+        reader.BaseStream.Seek(8, SeekOrigin.Current); // skip separately as we need to read the int after it
+        reader.BaseStream.Seek(reader.ReadInt32() * 2 + 8, SeekOrigin.Current);
         var syncGlobal = reader.ReadInt32();
 
         // Skipping the following elements:

@@ -40,6 +40,13 @@ public static class Analyze
         if (_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) && _headerString0xA0!.Contains("PS4|Final")))
         {
             platform = CreatePlatform<PlatformPlaystation>(data, platformSettings, out metaIndex, out meta);
+
+            // Special case for legacy memory.dat as all save were in one file. Try to get the first existing save.
+            if (metaIndex == -1 && platform?.GetSaveContainers().FirstOrDefault(i => i.Exists)?.MetaIndex is int index && index >= Constants.OFFSET_INDEX)
+                metaIndex = index;
+
+            if (metaIndex == -1)
+                platform = null;
         }
         // StartsWith for uncompressed saves and plaintext JSON.
         else if (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) || _headerString0x20!.StartsWith("{\"F2P\":") || _headerString0x20!.StartsWith("{\"Version\":"))
@@ -151,15 +158,12 @@ public static class Analyze
 
     #region Helper
 
-    private static T? CreatePlatform<T>(FileInfo data, PlatformSettings? platformSettings, out int metaIndex, out FileInfo? meta) where T : Platform
+    private static Platform CreatePlatform<T>(FileInfo data, PlatformSettings? platformSettings, out int metaIndex, out FileInfo? meta) where T : Platform
     {
         var typeofT = typeof(T);
 
         meta = GetPlatformMeta(typeofT, data);
         metaIndex = GetPlatformMetaIndex(typeofT, data);
-
-        if (metaIndex == -1)
-            return null;
 
         // For PlayStation we have to determine whether SaveWizard is used.
         Platform platform = typeofT == typeof(PlatformPlaystation) ? new PlatformPlaystation(_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER, platformSettings) : (T)(Activator.CreateInstance(typeofT, platformSettings))!;
@@ -168,7 +172,7 @@ public static class Analyze
         if (metaIndex > possibleIndex)
             metaIndex = Constants.OFFSET_INDEX;
 
-        return (T?)(platform);
+        return platform;
     }
 
     private static bool ExtractHeader(FileInfo data)
@@ -220,9 +224,17 @@ public static class Analyze
     private static int GetPlatformMetaIndex(Type type, FileInfo data)
     {
         var digits = string.Concat(Path.GetFileNameWithoutExtension(data.Name).Where(char.IsDigit));
-        var index = Constants.OFFSET_INDEX;
+        int? index = null;
 
-        if (!string.IsNullOrEmpty(digits))
+        if (string.IsNullOrEmpty(digits))
+        {
+            if (type == typeof(PlatformPlaystation))
+            {
+                index = -1;
+            }
+        }
+        else
+        {
             if (type == typeof(PlatformSteam))
             {
                 index = System.Convert.ToInt32(digits) + 1; // metaIndex = 3 is save2.hg
@@ -231,8 +243,9 @@ public static class Analyze
             {
                 index = System.Convert.ToInt32(digits);
             }
+        }
 
-        return index;
+        return index ?? Constants.OFFSET_INDEX;
     }
 
     private static HashSet<PlatformEnum> GetPlatformPreferredSequence(PlatformEnum? platformPreferred)
