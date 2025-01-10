@@ -159,7 +159,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
-                Destination.CopyImportantProperties(Destination);
+                Destination.CopyImportantProperties(Source);
 
                 // Due to this CanCreate can be true.
                 CreateContainerExtra(Destination, Source);
