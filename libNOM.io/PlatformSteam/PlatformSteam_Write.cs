@@ -41,7 +41,7 @@ public partial class PlatformSteam : Platform
             _ => Constants.META_FORMAT_1,
         });
 
-        if (container.IsSave && container.IsVersion360Frontiers) // META_FORMAT_3 and META_FORMAT_4
+        if (container.IsSave && container.IsVersion360Frontiers) // META_FORMAT_2 and META_FORMAT_3
         {
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current); // 16 + 32 = 48
@@ -65,7 +65,7 @@ public partial class PlatformSteam : Platform
             OverwriteWaypointMeta(writer, container);
             OverwriteWorldsMeta(writer, container);
         }
-        else // META_FORMAT_2
+        else // META_FORMAT_1
         {
             AppendHashes(writer, data); // 8 + 8 + 32 = 48
 

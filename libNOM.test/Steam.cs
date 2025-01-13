@@ -42,7 +42,7 @@ public class SteamTest : CommonTestClass
             return value;
 
         // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
-        var enumValues = new int[] { container.IsAccount ? 1 : container.MetaIndex }.Concat(Enumerable.Range(0, 30).Where(i => i > 1 && i != container.MetaIndex));
+        var enumValues = new int[] { container.IsAccount ? 1 : container.MetaIndex }.Concat(Enumerable.Range(0, 32).Where(i => i > 1 && i != container.MetaIndex));
 
         foreach (var entry in enumValues)
         {
@@ -57,7 +57,7 @@ public class SteamTest : CommonTestClass
             int iterations = value.Length == META_LENGTH_TOTAL_VANILLA ? 8 : 6;
             int lastIndex = result.Length - 1;
 
-            // Results in 0xF1BBCDC8 for META_FORMAT_2 as in the original algorithm.
+            // Results in 0xF1BBCDC8 for META_FORMAT_1 as in the original algorithm.
             for (int i = 0; i < iterations; i++)
                 hash += 0x9E3779B9;
 

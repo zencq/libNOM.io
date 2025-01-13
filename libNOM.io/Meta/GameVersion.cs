@@ -17,10 +17,10 @@ internal static class GameVersion
     internal static GameVersionEnum Get(Platform platform, int length, uint format)
     {
         if (length == platform.META_LENGTH_TOTAL_WORLDS)
-            return GameVersionEnum.WorldsPartI; // Constants.META_FORMAT_4
+            return GameVersionEnum.WorldsPartI; // Constants.META_FORMAT_3
 
         if (length == platform.META_LENGTH_TOTAL_WAYPOINT)
-            return GameVersionEnum.Waypoint; // Constants.META_FORMAT_3
+            return GameVersionEnum.Waypoint; // Constants.META_FORMAT_2
 
         if (length == platform.META_LENGTH_TOTAL_VANILLA)
             return format switch

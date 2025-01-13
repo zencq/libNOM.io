@@ -38,7 +38,7 @@ internal record class ContainerExtra
     internal uint SizeDisk { get; init; }
 
     // Microsoft
-    // Playstation (META_FORMAT_2)
+    // Playstation (META_FORMAT_1)
     // Steam
     // Switch
     internal DateTimeOffset? LastWriteTime { get; init; }
