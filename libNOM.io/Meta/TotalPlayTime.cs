@@ -7,7 +7,7 @@ internal static partial class TotalPlayTime
 {
     #region Regex
 
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
+#if NETSTANDARD2_0_OR_GREATER
 #pragma warning disable IDE0300 // Use collection expression for array
     private static readonly Regex[] RegexesTotalPlayTime = new Regex[] { // keep this format to have Regex syntax highlighting
         new("\\\"Lg8\\\":(\\d+),", RegexOptions.Compiled, TimeSpan.FromMilliseconds(100)),

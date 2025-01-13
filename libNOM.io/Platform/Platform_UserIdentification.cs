@@ -6,8 +6,6 @@ namespace libNOM.io;
 // This partial class contains UserIdentification related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // Field
-
     #region Field
 
     protected string? _uid; // will usually be set if available in path

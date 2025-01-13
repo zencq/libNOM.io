@@ -132,14 +132,16 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     public void Transfer(TransferData sourceTransferData, int destinationSlotIndex) => Transfer(sourceTransferData, destinationSlotIndex, true);
 
+    public void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool ignoreIncompleteUserIdentification) => Transfer(sourceTransferData, destinationSlotIndex, true, ignoreIncompleteUserIdentification: ignoreIncompleteUserIdentification);
+
     /// <inheritdoc cref="Transfer(TransferData, int)"/>
     /// <param name="write"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    protected virtual void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
+    protected virtual void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write, bool ignoreIncompleteUserIdentification = false)
     {
         PrepareTransferDestination(destinationSlotIndex);
 
-        if (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete())
+        if (!ignoreIncompleteUserIdentification && (!sourceTransferData.UserIdentification.IsComplete() || !PlatformUserIdentification.IsComplete()))
             ThrowHelper.ThrowInvalidOperationException("Cannot transfer as at least one user identification is not complete.");
 
         foreach (var (Source, Destination) in sourceTransferData.Containers.Zip(SaveContainerCollection.Where(i => i.SlotIndex == destinationSlotIndex), (Source, Destination) => (Source, Destination)))
@@ -152,19 +154,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                 if (!Source.IsCompatible)
                     ThrowHelper.ThrowInvalidOperationException($"Cannot copy as the source container is not compatible: {Source.IncompatibilityTag}");
 
-                // Needs to be set first to use the correct obfuscation state.
-                Destination.Platform = this;
+                Destination.Platform = this; // needs to be set first to use the correct obfuscation state
+                Destination.UserIdentification = PlatformUserIdentification; // to match new platform
 
                 Destination.SetJsonObject(Source.GetJsonObject());
                 Destination.ClearIncompatibility();
-
-                // Faking relevant properties to force it to Write().
-                Destination.Exists = true;
-
-                // Additional properties required to properly rebuild the container.
-                Destination.GameVersion = Source.GameVersion;
-                Destination.SaveVersion = Source.SaveVersion;
-                Destination.UserIdentification = PlatformUserIdentification; // update to match new platform
+                Destination.CopyImportantProperties(Source);
 
                 // Due to this CanCreate can be true.
                 CreateContainerExtra(Destination, Source);
@@ -197,17 +192,17 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         // Change token for Platform.
         jsonObject.SetValue(PlatformArchitecture, "PLATFORM");
 
-        if (sourceTransferData.TransferDiscovery) // 1.0
+        if (sourceTransferData.TransferDiscovery) // 1.00
             TransferCommonOwnership(jsonObject, sourceTransferData, SaveContextQueryEnum.DontCare, "TRANSFER_UID_DISCOVERY");
 
-        if (container.IsVersion(GameVersionEnum.Foundation) && sourceTransferData.TransferBase) // 1.1
+        if (container.IsVersion(GameVersionEnum.Foundation) && sourceTransferData.TransferBase) // 1.10
             foreach (var context in GetContexts(jsonObject))
                 TransferBaseOwnership(jsonObject, sourceTransferData, context);
 
         if (container.IsVersion351PrismsWithByteBeatAuthor && sourceTransferData.TransferByteBeat) // 3.51
             TransferByteBeatOwnership(jsonObject, sourceTransferData);
 
-        if (container.IsVersion360Frontiers && sourceTransferData.TransferSettlement) // 3.6
+        if (container.IsVersion360Frontiers && sourceTransferData.TransferSettlement) // 3.60
             foreach (var context in GetContexts(jsonObject))
                 TransferCommonOwnership(jsonObject, sourceTransferData, context, "TRANSFER_UID_SETTLEMENT");
     }

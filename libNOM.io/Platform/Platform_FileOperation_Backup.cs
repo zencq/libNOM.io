@@ -11,8 +11,6 @@ namespace libNOM.io;
 // This partial class contains file operation related code, especially for backups.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // //
-
     #region Initialize
 
     public IContainer? CreateBackupContainer(string file, int metaIndex)
@@ -70,9 +68,9 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         container.ClearIncompatibility();
 
         using var zipArchive = ZipFile.Open(container.DataFile!.FullName, ZipArchiveMode.Read);
-        if (zipArchive.ReadEntry("data", out var data))
+        if (zipArchive.Entries.FirstOrDefault(i => i.Name.StartsWith("data"))?.Read() is byte[] data)
         {
-            _ = zipArchive.ReadEntry("meta", out var meta);
+            var meta = zipArchive.Entries.FirstOrDefault(i => i.Name.StartsWith("meta"))?.Read();
 
             // Loads all meta information into the extra property.
             LoadMeta(container, meta);
@@ -93,7 +91,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     // //
 
-    #region Backup
+    #region Create
 
     public void CreateBackup(IContainer container)
     {
@@ -114,17 +112,16 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         Directory.CreateDirectory(Settings.BackupDirectory); // ensure directory exists
 
         var createdAt = DateTime.Now;
-        var name = $"backup.{PlatformEnum}.{nonIContainer.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(nonIContainer.GameVersion)}.zip".ToLowerInvariant();
-        var path = Path.Combine(Settings.BackupDirectory, name);
+        var path = Path.Combine(Settings.BackupDirectory, $"backup.{PlatformEnum}.{nonIContainer.MetaIndex:D2}.{createdAt.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.{(uint)(nonIContainer.GameVersion)}.zip".ToLowerInvariant());
 
         using (var zipArchive = ZipFile.Open(path, ZipArchiveMode.Create))
         {
             // Checked above and aborted if it does not exist.
-            nonIContainer.DataFile.CreateZipArchiveEntry(zipArchive, "data");
+            zipArchive.CreateEntryFromFile(nonIContainer.DataFile, "data");
 
             // Must be not null and exist to be added to the archive.
             if (nonIContainer.MetaFile?.Exists == true)
-                nonIContainer.MetaFile.CreateZipArchiveEntry(zipArchive, "meta");
+                zipArchive.CreateEntryFromFile(nonIContainer.MetaFile, "meta");
         }
 
         // Create new backup container.
@@ -140,6 +137,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         nonIContainer.BackupCreatedCallback.Invoke(backup);
     }
 
+    #endregion
+
+    #region Remove
+
     private void RemoveOldBackups(Container container)
     {
         // Remove the oldest backups above the maximum count.
@@ -148,6 +149,10 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         Delete(outdated); // delete before sending outdated into nirvana
         _ = outdated.All(container.BackupCollection.Remove); // remove all outdated from backup collection
     }
+
+    #endregion
+
+    #region Restore
 
     public void RestoreBackup(IContainer backup) => RestoreBackup(backup, false);
 

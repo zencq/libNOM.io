@@ -12,47 +12,28 @@ internal static class ReadOnlySpanExtensions
 {
     #region typeof(T)
 
-    /// <summary>
-    /// Concatenates two ReadOnlySpan<T> to one.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="span0"></param>
-    /// <param name="span1"></param>
-    /// <returns></returns>
-    /// <seealso href="https://stackoverflow.com/a/62525830"/>
-    internal static ReadOnlySpan<T> Concat<T>(this ReadOnlySpan<T> span0, ReadOnlySpan<T> span1)
+    internal static Span<T> AsSpan<T>(this ReadOnlySpan<T> self)
     {
-        var result = new T[span0.Length + span1.Length].AsSpan();
-        var start = 0;
-
-        span0.CopyTo(result[start..]);
-        start += span0.Length;
-
-        span1.CopyTo(result[start..]);
+        var result = new T[self.Length].AsSpan();
+        self.CopyTo(result);
         return result;
     }
 
     /// <summary>
-    /// Concatenates three ReadOnlySpan<T> to one.
+    /// Concatenates two ReadOnlySpan<T>.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="span0"></param>
-    /// <param name="span1"></param>
-    /// <param name="span2"></param>
+    /// <param name="self"></param>
+    /// <param name="second"></param>
     /// <returns></returns>
     /// <seealso href="https://stackoverflow.com/a/62525830"/>
-    internal static ReadOnlySpan<T> Concat<T>(ReadOnlySpan<T> span0, ReadOnlySpan<T> span1, ReadOnlySpan<T> span2)
+    internal static ReadOnlySpan<T> Concat<T>(this ReadOnlySpan<T> self, ReadOnlySpan<T> second)
     {
-        var result = new T[span0.Length + span1.Length + span2.Length].AsSpan();
-        var start = 0;
+        var result = new T[self.Length + second.Length].AsSpan();
 
-        span0.CopyTo(result[start..]);
-        start += span0.Length;
+        self.CopyTo(result[0..]); // all
+        second.CopyTo(result[self.Length..]);
 
-        span1.CopyTo(result[start..]);
-        start += span1.Length;
-
-        span2.CopyTo(result[start..]);
         return result;
     }
 
@@ -92,32 +73,6 @@ internal static class ReadOnlySpanExtensions
         return self.Slice(start, Marshal.SizeOf<T>()).Cast<byte, T>()[0];
     }
 
-    internal static ReadOnlySpan<byte> EscapeHashedIds(this ReadOnlySpan<byte> input)
-    {
-        var result = input;
-
-        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
-        {
-            var indices = result.IndicesOf(Raw).ToArray();
-            if (indices.Length > 0)
-            {
-                var value = Escaped.AsSpan();
-
-                for (int i = 0; i < indices.Length; i++)
-                {
-                    var index = indices[i] + ((Escaped.Length - Raw.Length) * i);
-
-                    var before = result[..index];
-                    var after = result.Slice(index + Raw.Length, result.Length - before.Length - Raw.Length);
-
-                    result = Concat(before, value, after);
-                }
-            }
-        }
-
-        return result;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="Guid"/> structure by using this bytes.
     /// </summary>
@@ -139,7 +94,11 @@ internal static class ReadOnlySpanExtensions
     /// <returns>The deserialized object from the bytes.</returns>
     internal static JObject? GetJson(this ReadOnlySpan<byte> self, bool escapeHashedIds = false)
     {
-        var binary = escapeHashedIds ? self.EscapeHashedIds() : self;
+        var binary = self;
+
+        if (escapeHashedIds)
+            foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
+                binary = Common.ConvertHashedIds(binary, Raw, Escaped);
 
         // Account has no proper decompressed size in the initial Fractal update (4.10) and therefore we look for the first.
         // Escaping gone wrong by HG. The backslash is in the file but instead of one of the chars below, still the unescaped control char.
@@ -185,7 +144,15 @@ internal static class ReadOnlySpanExtensions
 #endif
     }
 
-    internal static IEnumerable<int> IndicesOf(this ReadOnlySpan<byte> haystack, byte[] needle, int startIndex = 0, bool includeOverlapping = false)
+    /// <summary>
+    /// Returns all indices of the specified needle.
+    /// </summary>
+    /// <param name="haystack"></param>
+    /// <param name="needle"></param>
+    /// <param name="startIndex"></param>
+    /// <param name="includeOverlapping"></param>
+    /// <returns></returns>
+    internal static IEnumerable<int> IndicesOf(this ReadOnlySpan<byte> haystack, ReadOnlySpan<byte> needle, int startIndex = 0, bool includeOverlapping = false)
     {
         var result = new List<int>();
 
@@ -226,117 +193,6 @@ internal static class ReadOnlySpanExtensions
     {
         result = self.Slice(start, length).Cast<byte, char>().TrimEnd('\0');
         return length;
-    }
-
-    #endregion
-}
-
-internal static class SpanExtensions
-{
-    #region typeof(T)
-
-    /// <summary>
-    /// Concatenates two Span<T> to one.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="span0"></param>
-    /// <param name="span1"></param>
-    /// <returns></returns>
-    /// <seealso href="https://stackoverflow.com/a/62525830"/>
-    internal static Span<T> Concat<T>(this Span<T> span0, Span<T> span1)
-    {
-        var result = new T[span0.Length + span1.Length].AsSpan();
-        var start = 0;
-
-        span0.CopyTo(result[start..]);
-        start += span0.Length;
-
-        span1.CopyTo(result[start..]);
-        return result;
-    }
-
-    /// <summary>
-    /// Concatenates three Span<T> to one.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="span0"></param>
-    /// <param name="span1"></param>
-    /// <param name="span2"></param>
-    /// <returns></returns>
-    /// <seealso href="https://stackoverflow.com/a/62525830"/>
-    internal static Span<T> Concat<T>(Span<T> span0, Span<T> span1, Span<T> span2)
-    {
-        var result = new T[span0.Length + span1.Length + span2.Length].AsSpan();
-        var start = 0;
-
-        span0.CopyTo(result[start..]);
-        start += span0.Length;
-
-        span1.CopyTo(result[start..]);
-        start += span1.Length;
-
-        span2.CopyTo(result[start..]);
-        return result;
-    }
-
-    #endregion
-
-    #region typeof(byte)
-
-    internal static IEnumerable<int> IndicesOf(this Span<byte> haystack, byte[] needle, int startIndex = 0, bool includeOverlapping = false)
-    {
-        var result = new List<int>();
-
-        int matchIndex = haystack[startIndex..].IndexOf(needle);
-        while (matchIndex >= 0)
-        {
-            result.Add(startIndex + matchIndex);
-
-            startIndex += matchIndex + (includeOverlapping ? 1 : needle.Length);
-            matchIndex = haystack[startIndex..].IndexOf(needle);
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Gets whether this is empty, or contains only 0 bytes.
-    /// </summary>
-    /// <param name="self"></param>
-    /// <returns></returns>
-    internal static bool IsEmpty(this Span<byte> self)
-    {
-#if NETSTANDARD2_0_OR_GREATER
-        return self.IsEmpty || self.ToArray().All(i => i == byte.MinValue);
-#else
-        return self.IsEmpty || self.Trim(byte.MinValue).IsEmpty;
-#endif
-    }
-
-    internal static Span<byte> UnescapeHashedIds(this Span<byte> input)
-    {
-        var result = input;
-
-        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
-        {
-            var indices = result.IndicesOf(Escaped).ToArray();
-            if (indices.Length > 0)
-            {
-                var value = Raw.AsSpan();
-
-                for (int i = 0; i < indices.Length; i++)
-                {
-                    var index = indices[i] + ((Raw.Length - Escaped.Length) * i);
-
-                    var before = result[..index];
-                    var after = result.Slice(index + Escaped.Length, result.Length - before.Length - Escaped.Length);
-
-                    result = Concat(before, value, after);
-                }
-            }
-        }
-
-        return result;
     }
 
     #endregion

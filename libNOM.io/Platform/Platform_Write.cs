@@ -6,9 +6,7 @@ namespace libNOM.io;
 // This partial class contains writing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // //
-
-    #region Write
+    #region Container
 
     public void Write(IContainer container) => Write(container, DateTimeOffset.Now.LocalDateTime);
 
@@ -86,7 +84,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <returns></returns>
     protected virtual ReadOnlySpan<byte> CreateData(Container container)
     {
-        return container.GetJsonObject().GetBytes();
+        var binary = container.GetJsonObject().GetString(false, true, useAccount: container.IsAccount).GetBytesWithTerminator().AsReadOnlySpan();
+
+        foreach (var (Raw, Escaped) in Constants.BINARY_MAPPING)
+            binary = Common.ConvertHashedIds(binary, Escaped, Raw);
+
+        return binary;
     }
 
     /// <summary>
@@ -224,7 +227,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             // Skip next 8 bytes with SLOT IDENTIFIER.
             writer.Seek(0x8, SeekOrigin.Current);
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
-            writer.Write(Constants.META_FORMAT_4); // 4
+            writer.Write(Constants.META_FORMAT_3); // 4
         }
     }
 

@@ -4,16 +4,22 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.13.1)
+## Unreleased (0.14.0)
 
 ### Known Issues
 ### Added
+* Missing `IsVersion525TheCursedWithCrossSave` to `IContainer`
+* Parameter for `Transfer` to ignore incomplete user identification
 ### Changed
+* Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
+* The static class `libNOM.io.Global.Common` is no longer public accessible
 ### Deprecated
 ### Removed
+* `JObject.GetString(this JToken self, bool indent, bool obfuscate)` extension
 ### Fixed
 * CLI
     * An exception when using `Convert` without specifying an output
+* Use `IContainer` to implement `IComparable` and `IEquatable` of `IContainer` instead of `Container`
 ### Security
 
 ## 0.13.0 (2024-12-02)
@@ -25,9 +31,9 @@ since 1.0.0.
 ### Changed
 * Now also targeting .NET 9 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * No longer targeting .NET 6 and .NET 7 (can be still used thanks to .NET Standard)
-* `PlatformCollection.AnalyzePath` now also checks direct subfolders if path itself has no valid platform data
-  * Similar to how default locations for PC platforms are added
-  * Now returns `IEnumerable<IPlatform>` instead of `IPlatform?`
+* `PlatformCollection.AnalyzePath` now also checks all direct sub-folders if `path` itself has no valid platform data
+    * Similar to how default locations for PC platforms are added
+    * Now returns `IEnumerable<IPlatform>` instead of `IPlatform?`
 * `PATH` of PC platforms is not publicly accessible
 * Bump *libNOM.map* from 0.13.3 to 0.13.4
 
@@ -126,34 +132,29 @@ since 1.0.0.
 
 ### Changed
 * `PlatformSettings.MaxBackupCount <= 0` is disabling the backup feature again
-  * Existing backups will be deleted the next time one would be created otherwise
-  * To make it unlimited-like set it to `int.MaxValue`
+    * Existing backups will be deleted the next time one would be created otherwise
+    * To make it unlimited-like set it to `int.MaxValue`
 * `Constants.LOWEST_SUPPORTED_VERSION` is publicly accessible
-* Using the `IContainer` interface instead of `Container` directly, in interfaces
-  and other public methods
-* `Platform.RestartToApply` is now an enum for more precision on when a game restart
-  is required
+* Using the `IContainer` interface instead of `Container` directly, in interfaces and other public methods
+* `Platform.RestartToApply` is now an enum for more precision on when a game restart is required
 
 ### Fixed
-* The values for the properties `Container.ActiveContext` and `Container.CanSwitchContext`
-  are now properly set even if the `Container` is not fully loaded
+* The values for the properties `Container.ActiveContext` and `Container.CanSwitchContext` are now properly set even if the `Container` is not fully loaded
 
 ## 0.8.0 (2024-04-05)
 
 ### Added
 * CLI
-  * Analyze single files or whole directories and print information about it
-  * Convert between JSON and actual save formats
-  * Perform file operations
+    * Analyze single files or whole directories and print information about it
+    * Convert between JSON and actual save formats
+    * Perform file operations
 * `PlatformCollectionSettings` to configure `PlatformCollection`
 * Support for game version **Orbital 4.60**
 
 ### Changed
-* `PlatformSettings.MaxBackupCount <= 0` is unlimited and not unintentionally disabling
-  the backup feature
+* `PlatformSettings.MaxBackupCount <= 0` is unlimited and not unintentionally disabling the backup feature
 * `Container.ThrowHelperIsLoaded` now shows incompatibility if any
-* Replace preferred platform in constructors of `PlatformCollection` with new
-  `PlatformCollectionSettings`
+* Replace preferred platform in constructors of `PlatformCollection` with new `PlatformCollectionSettings`
 * Moved `Settings` to its own namespace
 * Bump *K4os.Compression.LZ4* from 1.3.6 to 1.3.8
 * Bump *libNOM.map* from 0.11.0 to 0.12.0
@@ -165,20 +166,16 @@ since 1.0.0.
 * Holiday 2023 Expeditions
 * Support for game version **Omega 4.50**
     * `IsExpedition` flag has been replaced in favor of `HasActiveExpedition`
-    * New property `CanSwitchContext` to indicated whether it is possible to switch
-      between primary save and expedition
+    * New property `CanSwitchContext` to indicated whether it is possible to switch between primary save and expedition
     * New property `ActiveContext` to indicated the active context
-    * `GetJson...` getter in `Container` have been extended to also take a context
-      value (without that parameter `ActiveContext` is used)
-* Support for new data file format used on Microsoft platform since game version
-  **Omega 4.52**
+    * `GetJson...` getter in `Container` have been extended to also take a context value (without that parameter `ActiveContext` is used)
+* Support for new data file format used on Microsoft platform since game version **Omega 4.52**
 * Omega Expedition
 
 ### Changed
 * `GetMaximumSlots` is now an extension of `IEnumerable<Container>`
 * `GetSaveContainers()` replaces all previous SaveContainers getter
-* To transfer you only have to call `GetSourceTransferData` and `Transfer` now,
-  the destination preparation is done automatically
+* To transfer you only have to call `GetSourceTransferData` and `Transfer` now, the destination preparation is done automatically
 * Bump *CommunityToolkit.Diagnostics* from 8.2.1 to 8.2.2
 * Bump *CommunityToolkit.HighPerformance* from 8.2.1 to 8.2.2
 * Bump *libNOM.map* from 0.9.2 to 0.11.0
@@ -187,18 +184,15 @@ since 1.0.0.
 * Dedicated getter for paths in `Platform.Settings`
 
 ### Fixed
-* If a new `JObject` is set in a `Container`, ensure it will be stored with the
-  configured obfuscation
+* If a new `JObject` is set in a `Container`, ensure it will be stored with the configured obfuscation
 
 ## 0.6.0 (2023-09-11)
 
 ### Added
 * Now also targeting .NET 7 according to supported versions in the [.NET release lifecycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core)
 * Now publishing to [NuGet Gallery](https://www.nuget.org/packages/libNOM.io)
-* A setting `WriteAlways` to choose between writing always or only if a container
-  is not synced
-* A privacy setting to decide whether external sources should be used to improve
-  user identification (e.g. launcher configs or API calls)
+* A setting `WriteAlways` to choose between writing always or only if a container is not synced
+* A privacy setting to decide whether external sources should be used to improve user identification (e.g. launcher configs or API calls)
 * An `IPlatform` interface you can use instead of the abstract base class
 * Lots of UnitTests
 * Support for game version **Echoes 4.40**
@@ -209,12 +203,10 @@ since 1.0.0.
 ### Changed
 * Bump *K4os.Compression.LZ4* from 1.3.5 to 1.3.6
 * Bump *libNOM.map* from 0.9.1 to 0.9.2
-* Renamed the setting `LastWriteTime` to `SetLastWriteTime` and `Mapping` to
-  `UseMapping`
+* Renamed the setting `LastWriteTime` to `SetLastWriteTime` and `Mapping` to `UseMapping`
 * Default value for some settings
 * Names of the `IsVersion` flags now include the version number as well
-* `DifficultyPresetTypeEnum` has been added and therefore `PresetGameModeEnum` is
-  now only used internal
+* `DifficultyPresetTypeEnum` has been added and therefore `PresetGameModeEnum` is now only used internal
 * More getter and setter for JSON tokens and values
 * Probably more...
 
@@ -222,10 +214,8 @@ since 1.0.0.
 * Maybe some things...
 
 ### Fixed
-* The `Mapping` setting is now only used to determine input/output and not for
-  modifying things internally
-* A number of different issues reported on [Discord](https://discord.gg/nomnom-762409407488720918)
-  and the [NomNom repository](https://github.com/zencq/NomNom/milestone/10)
+* The `Mapping` setting is now only used to determine input/output and not for modifying things internally
+* A number of different issues reported on [Discord](https://discord.gg/nomnom-762409407488720918) and the [NomNom repository](https://github.com/zencq/NomNom/milestone/10)
 
 ## 0.5.3 (2023-06-24)
 
@@ -278,16 +268,14 @@ since 1.0.0.
 ## 0.4.0 (2022-07-25)
 
 ### Changed
-* Use separate setter for `GameModeEnum` that automatically adds/removes the creative
-  primary mission
+* Use separate setter for `GameModeEnum` that automatically adds/removes the creative primary mission
 * Lots of tweaks to improve compatibility
 
 ### Removed
 * .NET Framework as explicit target as .NET Standard is enough
 
 ### Fixed
-* Total size of a save (data + meta) not correctly calculated for use in
-  *containers.index*
+* Total size of a save (data + meta) not correctly calculated for use in *containers.index*
 * Crash when there is a entry in the *containers.index* without actual files
 
 ## 0.3.1 (2022-05-25)
@@ -296,8 +284,7 @@ since 1.0.0.
 * Support for game version **Leviathan 3.90**
 
 ### Fixed
-* Calculation of game mode version number when switching between `Seasonal` and
-  others
+* Calculation of game mode version number when switching between `Seasonal` and others
 * Calculation of `SeasonEnum` in rare occasions
 
 ## 0.3.0 (2022-05-18)

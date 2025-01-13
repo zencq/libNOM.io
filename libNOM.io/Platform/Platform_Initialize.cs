@@ -10,45 +10,6 @@ namespace libNOM.io;
 // This partial class contains initialization related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // Property
-
-    #region Property
-
-    // public //
-
-    public DirectoryInfo Location { get; protected set; }
-
-    public PlatformSettings Settings { get; protected set; }
-
-    // protected //
-
-    protected int AnchorFileIndex { get; set; } = -1;
-
-    #endregion
-
-    // Accessor
-
-    #region Getter
-
-    /// <summary>
-    /// Gets the index of the matching anchor.
-    /// </summary>
-    /// <param name="directory"></param>
-    /// <returns></returns>
-    protected int GetAnchorFileIndex(DirectoryInfo? directory)
-    {
-        if (directory is not null)
-            for (var i = 0; i < PlatformAnchorFilePattern.Length; i++)
-                if (directory.GetFiles(PlatformAnchorFilePattern[i]).Length != 0)
-                    return i;
-
-        return -1;
-    }
-
-    #endregion
-
-    // //
-
     #region Constructor
 
 #pragma warning disable CS8618 // Non-nullable property 'Settings' must contain a non-null value when exiting constructor. Property 'Settings' is set in InitializeComponent.
@@ -95,7 +56,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         InitializeTrace();
     }
 
-    protected virtual void InitializePlatformSpecific() { }
+    protected virtual void InitializePlatformSpecific() { } // empty as not used by all platforms
 
     /// <summary>
     /// Generates all related containers as well as the user identification.
@@ -126,12 +87,12 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             switch (metaIndex)
             {
                 case 0:
-                    AccountContainer = InitializeContainer(metaIndex);
+                    AccountContainer = InitializeContainer(metaIndex, null);
                     break;
                 case 1:
                     break;
                 default:
-                    bag.Add(InitializeContainer(metaIndex));
+                    bag.Add(InitializeContainer(metaIndex, null));
                     break;
             }
         }));
@@ -139,8 +100,6 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
         return bag;
     }
-
-    private protected Container InitializeContainer(int metaIndex) => InitializeContainer(metaIndex, null);
 
     private protected Container InitializeContainer(int metaIndex, ContainerExtra? extra)
     {
@@ -221,6 +180,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Process
 
+    // Json
+
     /// <summary>
     /// Processes the read JSON object and fills the properties of the container.
     /// </summary>
@@ -248,48 +209,53 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     private static void UpdateContainerWithJsonInformation(Container container, string json, bool force)
     {
         // Independent values first.
-        if (IsUpdateNecessary(container.Extra.GameMode, force))
+        if (container.Extra.GameMode.IsUpdateNecessary(force))
             container.GameMode = Meta.GameMode.Get(json);
 
-        if (IsUpdateNecessary(container.SaveVersion, force))
+        if (container.SaveVersion.IsUpdateNecessary(force))
             container.SaveVersion = Meta.SaveVersion.Get(json);
 
-        if (IsUpdateNecessary((int)(container.Extra.TotalPlayTime), force))
+        if (container.Extra.TotalPlayTime.IsUpdateNecessary(force))
             container.TotalPlayTime = Meta.TotalPlayTime.Get(json);
 
         // Finally all remaining values that depend on others.
-        if (container.GameMode == PresetGameModeEnum.Seasonal && IsUpdateNecessary(container.Extra.Season, force)) // needs GameMode
+        if (container.GameMode == PresetGameModeEnum.Seasonal && container.Extra.Season.IsUpdateNecessary(force)) // needs GameMode
             container.Season = Meta.Season.Get(json);
 
-        if (IsUpdateNecessary(container.Extra.BaseVersion, force))
+        if (container.Extra.BaseVersion.IsUpdateNecessary(force))
             container.BaseVersion = Meta.BaseVersion.Calculate(container); // needs SaveVersion and GameMode and Season
 
-        if (IsUpdateNecessary((int)(container.GameVersion), force))
+        if (((int)(container.GameVersion)).IsUpdateNecessary(force))
             container.GameVersion = Meta.GameVersion.Get(container.BaseVersion, json); // needs BaseVersion
 
-        if (IsUpdateNecessary((int)(container.Extra.DifficultyPreset), force))
+        if (container.Extra.DifficultyPreset.IsUpdateNecessary(force))
             container.Difficulty = Meta.DifficultyPreset.Get(container, json); // needs GameMode and GameVersion
 
+        // Extend with values added in later versions.
         if (container.IsVersion400Waypoint) // needs GameVersion
-        {
-            if (IsUpdateNecessary(container.Extra.SaveName, force))
-                container.SaveName = Meta.SaveName.Get(json);
-
-            if (IsUpdateNecessary(container.Extra.SaveSummary, force))
-                container.SaveSummary = Meta.SaveSummary.Get(json);
-        }
+            UpdateContainerWithWaypointJsonInformation(container, json, force);
 
         if (container.IsVersion450Omega) // needs GameVersion
-        {
-            container.CanSwitchContext = Meta.Context.CanSwitch(json);
-
-            container.ActiveContext = Meta.Context.GetActive(json); // needs CanSwitchContext
-        }
+            UpdateContainerWithOmegaMetaInformation(container, json);
     }
 
-    private static bool IsUpdateNecessary(int property, bool force) => force || property <= 0;
+    protected static void UpdateContainerWithWaypointJsonInformation(Container container, string json, bool force)
+    {
+        if (container.Extra.SaveName.IsUpdateNecessary(force))
+            container.SaveName = Meta.SaveName.Get(json);
 
-    private static bool IsUpdateNecessary(string property, bool force) => force || string.IsNullOrEmpty(property);
+        if (container.Extra.SaveSummary.IsUpdateNecessary(force))
+            container.SaveSummary = Meta.SaveSummary.Get(json);
+    }
+
+    protected static void UpdateContainerWithOmegaMetaInformation(Container container, string json)
+    {
+        container.CanSwitchContext = Meta.Context.CanSwitch(json);
+
+        container.ActiveContext = Meta.Context.GetActive(json); // needs CanSwitchContext
+    }
+
+    // Meta
 
     /// <summary>
     /// Updates the specified container with information from the meta file.
@@ -297,9 +263,19 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="disk"></param>
     /// <param name="decompressed"></param>
-    protected abstract void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed);
+    protected virtual void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        if (container.IsAccount)
+            UpdateAccountContainerWithMetaInformation(container, disk, decompressed);
+        else
+            UpdateSaveContainerWithMetaInformation(container, disk, decompressed);
+    }
 
-    protected void UpdateContainerWithWaypointMetaInformation(Container container, ReadOnlySpan<byte> disk)
+    protected virtual void UpdateAccountContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed) { } // empty as not used by all platforms
+
+    protected virtual void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed) { } // empty as not used by all platforms
+
+    protected void UpdateSaveContainerWithWaypointMetaInformation(Container container, ReadOnlySpan<byte> disk)
     {
         container.Extra = container.Extra with
         {
@@ -309,7 +285,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         };
     }
 
-    protected virtual void UpdateContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    protected virtual void UpdateSaveContainerWithWorldsPart1MetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         container.Extra = container.Extra with
         {
@@ -319,6 +295,8 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[META_LENGTH_KNOWN_TIMESTAMP / 4]).ToLocalTime(),
         };
     }
+
+    // Data
 
     /// <summary>
     /// Updates the specified container with information from the data file.

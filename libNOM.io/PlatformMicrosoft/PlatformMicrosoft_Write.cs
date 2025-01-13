@@ -6,52 +6,51 @@ namespace libNOM.io;
 // This partial class contains writing related code.
 public partial class PlatformMicrosoft : Platform
 {
-    // //
-
-    #region Write
+    #region Container
 
     protected override void WritePlatformSpecific(Container container, DateTimeOffset writeTime)
     {
-        // Writing all Microsoft Store files at once in the same way as the game itself does.
-        if (Settings.WriteAlways || !container.IsSynced || Settings.SetLastWriteTime)
+        // Exit early if it is not necessary to write anything.
+        if (!Settings.WriteAlways && container.IsSynced && !Settings.SetLastWriteTime)
+            return;
+
+        // Timestamp must be set before creating meta.
+        if (Settings.SetLastWriteTime)
         {
-            // Timestamp must be set before creating meta.
-            if (Settings.SetLastWriteTime)
-            {
-                _lastWriteTime = writeTime; // global timestamp has full accuracy
-                container.LastWriteTime = _lastWriteTime.NullifyTicks(4);
-            }
-
-            if (Settings.WriteAlways || !container.IsSynced)
-            {
-                container.Exists = true;
-                container.IsSynced = true;
-
-                var data = PrepareData(container);
-                var meta = PrepareMeta(container, data);
-
-                // Cache original file information.
-                var copy = Common.DeepCopy(container.Extra);
-
-                // Create blob container with new file information.
-                var blob = PrepareBlobContainer(container);
-
-                // Write the previously created files and delete the old ones.
-                WriteMeta(container, meta, copy);
-                WriteData(container, data, copy);
-                WriteBlobContainer(container, blob, copy);
-            }
-
-            // Must be set after files have been created.
-            if (Settings.SetLastWriteTime)
-            {
-                container.DataFile?.SetFileTime(container.LastWriteTime);
-                container.MetaFile?.SetFileTime(container.LastWriteTime);
-            }
-
-            // Finally write the containers.index file.
-            WriteContainersIndex();
+            _lastWriteTime = writeTime; // global timestamp has full accuracy
+            container.LastWriteTime = _lastWriteTime.NullifyTicks(4);
         }
+
+        // Writing all Microsoft Store files at once in the same way as the game itself does.
+        if (Settings.WriteAlways || !container.IsSynced)
+        {
+            container.Exists = true;
+            container.IsSynced = true;
+
+            var data = PrepareData(container);
+            var meta = PrepareMeta(container, data);
+
+            // Cache original file information.
+            var copy = Common.DeepCopy(container.Extra);
+
+            // Create blob container with new file information.
+            var blob = PrepareBlobContainer(container);
+
+            // Write the previously created files and delete the old ones.
+            WriteMeta(container, meta, copy);
+            WriteData(container, data, copy);
+            WriteBlobContainer(container, blob, copy);
+        }
+
+        // Must be set after files have been created.
+        if (Settings.SetLastWriteTime)
+        {
+            container.DataFile?.SetFileTime(container.LastWriteTime);
+            container.MetaFile?.SetFileTime(container.LastWriteTime);
+        }
+
+        // Finally write the containers.index file.
+        WriteContainersIndex();
     }
 
     #endregion
@@ -152,7 +151,9 @@ public partial class PlatformMicrosoft : Platform
 
     #endregion
 
-    #region containers.index
+    // //
+
+    #region Helper (containers.index)
 
     /// <summary>
     /// Updates the data and meta file information for the new writing.

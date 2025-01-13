@@ -16,6 +16,8 @@ namespace libNOM.test.Helper;
 
 
 [TestClass]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0079:Remove unnecessary suppression", Justification = "Without suppression the message MSTEST0016 is shown.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MSTEST0016:Test class should have test method", Justification = "It is an abstract class and not used standalone.")]
 public abstract class CommonTestClass
 {
     #region Constant
@@ -379,8 +381,10 @@ public abstract class CommonTestClass
         var countResult = collection.Count();
 
         // Assert
+        Assert.IsNotNull(platform);
+
         Assert.AreEqual(countOrigin + 1, countResult);
-        Assert.AreEqual(platformResult, platform?.PlatformEnum);
+        Assert.AreEqual(platformResult, platform.PlatformEnum);
     }
 
     protected static void TestCommonBuildCollection(string path, PlatformEnum platformResult, PlatformCollectionSettings collectionSettings)

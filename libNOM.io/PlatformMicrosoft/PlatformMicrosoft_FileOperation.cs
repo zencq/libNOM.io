@@ -6,6 +6,40 @@ namespace libNOM.io;
 // This partial class contains file operation related code.
 public partial class PlatformMicrosoft : Platform
 {
+    #region Delete
+
+    protected override void Delete(IEnumerable<IContainer> containers, bool write)
+    {
+        Guard.IsTrue(CanDelete);
+
+        DisableWatcher();
+
+        foreach (var container in containers.Select(i => i.ToContainer()))
+        {
+            if (write)
+            {
+                if (container.Extra.MicrosoftBlobDirectory?.Exists == true)
+                    container.Extra.MicrosoftBlobDirectory!.Delete(true);
+            }
+
+            container.Reset();
+
+            container.DataFile = container.MetaFile = null; // set to null as it constantly changes anyway
+            container.Extra = container.Extra with { MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Deleted };
+            container.IncompatibilityTag = Constants.INCOMPATIBILITY_004;
+        }
+
+        if (Settings.SetLastWriteTime)
+            _lastWriteTime = DateTimeOffset.Now.LocalDateTime; // global timestamp has full accuracy
+
+        if (write)
+            WriteContainersIndex();
+
+        EnableWatcher();
+    }
+
+    #endregion
+
     // //
 
     #region Extra
@@ -53,40 +87,6 @@ public partial class PlatformMicrosoft : Platform
         // Write a dummy file.
         Directory.CreateDirectory(Destination.Extra.MicrosoftBlobDirectory!.FullName);
         File.WriteAllBytes(Destination.Extra.MicrosoftBlobContainerFile!.FullName, buffer);
-    }
-
-    #endregion
-
-    #region Delete
-
-    protected override void Delete(IEnumerable<IContainer> containers, bool write)
-    {
-        Guard.IsTrue(CanDelete);
-
-        DisableWatcher();
-
-        foreach (var container in containers.Select(i => i.ToContainer()))
-        {
-            if (write)
-            {
-                if (container.Extra.MicrosoftBlobDirectory?.Exists == true)
-                    container.Extra.MicrosoftBlobDirectory!.Delete(true);
-            }
-
-            container.Reset();
-
-            container.DataFile = container.MetaFile = null; // set to null as it constantly changes anyway
-            container.Extra = container.Extra with { MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Deleted };
-            container.IncompatibilityTag = Constants.INCOMPATIBILITY_004;
-        }
-
-        if (Settings.SetLastWriteTime)
-            _lastWriteTime = DateTimeOffset.Now.LocalDateTime; // global timestamp has full accuracy
-
-        if (write)
-            WriteContainersIndex();
-
-        EnableWatcher();
     }
 
     #endregion

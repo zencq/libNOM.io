@@ -91,6 +91,8 @@ public partial class PlatformPlaystation : Platform
 
     #region Process
 
+    // Meta
+
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         if (_usesSaveStreaming)
@@ -187,6 +189,8 @@ public partial class PlatformPlaystation : Platform
             PlaystationOffset = (int)(decompressed[MEMORYDAT_META_INDEX_OFFSET]), // either CHUNK OFFSET or SAVEWIZARD OFFSET depending on SaveWizard usage
         };
     }
+
+    // Data
 
     protected override void UpdateContainerWithDataInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<byte> decompressed)
     {

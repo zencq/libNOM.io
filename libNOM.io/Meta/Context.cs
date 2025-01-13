@@ -7,7 +7,7 @@ internal static partial class Context
 {
     #region Regex
 
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
+#if NETSTANDARD2_0_OR_GREATER
 #pragma warning disable IDE0300 // Use collection expression for array
     private static readonly Regex[] RegexesActiveContext = new Regex[] { // keep this format to have Regex syntax highlighting
         new("\\\"XTp\\\":\\\"(\\w{4,8})\\\",", RegexOptions.Compiled, TimeSpan.FromMilliseconds(10)),
@@ -81,12 +81,7 @@ internal static partial class Context
     /// </summary>
     /// <param name="json"></param>
     /// <returns></returns>
-    internal static bool CanSwitch(string? json)
-    {
-        return HasMatch(RegexesBaseContext, json) && HasMatch(RegexesExpeditionContext, json);
-    }
-
-    private static bool HasMatch(Regex[] regexes, string? json) => regexes.Match(json)?.Success == true;
+    internal static bool CanSwitch(string? json) => RegexesBaseContext.HasMatch(json) && RegexesExpeditionContext.HasMatch(json);
 
     #endregion
 }

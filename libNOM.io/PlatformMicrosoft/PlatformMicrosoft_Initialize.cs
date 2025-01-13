@@ -10,8 +10,6 @@ namespace libNOM.io;
 // This partial class contains initialization related code.
 public partial class PlatformMicrosoft : Platform
 {
-    // //
-
     #region Constructor
 
     public PlatformMicrosoft() : base() { }
@@ -32,7 +30,7 @@ public partial class PlatformMicrosoft : Platform
 
     protected override void InitializePlatformSpecific()
     {
-#if NETSTANDARD2_0_OR_GREATER || NET6_0
+#if NETSTANDARD2_0_OR_GREATER
         Func<char, bool> IsAsciiHexDigit = "0123456789ABCDEFabcdef".Contains;
 #else
         Func<char, bool> IsAsciiHexDigit = char.IsAsciiHexDigit;
@@ -302,50 +300,46 @@ public partial class PlatformMicrosoft : Platform
         if (disk.IsEmpty())
             return;
 
+        // As data has a save streaming like format since Omega 4.52, the disk size now stored.
+        var isV2 = Meta.GameVersion.Get(container.Extra.BaseVersion) >= GameVersionEnum.OmegaWithMicrosoftV2; // TODO: Breakpoint: check size values before setting them
+
         // Vanilla metadata always available.
         container.Extra = container.Extra with
         {
             Bytes = disk[META_LENGTH_KNOWN_VANILLA..].ToArray(),
             MetaLength = (uint)(disk.Length),
+            SizeDecompressed = isV2 ? container.Extra.SizeDecompressed : decompressed[4],
+            SizeDisk = isV2 ? decompressed[4] : container.Extra.SizeDisk,
         };
 
-        // As data has a save streaming like format since Omega 4.52, the disk size now stored.
-        if (Meta.GameVersion.Get(container.Extra.BaseVersion) < GameVersionEnum.OmegaWithMicrosoftV2)
-            container.Extra = container.Extra with
-            {
-                SizeDecompressed = decompressed[4],
-            };
-        else
-            container.Extra = container.Extra with
-            {
-                SizeDisk = decompressed[4],
-            };
+        base.UpdateContainerWithMetaInformation(container, disk, decompressed);
+    }
 
-        if (container.IsAccount)
+    protected override void UpdateAccountContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_1);
+    }
+
+    protected override void UpdateSaveContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    {
+        container.Extra = container.Extra with
         {
-            container.GameVersion = Meta.GameVersion.Get(this, disk.Length, Constants.META_FORMAT_2);
-        }
-        if (container.IsSave)
-        {
-            container.Extra = container.Extra with
-            {
-                BaseVersion = (int)(decompressed[0]),
-                GameMode = disk.Cast<ushort>(4),
-                Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
-                TotalPlayTime = decompressed[2],
-            };
+            BaseVersion = (int)(decompressed[0]),
+            GameMode = disk.Cast<ushort>(4),
+            Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
+            TotalPlayTime = decompressed[2],
+        };
 
-            // Extended metadata since Waypoint 4.00.
-            if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
-                UpdateContainerWithWaypointMetaInformation(container, disk);
+        // Extended metadata since Waypoint 4.00.
+        if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
+            UpdateSaveContainerWithWaypointMetaInformation(container, disk);
 
-            // Extended metadata since Worlds Part I 5.00.
-            if (disk.Length == META_LENGTH_TOTAL_WORLDS)
-                UpdateContainerWithWorldsMetaInformation(container, disk, decompressed);
+        // Extended metadata since Worlds Part I 5.00.
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+            UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
 
-            // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
-            container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
-        }
+        // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
+        container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
     }
 
     #endregion

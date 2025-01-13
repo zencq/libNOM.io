@@ -11,7 +11,7 @@ namespace libNOM.io.Interfaces;
 /// <summary>
 /// Holds all information about a single save.
 /// </summary>
-public interface IContainer : IComparable<Container>, IEquatable<Container>
+public interface IContainer : IComparable<IContainer>, IEquatable<IContainer>
 {
     #region Delegate
 
@@ -229,6 +229,8 @@ public interface IContainer : IComparable<Container>, IEquatable<Container>
     public bool IsVersion510Aquarius { get; }
 
     public bool IsVersion520TheCursed { get; }
+
+    public bool IsVersion525TheCursedWithCrossSave { get; }
 
     #endregion
 

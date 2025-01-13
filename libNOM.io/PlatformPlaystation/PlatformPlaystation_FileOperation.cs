@@ -6,46 +6,6 @@ namespace libNOM.io;
 // This partial class contains file operation related code.
 public partial class PlatformPlaystation : Platform
 {
-    // //
-
-    #region Extra
-
-    protected override void CreateContainerExtra(Container container, Container other)
-    {
-        if (_usesSaveStreaming)
-            base.CreateContainerExtra(container, other);
-        else
-        {
-            // base.CreatePlatformExtra() resets Extra.Bytes but here we want keep it and therefore calling CopyPlatformExtra() directly.
-            CopyContainerExtra(container, other);
-
-            container.Extra = container.Extra with
-            {
-                MetaLength = (uint)(container.GameVersion switch
-                {
-                    >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
-                    >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
-                    _ => META_LENGTH_TOTAL_WAYPOINT,
-                }),
-            };
-        }
-    }
-
-    protected override void CopyContainerExtra(Container container, Container other)
-    {
-        base.CopyContainerExtra(container, other);
-
-        if (!_usesSaveStreaming)
-            // Update bytes in platform extra as it is what will be written later.
-            container.Extra = container.Extra with
-            {
-                Bytes = CreateData(container).ToArray(),
-                LastWriteTime = other.LastWriteTime ?? DateTimeOffset.Now,
-            };
-    }
-
-    #endregion
-
     #region Copy
 
     protected override void Copy(IEnumerable<(IContainer Source, IContainer Destination)> operationData, bool write)
@@ -122,14 +82,40 @@ public partial class PlatformPlaystation : Platform
 
     // //
 
-    #region Transfer
+    #region Extra
 
-    protected override void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write)
+    protected override void CreateContainerExtra(Container container, Container other)
     {
-        base.Transfer(sourceTransferData, destinationSlotIndex, _usesSaveStreaming);
+        if (_usesSaveStreaming)
+            base.CreateContainerExtra(container, other);
+        else
+        {
+            // base.CreatePlatformExtra() resets Extra.Bytes but here we want keep it and therefore calling CopyPlatformExtra() directly.
+            CopyContainerExtra(container, other);
 
-        if (!_usesSaveStreaming && write)
-            WriteMemoryDat();
+            container.Extra = container.Extra with
+            {
+                MetaLength = (uint)(container.GameVersion switch
+                {
+                    >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
+                    >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
+                    _ => META_LENGTH_TOTAL_WAYPOINT,
+                }),
+            };
+        }
+    }
+
+    protected override void CopyContainerExtra(Container container, Container other)
+    {
+        base.CopyContainerExtra(container, other);
+
+        if (!_usesSaveStreaming)
+            // Update bytes in platform extra as it is what will be written later.
+            container.Extra = container.Extra with
+            {
+                Bytes = CreateData(container).ToArray(),
+                LastWriteTime = other.LastWriteTime ?? DateTimeOffset.Now,
+            };
     }
 
     #endregion

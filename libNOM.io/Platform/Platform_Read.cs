@@ -9,8 +9,6 @@ namespace libNOM.io;
 // This partial class contains reading and processing related code.
 public abstract partial class Platform : IPlatform, IEquatable<Platform>
 {
-    // //
-
     #region Container
 
     /// <summary>
@@ -107,7 +105,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
 
     #region Meta
 
-    /// <inheritdoc cref="LoadMeta(Container, Span{byte})"/>
+    /// <inheritdoc cref="LoadMeta(Container, ReadOnlySpan{byte})"/>
     protected void LoadMeta(Container container)
     {
         // 1. Read
@@ -120,7 +118,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="read">Already read content of the meta file.</param>
     /// <returns></returns>
-    protected void LoadMeta(Container container, Span<byte> read)
+    protected void LoadMeta(Container container, ReadOnlySpan<byte> read)
     {
         // 2. Decrypt
         // 3. Decompress
@@ -134,7 +132,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <returns></returns>
-    protected virtual Span<byte> ReadMeta(Container container)
+    protected virtual ReadOnlySpan<byte> ReadMeta(Container container)
     {
         return container.MetaFile?.ReadAllBytes() ?? [];
     }
@@ -145,7 +143,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// <param name="container"></param>
     /// <param name="meta"></param>
     /// <returns></returns>
-    protected virtual Span<uint> DecryptMeta(Container container, Span<byte> meta)
+    protected virtual ReadOnlySpan<uint> DecryptMeta(Container container, ReadOnlySpan<byte> meta)
     {
         return meta.Cast<byte, uint>();
     }

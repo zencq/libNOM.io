@@ -8,8 +8,6 @@ namespace libNOM.io;
 // This partial class contains reading and processing related code.
 public partial class PlatformPlaystation : Platform
 {
-    // //
-
     #region Container
 
     protected override ReadOnlySpan<byte> LoadContainer(Container container)
@@ -41,7 +39,7 @@ public partial class PlatformPlaystation : Platform
 
     #region Meta
 
-    protected override Span<byte> ReadMeta(Container container)
+    protected override ReadOnlySpan<byte> ReadMeta(Container container)
     {
         if (_usesSaveStreaming)
         {
@@ -73,7 +71,7 @@ public partial class PlatformPlaystation : Platform
     protected override ReadOnlySpan<byte> LoadData(Container container)
     {
         // 1. Read
-        return LoadData(container, container.IsAccount || container.Extra.Bytes?.AsSpan().IsEmpty() != false ? ReadData(container) : container.Extra.Bytes);
+        return LoadData(container, container.IsAccount || container.Extra.Bytes?.AsReadOnlySpan().IsEmpty() != false ? ReadData(container) : container.Extra.Bytes);
     }
 
     protected override ReadOnlySpan<byte> ReadData(Container container)

@@ -15,11 +15,7 @@ public static class Analyze
 
     #endregion
 
-    // Analyze
-
-    #region File
-
-    // public //
+    #region AnalyzeFile
 
     /// <inheritdoc cref="AnalyzeFile(string, PlatformSettings?)"
     public static Container? AnalyzeFile(string path) => AnalyzeFile(path, new());
@@ -31,33 +27,37 @@ public static class Analyze
     /// <returns>A pre-loaded <see cref="Container"/> if no incompatibilities.</returns>
     public static Container? AnalyzeFile(string path, PlatformSettings? platformSettings)
     {
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-            return null;
-
         FileInfo data = new(path);
-        if (!UpdateHeader(data))
+        if (!ExtractHeader(data))
             return null;
 
-        // Define variables and fill them while generating a platform.
+        // Define variables and fill them while creating a platform.
         FileInfo? meta;
         int metaIndex;
         Platform? platform;
 
-        // Select a platform below to convert the file with, based on the content.
+        // Select a platform based on the content.
         if (_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) && _headerString0xA0!.Contains("PS4|Final")))
         {
-            platform = GenerateCommonPlatform<PlatformPlaystation>(data, platformSettings, out metaIndex, out meta);
+            platform = CreatePlatform<PlatformPlaystation>(data, platformSettings, out metaIndex, out meta);
+
+            // Special case for legacy memory.dat as all save were in one file. Try to get the first existing save.
+            if (metaIndex == -1 && platform?.GetSaveContainers().FirstOrDefault(i => i.Exists)?.MetaIndex is int index && index >= Constants.OFFSET_INDEX)
+                metaIndex = index;
+
+            if (metaIndex == -1)
+                platform = null;
         }
         // StartsWith for uncompressed saves and plaintext JSON.
-        else if (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) || _headerString0x20!.StartsWith("{\"F2P\":") || _headerString0x20.StartsWith("{\"Version\":"))
+        else if (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) || _headerString0x20!.StartsWith("{\"F2P\":") || _headerString0x20!.StartsWith("{\"Version\":"))
         {
             if (_headerString0xA0!.Contains("NX1|Final"))
-                platform = GenerateCommonPlatform<PlatformSwitch>(data, platformSettings, out metaIndex, out meta);
+                platform = CreatePlatform<PlatformSwitch>(data, platformSettings, out metaIndex, out meta);
             else
-                platform = GenerateCommonPlatform<PlatformSteam>(data, platformSettings, out metaIndex, out meta);
+                platform = CreatePlatform<PlatformSteam>(data, platformSettings, out metaIndex, out meta);
         }
         else
-            platform = GenerateCommonPlatform<PlatformMicrosoft>(data, platformSettings, out metaIndex, out meta);
+            platform = CreatePlatform<PlatformMicrosoft>(data, platformSettings, out metaIndex, out meta);
 
         if (platform is null)
             return null;
@@ -68,26 +68,9 @@ public static class Analyze
         return container;
     }
 
-    // private //
-
-    private static bool UpdateHeader(FileInfo data)
-    {
-        ReadOnlySpan<byte> bytes = data.ReadAllBytes();
-        if (bytes.Length < 0xA0)
-            return false;
-
-        // Convert header with different lengths.
-        _headerByte = bytes[..0x4].ToArray();
-        _headerString0x08 = bytes[..0x08].GetString();
-        _headerString0x20 = bytes[..0x20].GetString();
-        _headerString0xA0 = bytes[..0xA0].GetString();
-
-        return true;
-    }
-
     #endregion
 
-    #region Path
+    #region AnalyzePath
 
     // public //
 
@@ -134,7 +117,7 @@ public static class Analyze
         if (platformSettings.LoadingStrategy == LoadingStrategyEnum.Empty)
             platformSettings = platformSettings with { LoadingStrategy = LoadingStrategyEnum.Hollow };
 
-        foreach (var platformEnum in GetPreferredPlatformSequence(platformPreferred))
+        foreach (var platformEnum in GetPlatformPreferredSequence(platformPreferred))
         {
             IPlatform? result = platformEnum switch
             {
@@ -151,17 +134,6 @@ public static class Analyze
 
         // Nothing found.
         return null;
-    }
-
-    private static HashSet<PlatformEnum> GetPreferredPlatformSequence(PlatformEnum? platformPreferred)
-    {
-        // First add the preferred platform and then everything else.
-        HashSet<PlatformEnum> platformSequence = platformPreferred is not null and not PlatformEnum.Unknown ? new() { platformPreferred.Value } : new();
-
-        foreach (var platformEnum in EnumExtensions.GetValues<PlatformEnum>())
-            platformSequence.Add(platformEnum);
-
-        return platformSequence;
     }
 
     // internal //
@@ -184,46 +156,111 @@ public static class Analyze
 
     #endregion
 
-    // private //
+    #region Helper
 
-    private static Platform? GenerateCommonPlatform<T>(FileInfo data, PlatformSettings? platformSettings, out int metaIndex, out FileInfo? meta) where T : Platform
+    private static Platform CreatePlatform<T>(FileInfo data, PlatformSettings? platformSettings, out int metaIndex, out FileInfo? meta) where T : Platform
     {
-        meta = GetCommonPlatformMeta<T>(data);
-        metaIndex = GetCommonPlatformMetaIndex<T>(data.Name);
+        var typeofT = typeof(T);
 
-        if (metaIndex == -1)
-            return null;
+        meta = GetPlatformMeta(typeofT, data);
+        metaIndex = GetPlatformMetaIndex(typeofT, data);
 
-        var platform = GetCommonPlatform<T>(platformSettings);
-        if (platform is not null)
-        {
-            var possibleIndex = Constants.OFFSET_INDEX + platform.MAX_SAVE_TOTAL - 1;
-            if (metaIndex > possibleIndex)
-                metaIndex = Constants.OFFSET_INDEX;
-        }
+        // For PlayStation we have to determine whether SaveWizard is used.
+        Platform platform = typeofT == typeof(PlatformPlaystation) ? new PlatformPlaystation(_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER, platformSettings) : (T)(Activator.CreateInstance(typeofT, platformSettings))!;
+
+        var possibleIndex = Constants.OFFSET_INDEX + platform.MAX_SAVE_TOTAL - 1;
+        if (metaIndex > possibleIndex)
+            metaIndex = Constants.OFFSET_INDEX;
+
         return platform;
     }
 
-    private static Platform? GetCommonPlatform<T>(PlatformSettings? platformSettings) where T : Platform => typeof(T) switch
+    private static bool ExtractHeader(FileInfo data)
     {
-        var typeofT when typeofT == typeof(PlatformPlaystation) => new PlatformPlaystation(_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER, platformSettings),
-        _ => (T)(Activator.CreateInstance(typeof(T), platformSettings))!,
-    };
+        if (!data.Exists)
+            return false;
 
-    private static FileInfo? GetCommonPlatformMeta<T>(FileInfo data) where T : Platform => typeof(T) switch
-    {
-        var typeofT when typeofT == typeof(PlatformMicrosoft) => data.Directory!.EnumerateFiles().FirstOrDefault(i => !i.Name.StartsWith("container.") && !i.FullName.Equals(data.FullName)),
-        var typeofT when typeofT == typeof(PlatformPlaystation) => data,
-        var typeofT when typeofT == typeof(PlatformSteam) => new(Path.Combine(data.Directory!.FullName, $"mf_{data.Name}")),
-        var typeofT when typeofT == typeof(PlatformSwitch) => new(Path.Combine(data.Directory!.FullName, data.Name.Replace("savedata", "manifest"))),
-        _ => null,
-    };
+        ReadOnlySpan<byte> bytes = data.ReadAllBytes();
+        if (bytes.Length < 0xA0)
+            return false;
 
-    private static int GetCommonPlatformMetaIndex<T>(string name) where T : Platform => typeof(T) switch
+        // Convert header with different lengths.
+        _headerByte = bytes[..0x4].ToArray();
+        _headerString0x08 = bytes[..0x08].GetString();
+        _headerString0x20 = bytes[..0x20].GetString();
+        _headerString0xA0 = bytes[..0xA0].GetString();
+
+        return true;
+    }
+
+    private static FileInfo? GetPlatformMeta(Type type, FileInfo data)
     {
-        var typeofT when typeofT == typeof(PlatformPlaystation) && string.Concat(Path.GetFileNameWithoutExtension(name).Where(char.IsDigit)) is string stringValue => string.IsNullOrEmpty(stringValue) ? -1 : System.Convert.ToInt32(stringValue),
-        var typeofT when typeofT == typeof(PlatformSteam) && string.Concat(Path.GetFileNameWithoutExtension(name).Where(char.IsDigit)) is string stringValue && !string.IsNullOrEmpty(stringValue) => System.Convert.ToInt32(stringValue) + 1, // metaIndex = 3 is save2.h,
-        var typeofT when typeofT == typeof(PlatformSwitch) => System.Convert.ToInt32(string.Concat(Path.GetFileNameWithoutExtension(name).Where(char.IsDigit))),
-        _ => Constants.OFFSET_INDEX,
-    };
+        FileInfo? meta = null;
+
+        if (type == typeof(PlatformSteam))
+        {
+            // Same filename as data but with a prefix.
+            meta = new(Path.Combine(data.Directory!.FullName, $"mf_{data.Name}"));
+        }
+        else if (type == typeof(PlatformMicrosoft))
+        {
+            // Search for third file in folder (not data and not container).
+            meta = data.Directory!.EnumerateFiles().FirstOrDefault(i => !i.Name.StartsWith("container.") && !i.FullName.Equals(data.FullName));
+        }
+        else if (type == typeof(PlatformPlaystation))
+        {
+            // Same file as meta is prepended.
+            meta = data;
+        }
+        else if (type == typeof(PlatformSwitch))
+        {
+            // Replace text but keep number and file extension.
+            meta = new(Path.Combine(data.Directory!.FullName, data.Name.Replace("savedata", "manifest")));
+        }
+
+        return meta;
+    }
+
+    private static int GetPlatformMetaIndex(Type type, FileInfo data)
+    {
+        var digits = string.Concat(Path.GetFileNameWithoutExtension(data.Name).Where(char.IsDigit));
+        int? index = null;
+
+        if (string.IsNullOrEmpty(digits))
+        {
+            if (type == typeof(PlatformPlaystation))
+            {
+                index = -1;
+            }
+        }
+        else
+        {
+            if (type == typeof(PlatformSteam))
+            {
+                index = System.Convert.ToInt32(digits) + 1; // metaIndex = 3 is save2.hg
+            }
+            else if (type == typeof(PlatformPlaystation) || type == typeof(PlatformSwitch))
+            {
+                index = System.Convert.ToInt32(digits);
+            }
+        }
+
+        return index ?? Constants.OFFSET_INDEX;
+    }
+
+    private static HashSet<PlatformEnum> GetPlatformPreferredSequence(PlatformEnum? platformPreferred)
+    {
+        var preferred = platformPreferred ?? PlatformEnum.Unknown;
+
+        // First add the preferred platform and then everything else.
+        HashSet<PlatformEnum> platformSequence = preferred is not PlatformEnum.Unknown ? new() { preferred } : new();
+
+        // Preferred platform is already there (if specified) and Unknown is ignored later.
+        foreach (var platformEnum in EnumExtensions.GetValues<PlatformEnum>())
+            platformSequence.Add(platformEnum);
+
+        return platformSequence;
+    }
+
+    #endregion
 }

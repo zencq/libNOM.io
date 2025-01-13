@@ -22,6 +22,17 @@ public static class IEnumerableExtensions
     #region typeof(RegEx)
 
     /// <summary>
+    /// Checks whether there is a match with any of the specified expressions.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    internal static bool HasMatch(this IEnumerable<Regex> self, string? json)
+    {
+        return self.Match(json)?.Success == true;
+    }
+
+    /// <summary>
     /// Searches the input string for the first occurrence of the specified regular expressions.
     /// </summary>
     /// <param name="self"></param>
@@ -68,6 +79,12 @@ public static class IEnumerableExtensions
     internal static bool ContainsIndex<T>(this IEnumerable<T> self, int index)
     {
         return 0 <= index && index < self.Count();
+    }
+
+    /// <inheritdoc cref="System.MemoryExtensions.AsSpan{T}(T[]?)"/>
+    public static ReadOnlySpan<T> AsReadOnlySpan<T>(this T[]? self)
+    {
+        return new ReadOnlySpan<T>(self);
     }
 
     #endregion

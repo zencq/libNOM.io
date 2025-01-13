@@ -2,6 +2,8 @@
 
 using libNOM.io.Delegates;
 
+using Newtonsoft.Json.Linq;
+
 namespace libNOM.io;
 
 
@@ -11,6 +13,12 @@ namespace libNOM.io;
 // This partial class contains some general code.
 public partial class Container : IContainer
 {
+    #region Field
+
+    private JObject? _jsonObject;
+
+    #endregion
+
     #region Delegate
 
     public NotifyBackupCreatedEventHandler BackupCreatedCallback { get; set; } = delegate { };
@@ -36,7 +44,67 @@ public partial class Container : IContainer
         SaveType = (SaveTypeEnum)(CollectionIndex % 2);
         SlotIndex = CollectionIndex / 2; // integer division
 
-        Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveType}";
+        Identifier = MetaIndex == 0 ? "AccountData" : $"Slot{SlotIndex + 1}{SaveType}"; // ignore 1 as it will not used here
+    }
+
+    #endregion
+
+    #region IComparable, IEquatable
+
+    public int CompareTo(IContainer? other)
+    {
+        return MetaIndex.CompareTo(other?.MetaIndex);
+    }
+
+    public bool Equals(IContainer? other)
+    {
+        if (other is null)
+            return this is null;
+
+        return GetHashCode() == other.GetHashCode();
+    }
+
+    public override bool Equals(object? other)
+    {
+        return other is IContainer otherContainer && Equals(otherContainer);
+    }
+
+    public override int GetHashCode()
+    {
+        return DataFile?.GetHashCode() ?? MetaIndex.GetHashCode();
+    }
+
+    public static bool operator ==(Container left, Container right)
+    {
+        if (left is null)
+            return right is null;
+
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Container left, Container right)
+    {
+        return !(left == right);
+    }
+
+    public static bool operator <(Container left, Container right)
+    {
+        return left is null ? right is not null : left.CompareTo(right) < 0;
+    }
+
+    public static bool operator <=(Container left, Container right)
+    {
+        return left is null || left.CompareTo(right) <= 0;
+    }
+
+    public static bool operator >(Container left, Container right)
+    {
+        return left is not null && left.CompareTo(right) > 0;
+    }
+
+    public static bool operator >=(Container left, Container right)
+    {
+        return left is null ? right is null : left.CompareTo(right) >= 0;
     }
 
     #endregion
@@ -45,11 +113,28 @@ public partial class Container : IContainer
 
     public override string ToString()
     {
-        var e = Exists ? (IsBackup ? "Backup" : (IsAccount ? "Account" : (IsSave ? "Save" : null))) : null;
-        if (e is not null)
-            e = $" // {e}";
+        string? type = null;
 
-        return $"{nameof(Container)} {PersistentStorageSlot} {Identifier}{(e ?? string.Empty)}";
+        if (Exists)
+        {
+            if (IsBackup) // potentially to most (multiple per Container)
+            {
+                type = "Backup";
+            }
+            else if (IsSave) // multiple per Platform
+            {
+                type = "Save";
+            }
+            else if (IsAccount) // one per Platform
+            {
+                type = "Account";
+            }
+
+            if (type is not null)
+                type = $" // {type}";
+        }
+
+        return $"{nameof(Container)} {PersistentStorageSlot} {Identifier}{(type ?? string.Empty)}";
     }
 
     #endregion
@@ -62,6 +147,16 @@ public partial class Container : IContainer
         IncompatibilityTag = null;
 
         PropertiesChangedCallback.Invoke();
+    }
+
+    internal void CopyImportantProperties(Container other)
+    {
+        // Faking properties to force it to Write().
+        Exists = true;
+
+        // Additional properties required to properly rebuild the container.
+        GameVersion = other.GameVersion;
+        SaveVersion = other.SaveVersion;
     }
 
     /// <summary>

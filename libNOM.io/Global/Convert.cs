@@ -96,7 +96,7 @@ public static class Convert
 
         var name = container.DataFile?.Name ?? Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "libNOM.io";
 
-        var result = container.GetJsonObject().GetString(indented, !deobfuscated); // throws InvalidOperationException if not loaded
+        var result = container.GetJsonObject().GetString(indented, !deobfuscated, useAccount: container.IsAccount); // throws InvalidOperationException if not loaded
         var file = Path.Combine(path, $"{name}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json");
 
         File.WriteAllText(file, result);
