@@ -8,7 +8,7 @@ public partial class PlatformPlaystation : Platform
 
     protected override void Transfer(TransferData sourceTransferData, int destinationSlotIndex, bool write, bool ignoreIncompleteUserIdentification = false)
     {
-        base.Transfer(sourceTransferData, destinationSlotIndex, _usesSaveStreaming);
+        base.Transfer(sourceTransferData, destinationSlotIndex, _usesSaveStreaming, ignoreIncompleteUserIdentification: ignoreIncompleteUserIdentification);
 
         if (!_usesSaveStreaming && write)
             WriteMemoryDat();
