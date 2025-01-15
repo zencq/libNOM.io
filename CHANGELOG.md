@@ -20,6 +20,7 @@ since 1.0.0.
 * CLI
     * An exception when using `Convert` without specifying an output
 * Use `IContainer` to implement `IComparable` and `IEquatable` of `IContainer` instead of `Container`
+* Packaged technology disappears due to the hashes no being UTF-8 conform ([#122 in the NomNom repository](https://github.com/zencq/NomNom/issues/122))
 ### Security
 
 ## 0.13.0 (2024-12-02)
