@@ -31,39 +31,12 @@ public static class Analyze
         if (!ExtractHeader(data))
             return null;
 
-        // Define variables and fill them while creating a platform.
-        FileInfo? meta;
-        int metaIndex;
-        Platform? platform;
-
-        // Select a platform based on the content.
-        if (_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) && _headerString0xA0!.Contains("PS4|Final")))
-        {
-            platform = CreatePlatform<PlatformPlaystation>(data, platformSettings, out metaIndex, out meta);
-
-            // Special case for legacy memory.dat as all save were in one file. Try to get the first existing save.
-            if (metaIndex == -1 && platform?.GetSaveContainers().FirstOrDefault(i => i.Exists)?.MetaIndex is int index && index >= Constants.OFFSET_INDEX)
-                metaIndex = index;
-
-            if (metaIndex == -1)
-                platform = null;
-        }
-        // StartsWith for uncompressed saves and plaintext JSON.
-        else if (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) || _headerString0x20!.StartsWith("{\"F2P\":") || _headerString0x20!.StartsWith("{\"Version\":"))
-        {
-            if (_headerString0xA0!.Contains("NX1|Final"))
-                platform = CreatePlatform<PlatformSwitch>(data, platformSettings, out metaIndex, out meta);
-            else
-                platform = CreatePlatform<PlatformSteam>(data, platformSettings, out metaIndex, out meta);
-        }
-        else
-            platform = CreatePlatform<PlatformMicrosoft>(data, platformSettings, out metaIndex, out meta);
-
+        var platform = GetPlatform(data, platformSettings, out var metaIndex);
         if (platform is null)
             return null;
 
         // Create container and load it before returning it.
-        var container = new Container(metaIndex, platform) { DataFile = data, MetaFile = meta };
+        var container = new Container(metaIndex, platform) { DataFile = data, MetaFile = GetPlatformMeta(platform.GetType(), data) };
         platform.Load(container);
         return container;
     }
@@ -158,19 +131,14 @@ public static class Analyze
 
     #region Helper
 
-    private static Platform CreatePlatform<T>(FileInfo data, PlatformSettings? platformSettings, out int metaIndex, out FileInfo? meta) where T : Platform
+    private static Platform CreatePlatform<T>(FileInfo data, PlatformSettings? platformSettings, out int metaIndex) where T : Platform
     {
         var typeofT = typeof(T);
-
-        meta = GetPlatformMeta(typeofT, data);
-        metaIndex = GetPlatformMetaIndex(typeofT, data);
 
         // For PlayStation we have to determine whether SaveWizard is used.
         Platform platform = typeofT == typeof(PlatformPlaystation) ? new PlatformPlaystation(_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER, platformSettings) : (T)(Activator.CreateInstance(typeofT, platformSettings))!;
 
-        var possibleIndex = Constants.OFFSET_INDEX + platform.MAX_SAVE_TOTAL - 1;
-        if (metaIndex > possibleIndex)
-            metaIndex = Constants.OFFSET_INDEX;
+        metaIndex = GetPlatformMetaIndex(typeofT, data, platform);
 
         return platform;
     }
@@ -191,6 +159,37 @@ public static class Analyze
         _headerString0xA0 = bytes[..0xA0].GetString();
 
         return true;
+    }
+
+    private static Platform? GetPlatform(FileInfo data, PlatformSettings? platformSettings, out int metaIndex)
+    {
+        // Define variables and fill them while creating a platform.
+        Platform? platform;
+
+        // Select a platform based on the content.
+        if (_headerString0x08 == PlatformPlaystation.SAVEWIZARD_HEADER || (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) && _headerString0xA0!.Contains("PS4|Final")))
+        {
+            platform = CreatePlatform<PlatformPlaystation>(data, platformSettings, out metaIndex);
+
+            // Special case for legacy memory.dat as all save were in one file. Try to get the first existing save.
+            if (metaIndex == -1 && platform?.GetSaveContainers().FirstOrDefault(i => i.Exists)?.MetaIndex is int index && index >= Constants.OFFSET_INDEX)
+                metaIndex = index;
+
+            if (metaIndex == -1)
+                platform = null;
+        }
+        // StartsWith for uncompressed saves and plaintext JSON.
+        else if (_headerByte.SequenceEqual(Constants.SAVE_STREAMING_HEADER) || _headerString0x20!.StartsWith("{\"F2P\":") || _headerString0x20!.StartsWith("{\"Version\":"))
+        {
+            if (_headerString0xA0!.Contains("NX1|Final"))
+                platform = CreatePlatform<PlatformSwitch>(data, platformSettings, out metaIndex);
+            else
+                platform = CreatePlatform<PlatformSteam>(data, platformSettings, out metaIndex);
+        }
+        else
+            platform = CreatePlatform<PlatformMicrosoft>(data, platformSettings, out metaIndex);
+
+        return platform;
     }
 
     private static FileInfo? GetPlatformMeta(Type type, FileInfo data)
@@ -221,7 +220,7 @@ public static class Analyze
         return meta;
     }
 
-    private static int GetPlatformMetaIndex(Type type, FileInfo data)
+    private static int GetPlatformMetaIndex(Type type, FileInfo data, Platform platform)
     {
         var digits = string.Concat(Path.GetFileNameWithoutExtension(data.Name).Where(char.IsDigit));
         int? index = null;
@@ -244,6 +243,10 @@ public static class Analyze
                 index = System.Convert.ToInt32(digits);
             }
         }
+
+        var possibleIndex = Constants.OFFSET_INDEX + platform.MAX_SAVE_TOTAL - 1;
+        if (index > possibleIndex)
+            index = Constants.OFFSET_INDEX;
 
         return index ?? Constants.OFFSET_INDEX;
     }
