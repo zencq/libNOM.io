@@ -10,8 +10,8 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Create a backup of all specified saves. No old backups will be deleted in this process."),
-        ArgExample("-Input <path-to-save-location> -Indices 0 29", "Backup Slot1Auto and Slot15Manual."), // directory
         ArgExample("-Input <path-to-save-location>/save.hg", "Backup Slot1Auto."), // file
+        ArgExample("-Input <path-to-save-location> -Indices 0 29", "Backup Slot1Auto and Slot15Manual."), // directory
     ]
     public static void Backup(BackupArgs args)
     {
@@ -67,8 +67,8 @@ public partial class Executor
     [
         ArgActionMethod,
         ArgDescription("Restore the specified backup."),
-        ArgExample("-Backup <path-to-backup-location>/backup.steam.02.20240402162157827.440.zip -Platform <path-to-save-location> -Index 5", "Restore to Slot3Manual."), // with index
         ArgExample("-Backup <path-to-backup-location>/backup.steam.02.20240402162157827.440.zip -Platform <path-to-save-location>", "Restore to Slot1Auto."), // without index
+        ArgExample("-Backup <path-to-backup-location>/backup.steam.02.20240402162157827.440.zip -Platform <path-to-save-location> -Index 5", "Restore to Slot3Manual."), // with index
     ]
     public static void Restore(RestoreArgs args)
     {
