@@ -17,7 +17,7 @@ public static class Convert
     /// The result will be right next to the specified input file.
     /// </summary>
     /// <param name="file"></param>
-    public static void ToJson(string file) => ToJson(file, null, true, true);
+    public static string ToJson(string file) => ToJson(file, null, true, true);
 
     /// <summary>
     /// Converts the specified file to a plaintext JSON file according to the specified flags.
@@ -25,7 +25,7 @@ public static class Convert
     /// </summary>
     /// <param name="file"></param>
     /// <param name="path"></param>
-    public static void ToJson(string file, bool indented, bool deobfuscated) => ToJson(file, null, indented, deobfuscated);
+    public static string ToJson(string file, bool indented, bool deobfuscated) => ToJson(file, null, indented, deobfuscated);
 
     /// <summary>
     /// Converts the specified file to an indented and deobfuscated plaintext JSON file.
@@ -33,7 +33,7 @@ public static class Convert
     /// </summary>
     /// <param name="file"></param>
     /// <param name="path"></param>
-    public static void ToJson(string file, string? path) => ToJson(file, path, true, true);
+    public static string ToJson(string file, string? path) => ToJson(file, path, true, true);
 
     /// <summary>
     /// Converts the specified file to a plaintext JSON file according to the specified flags.
@@ -44,7 +44,7 @@ public static class Convert
     /// <param name="indented"></param>
     /// <param name="deobfuscated"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void ToJson(string file, string? path, bool indented, bool deobfuscated)
+    public static string ToJson(string file, string? path, bool indented, bool deobfuscated)
     {
         // Method contains all relevant checks...
         var container = Analyze.AnalyzeFile(file);
@@ -53,7 +53,7 @@ public static class Convert
         if (container?.IsCompatible != true)
             ThrowHelper.ThrowInvalidOperationException("The specified file does not contain valid data.");
 
-        ToJson(container, path, indented, deobfuscated);
+        return ToJson(container, path, indented, deobfuscated);
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public static class Convert
     /// The result will be right next to the data file of the <see cref="Container"/>. If none is set, the current working directory is used.
     /// </summary>
     /// <param name="file"></param>
-    public static void ToJson(IContainer container) => ToJson(container, null, true, true);
+    public static string ToJson(IContainer container) => ToJson(container, null, true, true);
 
     /// <summary>
     /// Converts the specified container to a plaintext JSON file according to the specified flags.
@@ -70,7 +70,7 @@ public static class Convert
     /// <param name="container"></param>
     /// <param name="indented"></param>
     /// <param name="deobfuscated"></param>
-    public static void ToJson(IContainer container, bool indented, bool deobfuscated) => ToJson(container, null, indented, deobfuscated);
+    public static string ToJson(IContainer container, bool indented, bool deobfuscated) => ToJson(container, null, indented, deobfuscated);
 
     /// <summary>
     /// Converts the specified container to an indented and deobfuscated plaintext JSON file.
@@ -78,7 +78,7 @@ public static class Convert
     /// </summary>
     /// <param name="container"></param>
     /// <param name="path"></param>
-    public static void ToJson(IContainer container, string? path) => ToJson(container, path, true, true);
+    public static string ToJson(IContainer container, string? path) => ToJson(container, path, true, true);
 
     /// <summary>
     /// Converts the specified container to a plaintext JSON file according to the specified flags.
@@ -89,17 +89,21 @@ public static class Convert
     /// <param name="indented"></param>
     /// <param name="deobfuscated"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void ToJson(IContainer container, string? path, bool indented, bool deobfuscated)
+    public static string ToJson(IContainer container, string? path, bool indented, bool deobfuscated)
     {
-        if (string.IsNullOrWhiteSpace(path))
-            path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
-
-        var name = container.DataFile?.Name ?? Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "libNOM.io";
-
         var result = container.GetJsonObject().GetString(indented, !deobfuscated, useAccount: container.IsAccount); // throws InvalidOperationException if not loaded
-        var file = Path.Combine(path, $"{name}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json");
 
-        File.WriteAllText(file, result);
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            var path1 = File.Exists(path) ? new FileInfo(path).Directory!.FullName : Directory.Exists(path) ? path : container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory(); // path where to write the new file
+            
+            var name = File.Exists(path) ? Path.GetFileName(path) : container.DataFile?.Name ?? Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "libNOM.io"; // actual filename without timestamp and new extension
+            var file = Path.Combine(path1, $"{name}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json"); // full path
+
+            File.WriteAllText(file, result);
+        }
+
+        return result;
     }
 
     #endregion
