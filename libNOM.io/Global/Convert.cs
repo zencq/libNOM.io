@@ -117,7 +117,7 @@ public static class Convert
     /// </summary>
     /// <param name="file"></param>
     /// <param name="platform"></param>
-    public static Container? ToSaveContainer(string? file, Platform platform) => GetContainer(file, platform);
+    public static IContainer? ToSaveContainer(string? file, IPlatform platform) => GetContainer(file, platform);
 
     /// <summary>
     /// Converts an input file to a save of the specified platform.
@@ -154,7 +154,7 @@ public static class Convert
         if (string.IsNullOrWhiteSpace(path))
             path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
 
-        var name = $"{container.DataFile?.Name ?? ("libNOM.io")}.{platform}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}";
+        var name = $"{(container.DataFile?.Name ?? "libNOM.io")}.{platform}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}";
 
         // Set new files the converted content will be written to.
         container.DataFile = new FileInfo(Path.Combine(path, $"{name}.data"));
