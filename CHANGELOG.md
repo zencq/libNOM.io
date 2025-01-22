@@ -8,18 +8,23 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
-* Missing `IsVersion525TheCursedWithCrossSave` to `IContainer`
+* CLI
+    * Read action to read a (save) file and write the plaintext JSON to stdout
+    * Write action to take plaintext JSON from stdin and write it to a (save) file
 * Parameter for `Transfer` to ignore incomplete user identification
 ### Changed
 * Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
 * The static class `libNOM.io.Global.Common` is no longer public accessible
 * `libNOM.io.Global.Convert.ToJson()` now returns the plaintext JSON if no output is specified instead of writing to a default file(name)
+* Bump *CommunityToolkit* from 8.3.2 to 8.4.0
+* Bump *SharpCompress* from 0.38.0 to 0.39.0
 ### Deprecated
 ### Removed
 * `JObject.GetString(this JToken self, bool indent, bool obfuscate)` extension
 ### Fixed
 * CLI
     * An exception when using `Convert` without specifying an output
+* Missing `IsVersion525TheCursedWithCrossSave` in `IContainer`
 * Use `IContainer` to implement `IComparable` and `IEquatable` of `IContainer` instead of `Container`
 * Packaged technology disappears due to the hashes no being UTF-8 conform ([#122 in the NomNom repository](https://github.com/zencq/NomNom/issues/122))
 ### Security
@@ -36,7 +41,7 @@ since 1.0.0.
 * `PlatformCollection.AnalyzePath` now also checks all direct sub-folders if `path` itself has no valid platform data
     * Similar to how default locations for PC platforms are added
     * Now returns `IEnumerable<IPlatform>` instead of `IPlatform?`
-* `PATH` of PC platforms is not publicly accessible
+* `PATH` of PC platforms is now publicly accessible
 * Bump *libNOM.map* from 0.13.3 to 0.13.4
 
 ### Fixed
