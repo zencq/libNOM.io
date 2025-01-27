@@ -15,7 +15,10 @@ since 1.0.0.
 ### Changed
 * Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
 * The static class `libNOM.io.Global.Common` is no longer public accessible
-* `libNOM.io.Global.Convert.ToJson()` now returns the plaintext JSON if no output is specified instead of writing to a default file(name)
+* `libNOM.io.Global.Convert`
+  * `ToJson()` now returns the plaintext JSON if no output is specified instead of writing to a default file(name)
+  * `ToJson()` and `ToSaveContainer()` now accepts string or FileInfo for the input file
+  * `ToSaveFile()` methods now only accepts a FileInfo if you want use a file as input and string is now used to convert plaintext JSON
 * Bump *CommunityToolkit* from 8.3.2 to 8.4.0
 * Bump *SharpCompress* from 0.38.0 to 0.39.0
 ### Deprecated

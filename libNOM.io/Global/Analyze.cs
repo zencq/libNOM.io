@@ -17,17 +17,16 @@ public static class Analyze
 
     #region AnalyzeFile
 
-    /// <inheritdoc cref="AnalyzeFile(string, PlatformSettings?)"
-    public static Container? AnalyzeFile(string path) => AnalyzeFile(path, new());
+    /// <inheritdoc cref="AnalyzeFile(FileInfo, PlatformSettings?)"
+    public static Container? AnalyzeFile(FileInfo data) => AnalyzeFile(data, new());
 
     /// <summary>
     /// Analysis a single file and loads it.
     /// </summary>
-    /// <param name="path"></param>
+    /// <param name="data"></param>
     /// <returns>A pre-loaded <see cref="Container"/> if no incompatibilities.</returns>
-    public static Container? AnalyzeFile(string path, PlatformSettings? platformSettings)
+    public static Container? AnalyzeFile(FileInfo data, PlatformSettings? platformSettings)
     {
-        FileInfo data = new(path);
         if (!ExtractHeader(data))
             return null;
 
