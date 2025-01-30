@@ -51,7 +51,7 @@ public partial class Executor
 
     private static void GetBackupDataFromFile(BackupArgs args, out IPlatform? platform, out IEnumerable<IContainer> containers)
     {
-        var container = io.Global.Analyze.AnalyzeFile(args.Input, GetPlatformSettings());
+        var container = io.Global.Analyze.AnalyzeFile(new FileInfo(args.Input), GetPlatformSettings());
         if (container is null)
         {
             WriteLine("Input file could not be successfully processed.", 1);

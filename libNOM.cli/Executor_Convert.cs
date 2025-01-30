@@ -16,7 +16,7 @@ public partial class Executor
         else
         {
             var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());
-            io.Global.Convert.ToSaveFile(args.Input.FullName, platform, args.Output?.FullName);
+            io.Global.Convert.ToSaveFile(args.Input, platform, args.Output?.FullName);
         }
     }
 }

@@ -87,7 +87,7 @@ public static class Convert
         if (!string.IsNullOrWhiteSpace(output))
         {
             var path1 = File.Exists(output) ? new FileInfo(output).Directory!.FullName : Directory.Exists(output) ? output : input.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory(); // path where to write the new file
-            
+
             var name = File.Exists(output) ? Path.GetFileName(output) : input.DataFile?.Name ?? Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "libNOM.io"; // actual filename without timestamp and new extension
             var file = Path.Combine(path1, $"{name}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}.json"); // full path
 
@@ -111,19 +111,12 @@ public static class Convert
     /// <param name="platform"></param>
     public static IContainer? ToSaveContainer(FileInfo? input, IPlatform platform) => GetContainer(input, platform);
 
-
     #endregion
 
     #region ToSaveFile
 
-
-
-
-
-
-
     /// <summary>
-    /// Converts the input file to a save of the specified platform.
+    /// Converts the input to a save of the specified platform.
     /// The result will be right next to the specified input file.
     /// </summary>
     /// <param name="input"></param>
@@ -131,63 +124,16 @@ public static class Convert
     public static void ToSaveFile(FileInfo? input, PlatformEnum targetPlatform) => ToSaveFile(input, targetPlatform, null);
 
     /// <summary>
-    /// Converts an input file to a save of the specified platform.
-    /// The result will be in the specified output path or next to the specified input file if the path is invalid.
-    /// </summary>
-    /// <param name="input"></param>
-    /// <param name="targetPlatform"></param>
-    /// <param name="path"></param>
-    /// <exception cref="InvalidDataException"></exception>
-    // EXTERNAL RELEASE: If any, add the new platform here as well.
-    public static void ToSaveFile(FileInfo? input, PlatformEnum targetPlatform, string? path)
-    {
-        Platform platform = targetPlatform switch
-        {
-            PlatformEnum.Gog => new PlatformGog(),
-            PlatformEnum.Microsoft => new PlatformMicrosoft(),
-            PlatformEnum.Playstation => new PlatformPlaystation(),
-            PlatformEnum.Steam => new PlatformSteam(),
-            PlatformEnum.Switch => new PlatformSwitch(),
-            _ => throw new InvalidDataException("The specified output platform is not yet supported."),
-        };
-
-        // Method contains all relevant checks so just throw an exception if container is null.
-        var container = GetContainer(input, platform) ?? throw new InvalidDataException("Unable to read input file.");
-
-        if (string.IsNullOrWhiteSpace(path))
-            path = container.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
-
-        var name = $"{container.DataFile?.Name ?? "libNOM.io"}.{platform}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}";
-
-        // Set new files the converted content will be written to.
-        container.DataFile = new FileInfo(Path.Combine(path, $"{name}.data"));
-        container.MetaFile = new FileInfo(Path.Combine(path, $"{name}.meta"));
-
-        container.Exists = true; // fake it be able to create the data
-        container.Extra = container.Extra with { MetaLength = 0 }; // reset to get the length of the target platform
-        container.IsSynced = true;
-        container.Platform = platform; // to get the right sizes
-
-        platform.PrepareWrite(container);
-    }
-
-    /// <summary>
-    /// Converts an input file to a save of the specified platform.
-    /// The result will be in the specified output path or next to the specified input file if the path is invalid.
+    /// Converts an input to a save of the specified platform.
+    /// The result will be in the specified output path or next to the specified input file if the path is invalid or in the current directory if that fails as well.
     /// </summary>
     /// <param name="input"></param>
     /// <param name="targetPlatform"></param>
     /// <param name="output"></param>
     /// <exception cref="InvalidDataException"></exception>
     // EXTERNAL RELEASE: If any, add the new platform here as well.
-    public static void ToSaveFile(string input, PlatformEnum targetPlatform, string? output, int index)
+    public static void ToSaveFile(FileInfo? input, PlatformEnum targetPlatform, string? output)
     {
-        // 1. Analyze output (to get platform)
-        // 2. Get container from index (if output is not file) -> add index param
-        //  3. Overwrite JSONObject in container
-        //  4. Write container
-        // 5. Else fallback below
-
         Platform platform = targetPlatform switch
         {
             PlatformEnum.Gog => new PlatformGog(),
@@ -212,8 +158,62 @@ public static class Convert
 
         container.Exists = true; // fake it be able to create the data
         container.Extra = container.Extra with { MetaLength = 0 }; // reset to get the length of the target platform
-        container.IsSynced = true;
-        container.Platform = platform; // to get the right sizes
+
+        platform.PrepareWrite(container);
+    }
+
+    /// <summary>
+    /// Converts the input to a save of the specified platform.
+    /// The result will be in the current directory using the default naming pattern of the specified platform/index.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="targetPlatform"></param>
+    /// <param name="index"></param>
+    public static void ToSaveFile(string input, PlatformEnum targetPlatform, int index) => ToSaveFile(input, targetPlatform, index,null);
+
+    /// <summary>
+    /// Converts an input to a save of the specified platform.
+    /// The result will be in the specified output path and uses the default naming pattern of the specified platform/index.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="targetPlatform"></param>
+    /// <param name="index"></param>
+    /// <param name="output"></param>
+    /// <exception cref="InvalidDataException"></exception>
+    // EXTERNAL RELEASE: If any, add the new platform here as well.
+    public static void ToSaveFile(string input, PlatformEnum targetPlatform, int index, string? output)
+    {
+        Platform platform = targetPlatform switch
+        {
+            PlatformEnum.Gog => new PlatformGog(output, new() { LoadingStrategy = LoadingStrategyEnum.Hollow }),
+            PlatformEnum.Microsoft => new PlatformMicrosoft(output, new() { LoadingStrategy = LoadingStrategyEnum.Hollow }),
+            PlatformEnum.Playstation => new PlatformPlaystation(output, new() { LoadingStrategy = LoadingStrategyEnum.Hollow }),
+            PlatformEnum.Steam => new PlatformSteam(output, new() { LoadingStrategy = LoadingStrategyEnum.Hollow }),
+            PlatformEnum.Switch => new PlatformSwitch(output, new() { LoadingStrategy = LoadingStrategyEnum.Hollow }),
+            _ => throw new InvalidDataException("The specified output platform is not yet supported."),
+        };
+
+        // Method contains all relevant checks so just throw an exception if container is null.
+        var container = platform.GetSaveContainer(index)?.ToContainer();
+        var name = $"{container?.DataFile?.Name ?? "libNOM.io"}.{platform}.{DateTime.Now.ToString(Constants.FILE_TIMESTAMP_FORMAT)}";
+
+        if (string.IsNullOrWhiteSpace(output))
+            output = container?.DataFile?.Directory?.FullName ?? Directory.GetCurrentDirectory();
+
+        if (container is null)
+        {
+            container = new Container(Constants.OFFSET_INDEX, platform) ?? throw new InvalidDataException("Unable to read input file.");
+
+            // Set new files the converted content will be written to.
+            container.DataFile = new FileInfo(Path.Combine(output, $"{name}.data"));
+            container.MetaFile = new FileInfo(Path.Combine(output, $"{name}.meta"));
+        }
+
+        container.Exists = true; // fake it be able to create the data
+        container.Extra = container.Extra with { MetaLength = 0 }; // reset to get the length of the target platform
+
+        container.ClearIncompatibility();
+        container.SetJsonObject(input.GetJson()); // set specified input as new JSON after faking and resetting other properties
 
         platform.PrepareWrite(container);
     }

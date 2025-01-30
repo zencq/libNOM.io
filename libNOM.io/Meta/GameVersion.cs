@@ -42,7 +42,8 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
-        // TODO: Add TheCursedWithStarbornPhoenix ? 5.29 / 4167 -> check 5.28 if possible
+        // >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
+        // >= 4167 => GameVersionEnum.TheCursedWithStarbornPhoenix, // 5.29
         >= 4164 => GameVersionEnum.TheCursedWithCrossSave, // 5.25
         >= 4161 => GameVersionEnum.TheCursed, // 5.20
         >= 4155 => GameVersionEnum.Aquarius, // 5.10

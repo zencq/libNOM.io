@@ -36,7 +36,7 @@ public partial class Executor
 
         WriteLine(info.Name, indentionLevel);
 
-        var container = io.Global.Analyze.AnalyzeFile(info.FullName);
+        var container = io.Global.Analyze.AnalyzeFile(info);
         if (container is null)
             WriteLine("Analysis failed.", indentionLevel + 1);
         else
