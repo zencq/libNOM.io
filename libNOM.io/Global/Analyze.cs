@@ -227,9 +227,7 @@ public static class Analyze
         if (string.IsNullOrEmpty(digits))
         {
             if (type == typeof(PlatformPlaystation))
-            {
-                index = -1;
-            }
+                index = -1; // will be adapted in calling method if possible
         }
         else
         {
@@ -243,6 +241,7 @@ public static class Analyze
             }
         }
 
+        // Improve AccountData detection by checking for its constant version.
         if (index is null or > 0 && _headerString0x20!.Contains($":{Constants.THRESHOLD_VANILLA - 1},") == true)
             index = 0;
 
