@@ -37,7 +37,7 @@ public class ConvertTest : CommonTestClass
         var json = libNOM.io.Global.Convert.ToJson(pathIn);
 
         // Assert
-        Assert.AreEqual("{\r\n  \"Version\": 4097,\r\n", json[..23]);
+        Assert.IsTrue(json.StartsWith($"{{{Environment.NewLine}  \"Version\": 4097,{Environment.NewLine}"));
     }
 
     [TestMethod]
