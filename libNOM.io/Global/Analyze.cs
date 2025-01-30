@@ -243,6 +243,9 @@ public static class Analyze
             }
         }
 
+        if (index is null or > 0 && _headerString0x20!.Contains($":{Constants.THRESHOLD_VANILLA - 1},") == true)
+            index = 0;
+
         var possibleIndex = Constants.OFFSET_INDEX + platform.MAX_SAVE_TOTAL - 1;
         if (index > possibleIndex)
             index = Constants.OFFSET_INDEX;
