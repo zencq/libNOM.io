@@ -337,7 +337,7 @@ public abstract class CommonTestClass
     protected static void TestCommonAnalyzeFile(string path, ReadResults results, PlatformEnum platformResult)
     {
         // Act
-        var container = io.Global.Analyze.AnalyzeFile(path)!;
+        var container = io.Global.Analyze.AnalyzeFile(new(path))!;
         var priject = new PrivateObject(container);
 
         // Assert

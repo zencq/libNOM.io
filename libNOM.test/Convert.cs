@@ -22,7 +22,8 @@ public class ConvertTest : CommonTestClass
         var json = parentIn!.EnumerateFiles("7818252AB45E46868B43B7118290E50F.*.json").FirstOrDefault();
 
         // Assert
-        Assert.IsTrue(json?.Exists == true);
+        Assert.IsNotNull(json);
+        Assert.IsTrue(json.Exists);
         Assert.IsNotNull(JsonConvert.DeserializeObject(File.ReadAllText(json.FullName)) as JObject);
     }
 
@@ -34,7 +35,7 @@ public class ConvertTest : CommonTestClass
         var parentIn = Directory.GetParent(pathIn);
 
         // Act
-        libNOM.io.Global.Convert.ToSaveFile(pathIn, PlatformEnum.Steam);
+        libNOM.io.Global.Convert.ToSaveFile(new(pathIn), PlatformEnum.Steam);
 
         var data = parentIn!.EnumerateFiles($"C0CD238B9A2F46239623768051FBF493.{PlatformEnum.Steam}.*.data").First();
         var meta = parentIn!.EnumerateFiles($"C0CD238B9A2F46239623768051FBF493.{PlatformEnum.Steam}.*.meta").First();
