@@ -12,6 +12,8 @@ since 1.0.0.
     * Read action to read a (save) file and write the plaintext JSON to stdout
     * Write action to take plaintext JSON from stdin and write it to a (save) file
 * Parameter for `Transfer` to ignore incomplete user identification
+* Support for game version **Worlds Part II 5.50**
+* Titan Expedition
 ### Changed
 * Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
 * The static class `libNOM.io.Global.Common` is no longer public accessible
@@ -30,6 +32,7 @@ since 1.0.0.
 * Missing `IsVersion525TheCursedWithCrossSave` in `IContainer`
 * Use `IContainer` to implement `IComparable` and `IEquatable` of `IContainer` instead of `Container`
 * Packaged technology disappears due to the hashes no being UTF-8 conform ([#122 in the NomNom repository](https://github.com/zencq/NomNom/issues/122))
+* Crash caused by changes in the Microsoft platform ([#232 in the NomNom repository](https://github.com/zencq/NomNom/issues/232))
 ### Security
 
 ## 0.13.0 (2024-12-02)
@@ -122,7 +125,7 @@ since 1.0.0.
 
 ### Added
 * `GetString` extension for `JToken` that is now used by the one for `JObject`
-* Support for game version **Worlds 5.00**
+* Support for game version **Worlds Part I 5.00**
 * Liquidators Expedition
 
 ### Changed
