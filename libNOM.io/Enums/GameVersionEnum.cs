@@ -65,4 +65,7 @@ public enum GameVersionEnum
     TheCursed = 520,
     [Description(nameof(TheCursed))]
     TheCursedWithCrossSave = 525,
+    [Description(nameof(TheCursed))]
+    TheCursedWithStarbornPhoenix = 529,
+    WorldsPartII = 550,
 }

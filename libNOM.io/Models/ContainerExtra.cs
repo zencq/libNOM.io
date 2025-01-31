@@ -64,6 +64,7 @@ internal record class ContainerExtra
 
     #region Microsoft
 
+    internal bool? MicrosoftHasSecondIdentifier { get; init; }
     internal string? MicrosoftSyncTime { get; init; } // Ticks as Hexadecimal as String with surrounding double quotes
     internal byte? MicrosoftBlobContainerExtension { get; init; }
     internal MicrosoftBlobSyncStateEnum? MicrosoftSyncState { get; init; }

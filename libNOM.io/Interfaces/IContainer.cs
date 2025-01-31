@@ -232,6 +232,10 @@ public interface IContainer : IComparable<IContainer>, IEquatable<IContainer>
 
     public bool IsVersion525TheCursedWithCrossSave { get; }
 
+    public bool IsVersion529TheCursedWithStarbornPhoenix { get; }
+
+    public bool IsVersion550WorldsPartII { get; }
+
     #endregion
 
     #region Miscellaneous
