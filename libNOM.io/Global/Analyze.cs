@@ -17,17 +17,16 @@ public static class Analyze
 
     #region AnalyzeFile
 
-    /// <inheritdoc cref="AnalyzeFile(string, PlatformSettings?)"
-    public static Container? AnalyzeFile(string path) => AnalyzeFile(path, new());
+    /// <inheritdoc cref="AnalyzeFile(FileInfo, PlatformSettings?)"
+    public static Container? AnalyzeFile(FileInfo data) => AnalyzeFile(data, new());
 
     /// <summary>
     /// Analysis a single file and loads it.
     /// </summary>
-    /// <param name="path"></param>
+    /// <param name="data"></param>
     /// <returns>A pre-loaded <see cref="Container"/> if no incompatibilities.</returns>
-    public static Container? AnalyzeFile(string path, PlatformSettings? platformSettings)
+    public static Container? AnalyzeFile(FileInfo data, PlatformSettings? platformSettings)
     {
-        FileInfo data = new(path);
         if (!ExtractHeader(data))
             return null;
 
@@ -228,9 +227,7 @@ public static class Analyze
         if (string.IsNullOrEmpty(digits))
         {
             if (type == typeof(PlatformPlaystation))
-            {
-                index = -1;
-            }
+                index = -1; // will be adapted in calling method if possible
         }
         else
         {
@@ -243,6 +240,10 @@ public static class Analyze
                 index = System.Convert.ToInt32(digits);
             }
         }
+
+        // Improve AccountData detection by checking for its constant version.
+        if (index is null or > 0 && _headerString0x20!.Contains($":{Constants.THRESHOLD_VANILLA - 1},") == true)
+            index = 0;
 
         var possibleIndex = Constants.OFFSET_INDEX + platform.MAX_SAVE_TOTAL - 1;
         if (index > possibleIndex)

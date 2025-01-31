@@ -138,7 +138,7 @@ public class AnalyzeTest : CommonTestClass
         var path = GetCombinedPath("Playstation", "0x7D1", "SaveWizard", "3", "memory.dat");
 
         // Act
-        var container = io.Global.Analyze.AnalyzeFile(path);
+        var container = io.Global.Analyze.AnalyzeFile(new(path));
 
         // Assert
         Assert.IsNull(container);
