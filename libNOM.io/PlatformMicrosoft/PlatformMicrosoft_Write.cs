@@ -230,13 +230,13 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(CONTAINERSINDEX_FOOTER);
 
             if (HasAccountData)
-                AppendMicrosoftMeta(writer, AccountContainer!.Identifier, AccountContainer!.Extra);
+                AppendMicrosoftMeta(writer, AccountContainer!);
 
             if (hasSettings)
-                AppendMicrosoftMeta(writer, "Settings", _settingsContainer!);
+                AppendMicrosoftMeta(writer, _settingsContainer!, "Settings");
 
             foreach (var container in collection)
-                AppendMicrosoftMeta(writer, container.Identifier, container.Extra);
+                AppendMicrosoftMeta(writer, container);
 
             buffer = buffer.AsSpan()[..(int)(writer.BaseStream.Position)].ToArray();
         }
@@ -246,14 +246,25 @@ public partial class PlatformMicrosoft : Platform
         _containersindex.Refresh();
     }
 
-    private static void AppendMicrosoftMeta(BinaryWriter writer, string identifier, ContainerExtra extra)
+    private static void AppendMicrosoftMeta(BinaryWriter writer, Container container) => AppendMicrosoftMeta(writer, container.Extra, container.Identifier);
+
+    private static void AppendMicrosoftMeta(BinaryWriter writer, ContainerExtra extra, string identifier)
     {
         // Make sure to get the latest data.
         extra.MicrosoftBlobDataFile?.Refresh();
         extra.MicrosoftBlobMetaFile?.Refresh();
 
-        AppendDynamicText(writer, identifier, 2);
-        AppendDynamicText(writer, extra.MicrosoftSyncTime!, 1);
+        if (extra.MicrosoftHasSecondIdentifier!.Value)
+        {
+            AppendDynamicText(writer, identifier, count: 2);
+        }
+        else
+        {
+            AppendDynamicText(writer, identifier);
+            writer.Write((int)(0)); // length (0) of second identifier is still necessary
+        }
+
+        AppendDynamicText(writer, extra.MicrosoftSyncTime!);
         writer.Write(extra.MicrosoftBlobContainerExtension!.Value);
         writer.Write((int)(extra.MicrosoftSyncState!.Value));
         writer.Write(extra.MicrosoftBlobDirectoryGuid!.Value.ToByteArray());
@@ -268,7 +279,7 @@ public partial class PlatformMicrosoft : Platform
     /// <param name="writer"></param>
     /// <param name="identifier"></param>
     /// <param name="count">How many times it should be added.</param>
-    private static void AppendDynamicText(BinaryWriter writer, string identifier, int count)
+    private static void AppendDynamicText(BinaryWriter writer, string identifier, int count = 1)
     {
         for (var i = 0; i < count; i++)
         {
