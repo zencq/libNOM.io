@@ -233,6 +233,9 @@ public static class NewtonsoftExtensions
         var result = default(T);
         var type = typeof(T);
 
+        if (type.IsNullable())
+            type = type.GenericTypeArguments[0];
+
         if (type.IsSubclassOf(typeof(JToken)) || type == typeof(JToken))
         {
             // integer

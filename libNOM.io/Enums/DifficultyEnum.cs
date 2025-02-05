@@ -28,6 +28,15 @@ internal enum ChargingRequirementsDifficultyEnum : uint
     High,
 }
 
+// https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcCombatTimerDifficultyOption.cs#L7
+internal enum CombatTimerDifficultyOptionEnum : uint
+{
+    Off,
+    Slow,
+    Normal,
+    Fast,
+}
+
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcCreatureHostilityDifficultyOption.cs#L7
 internal enum CreatureHostilityDifficultyEnum : uint
 {
@@ -95,15 +104,6 @@ internal enum FuelUseDifficultyEnum : uint
     Cheap,
     Normal,
     Expensive,
-}
-
-// https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcCombatTimerDifficultyOption.cs#L7
-internal enum CombatTimerDifficultyOptionEnum : uint
-{
-    Off,
-    Slow,
-    Normal,
-    Fast,
 }
 
 // https://github.com/monkeyman192/MBINCompiler/blob/development/libMBIN/Source/NMS/GameComponents/GcHazardDrainDifficultyOption.cs#L7
