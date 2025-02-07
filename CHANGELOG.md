@@ -13,6 +13,8 @@ since 1.0.0.
     * Write action to take plaintext JSON from stdin and write it to a (save) file
 * Parameter for `Transfer` to ignore incomplete user identification
 * Support for game version **Worlds Part II 5.50**
+    * Detection for new packaged technology
+    * Difficulty setting for NPC population is taken into account
 * Titan Expedition
 ### Changed
 * Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
@@ -33,6 +35,7 @@ since 1.0.0.
 * Use `IContainer` to implement `IComparable` and `IEquatable` of `IContainer` instead of `Container`
 * Packaged technology disappears due to the hashes no being UTF-8 conform ([#122 in the NomNom repository](https://github.com/zencq/NomNom/issues/122))
 * Crash caused by changes in the Microsoft platform ([#232 in the NomNom repository](https://github.com/zencq/NomNom/issues/232))
+* Difficulty setting for fishing added in **Aquarius 5.10** was not taken into account
 ### Security
 
 ## 0.13.0 (2024-12-02)
