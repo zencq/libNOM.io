@@ -61,6 +61,7 @@ public partial class PlatformMicrosoft : Platform
         // Update container and its extra with dummy data.
         Destination.Extra = Destination.Extra with
         {
+            MicrosoftHasSecondIdentifier = !Destination.IsVersion550WorldsPartII,
             MicrosoftSyncTime = string.Empty,
             MicrosoftBlobContainerExtension = 0,
             MicrosoftSyncState = MicrosoftBlobSyncStateEnum.Created,
