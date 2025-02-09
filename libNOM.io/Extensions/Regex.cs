@@ -12,7 +12,7 @@ internal static partial class MatchExtensions
     /// <returns></returns>
     /// <exception cref="FormatException" />
     /// <exception cref="OverflowException" />
-    internal static int ToInt32Value(this Match self) => System.Convert.ToInt32(self.Groups[1].Value);
+    internal static uint ToUInt32Value(this Match self) => System.Convert.ToUInt32(self.Groups[1].Value);
 
     /// <Gets>
     /// Gets the captured substring from the input string.
