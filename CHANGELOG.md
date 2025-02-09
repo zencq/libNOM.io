@@ -4,9 +4,18 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.14.0)
+## Unreleased
 
 ### Known Issues
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.14.0 (2025-02-09)
+
 ### Added
 * CLI
     * Read action to read a (save) file and write the plaintext JSON to stdout
@@ -16,6 +25,7 @@ since 1.0.0.
     * Detection for new packaged technology
     * Difficulty setting for NPC population is taken into account
 * Titan Expedition
+
 ### Changed
 * Files in backups are now only prefixed with `data`/`meta` and no longer completely renamed to make manual backups a little easier
 * The static class `libNOM.io.Global.Common` is no longer public accessible
@@ -25,18 +35,19 @@ since 1.0.0.
   * `ToSaveFile()` methods now only accepts a FileInfo if you want use a file as input and string is now used to convert plaintext JSON
 * Bump *CommunityToolkit* from 8.3.2 to 8.4.0
 * Bump *SharpCompress* from 0.38.0 to 0.39.0
-### Deprecated
+* Bump *libNOM.map* from 0.13.4 to 0.13.5
+
 ### Removed
 * `JObject.GetString(this JToken self, bool indent, bool obfuscate)` extension
+
 ### Fixed
 * CLI
     * An exception when using `Convert` without specifying an output
 * Missing `IsVersion525TheCursedWithCrossSave` in `IContainer`
-* Use `IContainer` to implement `IComparable` and `IEquatable` of `IContainer` instead of `Container`
+* Use `IContainer` instead of `Container` to implement `IComparable` and `IEquatable` of `IContainer`
 * Packaged technology disappears due to the hashes no being UTF-8 conform ([#122 in the NomNom repository](https://github.com/zencq/NomNom/issues/122))
 * Crash caused by changes in the Microsoft platform ([#232 in the NomNom repository](https://github.com/zencq/NomNom/issues/232))
 * Difficulty setting for fishing added in **Aquarius 5.10** was not taken into account
-### Security
 
 ## 0.13.0 (2024-12-02)
 
