@@ -51,12 +51,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.4, )",
-        "resolved": "0.13.4",
-        "contentHash": "uQtznykCV1+zL7vWqu/0jwsB7yk1o9T0ym4YJW+D3wxlOioKkxQglmSeF92w3e3rpJnXpeSr+DVdpiAm4EgMUg==",
+        "requested": "[0.13.5, )",
+        "resolved": "0.13.5",
+        "contentHash": "puaMk8OQEYYw4nN/d9MRmWlS8SzW4nzb5gFCSM8dE1Szjx0S36W7C7s/cPyJmPAqJ6jLU931ofXYPsJppoXvjA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "13.0.1"
+          "Octokit": "14.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -172,8 +172,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "13.0.1",
-        "contentHash": "tjXTa2FXzbd3n17VWpi8UXe05EIJqHcWJW8C2kukftIve00duWiZL8x4i1vlZQ0zQ4RbRANbRc7J5K7Co/1spQ=="
+        "resolved": "14.0.0",
+        "contentHash": "jGOuTH1l+TCpJH+fwYOp7USzHDuGfN1jKbLz3J2COwyn+wL08eynvpnM6rY2qkzIEXum3PN2p2QkP3BW/p9Qcw=="
       },
       "System.Buffers": {
         "type": "Transitive",
@@ -239,12 +239,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.4, )",
-        "resolved": "0.13.4",
-        "contentHash": "uQtznykCV1+zL7vWqu/0jwsB7yk1o9T0ym4YJW+D3wxlOioKkxQglmSeF92w3e3rpJnXpeSr+DVdpiAm4EgMUg==",
+        "requested": "[0.13.5, )",
+        "resolved": "0.13.5",
+        "contentHash": "puaMk8OQEYYw4nN/d9MRmWlS8SzW4nzb5gFCSM8dE1Szjx0S36W7C7s/cPyJmPAqJ6jLU931ofXYPsJppoXvjA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "13.0.1"
+          "Octokit": "14.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -330,8 +330,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "13.0.1",
-        "contentHash": "tjXTa2FXzbd3n17VWpi8UXe05EIJqHcWJW8C2kukftIve00duWiZL8x4i1vlZQ0zQ4RbRANbRc7J5K7Co/1spQ=="
+        "resolved": "14.0.0",
+        "contentHash": "jGOuTH1l+TCpJH+fwYOp7USzHDuGfN1jKbLz3J2COwyn+wL08eynvpnM6rY2qkzIEXum3PN2p2QkP3BW/p9Qcw=="
       },
       "System.Buffers": {
         "type": "Transitive",
@@ -390,12 +390,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.4, )",
-        "resolved": "0.13.4",
-        "contentHash": "uQtznykCV1+zL7vWqu/0jwsB7yk1o9T0ym4YJW+D3wxlOioKkxQglmSeF92w3e3rpJnXpeSr+DVdpiAm4EgMUg==",
+        "requested": "[0.13.5, )",
+        "resolved": "0.13.5",
+        "contentHash": "puaMk8OQEYYw4nN/d9MRmWlS8SzW4nzb5gFCSM8dE1Szjx0S36W7C7s/cPyJmPAqJ6jLU931ofXYPsJppoXvjA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "13.0.1"
+          "Octokit": "14.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -481,8 +481,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "13.0.1",
-        "contentHash": "tjXTa2FXzbd3n17VWpi8UXe05EIJqHcWJW8C2kukftIve00duWiZL8x4i1vlZQ0zQ4RbRANbRc7J5K7Co/1spQ=="
+        "resolved": "14.0.0",
+        "contentHash": "jGOuTH1l+TCpJH+fwYOp7USzHDuGfN1jKbLz3J2COwyn+wL08eynvpnM6rY2qkzIEXum3PN2p2QkP3BW/p9Qcw=="
       },
       "System.Memory": {
         "type": "Transitive",
@@ -526,12 +526,12 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.4, )",
-        "resolved": "0.13.4",
-        "contentHash": "uQtznykCV1+zL7vWqu/0jwsB7yk1o9T0ym4YJW+D3wxlOioKkxQglmSeF92w3e3rpJnXpeSr+DVdpiAm4EgMUg==",
+        "requested": "[0.13.5, )",
+        "resolved": "0.13.5",
+        "contentHash": "puaMk8OQEYYw4nN/d9MRmWlS8SzW4nzb5gFCSM8dE1Szjx0S36W7C7s/cPyJmPAqJ6jLU931ofXYPsJppoXvjA==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
-          "Octokit": "13.0.1"
+          "Octokit": "14.0.0"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -617,8 +617,8 @@
       },
       "Octokit": {
         "type": "Transitive",
-        "resolved": "13.0.1",
-        "contentHash": "tjXTa2FXzbd3n17VWpi8UXe05EIJqHcWJW8C2kukftIve00duWiZL8x4i1vlZQ0zQ4RbRANbRc7J5K7Co/1spQ=="
+        "resolved": "14.0.0",
+        "contentHash": "jGOuTH1l+TCpJH+fwYOp7USzHDuGfN1jKbLz3J2COwyn+wL08eynvpnM6rY2qkzIEXum3PN2p2QkP3BW/p9Qcw=="
       },
       "System.Memory": {
         "type": "Transitive",

@@ -154,10 +154,10 @@ public partial class PlatformMicrosoft : Platform
     private int ParseBlobContainerIndex(ReadOnlySpan<byte> bytes, int offset, out string saveIdentifier, out ContainerExtra extra)
     {
         /**
-         9. SAVE IDENTIFIER LENGTH          (  4)
-        10. SAVE IDENTIFIER                 (VAR) (UTF-16)
-        11. SAVE IDENTIFIER LENGTH          (  4)
-        12. SAVE IDENTIFIER                 (VAR) (UTF-16)
+         9. SAVE IDENTIFIER 1 LENGTH        (  4)
+        10. SAVE IDENTIFIER 1               (VAR) (UTF-16)
+        11. SAVE IDENTIFIER 2 LENGTH        (  4)
+        12. SAVE IDENTIFIER 2               (VAR) (UTF-16) // SAVE IDENTIFIER 2 no longer used since Worlds Part II 5.50
         13. SYNC HEX LENGTH                 (  4)
         14. SYNC HEX                        (VAR) (UTF-16)
         15. BLOB CONTAINER FILE EXTENSION   (  1)
@@ -168,7 +168,10 @@ public partial class PlatformMicrosoft : Platform
         20. TOTAL SIZE OF FILES             (  8) (BLOB CONTAINER EXCLUDED)
         */
 
-        offset += bytes.ReadString(offset, out saveIdentifier) * 2; // saveIdentifier two times in a row
+        // Two slots for identification but only the first one is relevant.
+        offset += bytes.ReadString(offset, out saveIdentifier);
+        offset += bytes.ReadString(offset, out var secondIdentifier);
+
         offset += bytes.ReadString(offset, out var syncTime);
 
         var directoryGuid = bytes.GetGuid(offset + 5);
@@ -178,6 +181,7 @@ public partial class PlatformMicrosoft : Platform
             LastWriteTime = DateTimeOffset.FromFileTime(bytes.Cast<long>(offset + 21)).ToLocalTime(),
             SizeDisk = (uint)(bytes.Cast<long>(offset + 37)),
 
+            MicrosoftHasSecondIdentifier = !string.IsNullOrEmpty(secondIdentifier),
             MicrosoftSyncTime = syncTime,
             MicrosoftBlobContainerExtension = bytes[offset],
             MicrosoftSyncState = (MicrosoftBlobSyncStateEnum)(bytes.Cast<int>(offset + 1)),

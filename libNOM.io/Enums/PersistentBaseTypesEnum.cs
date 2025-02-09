@@ -17,4 +17,6 @@ internal enum PersistentBaseTypesEnum : uint
     SpaceBase,
     GeneratedPlanetBase,
     GeneratedPlanetBaseEdits,
+    PlayerShipBase,
+    FriendsShipBase,
 }

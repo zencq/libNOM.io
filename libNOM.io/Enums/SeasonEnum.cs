@@ -43,5 +43,6 @@ public enum SeasonEnum
     LiquidatorsRedux,
     AquariusRedux,
     CursedRedux,
+    Titan, // 17th
     Future,
 }

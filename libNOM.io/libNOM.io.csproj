@@ -52,7 +52,7 @@
 
 	<!-- Package -->
 	<PropertyGroup Label="General">
-		<Version>0.14.0-beta.17</Version>
+		<Version>0.14.0-beta.20</Version>
 		<Authors>cengelha</Authors>
 		<Description>Provides reading and writing save files from the game No Man's Sky for all possible platforms as well as related actions.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2021</Copyright>
@@ -93,7 +93,7 @@
 		<PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
 		<PackageReference Include="K4os.Compression.LZ4" Version="1.3.8" />
 		<PackageReference Include="LazyCache" Version="2.4.0" />
-		<PackageReference Include="libNOM.map" Version="0.13.4" />
+		<PackageReference Include="libNOM.map" Version="0.13.5" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

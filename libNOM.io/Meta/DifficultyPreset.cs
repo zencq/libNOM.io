@@ -21,12 +21,12 @@ internal static class DifficultyPreset
 
         // Since Waypoint the difficulty is handed differently and therefore needs to be checked in more detail.
         if (container.IsVersion400Waypoint && container.GameMode == PresetGameModeEnum.Normal)
-            return GetCurrentDifficulty(jsonObject) switch
+            return GetCurrentDifficulty(jsonObject, container.ActiveContext) switch
             {
-                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_NORMAL) => DifficultyPresetTypeEnum.Normal,
-                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_CREATIVE) => DifficultyPresetTypeEnum.Creative,
-                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_RELAXED) => DifficultyPresetTypeEnum.Relaxed,
-                var difficulty when difficulty.Equals(Constants.DIFFICULTY_PRESET_SURVIVAL) => DifficultyPresetTypeEnum.Survival,
+                var difficulty when IsPreset(difficulty, Constants.DIFFICULTY_PRESET_NORMAL) => DifficultyPresetTypeEnum.Normal,
+                var difficulty when IsPreset(difficulty, Constants.DIFFICULTY_PRESET_CREATIVE) => DifficultyPresetTypeEnum.Creative,
+                var difficulty when IsPreset(difficulty, Constants.DIFFICULTY_PRESET_RELAXED) => DifficultyPresetTypeEnum.Relaxed,
+                var difficulty when IsPreset(difficulty, Constants.DIFFICULTY_PRESET_SURVIVAL) => DifficultyPresetTypeEnum.Survival,
                 _ => DifficultyPresetTypeEnum.Custom,
             };
 
@@ -40,7 +40,7 @@ internal static class DifficultyPreset
         if (string.IsNullOrWhiteSpace(json))
             return DifficultyPresetTypeEnum.Invalid;
 
-        // Since Omega there can be two difficulties in one save and therefore not determined reliable from a string. Also SeasonData is now stored before DifficultyState.
+        // Since Omega 4.50 there can be two difficulties in one save and therefore not determined reliable from a string. Also SeasonData is now stored before DifficultyState.
         if (container.IsVersion450Omega)
         {
             return DifficultyPresetTypeEnum.Custom;
@@ -70,7 +70,7 @@ internal static class DifficultyPreset
     internal static void Set(Container container, Difficulty preset)
     {
         var jsonObject = container.GetJsonObject();
-        var parameters = new (JToken, string)[] {
+        var parameters = new List<(JToken, string)> {
             // Survival Elements
             (preset.ActiveSurvivalBars.ToString(), "DIFFICULTY_ACTIVE_SURVIVAL_BARS"),
 
@@ -138,6 +138,18 @@ internal static class DifficultyPreset
             (preset.ReputationGain.ToString(), "DIFFICULTY_REPUTATION_GAIN"),
         };
 
+        if (container.IsVersion510Aquarius)
+        {
+            // Fishing Timing
+            parameters.Add((preset.Fishing.ToString(), "DIFFICULTY_FISHING"));
+        }
+
+        if (container.IsVersion550WorldsPartII)
+        {
+            // Universe Population
+            parameters.Add((preset.NPCPopulation.ToString(), "DIFFICULTY_NPC_POPULATION"));
+        }
+
         foreach (var (value, pathIdentifier) in parameters)
             jsonObject.SetValue(value, pathIdentifier);
     }
@@ -146,77 +158,100 @@ internal static class DifficultyPreset
 
     #region Helper
 
-    private static Difficulty GetCurrentDifficulty(JObject jsonObject)
+    private static Difficulty GetCurrentDifficulty(JObject jsonObject, SaveContextQueryEnum context)
     {
         // Survival Elements
-        var activeSurvivalBars = jsonObject.GetValue<ActiveSurvivalBarsDifficultyEnum>("DIFFICULTY_ACTIVE_SURVIVAL_BARS");
+        var activeSurvivalBars = jsonObject.GetValue<ActiveSurvivalBarsDifficultyEnum>("DIFFICULTY_ACTIVE_SURVIVAL_BARS", context);
 
         // Survival Difficulty
-        var hazardDrain = jsonObject.GetValue<HazardDrainDifficultyEnum>("DIFFICULTY_HAZARD_DRAIN");
-        var energyDrain = jsonObject.GetValue<EnergyDrainDifficultyEnum>("DIFFICULTY_ENERGY_DRAIN");
+        var hazardDrain = jsonObject.GetValue<HazardDrainDifficultyEnum>("DIFFICULTY_HAZARD_DRAIN", context);
+        var energyDrain = jsonObject.GetValue<EnergyDrainDifficultyEnum>("DIFFICULTY_ENERGY_DRAIN", context);
 
         // Natural Resources
-        var substanceCollection = jsonObject.GetValue<SubstanceCollectionDifficultyEnum>("DIFFICULTY_SUBSTANCE_COLLECTION");
+        var substanceCollection = jsonObject.GetValue<SubstanceCollectionDifficultyEnum>("DIFFICULTY_SUBSTANCE_COLLECTION", context);
 
         // Sprinting
-        var sprintingCost = jsonObject.GetValue<SprintingCostDifficultyEnum>("DIFFICULTY_SPRINTING_COST");
+        var sprintingCost = jsonObject.GetValue<SprintingCostDifficultyEnum>("DIFFICULTY_SPRINTING_COST", context);
 
         // Scanner Recharge
-        var scannerRecharge = jsonObject.GetValue<ScannerRechargeDifficultyEnum>("DIFFICULTY_SCANNER_RECHARGE");
+        var scannerRecharge = jsonObject.GetValue<ScannerRechargeDifficultyEnum>("DIFFICULTY_SCANNER_RECHARGE", context);
 
         // Damage Levels
-        var damageReceived = jsonObject.GetValue<DamageReceivedDifficultyEnum>("DIFFICULTY_DAMAGE_RECEIVED");
+        var damageReceived = jsonObject.GetValue<DamageReceivedDifficultyEnum>("DIFFICULTY_DAMAGE_RECEIVED", context);
 
         // Technology Damage
-        var breakTechOnDamage = jsonObject.GetValue<BreakTechOnDamageProbabilityEnum>("DIFFICULTY_BREAK_TECH_ON_DAMAGE");
+        var breakTechOnDamage = jsonObject.GetValue<BreakTechOnDamageProbabilityEnum>("DIFFICULTY_BREAK_TECH_ON_DAMAGE", context);
 
         // Death Consequences
-        var deathConsequences = jsonObject.GetValue<DeathConsequencesDifficultyEnum>("DIFFICULTY_DEATH_CONSEQUENCES");
+        var deathConsequences = jsonObject.GetValue<DeathConsequencesDifficultyEnum>("DIFFICULTY_DEATH_CONSEQUENCES", context);
+
+        // Universe Population
+        var npcPopulation = jsonObject.GetValue<NPCPopulationDifficultyEnum?>("DIFFICULTY_NPC_POPULATION", context);
 
         // Fuel Usage
-        var chargingRequirements = jsonObject.GetValue<ChargingRequirementsDifficultyEnum>("DIFFICULTY_CHARGING_REQUIREMENTS");
-        var fuelUse = jsonObject.GetValue<FuelUseDifficultyEnum>("DIFFICULTY_FUEL_USE");
-        var launchFuelCost = jsonObject.GetValue<LaunchFuelCostDifficultyEnum>("DIFFICULTY_LAUNCH_FUEL_COST");
+        var chargingRequirements = jsonObject.GetValue<ChargingRequirementsDifficultyEnum>("DIFFICULTY_CHARGING_REQUIREMENTS", context);
+        var fuelUse = jsonObject.GetValue<FuelUseDifficultyEnum>("DIFFICULTY_FUEL_USE", context);
+        var launchFuelCost = jsonObject.GetValue<LaunchFuelCostDifficultyEnum>("DIFFICULTY_LAUNCH_FUEL_COST", context);
 
         // Crafting
-        var craftingIsFree = jsonObject.GetValue<bool>("DIFFICULTY_CRAFTING_IS_FREE");
+        var craftingIsFree = jsonObject.GetValue<bool>("DIFFICULTY_CRAFTING_IS_FREE", context);
 
         // Purchases
-        var currencyCost = jsonObject.GetValue<CurrencyCostDifficultyEnum>("DIFFICULTY_CURRENCY_COST");
+        var currencyCost = jsonObject.GetValue<CurrencyCostDifficultyEnum>("DIFFICULTY_CURRENCY_COST", context);
 
         // Goods Availability
-        var itemShopAvailability = jsonObject.GetValue<ItemShopAvailabilityDifficultyEnum>("DIFFICULTY_ITEM_SHOP_AVAILABILITY");
+        var itemShopAvailability = jsonObject.GetValue<ItemShopAvailabilityDifficultyEnum>("DIFFICULTY_ITEM_SHOP_AVAILABILITY", context);
 
         // Inventory Stack Limits
-        var inventoryStackLimits = jsonObject.GetValue<InventoryStackLimitsDifficultyEnum>("DIFFICULTY_INVENTORY_STACK_LIMITS");
+        var inventoryStackLimits = jsonObject.GetValue<InventoryStackLimitsDifficultyEnum>("DIFFICULTY_INVENTORY_STACK_LIMITS", context);
 
         // Enemy Strength
-        var damageGiven = jsonObject.GetValue<DamageGivenDifficultyEnum>("DIFFICULTY_DAMAGE_GIVEN");
+        var damageGiven = jsonObject.GetValue<DamageGivenDifficultyEnum>("DIFFICULTY_DAMAGE_GIVEN", context);
 
         // On-Foot Combat
-        var groundCombatTimers = jsonObject.GetValue<CombatTimerDifficultyOptionEnum>("DIFFICULTY_GROUND_COMBAT_TIMERS");
+        var groundCombatTimers = jsonObject.GetValue<CombatTimerDifficultyOptionEnum>("DIFFICULTY_GROUND_COMBAT_TIMERS", context);
 
         // Space Combat
-        var spaceCombatTimers = jsonObject.GetValue<CombatTimerDifficultyOptionEnum>("DIFFICULTY_SPACE_COMBAT_TIMERS");
+        var spaceCombatTimers = jsonObject.GetValue<CombatTimerDifficultyOptionEnum>("DIFFICULTY_SPACE_COMBAT_TIMERS", context);
 
         // Creatures
-        var creatureHostility = jsonObject.GetValue<CreatureHostilityDifficultyEnum>("DIFFICULTY_CREATURE_HOSTILITY");
+        var creatureHostility = jsonObject.GetValue<CreatureHostilityDifficultyEnum>("DIFFICULTY_CREATURE_HOSTILITY", context);
 
         // Inventory Transfer Range
-        var inventoriesAlwaysInRange = jsonObject.GetValue<bool>("DIFFICULTY_INVENTORIES_ALWAYS_IN_RANGE");
+        var inventoriesAlwaysInRange = jsonObject.GetValue<bool>("DIFFICULTY_INVENTORIES_ALWAYS_IN_RANGE", context);
 
         // Hyperdrive System Access
-        var warpDriveRequirements = jsonObject.GetValue<bool>("DIFFICULTY_WARP_DRIVE_REQUIREMENTS");
+        var warpDriveRequirements = jsonObject.GetValue<bool>("DIFFICULTY_WARP_DRIVE_REQUIREMENTS", context);
 
         // Base Power
-        var baseAutoPower = jsonObject.GetValue<bool>("DIFFICULTY_BASE_AUTO_POWER");
+        var baseAutoPower = jsonObject.GetValue<bool>("DIFFICULTY_BASE_AUTO_POWER", context);
+
+        // Fishing Timing
+        var fishing = jsonObject.GetValue<FishingDifficultyEnum?>("DIFFICULTY_FISHING", context);
 
         // Reputation & Standing Gain
-        var reputationGain = jsonObject.GetValue<ReputationGainDifficultyEnum>("DIFFICULTY_REPUTATION_GAIN");
+        var reputationGain = jsonObject.GetValue<ReputationGainDifficultyEnum>("DIFFICULTY_REPUTATION_GAIN", context);
 
-        return new(activeSurvivalBars, hazardDrain, energyDrain, substanceCollection, sprintingCost, scannerRecharge, damageReceived, breakTechOnDamage, deathConsequences, chargingRequirements, fuelUse, launchFuelCost, craftingIsFree, currencyCost, itemShopAvailability, inventoryStackLimits, damageGiven, groundCombatTimers, spaceCombatTimers, creatureHostility, inventoriesAlwaysInRange, warpDriveRequirements, baseAutoPower, reputationGain);
+        return new(activeSurvivalBars, hazardDrain, energyDrain, substanceCollection, sprintingCost, scannerRecharge, damageReceived, breakTechOnDamage, deathConsequences, npcPopulation, chargingRequirements, fuelUse, launchFuelCost, craftingIsFree, currencyCost, itemShopAvailability, inventoryStackLimits, damageGiven, groundCombatTimers, spaceCombatTimers, creatureHostility, inventoriesAlwaysInRange, warpDriveRequirements, baseAutoPower, fishing, reputationGain);
     }
 
+    private static bool IsPreset(Difficulty difficulty, Difficulty preset)
+    {
+        foreach (var property in typeof(Difficulty).GetProperties())
+        {
+            var value = property.GetValue(difficulty);
+
+            // This is a case for settings that have been added in a later version.
+            if (property.PropertyType.IsNullable() && value is null)
+                continue;
+
+            if (!value!.Equals(property.GetValue(preset)))
+                return false;
+        }
+        return true;
+    }
+
+    // Newly added settings can be ignored here as it will never be reached (see comment about Omega 4.50 in calling method). 
     private static bool IsPreset(string json, Difficulty preset)
     {
         string[] settings = [

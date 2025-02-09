@@ -460,7 +460,7 @@ public class PlaystationTest : CommonTestClass
         {
             new(3, "Slot2Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4146, 4658, GameVersionEnum.Echoes, "Eggsave", "Aboard the Space Anomaly", 23349),
 
-            new(9, "Slot5Manual", true, true, false, true, true, true, true, true, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4148, 4660, GameVersionEnum.Omega, "Purfex", "Within HydroFarm Paradise", 2721229),
+            new(9, "Slot5Manual", true, true, false, true, true, true, true, true, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4148, 4660, GameVersionEnum.Omega, "Purfex", "Within HydroFarm Paradise", 2721229),
 
             new(10, "Slot6Auto", true, true, false, true, true, true, true, true, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4148, 4660, GameVersionEnum.Omega, "Purfex", "Within HydroFarm Paradise", 2742841),
         };

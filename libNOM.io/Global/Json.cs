@@ -50,7 +50,7 @@ internal static partial class Json
         while (index >= 0) // to not store unchanged paths multiple times
         {
             if (paths.ContainsIndex(index) && !string.IsNullOrEmpty(paths[index])) // skip empty strings for Vanilla save structure
-                return string.IsNullOrEmpty(contextKey) ? [paths[index]] : [string.Format(paths[index], contextKey)]; // [] to have a consistent return type
+                return string.IsNullOrEmpty(contextKey) ? [paths[index]] : [string.Format(paths[index], contextKey)];
 
             index -= 2; // 2 obfuscation states per save structure
         }
