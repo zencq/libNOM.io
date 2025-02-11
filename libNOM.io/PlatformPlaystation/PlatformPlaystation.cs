@@ -16,7 +16,8 @@ public partial class PlatformPlaystation : Platform
     protected const uint META_HEADER = 0xCA55E77E;
     internal override int META_LENGTH_TOTAL_VANILLA => _usesSaveWizard ? 0x30 : 0x20; // 48 : 32
     internal override int META_LENGTH_TOTAL_WAYPOINT => _usesSaveWizard ? 0x70 : 0x0; // 112 : 0 // actually _FRONTIERS would be more accurate as there was no changed in Waypoint for PlayStation but reusing it as it has to be implemented anyway and would have no use otherwise
-    internal override int META_LENGTH_TOTAL_WORLDS => META_LENGTH_TOTAL_WAYPOINT; // no changes for this platform
+    internal override int META_LENGTH_TOTAL_WORLDS_PART_I => META_LENGTH_TOTAL_WAYPOINT; // no changes for this platform
+    internal override int META_LENGTH_TOTAL_WORLDS_PART_II => META_LENGTH_TOTAL_WAYPOINT; // no changes for this platform
 
     private const uint MEMORYDAT_LENGTH_ACCOUNTDATA = 0x40000U;
     private const uint MEMORYDAT_LENGTH_CONTAINER = 0x300000U;

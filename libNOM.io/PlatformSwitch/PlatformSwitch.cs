@@ -15,7 +15,7 @@ public partial class PlatformSwitch : Platform
     protected override int META_LENGTH_KNOWN_VANILLA => 0x28; // 40
     internal override int META_LENGTH_TOTAL_VANILLA => 0x64; // 100
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x164; // 356
-    internal override int META_LENGTH_TOTAL_WORLDS => 0x174; // 372
+    internal override int META_LENGTH_TOTAL_WORLDS_PART_I => 0x174; // 372
 
     #endregion
 }

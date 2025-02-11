@@ -175,11 +175,23 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         if (capacity == 0)
             capacity = container.GameVersion switch
             {
-                >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
+                >= GameVersionEnum.WorldsPartIIWithDifficultyTag => META_LENGTH_TOTAL_WORLDS_PART_II,
+                >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS_PART_I,
                 >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
                 _ => META_LENGTH_TOTAL_VANILLA,
             };
         return capacity;
+    }
+
+    protected static uint GetMetaFormat(Container container)
+    {
+        return container.GameVersion switch // 4
+        {
+            >= GameVersionEnum.WorldsPartII => Constants.META_FORMAT_4,
+            >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_3,
+            >= GameVersionEnum.Frontiers => Constants.META_FORMAT_2,
+            _ => Constants.META_FORMAT_1,
+        };
     }
 
     /// <summary>
@@ -217,7 +229,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <param name="writer"></param>
-    protected virtual void OverwriteWorldsMeta(BinaryWriter writer, Container container)
+    protected virtual void OverwriteWorldsPart1Meta(BinaryWriter writer, Container container)
     {
         if (container.IsVersion500WorldsPartI)
         {
@@ -227,7 +239,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
             // Skip next 8 bytes with SLOT IDENTIFIER.
             writer.Seek(0x8, SeekOrigin.Current);
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
-            writer.Write(Constants.META_FORMAT_3); // 4
+            writer.Write(GetMetaFormat(container)); // 4 // META_FORMAT_3 or META_FORMAT_4
         }
     }
 

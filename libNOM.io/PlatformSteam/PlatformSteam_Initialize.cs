@@ -72,35 +72,46 @@ public partial class PlatformSteam : Platform
     protected override void UpdateContainerWithMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         /**
-          0. META HEADER          (  4)
-          1. META FORMAT          (  4)
-          2. SPOOKY HASH          ( 16) // META_FORMAT_1
-          6. SHA256 HASH          ( 32) // META_FORMAT_1
-         14. DECOMPRESSED SIZE    (  4) // META_FORMAT_3
-         15. COMPRESSED SIZE      (  4) // META_FORMAT_3
-         16. PROFILE HASH         (  4) // META_FORMAT_0
-         17. BASE VERSION         (  4) // META_FORMAT_3
-         18. GAME MODE            (  2) // META_FORMAT_3
-         18. SEASON               (  2) // META_FORMAT_3
+           0. META HEADER           (  4)
+           1. META FORMAT           (  4)
+           2. SPOOKY HASH           ( 16) // META_FORMAT_1
+           6. SHA256 HASH           ( 32) // META_FORMAT_1
+          14. DECOMPRESSED SIZE     (  4) // META_FORMAT_4
+          15. COMPRESSED SIZE       (  4) // META_FORMAT_4
+          16. PROFILE HASH          (  4) // META_FORMAT_0
+          17. BASE VERSION          (  4) // META_FORMAT_4
+          18. GAME MODE             (  2) // META_FORMAT_4
+          18. SEASON                (  2) // META_FORMAT_4
           19. TOTAL PLAY TIME       (  8) // META_FORMAT_4
-         20. EMPTY                (  8)
 
-         22. EMPTY                ( 16) // META_FORMAT_1
-                                  (104)
+          21. EMPTY                 ( 20) // META_FORMAT_1
+                                    (104)
 
-         22. SAVE NAME            (128) // META_FORMAT_3 // may contain additional junk data after null terminator
-         54. SAVE SUMMARY         (128) // META_FORMAT_3 // may contain additional junk data after null terminator
+          21. EMPTY                 (  4) // META_FORMAT_4
+          22. SAVE NAME             (128) // META_FORMAT_4 // may contain additional junk data after null terminator
+          54. SAVE SUMMARY          (128) // META_FORMAT_4 // may contain additional junk data after null terminator
+         
+          86. DIFFICULTY PRESET     (  1) // META_FORMAT_2
+          86. EMPTY                 ( 15) // META_FORMAT_2 // may contain additional junk data
+                                    (360)
 
-         86. DIFFICULTY PRESET    (  1) // META_FORMAT_2
-         86. EMPTY                ( 15) // META_FORMAT_2 // may contain additional junk data
-                                  (360)
+          86. DIFFICULTY PRESET     (  4) // META_FORMAT_4
+          87. SLOT IDENTIFIER       (  8) // META_FORMAT_4
+          89. TIMESTAMP             (  4) // META_FORMAT_4
+          90. META FORMAT           (  4) // META_FORMAT_4
+          91. EMPTY                 ( 20) // META_FORMAT_4
+                                    (384)
 
-         86. DIFFICULTY PRESET    (  4) // META_FORMAT_3
-         87. SLOT IDENTIFIER      (  8) // META_FORMAT_3
-         89. TIMESTAMP            (  4) // META_FORMAT_3
-         90. META FORMAT          (  4) // META_FORMAT_3
-         91. EMPTY                ( 20) // META_FORMAT_3
-                                  (384)
+          21. ???                   (  4) // META_FORMAT_4
+          22. SAVE NAME             (128) // META_FORMAT_4
+          54. SAVE SUMMARY          (128) // META_FORMAT_4
+          86. DIFFICULTY PRESET     (  4) // META_FORMAT_4
+          87. SLOT IDENTIFIER       (  8) // META_FORMAT_4
+          89. TIMESTAMP             (  4) // META_FORMAT_4
+          90. META FORMAT           (  4) // META_FORMAT_4
+          91. DIFFICULTY TAG        ( 64) // META_FORMAT_4
+         107. EMPTY                 (  4) // META_FORMAT_4
+                                    (432)
          */
 
         // Do not write wrong data in case a step before failed.
@@ -136,7 +147,7 @@ public partial class PlatformSteam : Platform
             UpdateSaveContainerWithWaypointMetaInformation(container, disk);
 
         // Extended metadata since Worlds Part I 5.00.
-        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I)
             UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
 
         // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.

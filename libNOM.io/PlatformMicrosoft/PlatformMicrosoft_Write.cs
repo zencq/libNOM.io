@@ -137,7 +137,7 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 4 or 260 or 276
 
             OverwriteWaypointMeta(writer, container);
-            OverwriteWorldsMeta(writer, container);
+            OverwriteWorldsPart1Meta(writer, container);
         }
 
         return buffer.AsSpan().Cast<byte, uint>();

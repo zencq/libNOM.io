@@ -20,7 +20,7 @@ public partial class PlatformMicrosoft : Platform
     protected override int META_LENGTH_KNOWN_VANILLA => 0x14; // 20
     internal override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x118; // 280
-    internal override int META_LENGTH_TOTAL_WORLDS => 0x128; // 296
+    internal override int META_LENGTH_TOTAL_WORLDS_PART_I => 0x128; // 296
 
     private const int BLOBCONTAINER_HEADER = 0x4; // 4
     private const int BLOBCONTAINER_COUNT = 0x2; // 2

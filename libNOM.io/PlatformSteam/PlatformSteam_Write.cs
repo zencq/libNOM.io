@@ -34,36 +34,41 @@ public partial class PlatformSteam : Platform
         using var writer = new BinaryWriter(new MemoryStream(buffer));
 
         writer.Write(META_HEADER); // 4
-        writer.Write(container.GameVersion switch // 4
-        {
-            >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_3,
-            >= GameVersionEnum.Frontiers => Constants.META_FORMAT_2,
-            _ => Constants.META_FORMAT_1,
-        });
+        writer.Write(GetMetaFormat(container)); // 4
 
-        if (container.IsSave && container.IsVersion360Frontiers) // META_FORMAT_2 and META_FORMAT_3
+        if (container.IsSave && container.IsVersion360Frontiers) // META_FORMAT_2 and META_FORMAT_3 and META_FORMAT_4
         {
             // SPOOKY HASH and SHA256 HASH not used.
             writer.Seek(0x30, SeekOrigin.Current); // 16 + 32 = 48
 
             writer.Write(container.Extra.SizeDecompressed); // 4
 
-            // COMPRESSED SIZE and PROFILE HASH not used.
-            writer.Seek(0x8, SeekOrigin.Current); // 4 + 4 = 8
+            if (container.IsVersion500WorldsPartI)
+            {
+                writer.Write(container.Extra.SizeDecompressed); // 4
+
+                // PROFILE HASH not used.
+                writer.Seek(0x4, SeekOrigin.Current); // 4
+            }
+            else
+            {
+                // COMPRESSED SIZE and PROFILE HASH not used.
+                writer.Seek(0x8, SeekOrigin.Current); // 4 + 4 = 8
+            }
 
             writer.Write(container.BaseVersion); // 4
             writer.Write((ushort)(container.GameMode)); // 2
             writer.Write((ushort)(container.Season)); // 2
-            writer.Write(container.TotalPlayTime); // 4
+            writer.Write(container.TotalPlayTime); // 8
 
             // Skip EMPTY bytes.
-            writer.Seek(0x8, SeekOrigin.Current); // 8
+            writer.Seek(0x4, SeekOrigin.Current); // 4
 
             // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
-            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 272 or 296
+            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 276 or 300 or 348
 
             OverwriteWaypointMeta(writer, container);
-            OverwriteWorldsMeta(writer, container);
+            OverwriteWorldsPart1Meta(writer, container);
         }
         else // META_FORMAT_1
         {
@@ -71,16 +76,16 @@ public partial class PlatformSteam : Platform
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_KNOWN_VANILLA, SeekOrigin.Begin);
-            writer.Write(container.Extra.Bytes ?? []); // 16
+            writer.Write(container.Extra.Bytes ?? []); // 20
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    protected override void OverwriteWorldsMeta(BinaryWriter writer, Container container)
+    protected override void OverwriteWorldsPart1Meta(BinaryWriter writer, Container container)
     {
         // Write appended.
-        base.OverwriteWorldsMeta(writer, container);
+        base.OverwriteWorldsPart1Meta(writer, container);
 
         // Overwrite changed.
         if (container.IsVersion500WorldsPartI)

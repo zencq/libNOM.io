@@ -106,7 +106,7 @@ public partial class PlatformSwitch : Platform
             UpdateSaveContainerWithWaypointMetaInformation(container, disk);
 
         // Extended metadata since Worlds Part I 5.00.
-        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I)
             UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
 
         // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
