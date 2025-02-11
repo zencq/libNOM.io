@@ -77,6 +77,12 @@ public abstract class CommonTestClass
             Assert.AreEqual(expected, value);
     }
 
+    protected static void AssertAllAreEqual(ulong expected, params ulong[] actual)
+    {
+        foreach (var value in actual)
+            Assert.AreEqual(expected, value);
+    }
+
     protected static void AssertAllAreEqual(string expected, params string?[] actual)
     {
         foreach (var value in actual)

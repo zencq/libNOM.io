@@ -186,7 +186,7 @@ public class SteamTest : CommonTestClass
         AssertAllAreEqual(results.BaseVersion, (uint)(int)(prijectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(prijectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[17], metaB[17]);
         AssertAllAreEqual(results.GameMode, (ushort)(prijectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(prijectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 72), BitConverter.ToInt16(bytesB, 72));
         AssertAllAreEqual(results.Season, (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 74), BitConverter.ToUInt16(bytesA, 74));
-        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[19], metaB[19]);
+        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[19], metaB[19]); // metaA and metaB are actual uint but the values we compare are low enough to not require a ulong
 
         if (results.BaseVersion < 4140) // Waypoint
             return;

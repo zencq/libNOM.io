@@ -82,7 +82,7 @@ public partial class PlatformSteam : Platform
          17. BASE VERSION         (  4) // META_FORMAT_3
          18. GAME MODE            (  2) // META_FORMAT_3
          18. SEASON               (  2) // META_FORMAT_3
-         19. TOTAL PLAY TIME      (  4) // META_FORMAT_3
+          19. TOTAL PLAY TIME       (  8) // META_FORMAT_4
          20. EMPTY                (  8)
 
          22. EMPTY                ( 16) // META_FORMAT_1
@@ -114,7 +114,7 @@ public partial class PlatformSteam : Platform
                 BaseVersion = (int)(decompressed[17]),
                 GameMode = disk.Cast<ushort>(72),
                 Season = disk.Cast<ushort>(74),
-                TotalPlayTime = decompressed[19],
+                TotalPlayTime = disk.Cast<ulong>(76),
             };
 
             base.UpdateContainerWithMetaInformation(container, disk, decompressed);

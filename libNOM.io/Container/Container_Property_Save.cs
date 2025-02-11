@@ -134,7 +134,7 @@ public partial class Container : IContainer
         internal set => Extra = Extra with { Season = (ushort)(value) };
     }
 
-    public uint TotalPlayTime // { get; set; }
+    public ulong TotalPlayTime // { get; set; }
     {
         get
         {

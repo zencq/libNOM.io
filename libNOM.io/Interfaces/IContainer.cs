@@ -308,7 +308,7 @@ public interface IContainer : IComparable<IContainer>, IEquatable<IContainer>
     /// <summary>
     /// Total time played in seconds.
     /// </summary>
-    public uint TotalPlayTime { get; set; }
+    public ulong TotalPlayTime { get; set; }
 
     #endregion
 

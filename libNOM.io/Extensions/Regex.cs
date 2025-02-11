@@ -6,16 +6,25 @@ namespace libNOM.io.Extensions;
 internal static partial class MatchExtensions
 {
     /// <summary>
-    /// Gets the captured substring from the input string as an integer.
+    /// Converts the captured substring to an integer.
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
     /// <exception cref="FormatException" />
     /// <exception cref="OverflowException" />
-    internal static uint ToUInt32Value(this Match self) => System.Convert.ToUInt32(self.Groups[1].Value);
+    internal static int ToInt32Value(this Match self) => System.Convert.ToInt32(self.Groups[1].Value);
+
+    /// <summary>
+    /// Converts the captured substring to an unsigned integer.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    /// <exception cref="FormatException" />
+    /// <exception cref="OverflowException" />
+    internal static ulong ToUInt64Value(this Match self) => System.Convert.ToUInt64(self.Groups[1].Value);
 
     /// <Gets>
-    /// Gets the captured substring from the input string.
+    /// Gets the captured substring.
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>

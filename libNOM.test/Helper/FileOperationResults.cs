@@ -7,5 +7,5 @@ public record class FileOperationResults(
     SeasonEnum Season,
     int BaseVersion,
     GameVersionEnum GameVersion,
-    uint TotalPlayTime
+    ulong TotalPlayTime
 );
