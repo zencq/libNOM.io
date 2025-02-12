@@ -448,7 +448,7 @@ public class SteamTest : CommonTestClass
     /// No changes compared to <see cref="T220_Write_Default_0x7D2_Waypoint_Account"/>.
     /// </summary>
     [TestMethod]
-    public void T222_Write_Default_0x7D3_Worlds_Account()
+    public void T222_Write_Default_0x7D3_WorldsPartI_Account()
     {
         // Arrange
         var originMusicVolume = 80; // 80
@@ -461,7 +461,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T223_Write_Default_0x7D3_Worlds()
+    public void T223_Write_Default_0x7D3_WorldsPartI()
     {
         // Arrange
         var containerIndex = 0;

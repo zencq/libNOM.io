@@ -57,7 +57,7 @@ public partial class PlatformSwitch : Platform
         writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 60 or 272
 
         OverwriteWaypointMeta(writer, container);
-        OverwriteWorldsPart1Meta(writer, container);
+        OverwriteWorldsMeta(writer, container);
 
         return buffer;
     }

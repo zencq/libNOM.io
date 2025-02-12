@@ -43,55 +43,42 @@ public partial class PlatformSteam : Platform
 
             writer.Write(container.Extra.SizeDecompressed); // 4
 
-            if (container.IsVersion500WorldsPartI)
-            {
-                writer.Write(container.Extra.SizeDecompressed); // 4
-
-                // PROFILE HASH not used.
-                writer.Seek(0x4, SeekOrigin.Current); // 4
-            }
-            else
-            {
-                // COMPRESSED SIZE and PROFILE HASH not used.
-                writer.Seek(0x8, SeekOrigin.Current); // 4 + 4 = 8
-            }
+            // COMPRESSED SIZE and PROFILE HASH not used.
+            writer.Seek(0x8, SeekOrigin.Current); // 4 + 4 = 8
 
             writer.Write(container.BaseVersion); // 4
             writer.Write((ushort)(container.GameMode)); // 2
             writer.Write((ushort)(container.Season)); // 2
             writer.Write(container.TotalPlayTime); // 8
 
-            // Skip EMPTY bytes.
-            writer.Seek(0x4, SeekOrigin.Current); // 4
-
             // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
-            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 276 or 300 or 348
+            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 20 or 276 or 300 or 348
 
             OverwriteWaypointMeta(writer, container);
-            OverwriteWorldsPart1Meta(writer, container);
+            OverwriteWorldsMeta(writer, container);
         }
         else // META_FORMAT_1
         {
             AppendHashes(writer, data); // 8 + 8 + 32 = 48
 
             // Seek to position of last known byte and append the cached bytes.
-            writer.Seek(META_LENGTH_KNOWN_VANILLA, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_AFTER_VANILLA, SeekOrigin.Begin);
             writer.Write(container.Extra.Bytes ?? []); // 20
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
     }
 
-    protected override void OverwriteWorldsPart1Meta(BinaryWriter writer, Container container)
+    protected override void OverwriteWorldsMeta(BinaryWriter writer, Container container)
     {
         // Write appended.
-        base.OverwriteWorldsPart1Meta(writer, container);
+        base.OverwriteWorldsMeta(writer, container);
 
         // Overwrite changed.
         if (container.IsVersion500WorldsPartI)
         {
             // COMPRESSED SIZE is used again.
-            writer.Seek(0x3C, SeekOrigin.Begin); // 4 + 4 + 16 + 32 = 48
+            writer.Seek(0x3C, SeekOrigin.Begin); // 4 + 4 + 16 + 32 + 4 = 60
             writer.Write(container.Extra.SizeDisk); // 4
         }
     }

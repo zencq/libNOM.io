@@ -120,7 +120,7 @@ public partial class PlatformSteam : Platform
             // Vanilla metadata always available but not always set depending on the META_FORMAT.
             container.Extra = container.Extra with
             {
-                Bytes = disk[META_LENGTH_KNOWN_VANILLA..].ToArray(),
+                Bytes = disk[META_LENGTH_AFTER_VANILLA..].ToArray(),
                 SizeDecompressed = decompressed[14],
                 BaseVersion = (int)(decompressed[17]),
                 GameMode = disk.Cast<ushort>(72),
@@ -146,9 +146,9 @@ public partial class PlatformSteam : Platform
         if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
             UpdateSaveContainerWithWaypointMetaInformation(container, disk);
 
-        // Extended metadata since Worlds Part I 5.00.
-        if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I)
-            UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
+        // Extended metadata since Worlds Part I 5.00 and once more since Worlds Part II 5.53.
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I || disk.Length == META_LENGTH_TOTAL_WORLDS_PART_II)
+            UpdateSaveContainerWithWorldsMetaInformation(container, disk, decompressed);
 
         // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
         container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));

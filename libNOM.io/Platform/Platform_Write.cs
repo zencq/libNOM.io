@@ -212,13 +212,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         if (container.IsVersion400Waypoint)
         {
-            writer.Seek(META_LENGTH_KNOWN_VANILLA, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_BEFORE_NAME, SeekOrigin.Begin);
             writer.Write(container.SaveName.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN_NAME, SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
+            writer.Seek(META_LENGTH_BEFORE_SUMMARY, SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
             writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_BEFORE_DIFFICULTY_PRESET, SeekOrigin.Begin);
             writer.Write((byte)(container.Difficulty)); // 1
         }
     }
@@ -229,15 +229,15 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     /// </summary>
     /// <param name="container"></param>
     /// <param name="writer"></param>
-    protected virtual void OverwriteWorldsPart1Meta(BinaryWriter writer, Container container)
+    protected virtual void OverwriteWorldsMeta(BinaryWriter writer, Container container)
     {
         if (container.IsVersion500WorldsPartI)
         {
-            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_BEFORE_DIFFICULTY_PRESET, SeekOrigin.Begin);
             writer.Write((uint)(container.Difficulty)); // 4
 
-            // Skip next 8 bytes with SLOT IDENTIFIER.
-            writer.Seek(0x8, SeekOrigin.Current);
+            // Skip SLOT IDENTIFIER.
+            writer.Seek(META_LENGTH_BEFORE_TIMESTAMP, SeekOrigin.Begin);
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
             writer.Write(GetMetaFormat(container)); // 4 // META_FORMAT_3 or META_FORMAT_4
         }

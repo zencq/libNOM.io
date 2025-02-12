@@ -279,20 +279,20 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         container.Extra = container.Extra with
         {
-            SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-            SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-            DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // just a single byte to be able to use a common method for all platforms
+            SaveName = disk.Slice(META_LENGTH_BEFORE_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            SaveSummary = disk.Slice(META_LENGTH_BEFORE_SUMMARY, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            DifficultyPreset = disk[META_LENGTH_BEFORE_DIFFICULTY_PRESET], // just a single byte to be able to use a common method for all platforms
         };
     }
 
-    protected virtual void UpdateSaveContainerWithWorldsPart1MetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
+    protected virtual void UpdateSaveContainerWithWorldsMetaInformation(Container container, ReadOnlySpan<byte> disk, ReadOnlySpan<uint> decompressed)
     {
         container.Extra = container.Extra with
         {
-            SaveName = disk.Slice(META_LENGTH_KNOWN_VANILLA, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-            SaveSummary = disk.Slice(META_LENGTH_KNOWN_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
-            DifficultyPreset = disk[META_LENGTH_KNOWN_SUMMARY], // keep it a single byte to get the correct value if migrated but not updated
-            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[META_LENGTH_KNOWN_IDENTIFIER / 4]).ToLocalTime(),
+            SaveName = disk.Slice(META_LENGTH_BEFORE_NAME, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            SaveSummary = disk.Slice(META_LENGTH_BEFORE_SUMMARY, Constants.SAVE_RENAMING_LENGTH_MANIFEST).GetStringUntilTerminator(),
+            DifficultyPreset = disk[META_LENGTH_BEFORE_DIFFICULTY_PRESET], // keep it a single byte to get the correct value if migrated but not updated
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[META_LENGTH_BEFORE_TIMESTAMP / 4]).ToLocalTime(),
         };
     }
 

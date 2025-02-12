@@ -13,10 +13,11 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     protected virtual int MAX_SAVE_PER_SLOT { get; } = Constants.MAX_SAVE_PER_SLOT; // overridable in case it will be necessary in the future
     internal int MAX_SAVE_TOTAL => MAX_SAVE_SLOTS * MAX_SAVE_PER_SLOT; // { get; } // compute here in case one of the values has been overridden
 
-    protected virtual int META_LENGTH_KNOWN_VANILLA { get; } = -1; // all metadata at the beginning of a file before the first extension in Waypoint
-    protected virtual int META_LENGTH_KNOWN_NAME => META_LENGTH_KNOWN_VANILLA + Constants.SAVE_RENAMING_LENGTH_MANIFEST; // { get; } // ? + 128
-    protected virtual int META_LENGTH_KNOWN_SUMMARY => META_LENGTH_KNOWN_NAME + Constants.SAVE_RENAMING_LENGTH_MANIFEST; // { get; } // ? + 128 // ? + 256
-    protected virtual int META_LENGTH_KNOWN_IDENTIFIER => META_LENGTH_KNOWN_SUMMARY + 4 + 8; // { get; } // ? + 4 + 8 // ? + 268
+    protected virtual int META_LENGTH_AFTER_VANILLA { get; } = -1; // all metadata at the beginning of a file before the first extension in Waypoint
+    protected virtual int META_LENGTH_BEFORE_NAME => META_LENGTH_AFTER_VANILLA; // { get; }
+    protected virtual int META_LENGTH_BEFORE_SUMMARY => META_LENGTH_BEFORE_NAME + Constants.SAVE_RENAMING_LENGTH_MANIFEST; // { get; } // ? + 128
+    protected virtual int META_LENGTH_BEFORE_DIFFICULTY_PRESET => META_LENGTH_BEFORE_SUMMARY + Constants.SAVE_RENAMING_LENGTH_MANIFEST; // { get; } // ? + 128
+    protected virtual int META_LENGTH_BEFORE_TIMESTAMP => META_LENGTH_BEFORE_DIFFICULTY_PRESET + 4 + 8; // { get; } // ? + 4 + 8
 
     internal abstract int META_LENGTH_TOTAL_VANILLA { get; }
     internal abstract int META_LENGTH_TOTAL_WAYPOINT { get; }

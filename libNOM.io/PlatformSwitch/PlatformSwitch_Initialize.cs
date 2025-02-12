@@ -76,7 +76,7 @@ public partial class PlatformSwitch : Platform
 
         container.Extra = container.Extra with
         {
-            Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN_VANILLA..].ToArray(),
+            Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_AFTER_VANILLA..].ToArray(),
             MetaLength = (uint)(disk.Length),
             SizeDecompressed = decompressed[2],
         };
@@ -107,7 +107,7 @@ public partial class PlatformSwitch : Platform
 
         // Extended metadata since Worlds Part I 5.00.
         if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I)
-            UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
+            UpdateSaveContainerWithWorldsMetaInformation(container, disk, decompressed);
 
         // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
         container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));
