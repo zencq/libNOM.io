@@ -34,9 +34,10 @@ public abstract class CommonTestClass
     protected const string DIRECTORY_TESTSUITE_ARCHIVE = "TESTSUITE_ARCHIVE";
     protected const string DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE = "TESTSUITE_ARCHIVE_TEMPLATE";
 
-    protected const uint META_FORMAT_2 = 0x7D1; // 2001
-    protected const uint META_FORMAT_3 = 0x7D2; // 2002
-    protected const uint META_FORMAT_4 = 0x7D3; // 2003
+    protected const uint META_FORMAT_1 = 0x7D1; // 2001
+    protected const uint META_FORMAT_2 = 0x7D2; // 2002
+    protected const uint META_FORMAT_3 = 0x7D3; // 2003
+    protected const uint META_FORMAT_4 = 0x7D4; // 2004
 
     protected static readonly int[] MUSICVOLUME_INDICES = [1, 7];
     protected const string MUSICVOLUME_JSONPATH = "UserSettingsData.MusicVolume";

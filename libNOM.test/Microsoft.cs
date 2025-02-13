@@ -70,7 +70,7 @@ public class MicrosoftTest : CommonTestClass
             else
             {
                 Assert.IsTrue(metaA.Skip(5).Take(67).SequenceEqual(metaB.Skip(5).Take(67)));
-                AssertAllAreEqual(META_FORMAT_4, metaA[73], metaB[73]);
+                AssertAllAreEqual(META_FORMAT_3, metaA[73], metaB[73]);
             }
         }
         else
@@ -640,7 +640,7 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T204_Write_Default_0x7D3_Worlds()
+    public void T204_Write_Default_0x7D3_WorldsPartI()
     {
         // Arrange
         var containerIndex = 0;

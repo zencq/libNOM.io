@@ -18,9 +18,11 @@ public partial class PlatformMicrosoft : Platform
     public static readonly string PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Packages", "HelloGames.NoMansSky_bs190hzg1sesy", "SystemAppData", "wgs");
 
     protected override int META_LENGTH_AFTER_VANILLA => 0x14; // 20
+
     internal override int META_LENGTH_TOTAL_VANILLA => 0x18; // 24
     internal override int META_LENGTH_TOTAL_WAYPOINT => 0x118; // 280
     internal override int META_LENGTH_TOTAL_WORLDS_PART_I => 0x128; // 296
+    internal override int META_LENGTH_TOTAL_WORLDS_PART_II => 0x168; // 360
 
     private const int BLOBCONTAINER_HEADER = 0x4; // 4
     private const int BLOBCONTAINER_COUNT = 0x2; // 2

@@ -22,6 +22,7 @@ public class SwitchTest : CommonTestClass
     protected const uint META_HEADER = 0xCA55E77E;
     protected const int META_LENGTH_TOTAL_VANILLA = 0x64 / sizeof(uint); // 25
     protected const int META_LENGTH_TOTAL_WAYPOINT = 0x164 / sizeof(uint); // 89
+    protected const int META_LENGTH_TOTAL_WORLDS_PART_I = 0x174 / sizeof(uint); // 93
 
     #endregion
 
@@ -40,9 +41,21 @@ public class SwitchTest : CommonTestClass
         if (metaA.Length == META_LENGTH_TOTAL_VANILLA || metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
             AssertAllAreEqual(META_HEADER, metaA[0], metaB[0]);
+            AssertAllAreEqual(META_FORMAT_2, metaA[1], metaB[1]);
+
+            // Skip DECOMPRESSED SIZE and META INDEX and TIMESTAMP.
+            Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
+        }
+        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS_PART_I)
+        {
+            AssertAllAreEqual(META_HEADER, metaA[0], metaB[0]);
             AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
 
-            Assert.IsTrue(metaA.Skip(32).SequenceEqual(metaB.Skip(32)));
+            // Skip DECOMPRESSED SIZE and META INDEX and TIMESTAMP.
+            Assert.IsTrue(metaA.Skip(5).Take(72).SequenceEqual(metaB.Skip(5).Take(72)));
+
+            // Skip TIMESTAMP.
+            Assert.IsTrue(metaA.Skip(78).SequenceEqual(metaB.Skip(78)));
         }
         else
             throw new AssertFailedException();
@@ -165,6 +178,24 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T106_Read()
+    {
+        // Arrange
+        var expectAccountData = true;
+        var path = GetCombinedPath("Switch", "6");
+        var results = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "", "Ouverm殖民地内", 72800),
+            new(1, "Slot1Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "", "Ouverm殖民地内", 72836),
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonRead<PlatformSwitch>(path, results, expectAccountData, userIdentification);
+    }
+
+    [TestMethod]
     public void T200_Write_Default_0x7D2_Frontiers_Account()
     {
         // Arrange
@@ -221,7 +252,35 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T220_Write_SetLastWriteTime_False()
+    public void T220_Write_Default_0x7D3_WorldsPartI_Account()
+    {
+        // Arrange
+        var originMusicVolume = 80; // 80
+        var originUtcTicks = 638749939740000000; // 2025-02-12 21:52:54 +00:00
+        var path = GetCombinedPath("Switch", "6");
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultAccount<PlatformSwitch>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+    }
+
+    [TestMethod]
+    public void T221_Write_Default_0x7D3_WorldsPartI()
+    {
+        // Arrange
+        var containerIndex = 0;
+        var originUnits = 1001175713; // 1.001.175.713
+        var originUtcTicks = 638580996090000000; // 2024-08-01 09:00:09 +00:00 (from meta)
+        var path = GetCombinedPath("Switch", "6");
+        var results = new WriteResults(2, 4153, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 72800, "", "Ouverm殖民地内", (byte)(DifficultyPresetTypeEnum.Custom));
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultSave<PlatformSwitch>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+    }
+
+    [TestMethod]
+    public void T240_Write_SetLastWriteTime_False()
     {
         // Arrange
         var containerIndex = 0;
@@ -235,7 +294,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T230_Write_WriteAlways_False()
+    public void T250_Write_WriteAlways_False()
     {
         var containerIndex = 0;
         var path = GetCombinedPath("Switch", "1");
@@ -246,7 +305,7 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T231_Write_WriteAlways_True()
+    public void T251_Write_WriteAlways_True()
     {
         var containerIndex = 0;
         var path = GetCombinedPath("Switch", "1");

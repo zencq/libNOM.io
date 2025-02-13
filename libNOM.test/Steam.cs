@@ -111,7 +111,7 @@ public class SteamTest : CommonTestClass
             if (container.IsAccount || container.IsSave && !container.IsVersion360Frontiers)
             {
                 // Editing account data is possible since Frontiers and therefore has always the new format but otherwise uses the old format.
-                AssertAllAreEqual(container.IsAccount ? META_FORMAT_3 : META_FORMAT_2, metaA[1], metaB[1]);
+                AssertAllAreEqual(container.IsAccount ? META_FORMAT_2 : META_FORMAT_1, metaA[1], metaB[1]);
 
                 AssertAllNotZero(metaA.Skip(2).Take(4), metaB.Skip(2).Take(4));
                 AssertAllNotZero(metaA.Skip(6).Take(8), metaB.Skip(6).Take(8));
@@ -119,7 +119,7 @@ public class SteamTest : CommonTestClass
             }
             else if (container.IsVersion360Frontiers)
             {
-                AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
+                AssertAllAreEqual(META_FORMAT_2, metaA[1], metaB[1]);
 
                 AssertAllZero(metaA.Skip(2).Take(12), metaB.Skip(2).Take(12));
                 AssertAllNotZero(metaA[14], metaB[14]);
@@ -131,7 +131,7 @@ public class SteamTest : CommonTestClass
         }
         else if (metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
-            AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
+            AssertAllAreEqual(META_FORMAT_2, metaA[1], metaB[1]);
 
             if (container.IsAccount)
             {
@@ -149,7 +149,7 @@ public class SteamTest : CommonTestClass
         }
         else if (metaA.Length == META_LENGTH_TOTAL_WORLDS)
         {
-            AssertAllAreEqual(META_FORMAT_4, metaA[1], metaB[1]);
+            AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
 
             if (container.IsAccount)
             {
@@ -164,7 +164,7 @@ public class SteamTest : CommonTestClass
                 AssertAllZero(metaA[16], metaB[16]);
                 Assert.IsTrue(metaA.Skip(20).Take(69).SequenceEqual(metaB.Skip(20).Take(69)));
                 AssertAllNotZero(metaA[89], metaB[89]);
-                AssertAllAreEqual(META_FORMAT_4, metaA[90], metaB[90]);
+                AssertAllAreEqual(META_FORMAT_3, metaA[90], metaB[90]);
                 AssertAllZero(metaA.Skip(91), metaB.Skip(91));
 
             }

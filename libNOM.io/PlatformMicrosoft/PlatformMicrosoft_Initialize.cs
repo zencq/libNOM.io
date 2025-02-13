@@ -281,10 +281,9 @@ public partial class PlatformMicrosoft : Platform
           0. BASE VERSION                   (  4)
           1. GAME MODE                      (  2)
           1. SEASON                         (  2)
-          2. TOTAL PLAY TIME                (  4)
-          3. EMPTY                          (  4)
-          4. DECOMPRESSED SIZE              (  4) // before Omega 4.52
-          4. COMPRESSED SIZE                (  4) // since Omega 4.52
+          2. TOTAL PLAY TIME                (  8)
+          4. DECOMPRESSED SIZE              (  4) // before Omega 4.52 and since Worlds Part II 5.50
+          4. COMPRESSED SIZE                (  4) // between the two versions above
 
           5. EMPTY                          (  4)
                                             ( 24)
@@ -300,20 +299,29 @@ public partial class PlatformMicrosoft : Platform
          72. TIMESTAMP                      (  4)
          73. META FORMAT                    (  4)
                                             (296)
+
+          5. SAVE NAME                      (128)
+         37. SAVE SUMMARY                   (128)
+         69. DIFFICULTY PRESET              (  4)
+         70. SLOT IDENTIFIER                (  8)
+         72. TIMESTAMP                      (  4)
+         73. META FORMAT                    (  4)
+         74. DIFFICULTY TAG                 ( 64)
+                                            (360)
         */
         if (disk.IsEmpty())
             return;
 
-        // As data has a save streaming like format since Omega 4.52, the disk size now stored.
-        var isV2 = Meta.GameVersion.Get(container.Extra.BaseVersion) >= GameVersionEnum.OmegaWithMicrosoftV2; // TODO: Breakpoint: check size values before setting them
+        // The disk size was stored between Omega 4.52 and Worlds Part II 5.50.
+        var hasSizeDisk = Meta.GameVersion.Get(container.Extra.BaseVersion) is >= GameVersionEnum.OmegaWithMicrosoftV2 and < GameVersionEnum.WorldsPartII;
 
         // Vanilla metadata always available.
         container.Extra = container.Extra with
         {
             Bytes = disk[META_LENGTH_AFTER_VANILLA..].ToArray(),
             MetaLength = (uint)(disk.Length),
-            SizeDecompressed = isV2 ? container.Extra.SizeDecompressed : decompressed[4],
-            SizeDisk = isV2 ? decompressed[4] : container.Extra.SizeDisk,
+            SizeDecompressed = hasSizeDisk ? container.Extra.SizeDecompressed : decompressed[4],
+            SizeDisk = hasSizeDisk ? decompressed[4] : container.Extra.SizeDisk,
         };
 
         base.UpdateContainerWithMetaInformation(container, disk, decompressed);
@@ -331,15 +339,15 @@ public partial class PlatformMicrosoft : Platform
             BaseVersion = (int)(decompressed[0]),
             GameMode = disk.Cast<ushort>(4),
             Season = disk.Cast<ushort>(6) is var season && season == ushort.MaxValue ? (ushort)(0) : season,
-            TotalPlayTime = decompressed[2],
+            TotalPlayTime = disk.Cast<ulong>(8),
         };
 
         // Extended metadata since Waypoint 4.00.
         if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
             UpdateSaveContainerWithWaypointMetaInformation(container, disk);
 
-        // Extended metadata since Worlds Part I 5.00.
-        if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I)
+        // Extended metadata since Worlds Part I 5.00 and once more since Worlds Part II 5.53.
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I || disk.Length == META_LENGTH_TOTAL_WORLDS_PART_II)
             UpdateSaveContainerWithWorldsMetaInformation(container, disk, decompressed);
 
         // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
