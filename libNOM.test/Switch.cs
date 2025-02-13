@@ -34,7 +34,7 @@ public class SwitchTest : CommonTestClass
         return ToUInt32(meta);
     }
 
-    private static void AssertCommonMeta(IContainer _, uint[] metaA, uint[] metaB)
+    private static void AssertCommonMeta(IContainer container, uint[] metaA, uint[] metaB)
     {
         Assert.AreEqual(metaA.Length, metaB.Length);
 
@@ -43,6 +43,15 @@ public class SwitchTest : CommonTestClass
             AssertAllAreEqual(META_HEADER, metaA[0], metaB[0]);
             AssertAllAreEqual(META_FORMAT_2, metaA[1], metaB[1]);
 
+            if (!container.IsAccount)
+            {
+                // Changes to latest edited save.
+                AssertAllAreEqual(container.MetaIndex, metaA[3], metaB[3]);
+
+                // TIMESTAMP
+                Assert.IsTrue(metaA[4] < metaB[4]);
+            }
+
             // Skip DECOMPRESSED SIZE and META INDEX and TIMESTAMP.
             Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
         }
@@ -50,6 +59,18 @@ public class SwitchTest : CommonTestClass
         {
             AssertAllAreEqual(META_HEADER, metaA[0], metaB[0]);
             AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
+
+            if (!container.IsAccount)
+            {
+                // Changes to latest edited save.
+                AssertAllAreEqual(container.MetaIndex, metaA[3], metaB[3]);
+
+                // TIMESTAMP
+                Assert.AreEqual(metaA[4], metaA[77]);
+                Assert.AreEqual(metaB[4], metaB[77]);
+
+                Assert.IsTrue(metaA[4] < metaB[4]);
+            }
 
             // Skip DECOMPRESSED SIZE and META INDEX and TIMESTAMP.
             Assert.IsTrue(metaA.Skip(5).Take(72).SequenceEqual(metaB.Skip(5).Take(72)));

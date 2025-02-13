@@ -28,7 +28,8 @@ public class MicrosoftTest : CommonTestClass
 
     protected const int META_LENGTH_TOTAL_VANILLA = 0x18 / sizeof(uint); // 6
     protected const int META_LENGTH_TOTAL_WAYPOINT = 0x118 / sizeof(uint); // 70
-    protected const int META_LENGTH_TOTAL_WORLDS = 0x128 / sizeof(uint); // 74
+    protected const int META_LENGTH_TOTAL_WORLDS_PART_I = 0x128 / sizeof(uint); // 74
+    protected const int META_LENGTH_TOTAL_WORLDS_PART_II = 0x168 / sizeof(uint); // 90
 
     #endregion
 
@@ -55,10 +56,11 @@ public class MicrosoftTest : CommonTestClass
             }
             else
             {
+                Assert.IsTrue(metaA.Take(4).SequenceEqual(metaB.Take(4)));
                 Assert.IsTrue(metaA.Skip(5).SequenceEqual(metaB.Skip(5)));
             }
         }
-        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS)
+        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS_PART_I)
         {
             if (container.IsAccount)
             {
@@ -69,8 +71,28 @@ public class MicrosoftTest : CommonTestClass
             }
             else
             {
+                Assert.IsTrue(metaA.Take(4).SequenceEqual(metaB.Take(4)));
                 Assert.IsTrue(metaA.Skip(5).Take(67).SequenceEqual(metaB.Skip(5).Take(67)));
+                Assert.IsTrue(metaA[72] < metaB[72]);
                 AssertAllAreEqual(META_FORMAT_3, metaA[73], metaB[73]);
+            }
+        }
+        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS_PART_II)
+        {
+            if (container.IsAccount)
+            {
+                AssertAllAreEqual(1, metaA[0], metaB[0]);
+                AssertAllZero(metaA.Skip(1).Take(3), metaB.Skip(1).Take(3));
+                AssertAllNotZero(metaA[4], metaB[4]);
+                AssertAllZero(metaA.Skip(5), metaB.Skip(5));
+            }
+            else
+            {
+                Assert.IsTrue(metaA.Take(4).SequenceEqual(metaB.Take(4)));
+                Assert.IsTrue(metaA.Skip(5).Take(67).SequenceEqual(metaB.Skip(5).Take(67)));
+                Assert.IsTrue(metaA[72] < metaB[72]);
+                AssertAllAreEqual(META_FORMAT_4, metaA[73], metaB[73]);
+                Assert.IsTrue(metaA.Skip(73).SequenceEqual(metaB.Skip(73)));
             }
         }
         else
@@ -474,11 +496,29 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T108_Read_00090000025A963A_0x7D3_Worlds()
+    public void T108_Read_000900000104066F()
     {
         // Arrange
         var expectAccountData = true;
-        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D3_Worlds");
+        var path = GetCombinedPath("Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
+        var results = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithMicrosoftV2, "", "On freighter (Spear of Benevolence)", 169127),
+            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithMicrosoftV2, "", "On freighter (Spear of Benevolence)", 169144),
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonRead<PlatformMicrosoft>(path, results, expectAccountData, userIdentification);
+    }
+
+    [TestMethod]
+    public void T109_Read_00090000025A963A_0x7D3_WorldsPartI()
+    {
+        // Arrange
+        var expectAccountData = true;
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D3");
         var results = new ReadResults[]
         {
             new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 378),
@@ -504,15 +544,39 @@ public class MicrosoftTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T109_Read_000900000104066F()
+    public void T110_Read_00090000025A963A_0x7D4_WorldsPartII()
     {
         // Arrange
         var expectAccountData = true;
-        var path = GetCombinedPath("Microsoft", "wgs", "000900000104066F_29070100B936489ABCE8B9AF3980429C");
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D4");
         var results = new ReadResults[]
         {
-            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithMicrosoftV2, "", "On freighter (Spear of Benevolence)", 169127),
-            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4149, 4661, GameVersionEnum.OmegaWithMicrosoftV2, "", "On freighter (Spear of Benevolence)", 169144),
+            new(0, "Slot1Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 378),
+            new(1, "Slot1Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", 388),
+
+            new(2, "Slot2Auto", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes,"Voyagers", "Auf dem Planeten (Lehave)", 6072),
+            new(3, "Slot2Manual", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes,"Voyagers", "Auf dem Planeten (Lehave)", 5936),
+
+            new(4, "Slot3Auto", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes, "Reisende", "Auf dem Planeten (Leigha Yamak)", 425),
+            new(5, "Slot3Manual", true, true, false, true, true, false, true, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Seasonal), DifficultyPresetTypeEnum.Normal, SeasonEnum.Voyagers, 4146, 1252402, GameVersionEnum.Echoes, "Reisende", "Auf dem Planeten (Leigha Yamak)", 416),
+
+            new(6, "Slot4Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4135, 4647, GameVersionEnum.Emergence, "�\u0001", "", 773474),
+            new(7, "Slot4Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4124, 4636, GameVersionEnum.LivingShip, "", "", 771852),
+
+            new(8, "Slot5Auto", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4149, 6709, GameVersionEnum.OmegaWithMicrosoftV2, "The Final Frontier", "Within Wemexb Colony", 2964),
+            new(9, "Slot5Manual", true, true, false, true, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Permadeath), DifficultyPresetTypeEnum.Permadeath, SeasonEnum.None, 4149, 6709, GameVersionEnum.OmegaWithMicrosoftV2, "The Final Frontier", "Innerhalb von Wemexb Colony", 3003),
+
+            new(10, "Slot6Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4154, 4666, GameVersionEnum.WorldsPartI, "", "In the Dapjodm system", 97666),
+            new(11, "Slot6Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "", "On Planet (Uditakel Omega)", 97588),
+
+            new(12, "Slot7Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4154, 4666, GameVersionEnum.WorldsPartI, "", "On Planet (Ekios)", 1231357),
+            new(13, "Slot7Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4142, 4654, GameVersionEnum.WaypointWithSuperchargedSlots, "", "On Planet (Ekios)", 1231357),
+
+            new(14, "Slot8Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4154, 4666, GameVersionEnum.WorldsPartI, "", "Im Dapjodm-System", 97742),
+            new(15, "Slot8Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "", "On Planet (Uditakel Omega)", 97588),
+
+            new(16, "Slot9Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4172, 4684, GameVersionEnum.WorldsPartIIWithDifficultyTag, "554", "Auf dem Planeten (Neu: Joshuang)", 14),
+            new(17, "Slot9Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4172, 4684, GameVersionEnum.WorldsPartIIWithDifficultyTag, "554", "Auf dem Planeten (Neu: Joshuang)", 20),
         };
         var userIdentification = ReadUserIdentification(path);
 
@@ -525,7 +589,7 @@ public class MicrosoftTest : CommonTestClass
     /// Same as <see cref="T106_Read_000901FFCAB85905"/>.
     /// </summary>
     [TestMethod]
-    public void T110_Read_NoAccountInDirectory()
+    public void T120_Read_NoAccountInDirectory()
     {
         // Arrange
         var expectAccountData = false;
@@ -646,9 +710,24 @@ public class MicrosoftTest : CommonTestClass
         var containerIndex = 0;
         var originUnits = 20221021; // 20,221,021
         var originUtcTicks = 638575130110000000; // 2024-07-25 14:03:31 +00:00
-        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D3_Worlds");
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D3");
         var results = new WriteResults(uint.MaxValue, 4153, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 378, "Test56789012345678901234567890123456789012", "An Bord von „Negfengf“-Station Majoris", (byte)(DifficultyPresetTypeEnum.Creative));
-    
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultSave<PlatformMicrosoft>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+    }
+
+    [TestMethod]
+    public void T205_Write_Default_0x7D4_WorldsPartII()
+    {
+        // Arrange
+        var containerIndex = 16;
+        var originUnits = 0; // 0
+        var originUtcTicks = 638749060150000000; // 2025-02-11 21:26:55 +00:00
+        var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D4");
+        var results = new WriteResults(uint.MaxValue, 4172, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 14, "554", "Auf dem Planeten (Neu: Joshuang)", (byte)(DifficultyPresetTypeEnum.Creative));
+
         // Act
         // Assert
         TestCommonWriteDefaultSave<PlatformMicrosoft>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
