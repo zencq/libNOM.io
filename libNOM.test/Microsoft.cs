@@ -109,7 +109,7 @@ public class MicrosoftTest : CommonTestClass
         AssertAllAreEqual(results.BaseVersion, (uint)(int)(prijectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(prijectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[0], metaB[0]);
         AssertAllAreEqual(results.GameMode, (ushort)(prijectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(prijectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 4), BitConverter.ToInt16(bytesB, 4));
         AssertAllAreEqual(results.Season, (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 6), BitConverter.ToUInt16(bytesA, 6));
-        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[2], metaB[2]); // metaA and metaB are actual uint but the values we compare are low enough to not require a ulong
+        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, BitConverter.ToUInt64(bytesA, 8), BitConverter.ToUInt64(bytesB, 8));
 
         if (results.BaseVersion < 4140) // Waypoint
             return;
@@ -723,7 +723,7 @@ public class MicrosoftTest : CommonTestClass
     {
         // Arrange
         var containerIndex = 16;
-        var originUnits = 0; // 0
+        var originUnits = 0;
         var originUtcTicks = 638749060150000000; // 2025-02-11 21:26:55 +00:00
         var path = GetCombinedPath("Microsoft", "wgs", "00090000025A963A_29070100B936489ABCE8B9AF3980429C_0x7D4");
         var results = new WriteResults(uint.MaxValue, 4172, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 14, "554", "Auf dem Planeten (Neu: Joshuang)", (byte)(DifficultyPresetTypeEnum.Creative));

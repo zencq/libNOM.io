@@ -21,5 +21,5 @@ public record class ReadResults(
     GameVersionEnum GameVersion,
     string SaveName,
     string SaveSummary,
-    uint TotalPlayTime
+    ulong TotalPlayTime
 );

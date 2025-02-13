@@ -60,6 +60,12 @@ public abstract class CommonTestClass
             Assert.IsTrue(expected.SequenceEqual(value));
     }
 
+    protected static void AssertAllAreEqual(IEnumerable<uint> expected, params IEnumerable<uint>[] actual)
+    {
+        foreach (var value in actual)
+            Assert.IsTrue(expected.SequenceEqual(value));
+    }
+
     protected static void AssertAllAreEqual(int expected, params int[] actual)
     {
         foreach (var value in actual)

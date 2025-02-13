@@ -60,10 +60,11 @@ public partial class PlatformSteam : Platform
         else // META_FORMAT_1
         {
             AppendHashes(writer, data); // 8 + 8 + 32 = 48
+            writer.Write(container.Extra.SizeDecompressed); // 4
 
             // Seek to position of last known byte and append the cached bytes.
             writer.Seek(META_LENGTH_AFTER_VANILLA, SeekOrigin.Begin);
-            writer.Write(container.Extra.Bytes ?? []); // 20
+            writer.Write(container.Extra.Bytes ?? []);
         }
 
         return buffer.AsSpan().Cast<byte, uint>();
