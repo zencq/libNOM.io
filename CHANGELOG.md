@@ -8,11 +8,13 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
+* Proper support for Worlds Part II patch 5.53 with new meta size
+* Tests for Worlds Part I and II on all platforms
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
-* Potential exception when having a really high play time
+* Exception when having a really high play time (`IContainer.TotalPlayTime` is now `ulong`)
 ### Security
 
 ## 0.14.0 (2025-02-09)

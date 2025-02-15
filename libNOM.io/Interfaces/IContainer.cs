@@ -236,6 +236,8 @@ public interface IContainer : IComparable<IContainer>, IEquatable<IContainer>
 
     public bool IsVersion550WorldsPartII { get; }
 
+    public bool IsVersion553WorldsPartIIWithDifficultyTag { get; }
+
     #endregion
 
     #region Miscellaneous
