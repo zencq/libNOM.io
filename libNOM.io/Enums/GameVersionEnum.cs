@@ -68,4 +68,6 @@ public enum GameVersionEnum
     [Description(nameof(TheCursed))]
     TheCursedWithStarbornPhoenix = 529,
     WorldsPartII = 550,
+    [Description(nameof(WorldsPartII))]
+    WorldsPartIIWithDifficultyTag = 553,
 }

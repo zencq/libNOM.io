@@ -236,6 +236,8 @@ public interface IContainer : IComparable<IContainer>, IEquatable<IContainer>
 
     public bool IsVersion550WorldsPartII { get; }
 
+    public bool IsVersion553WorldsPartIIWithDifficultyTag { get; }
+
     #endregion
 
     #region Miscellaneous
@@ -308,7 +310,7 @@ public interface IContainer : IComparable<IContainer>, IEquatable<IContainer>
     /// <summary>
     /// Total time played in seconds.
     /// </summary>
-    public uint TotalPlayTime { get; set; }
+    public ulong TotalPlayTime { get; set; }
 
     #endregion
 
