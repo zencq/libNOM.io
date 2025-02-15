@@ -63,11 +63,11 @@ public enum GameVersionEnum
     WorldsPartI = 500,
     Aquarius = 510,
     TheCursed = 520,
-    [Description(nameof(TheCursed))]
+    [Description("The Cursed")]
     TheCursedWithCrossSave = 525,
-    [Description(nameof(TheCursed))]
+    [Description("The Cursed")]
     TheCursedWithStarbornPhoenix = 529,
     WorldsPartII = 550,
-    [Description(nameof(WorldsPartII))]
+    [Description("Worlds Part II")]
     WorldsPartIIWithDifficultyTag = 553,
 }
