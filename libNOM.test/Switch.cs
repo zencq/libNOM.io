@@ -23,6 +23,7 @@ public class SwitchTest : CommonTestClass
     protected const int META_LENGTH_TOTAL_VANILLA = 0x64 / sizeof(uint); // 25
     protected const int META_LENGTH_TOTAL_WAYPOINT = 0x164 / sizeof(uint); // 89
     protected const int META_LENGTH_TOTAL_WORLDS_PART_I = 0x174 / sizeof(uint); // 93
+    protected const int META_LENGTH_TOTAL_WORLDS_PART_II = 0x17C / sizeof(uint); // 95
 
     #endregion
 
@@ -45,7 +46,7 @@ public class SwitchTest : CommonTestClass
 
             if (!container.IsAccount)
             {
-                // Changes to latest edited save.
+                // Changes to latest edited save in AccountData.
                 AssertAllAreEqual(container.MetaIndex, metaA[3], metaB[3]);
 
                 // TIMESTAMP
@@ -62,7 +63,7 @@ public class SwitchTest : CommonTestClass
 
             if (!container.IsAccount)
             {
-                // Changes to latest edited save.
+                // Changes to latest edited save in AccountData.
                 AssertAllAreEqual(container.MetaIndex, metaA[3], metaB[3]);
 
                 // TIMESTAMP
@@ -78,6 +79,28 @@ public class SwitchTest : CommonTestClass
             // Skip TIMESTAMP.
             Assert.IsTrue(metaA.Skip(78).SequenceEqual(metaB.Skip(78)));
         }
+        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS_PART_II)
+        {
+            AssertAllAreEqual(META_HEADER, metaA[0], metaB[0]);
+            AssertAllAreEqual(META_FORMAT_4, metaA[1], metaB[1]);
+
+            if (!container.IsAccount)
+            {
+                // Changes to latest edited save in AccountData.
+                // TODO: Unknown value for Worlds Part II.
+                // AssertAllAreEqual(container.MetaIndex, metaA[3], metaB[3]);
+
+                // TIMESTAMP
+                AssertAllAreEqual(0, metaA[4], metaB[4]);
+                Assert.IsTrue(metaA[77] < metaB[77]);
+            }
+
+            // Skip DECOMPRESSED SIZE and META INDEX.
+            Assert.IsTrue(metaA.Skip(4).Take(73).SequenceEqual(metaB.Skip(4).Take(73)));
+
+            // Skip TIMESTAMP.
+            Assert.IsTrue(metaA.Skip(78).SequenceEqual(metaB.Skip(78)));
+        }
         else
             throw new AssertFailedException();
     }
@@ -89,7 +112,8 @@ public class SwitchTest : CommonTestClass
         var prijectA = new PrivateObject(containerA);
         var prijectB = new PrivateObject(containerB);
 
-        AssertAllAreEqual(results.MetaIndex, (uint)(containerA.MetaIndex), (uint)(containerB.MetaIndex), metaA[3], metaB[3]);
+        // TODO: Unknown value for Worlds Part II.
+        // AssertAllAreEqual(results.MetaIndex, (uint)(containerA.MetaIndex), (uint)(containerB.MetaIndex), metaA[3], metaB[3]);
         AssertAllAreEqual(results.BaseVersion, (uint)(int)(prijectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(prijectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[5], metaB[5]);
         AssertAllAreEqual(results.GameMode, (ushort)(prijectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(prijectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 24), BitConverter.ToInt16(bytesB, 24));
         AssertAllAreEqual(results.Season, (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 26), BitConverter.ToUInt16(bytesA, 26));
@@ -217,6 +241,27 @@ public class SwitchTest : CommonTestClass
     }
 
     [TestMethod]
+    public void T107_Read()
+    {
+        // Arrange
+        var expectAccountData = true;
+        var path = GetCombinedPath("Switch", "7");
+        var results = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, true, true, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4173, 4685, GameVersionEnum.WorldsPartIIWithDifficultyTag, "", "位于Baraso星系", 88479),
+            new(1, "Slot1Manual", true, true, false, true, true, false, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4173, 4685, GameVersionEnum.WorldsPartIIWithDifficultyTag, "", "登上Baraso空间站", 88558),
+
+            new(2, "Slot2Auto", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4146, 4658, GameVersionEnum.Echoes, "", "登上太空异象", 117),
+            new(3, "Slot2Manual", true, true, false, false, false, false, false, false, SaveContextQueryEnum.DontCare, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Creative, SeasonEnum.None, 4146, 4658, GameVersionEnum.Echoes, "", "登上太空异象", 101),
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonRead<PlatformSwitch>(path, results, expectAccountData, userIdentification);
+    }
+
+    [TestMethod]
     public void T200_Write_Default_0x7D2_Frontiers_Account()
     {
         // Arrange
@@ -294,6 +339,34 @@ public class SwitchTest : CommonTestClass
         var originUtcTicks = 638580996090000000; // 2024-08-01 09:00:09 +00:00 (from meta)
         var path = GetCombinedPath("Switch", "6");
         var results = new WriteResults(2, 4153, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 72800, "", "Ouverm殖民地内", (byte)(DifficultyPresetTypeEnum.Custom));
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultSave<PlatformSwitch>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+    }
+
+    [TestMethod]
+    public void T230_Write_Default_0x7D4_WorldsPartII_Account()
+    {
+        // Arrange
+        var originMusicVolume = 80; // 80
+        var originUtcTicks = 638755870000000000; // 2025-02-19 18:36:40 +00:00
+        var path = GetCombinedPath("Switch", "7");
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultAccount<PlatformSwitch>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+    }
+
+    [TestMethod]
+    public void T231_Write_Default_0x7D4_WorldsPartII()
+    {
+        // Arrange
+        var containerIndex = 0;
+        var originUnits = 994971933; // 1.000.356.262
+        var originUtcTicks = 638755852790000000; // 2025-02-19 18:07:59 +00:00 (from meta)
+        var path = GetCombinedPath("Switch", "7");
+        var results = new WriteResults(2, 4173, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 88479, "", "位于Baraso星系", (byte)(DifficultyPresetTypeEnum.Custom));
 
         // Act
         // Assert

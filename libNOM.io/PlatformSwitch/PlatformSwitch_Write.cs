@@ -39,15 +39,15 @@ public partial class PlatformSwitch : Platform
         writer.Write(META_HEADER); // 4
         writer.Write(GetMetaFormat(container)); // 4
         writer.Write(container.Extra.SizeDecompressed); // 4
-        writer.Write(container.MetaIndex); // 4
-        writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
+        writer.Write(container.MetaIndex); // 4 // TODO: Unknown in Worlds Part II.
+        writer.Write((uint)(container.IsVersion550WorldsPartII ? 0 : container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
         writer.Write(container.BaseVersion); // 4
         writer.Write((ushort)(container.GameMode)); // 2
         writer.Write((ushort)(container.Season)); // 2
         writer.Write(container.TotalPlayTime); // 8
 
         // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
-        writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 64 or 320 or 336 or ???
+        writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 64 or 320 or 336 or 344
 
         OverwriteWaypointMeta(writer, container);
         OverwriteWorldsMeta(writer, container);

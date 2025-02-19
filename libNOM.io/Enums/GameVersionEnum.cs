@@ -52,7 +52,7 @@ public enum GameVersionEnum
     WaypointWithSuperchargedSlots = 405,
     Fractal = 410,
     Interceptor = 420,
-    Mac = 425,
+    Mac = 425, // not actually used
     Singularity = 430,
     Echoes = 440,
     Omega = 450,
@@ -70,4 +70,5 @@ public enum GameVersionEnum
     WorldsPartII = 550,
     [Description("Worlds Part II")]
     WorldsPartIIWithDifficultyTag = 553,
+    Titan = 555, // not actually used
 }

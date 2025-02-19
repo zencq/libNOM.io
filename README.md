@@ -135,6 +135,7 @@ Thanks to the following people for their help in one way or another.
 * [MetaIdea](https://github.com/MetaIdea/nms-savetool) - Decrypt and encrypt Steam saves
 * [u/MegaGold_Fighter](https://www.reddit.com/r/NoMansSkyMods/comments/hhe2he/ps4_nms_save_editing_general_guide/) - [Storm21](https://psxtools.de/index.php?user/38756-storm21/) - Helping and verifying to make PlayStation support possible
 * [Moo](https://discord.gg/22ZAU9H) - Helping and verifying to make Microsoft Store support possible
+* [waryder](https://github.com/waryder) - Idea and initial implementation of the stdin/stdout feature of the CLI
 
 ## Dependencies
 

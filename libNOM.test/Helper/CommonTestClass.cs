@@ -320,7 +320,7 @@ public abstract class CommonTestClass
 
     protected static string GetGuid(IEnumerable<byte> source)
     {
-        return new Guid(source.ToArray()).ToString("N").ToUpper();
+        return new Guid([.. source]).ToString("N").ToUpper();
     }
 
     protected static IEnumerable<IContainer> GetLoadedContainers(IPlatform platform)
@@ -330,12 +330,12 @@ public abstract class CommonTestClass
 
     protected static string GetString(IEnumerable<byte> source)
     {
-        return Encoding.UTF8.GetString(source.ToArray());
+        return Encoding.UTF8.GetString([.. source]);
     }
 
     protected static string GetUnicode(IEnumerable<byte> source)
     {
-        return Encoding.Unicode.GetString(source.ToArray());
+        return Encoding.Unicode.GetString([.. source]);
     }
 
     protected static IEnumerable<IContainer> GetWatcherChangeContainers(IPlatform platform)

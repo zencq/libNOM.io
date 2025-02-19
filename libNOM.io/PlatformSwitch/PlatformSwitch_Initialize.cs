@@ -59,7 +59,8 @@ public partial class PlatformSwitch : Platform
          10. ???                  (  4)
          11. EMPTY                ( 56)
                                   (100)
-
+        
+          9. EMPTY                (  4)
          10. SAVE NAME            (128) // may contain additional junk data after null terminator
          42. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
          74. DIFFICULTY PRESET    (  4)
@@ -71,6 +72,16 @@ public partial class PlatformSwitch : Platform
          78. META FORMAT          (  4)
          79. EMPTY                ( 56)
                                   (372)
+
+          9. ???                  (  4)
+         10. SAVE NAME            (128)
+         42. SAVE SUMMARY         (128)
+         74. DIFFICULTY PRESET    (  4)
+         75. SLOT IDENTIFIER      (  8)
+         77. TIMESTAMP            (  4)
+         78. META FORMAT          (  4)
+         79. DIFFICULTY TAG       ( 64)
+                                  (380)
          */
         if (disk.IsEmpty())
             return;
@@ -95,7 +106,7 @@ public partial class PlatformSwitch : Platform
         // Vanilla data always available.
         container.Extra = container.Extra with
         {
-            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[4]).ToLocalTime(),
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[4]).ToLocalTime(), // gets overwriten in UpdateSaveContainerWithWorldsMetaInformation()
             BaseVersion = (int)(decompressed[5]),
             GameMode = disk.Cast<ushort>(24),
             Season = disk.Cast<ushort>(26),

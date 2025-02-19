@@ -169,7 +169,6 @@ public class SteamTest : CommonTestClass
                 AssertAllNotZero(metaA[89], metaB[89]);
                 AssertAllAreEqual(metaFormat, metaA[90], metaB[90]);
                 AssertAllAreEqual(metaA.Skip(91), metaB.Skip(91));
-
             }
         }
         else
