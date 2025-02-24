@@ -3,7 +3,7 @@
 	<!-- Application -->
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
 		<AssemblyName>libNOM.io.cli</AssemblyName>
 	</PropertyGroup>
 
@@ -37,7 +37,7 @@
 
 	<!-- Package -->
 	<PropertyGroup Label="General">
-		<Version>1.1.0</Version>
+		<Version>1.2.0-beta.1</Version>
 		<Authors>cengelha</Authors>
 		<Description>CLI for libNOM.io to analyze single files or whole directories and print information about it, convert between JSON and actual save formats and perform file operations.</Description>
 		<Copyright>Copyright (c) Christian Engelhardt 2024</Copyright>
