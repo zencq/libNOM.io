@@ -64,6 +64,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\libNOM.cli\libNOM.cli.csproj" />
 		<ProjectReference Include="..\libNOM.io\libNOM.io.csproj" />
 	</ItemGroup>
 
