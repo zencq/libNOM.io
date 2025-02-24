@@ -12,7 +12,7 @@ public partial class Executor
     public static void Convert(ConvertArgs args)
     {
         if (args.Format == Enums.FormatEnum.Json)
-            _ = io.Global.Convert.ToJson(args.Input.FullName, args.Output?.FullName ?? args.Input.Directory!.FullName, args.JsonIndented, args.JsonDeobfuscated);
+            _ = io.Global.Convert.ToJson(args.Input.FullName, args.Output?.FullName ?? args.Input.Directory!.FullName, args.JsonPrettyPrint, args.JsonHumanReadable);
         else
         {
             var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());

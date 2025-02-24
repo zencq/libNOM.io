@@ -27,7 +27,8 @@ public class SteamTest : CommonTestClass
     private const uint META_HEADER = 0xEEEEEEBE; // 4,008,636,094
     private const int META_LENGTH_TOTAL_VANILLA = 0x68 / sizeof(uint); // 26
     private const int META_LENGTH_TOTAL_WAYPOINT = 0x168 / sizeof(uint); // 90
-    private const int META_LENGTH_TOTAL_WORLDS = 0x180 / sizeof(uint); // 96
+    private const int META_LENGTH_TOTAL_WORLDS_PART_I = 0x180 / sizeof(uint); // 96
+    private const int META_LENGTH_TOTAL_WORLDS_PART_II = 0x1B0 / sizeof(uint); // 108
 
     #endregion
 
@@ -38,7 +39,7 @@ public class SteamTest : CommonTestClass
         var meta = File.ReadAllBytes(container.MetaFile!.FullName);
         var value = ToUInt32(meta);
 
-        if (value.Length != META_LENGTH_TOTAL_VANILLA && value.Length != META_LENGTH_TOTAL_WAYPOINT && value.Length != META_LENGTH_TOTAL_WORLDS)
+        if (value.Length != META_LENGTH_TOTAL_VANILLA && value.Length != META_LENGTH_TOTAL_WAYPOINT && value.Length != META_LENGTH_TOTAL_WORLDS_PART_I && value.Length != META_LENGTH_TOTAL_WORLDS_PART_II)
             return value;
 
         // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.
@@ -111,15 +112,15 @@ public class SteamTest : CommonTestClass
             if (container.IsAccount || container.IsSave && !container.IsVersion360Frontiers)
             {
                 // Editing account data is possible since Frontiers and therefore has always the new format but otherwise uses the old format.
-                AssertAllAreEqual(container.IsAccount ? META_FORMAT_3 : META_FORMAT_2, metaA[1], metaB[1]);
+                AssertAllAreEqual(container.IsAccount ? META_FORMAT_2 : META_FORMAT_1, metaA[1], metaB[1]);
 
                 AssertAllNotZero(metaA.Skip(2).Take(4), metaB.Skip(2).Take(4));
                 AssertAllNotZero(metaA.Skip(6).Take(8), metaB.Skip(6).Take(8));
-                AssertAllZero(metaA.Skip(14), metaB.Skip(14));
+                AssertAllZero(metaA.Skip(15), metaB.Skip(15));
             }
             else if (container.IsVersion360Frontiers)
             {
-                AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
+                AssertAllAreEqual(META_FORMAT_2, metaA[1], metaB[1]);
 
                 AssertAllZero(metaA.Skip(2).Take(12), metaB.Skip(2).Take(12));
                 AssertAllNotZero(metaA[14], metaB[14]);
@@ -131,42 +132,43 @@ public class SteamTest : CommonTestClass
         }
         else if (metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
-            AssertAllAreEqual(META_FORMAT_3, metaA[1], metaB[1]);
+            AssertAllAreEqual(META_FORMAT_2, metaA[1], metaB[1]);
 
             if (container.IsAccount)
             {
                 AssertAllNotZero(metaA.Skip(2).Take(4), metaB.Skip(2).Take(4));
                 AssertAllNotZero(metaA.Skip(6).Take(8), metaB.Skip(6).Take(8));
-                AssertAllZero(metaA.Skip(14), metaB.Skip(14));
+                AssertAllZero(metaA.Skip(15), metaB.Skip(15));
             }
             else
             {
                 AssertAllZero(metaA.Skip(2).Take(12), metaB.Skip(2).Take(12));
                 AssertAllNotZero(metaA[14], metaB[14]);
                 AssertAllZero(metaA.Skip(15).Take(2), metaB.Skip(15).Take(2));
-                Assert.IsTrue(metaA.Skip(20).SequenceEqual(metaB.Skip(20)));
+                Assert.IsTrue(metaA.Skip(21).SequenceEqual(metaB.Skip(21)));
             }
         }
-        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS)
+        else if (metaA.Length == META_LENGTH_TOTAL_WORLDS_PART_I || metaA.Length == META_LENGTH_TOTAL_WORLDS_PART_II)
         {
-            AssertAllAreEqual(META_FORMAT_4, metaA[1], metaB[1]);
+            var metaFormat = container.IsVersion550WorldsPartII ? META_FORMAT_4 : META_FORMAT_3;
+
+            AssertAllAreEqual(metaFormat, metaA[1], metaB[1]);
 
             if (container.IsAccount)
             {
                 AssertAllNotZero(metaA.Skip(2).Take(4), metaB.Skip(2).Take(4));
                 AssertAllNotZero(metaA.Skip(6).Take(8), metaB.Skip(6).Take(8));
-                AssertAllZero(metaA.Skip(14), metaB.Skip(14));
+                AssertAllZero(metaA.Skip(15), metaB.Skip(15));
             }
             else
             {
                 AssertAllZero(metaA.Skip(2).Take(12), metaB.Skip(2).Take(12));
                 AssertAllNotZero(metaA.Skip(14).Take(2), metaB.Skip(14).Take(2));
                 AssertAllZero(metaA[16], metaB[16]);
-                Assert.IsTrue(metaA.Skip(20).Take(69).SequenceEqual(metaB.Skip(20).Take(69)));
+                Assert.IsTrue(metaA.Skip(21).Take(68).SequenceEqual(metaB.Skip(21).Take(68)));
                 AssertAllNotZero(metaA[89], metaB[89]);
-                AssertAllAreEqual(META_FORMAT_4, metaA[90], metaB[90]);
-                AssertAllZero(metaA.Skip(91), metaB.Skip(91));
-
+                AssertAllAreEqual(metaFormat, metaA[90], metaB[90]);
+                AssertAllAreEqual(metaA.Skip(91), metaB.Skip(91));
             }
         }
         else
@@ -186,7 +188,7 @@ public class SteamTest : CommonTestClass
         AssertAllAreEqual(results.BaseVersion, (uint)(int)(prijectA.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), (uint)(int)(prijectB.GetFieldOrProperty(nameof(WriteResults.BaseVersion))), metaA[17], metaB[17]);
         AssertAllAreEqual(results.GameMode, (ushort)(prijectA.GetFieldOrProperty(nameof(WriteResults.GameMode))), (ushort)(prijectB.GetFieldOrProperty(nameof(WriteResults.GameMode))), BitConverter.ToInt16(bytesA, 72), BitConverter.ToInt16(bytesB, 72));
         AssertAllAreEqual(results.Season, (ushort)(containerA.Season), (ushort)(containerB.Season), BitConverter.ToUInt16(bytesA, 74), BitConverter.ToUInt16(bytesA, 74));
-        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, metaA[19], metaB[19]);
+        AssertAllAreEqual(results.TotalPlayTime, containerA.TotalPlayTime, containerB.TotalPlayTime, BitConverter.ToUInt64(bytesA, 76), BitConverter.ToUInt64(bytesB, 76));
 
         if (results.BaseVersion < 4140) // Waypoint
             return;
@@ -233,25 +235,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T102_Read_76561198042453834_0x7D3_Worlds()
-    {
-        // Arrange
-        var expectAccountData = true;
-        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3_Worlds");
-        var results = new ReadResults[]
-        {
-            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287227),
-            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287234),
-        };
-        var userIdentification = ReadUserIdentification(path);
-
-        // Act
-        // Assert
-        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
-    }
-
-    [TestMethod]
-    public void T103_Read_76561198043217184()
+    public void T102_Read_76561198043217184()
     {
         // Arrange
         var expectAccountData = false;
@@ -281,7 +265,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T104_Read_76561198371877533()
+    public void T103_Read_76561198371877533()
     {
         // Arrange
         var expectAccountData = true;
@@ -304,7 +288,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T105_Read_76561198093556678()
+    public void T104_Read_76561198093556678()
     {
         // Arrange
         var expectAccountData = false;
@@ -322,7 +306,7 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T106_Read_76561199278291995()
+    public void T105_Read_76561199278291995()
     {
         // Arrange
         var expectAccountData = false;
@@ -347,11 +331,49 @@ public class SteamTest : CommonTestClass
         TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
     }
 
+    [TestMethod]
+    public void T106_Read_76561198042453834_0x7D3_WorldsPartI()
+    {
+        // Arrange
+        var expectAccountData = true;
+        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3");
+        var results = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287227),
+            new(1, "Slot1Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Custom, SeasonEnum.None, 4153, 4665, GameVersionEnum.WorldsPartI, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", 1287234),
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
+    }
+
+    [TestMethod]
+    public void T107_Read_76561198370111076_0x7D4_WorldsPartII()
+    {
+        // Arrange
+        var expectAccountData = true;
+        var path = GetCombinedPath("Steam", "st_76561198370111076_0x7D4");
+        var results = new ReadResults[]
+        {
+            new(0, "Slot1Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4172, 4684, GameVersionEnum.WorldsPartIIWithDifficultyTag, "Main", "Main", 20437),
+
+            new(2, "Slot2Auto", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4172, 4684, GameVersionEnum.WorldsPartIIWithDifficultyTag, "Møddęd Şävę", "Within New Atlantis", 4294987702),
+            new(3, "Slot2Manual", true, true, false, true, true, true, false, false, SaveContextQueryEnum.Main, nameof(PresetGameModeEnum.Normal), DifficultyPresetTypeEnum.Normal, SeasonEnum.None, 4172, 4684, GameVersionEnum.WorldsPartIIWithDifficultyTag, "Møddęd Şävę", "Main", 4294987733),
+        };
+        var userIdentification = ReadUserIdentification(path);
+
+        // Act
+        // Assert
+        TestCommonRead<PlatformSteam>(path, results, expectAccountData, userIdentification);
+    }
+
     /// <summary>
     /// Same as <see cref="T103_Read_76561198371877533"/>.
     /// </summary>
     [TestMethod]
-    public void T107_Read_NoAccountInDirectory()
+    public void T110_Read_NoAccountInDirectory()
     {
         // Arrange
         var expectAccountData = true;
@@ -448,12 +470,12 @@ public class SteamTest : CommonTestClass
     /// No changes compared to <see cref="T220_Write_Default_0x7D2_Waypoint_Account"/>.
     /// </summary>
     [TestMethod]
-    public void T222_Write_Default_0x7D3_Worlds_Account()
+    public void T222_Write_Default_0x7D3_WorldsPartI_Account()
     {
         // Arrange
         var originMusicVolume = 80; // 80
         var originUtcTicks = 638569393020000000; // 2024-07-18 22:41:42 +00:00
-        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3_Worlds");
+        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3");
 
         // Act
         // Assert
@@ -461,14 +483,45 @@ public class SteamTest : CommonTestClass
     }
 
     [TestMethod]
-    public void T223_Write_Default_0x7D3_Worlds()
+    public void T223_Write_Default_0x7D3_WorldsPartI()
     {
         // Arrange
         var containerIndex = 0;
         var originUnits = 1230523743; // 1,230,523,743
         var originUtcTicks = 638569393610000000; // 2024-07-18 22:42:41 +00:00
-        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3_Worlds");
+        var path = GetCombinedPath("Steam", "st_76561198042453834_0x7D3");
         var results = new WriteResults(uint.MaxValue, 4153, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 1287227, "Iteration 1", "An Bord von Die „Batannam“-Sphäre", (byte)(DifficultyPresetTypeEnum.Custom));
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultSave<PlatformSteam>(path, containerIndex, originUnits, originUtcTicks, results, DecryptMeta, AssertCommonMeta, AssertSpecificMeta);
+    }
+
+    /// <summary>
+    /// No changes compared to <see cref="T220_Write_Default_0x7D2_Waypoint_Account"/>.
+    /// </summary>
+    [TestMethod]
+    public void T224_Write_Default_0x7D4_WorldsPartII_Account()
+    {
+        // Arrange
+        var originMusicVolume = 80; // 80
+        var originUtcTicks = 638748002980000000; // 2025-02-10 16:04:58 +00:00
+        var path = GetCombinedPath("Steam", "st_76561198370111076_0x7D4");
+
+        // Act
+        // Assert
+        TestCommonWriteDefaultAccount<PlatformSteam>(path, originMusicVolume, originUtcTicks, DecryptMeta, AssertCommonMeta);
+    }
+
+    [TestMethod]
+    public void T225_Write_Default_0x7D4_WorldsPartII()
+    {
+        // Arrange
+        var containerIndex = 2;
+        var originUnits = -1;
+        var originUtcTicks = 638746854450000000; // 2025-02-09 08:10:45 +00:00
+        var path = GetCombinedPath("Steam", "st_76561198370111076_0x7D4");
+        var results = new WriteResults(uint.MaxValue, 4172, (ushort)(PresetGameModeEnum.Normal), (ushort)(SeasonEnum.None), 4294987702, "Møddęd Şävę", "Within New Atlantis", (byte)(DifficultyPresetTypeEnum.Normal));
 
         // Act
         // Assert

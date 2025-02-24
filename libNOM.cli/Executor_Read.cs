@@ -11,7 +11,7 @@ public partial class Executor
     ]
     public static void Read(ReadArgs args)
     {
-        var json = io.Global.Convert.ToJson(args.Input.FullName, false, args.JsonDeobfuscated);
+        var json = io.Global.Convert.ToJson(args.Input.FullName, false, args.JsonHumanReadable);
         Console.Out.Write(json);
     }
 }

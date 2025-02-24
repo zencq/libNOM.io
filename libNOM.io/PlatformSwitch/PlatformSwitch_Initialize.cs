@@ -53,12 +53,14 @@ public partial class PlatformSwitch : Platform
           5. BASE VERSION         (  4)
           6. GAME MODE            (  2)
           6. SEASON               (  2)
-          7. TOTAL PLAY TIME      (  4)
-          8. EMPTY                (  8)
+          7. TOTAL PLAY TIME      (  8)
 
-         10. EMPTY                ( 60)
+          9. EMPTY                (  4)
+         10. ???                  (  4)
+         11. EMPTY                ( 56)
                                   (100)
-
+        
+          9. EMPTY                (  4)
          10. SAVE NAME            (128) // may contain additional junk data after null terminator
          42. SAVE SUMMARY         (128) // may contain additional junk data after null terminator
          74. DIFFICULTY PRESET    (  4)
@@ -70,13 +72,23 @@ public partial class PlatformSwitch : Platform
          78. META FORMAT          (  4)
          79. EMPTY                ( 56)
                                   (372)
+
+          9. ???                  (  4)
+         10. SAVE NAME            (128)
+         42. SAVE SUMMARY         (128)
+         74. DIFFICULTY PRESET    (  4)
+         75. SLOT IDENTIFIER      (  8)
+         77. TIMESTAMP            (  4)
+         78. META FORMAT          (  4)
+         79. DIFFICULTY TAG       ( 64)
+                                  (380)
          */
         if (disk.IsEmpty())
             return;
 
         container.Extra = container.Extra with
         {
-            Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_KNOWN_VANILLA..].ToArray(),
+            Bytes = container.IsAccount ? disk.ToArray() : disk[META_LENGTH_AFTER_VANILLA..].ToArray(),
             MetaLength = (uint)(disk.Length),
             SizeDecompressed = decompressed[2],
         };
@@ -94,20 +106,20 @@ public partial class PlatformSwitch : Platform
         // Vanilla data always available.
         container.Extra = container.Extra with
         {
-            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[4]).ToLocalTime(),
+            LastWriteTime = DateTimeOffset.FromUnixTimeSeconds(decompressed[4]).ToLocalTime(), // gets overwriten in UpdateSaveContainerWithWorldsMetaInformation()
             BaseVersion = (int)(decompressed[5]),
             GameMode = disk.Cast<ushort>(24),
             Season = disk.Cast<ushort>(26),
-            TotalPlayTime = decompressed[7],
+            TotalPlayTime = disk.Cast<ulong>(28),
         };
 
         // Extended metadata since Waypoint 4.00.
         if (disk.Length == META_LENGTH_TOTAL_WAYPOINT)
             UpdateSaveContainerWithWaypointMetaInformation(container, disk);
 
-        // Extended metadata since Worlds Part I 5.00.
-        if (disk.Length == META_LENGTH_TOTAL_WORLDS)
-            UpdateSaveContainerWithWorldsPart1MetaInformation(container, disk, decompressed);
+        // Extended metadata since Worlds Part I 5.00 and once more since Worlds Part II 5.53.
+        if (disk.Length == META_LENGTH_TOTAL_WORLDS_PART_I || disk.Length == META_LENGTH_TOTAL_WORLDS_PART_II)
+            UpdateSaveContainerWithWorldsMetaInformation(container, disk, decompressed);
 
         // GameVersion with BaseVersion only is not 100% accurate but good enough to calculate SaveVersion.
         container.SaveVersion = Meta.SaveVersion.Calculate(container, Meta.GameVersion.Get(container.Extra.BaseVersion));

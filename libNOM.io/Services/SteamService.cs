@@ -35,7 +35,7 @@ internal class SteamService
     internal async Task<string?> GetPersonaNameAsync(string steamId)
     {
         var content = string.Empty;
-        var requestUri = $"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={Properties.Resources.STEAM_API_KEY}&steamids={steamId}";
+        var requestUri = $"http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={Properties.Resources.STEAM_API_KEY}&steamids={steamId}";
 
         try
         {

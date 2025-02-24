@@ -14,9 +14,9 @@ public class ConvertArgs
     [ArgRequired, ArgDescription("The target format to convert into."), ArgPosition(3)]
     public required FormatEnum Format { get; set; }
 
-    [ArgDefaultValue(true), ArgDescription("If the format is JSON, decide whether to indent or not."), ArgPosition(4)]
-    public required bool JsonIndented { get; set; }
+    [ArgDefaultValue(true), ArgDescription("If the format is JSON, decide whether it should be pretty printed."), ArgPosition(4)]
+    public required bool JsonPrettyPrint { get; set; }
 
-    [ArgDefaultValue(true), ArgDescription("If the format is JSON, decide whether to deobfuscate or not."), ArgPosition(5)]
-    public required bool JsonDeobfuscated { get; set; }
+    [ArgDefaultValue(true), ArgDescription("If the format is JSON, decide whether the keys should be human readable."), ArgPosition(5)]
+    public required bool JsonHumanReadable { get; set; }
 }

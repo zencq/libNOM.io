@@ -21,11 +21,13 @@ as well as performing related actions.
 
 ## Getting Started
 
-Currently save formats `2001` (**Foundation 1.10** to **Prisms 3.53**), `2002`
-(**Frontiers 3.60** to **Adrift 4.72**) including the extension made in **Waypoint 4.00**,
-and `2003` (**Worlds Part I 5.00** and up) are supported.
-The original format `2000` that was used in the vanilla game is not supported. If
-you are interested in it, have a look at the [nms-savetool by MetaIdea](https://github.com/MetaIdea/nms-savetool).
+Currently all save formats except the original `2000`, that was used in the vanilla
+game, are supported. If you are interested in the original format, have a look at
+the [nms-savetool by MetaIdea](https://github.com/MetaIdea/nms-savetool).
+  * `2001` (**Foundation 1.10** to **Prisms 3.53**)
+  * `2002` including its extension in **Waypoint 4.00** (**Frontiers 3.60** to **Adrift 4.72**)
+  * `2003` (**Worlds Part I 5.00** to **The Cursed 5.29**)
+  * `2004` including its extension in **5.53** (**Worlds Part II 5.50** and up)
 
 The lowest officially supported game version is **Beyond 2.11** to enable support
 for homebrew users on PlayStation 4 which could not update further at some point.
@@ -133,6 +135,7 @@ Thanks to the following people for their help in one way or another.
 * [MetaIdea](https://github.com/MetaIdea/nms-savetool) - Decrypt and encrypt Steam saves
 * [u/MegaGold_Fighter](https://www.reddit.com/r/NoMansSkyMods/comments/hhe2he/ps4_nms_save_editing_general_guide/) - [Storm21](https://psxtools.de/index.php?user/38756-storm21/) - Helping and verifying to make PlayStation support possible
 * [Moo](https://discord.gg/22ZAU9H) - Helping and verifying to make Microsoft Store support possible
+* [waryder](https://github.com/waryder) - Idea and initial implementation of the stdin/stdout feature of the CLI
 
 ## Dependencies
 

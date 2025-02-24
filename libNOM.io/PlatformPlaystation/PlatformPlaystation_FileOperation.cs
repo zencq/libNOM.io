@@ -97,7 +97,7 @@ public partial class PlatformPlaystation : Platform
             {
                 MetaLength = (uint)(container.GameVersion switch
                 {
-                    >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
+                    >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS_PART_I,
                     >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
                     _ => META_LENGTH_TOTAL_WAYPOINT,
                 }),

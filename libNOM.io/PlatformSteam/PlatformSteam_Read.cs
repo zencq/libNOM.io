@@ -14,7 +14,7 @@ public partial class PlatformSteam : Platform
         var result = base.DecryptMeta(container, meta);
 
         // Ensure it has a known length before continuing decrypting.
-        if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT && meta.Length != META_LENGTH_TOTAL_WORLDS)
+        if (meta.Length != META_LENGTH_TOTAL_VANILLA && meta.Length != META_LENGTH_TOTAL_WAYPOINT && meta.Length != META_LENGTH_TOTAL_WORLDS_PART_I && meta.Length != META_LENGTH_TOTAL_WORLDS_PART_II)
             return result;
 
         // Best case is that it works with the value of the file but in case it was moved manually, try all other values as well.

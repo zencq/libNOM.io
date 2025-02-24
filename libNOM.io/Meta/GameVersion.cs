@@ -16,7 +16,10 @@ internal static class GameVersion
     /// <returns></returns>
     internal static GameVersionEnum Get(Platform platform, int length, uint format)
     {
-        if (length == platform.META_LENGTH_TOTAL_WORLDS)
+        if (length == platform.META_LENGTH_TOTAL_WORLDS_PART_II)
+            return GameVersionEnum.WorldsPartIIWithDifficultyTag; // Constants.META_FORMAT_4
+
+        if (length == platform.META_LENGTH_TOTAL_WORLDS_PART_I)
             return GameVersionEnum.WorldsPartI; // Constants.META_FORMAT_3
 
         if (length == platform.META_LENGTH_TOTAL_WAYPOINT)
@@ -42,6 +45,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
         >= 4167 => GameVersionEnum.TheCursedWithStarbornPhoenix, // 5.29
         >= 4164 => GameVersionEnum.TheCursedWithCrossSave, // 5.25
@@ -82,6 +86,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
         >= 4167 => GameVersionEnum.TheCursedWithStarbornPhoenix, // 5.29
         >= 4164 => GameVersionEnum.TheCursedWithCrossSave, // 5.25
@@ -118,6 +123,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
         >= 4167 => GameVersionEnum.TheCursedWithStarbornPhoenix, // 5.29
         >= 4164 => GameVersionEnum.TheCursedWithCrossSave, // 5.25
