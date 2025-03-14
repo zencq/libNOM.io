@@ -1,4 +1,6 @@
-﻿using libNOM.cli.Args;
+﻿using System.Text;
+
+using libNOM.cli.Args;
 
 namespace libNOM.cli;
 
@@ -12,6 +14,8 @@ public partial class Executor
     public static void Read(ReadArgs args)
     {
         var json = io.Global.Convert.ToJson(args.Input.FullName, false, args.JsonHumanReadable);
+
+        Console.OutputEncoding = Encoding.UTF8;
         Console.Out.Write(json);
     }
 }

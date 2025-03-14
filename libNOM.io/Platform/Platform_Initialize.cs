@@ -96,7 +96,7 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
                     break;
             }
         }));
-        Task.WaitAll(tasks.ToArray());
+        Task.WaitAll([.. tasks]);
 
         return bag;
     }

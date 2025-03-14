@@ -12,8 +12,16 @@ public partial class Executor
     public static void Write(WriteArgs args)
     {
         var json = Console.In.ReadToEnd();
-        var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());
 
-        io.Global.Convert.ToSaveFile(json, platform, args.Index, args.Output?.FullName);
+        if (args.Format == Enums.FormatEnum.Json)
+        {
+            var path = args.Output?.FullName ?? System.AppContext.BaseDirectory;
+            File.WriteAllText(path, json);
+        }
+        else
+        {
+            var platform = Enum.Parse<io.Enums.PlatformEnum>(args.Format.ToString());
+            io.Global.Convert.ToSaveFile(json, platform, args.Index, args.Output?.FullName);
+        }
     }
 }
