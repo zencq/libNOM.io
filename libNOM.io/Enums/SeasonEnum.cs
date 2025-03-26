@@ -44,5 +44,6 @@ public enum SeasonEnum
     AquariusRedux,
     CursedRedux,
     Titan, // 17th
+    Relics, // 18th
     Future,
 }

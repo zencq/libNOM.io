@@ -71,4 +71,5 @@ public enum GameVersionEnum
     [Description("Worlds Part II")]
     WorldsPartIIWithDifficultyTag = 553,
     Titan = 555, // not actually used
+    Relics = 560,
 }

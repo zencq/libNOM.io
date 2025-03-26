@@ -45,6 +45,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4176 => GameVersionEnum.Relics, // 5.60
         >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
         >= 4167 => GameVersionEnum.TheCursedWithStarbornPhoenix, // 5.29
@@ -86,6 +87,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4176 => GameVersionEnum.Relics, // 5.60
         >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
         >= 4167 => GameVersionEnum.TheCursedWithStarbornPhoenix, // 5.29
@@ -123,6 +125,7 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4176 => GameVersionEnum.Relics, // 5.60
         >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
         >= 4167 => GameVersionEnum.TheCursedWithStarbornPhoenix, // 5.29
