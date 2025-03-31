@@ -6,7 +6,7 @@ public record class WriteResults(
     uint BaseVersion,
     ushort GameMode, // PresetGameModeEnum
     ushort Season, // SeasonEnum
-    uint TotalPlayTime,
+    ulong TotalPlayTime,
 
     string SaveName,
     string SaveSummary,

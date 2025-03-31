@@ -82,4 +82,8 @@ public partial class Container : IContainer
     public bool IsVersion529TheCursedWithStarbornPhoenix => IsVersion(GameVersionEnum.TheCursedWithStarbornPhoenix); // { get; }
 
     public bool IsVersion550WorldsPartII => IsVersion(GameVersionEnum.WorldsPartII); // { get; }
+
+    public bool IsVersion553WorldsPartIIWithDifficultyTag => IsVersion(GameVersionEnum.WorldsPartIIWithDifficultyTag); // { get; }
+
+    public bool IsVersion560Relics => IsVersion(GameVersionEnum.Relics); // { get; }
 }

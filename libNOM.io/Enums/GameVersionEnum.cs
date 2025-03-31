@@ -52,7 +52,7 @@ public enum GameVersionEnum
     WaypointWithSuperchargedSlots = 405,
     Fractal = 410,
     Interceptor = 420,
-    Mac = 425,
+    Mac = 425, // not actually used
     Singularity = 430,
     Echoes = 440,
     Omega = 450,
@@ -63,9 +63,13 @@ public enum GameVersionEnum
     WorldsPartI = 500,
     Aquarius = 510,
     TheCursed = 520,
-    [Description(nameof(TheCursed))]
+    [Description("The Cursed")]
     TheCursedWithCrossSave = 525,
-    [Description(nameof(TheCursed))]
+    [Description("The Cursed")]
     TheCursedWithStarbornPhoenix = 529,
     WorldsPartII = 550,
+    [Description("Worlds Part II")]
+    WorldsPartIIWithDifficultyTag = 553,
+    Titan = 555, // not actually used
+    Relics = 560,
 }

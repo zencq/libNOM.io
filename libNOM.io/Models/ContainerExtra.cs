@@ -52,7 +52,7 @@ internal record class ContainerExtra
 
     internal ushort Season { get; init; }
 
-    internal uint TotalPlayTime { get; init; }
+    internal ulong TotalPlayTime { get; init; }
 
     internal string SaveName { get; init; } = string.Empty;
 

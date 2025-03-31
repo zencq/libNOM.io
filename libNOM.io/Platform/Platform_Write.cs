@@ -175,11 +175,23 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
         if (capacity == 0)
             capacity = container.GameVersion switch
             {
-                >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS,
+                >= GameVersionEnum.WorldsPartIIWithDifficultyTag => META_LENGTH_TOTAL_WORLDS_PART_II,
+                >= GameVersionEnum.WorldsPartI => META_LENGTH_TOTAL_WORLDS_PART_I,
                 >= GameVersionEnum.Waypoint => META_LENGTH_TOTAL_WAYPOINT,
                 _ => META_LENGTH_TOTAL_VANILLA,
             };
         return capacity;
+    }
+
+    protected static uint GetMetaFormat(Container container)
+    {
+        return container.GameVersion switch // 4
+        {
+            >= GameVersionEnum.WorldsPartII => Constants.META_FORMAT_4,
+            >= GameVersionEnum.WorldsPartI => Constants.META_FORMAT_3,
+            >= GameVersionEnum.Frontiers => Constants.META_FORMAT_2,
+            _ => Constants.META_FORMAT_1,
+        };
     }
 
     /// <summary>
@@ -200,13 +212,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         if (container.IsVersion400Waypoint)
         {
-            writer.Seek(META_LENGTH_KNOWN_VANILLA, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_BEFORE_NAME, SeekOrigin.Begin);
             writer.Write(container.SaveName.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN_NAME, SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
+            writer.Seek(META_LENGTH_BEFORE_SUMMARY, SeekOrigin.Begin); // as a variable number of bytes is written, we seek from SeekOrigin.Begin again
             writer.Write(container.SaveSummary.GetBytesWithTerminator()); // 128
 
-            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_BEFORE_DIFFICULTY_PRESET, SeekOrigin.Begin);
             writer.Write((byte)(container.Difficulty)); // 1
         }
     }
@@ -221,13 +233,13 @@ public abstract partial class Platform : IPlatform, IEquatable<Platform>
     {
         if (container.IsVersion500WorldsPartI)
         {
-            writer.Seek(META_LENGTH_KNOWN_SUMMARY, SeekOrigin.Begin);
+            writer.Seek(META_LENGTH_BEFORE_DIFFICULTY_PRESET, SeekOrigin.Begin);
             writer.Write((uint)(container.Difficulty)); // 4
 
-            // Skip next 8 bytes with SLOT IDENTIFIER.
-            writer.Seek(0x8, SeekOrigin.Current);
+            // Skip SLOT IDENTIFIER.
+            writer.Seek(META_LENGTH_BEFORE_TIMESTAMP, SeekOrigin.Begin);
             writer.Write((uint)(container.LastWriteTime!.Value.ToUniversalTime().ToUnixTimeSeconds())); // 4
-            writer.Write(Constants.META_FORMAT_3); // 4
+            writer.Write(GetMetaFormat(container)); // 4 // META_FORMAT_3 or META_FORMAT_4
         }
     }
 

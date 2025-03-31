@@ -8,11 +8,20 @@ since 1.0.0.
 
 ### Known Issues
 ### Added
+* Proper support for Worlds Part II patch 5.53 with new meta size
+* Tests for Worlds Part I and II on all platforms
+* Support for game version **Relics 5.60**
+    * Detection for new packaged technology
+* Titan and Relics Expedition
 ### Changed
+* CLI
+    * Renaming `Json*` arguments to make their purpose easier understandable
 ### Deprecated
 ### Removed
 ### Fixed
-* Potential exception when having a really high play time
+* CLI
+    * Force stdout encoding for the read action to be UTF-8 as the default one may not support all characters and can break the resulting JSON
+* Exception when having a really high play time (`IContainer.TotalPlayTime` is now `ulong`)
 ### Security
 
 ## 0.14.0 (2025-02-09)

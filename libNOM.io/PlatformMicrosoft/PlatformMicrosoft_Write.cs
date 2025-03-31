@@ -125,16 +125,13 @@ public partial class PlatformMicrosoft : Platform
             writer.Write(container.BaseVersion); // 4
             writer.Write((ushort)(container.GameMode)); // 2
             writer.Write((ushort)(container.Season)); // 2
-            writer.Write(container.TotalPlayTime); // 4
-
-            // Skip EMPTY.
-            writer.Seek(0x4, SeekOrigin.Current); // 4
+            writer.Write(container.TotalPlayTime); // 8
 
             // COMPRESSED SIZE or DECOMPRESSED SIZE depending on game version.
-            writer.Write(container.IsVersion452OmegaWithMicrosoftV2 ? container.Extra.SizeDisk : container.Extra.SizeDecompressed); // 4
+            writer.Write(container.IsVersion452OmegaWithMicrosoftV2 && !container.IsVersion550WorldsPartII ? container.Extra.SizeDisk : container.Extra.SizeDecompressed); // 4
 
             // Append buffered bytes that follow META_LENGTH_KNOWN_VANILLA.
-            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 4 or 260 or 276
+            writer.Write(container.Extra.Bytes ?? []); // Extra.Bytes is 4 or 260 or 276 or 340
 
             OverwriteWaypointMeta(writer, container);
             OverwriteWorldsMeta(writer, container);

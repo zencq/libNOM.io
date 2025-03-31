@@ -36,7 +36,7 @@ internal static partial class TotalPlayTime
     /// </summary>
     /// <param name="json"></param>
     /// <returns></returns>
-    public static uint Get(string? json) => RegexesTotalPlayTime.Match(json)?.ToUInt32Value() ?? 0;
+    public static ulong Get(string? json) => RegexesTotalPlayTime.Match(json)?.ToUInt64Value() ?? 0;
 
     #endregion
 }

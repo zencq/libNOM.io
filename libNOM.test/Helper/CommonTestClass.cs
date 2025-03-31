@@ -34,9 +34,10 @@ public abstract class CommonTestClass
     protected const string DIRECTORY_TESTSUITE_ARCHIVE = "TESTSUITE_ARCHIVE";
     protected const string DIRECTORY_TESTSUITE_ARCHIVE_TEMPLATE = "TESTSUITE_ARCHIVE_TEMPLATE";
 
-    protected const uint META_FORMAT_2 = 0x7D1; // 2001
-    protected const uint META_FORMAT_3 = 0x7D2; // 2002
-    protected const uint META_FORMAT_4 = 0x7D3; // 2003
+    protected const uint META_FORMAT_1 = 0x7D1; // 2001
+    protected const uint META_FORMAT_2 = 0x7D2; // 2002
+    protected const uint META_FORMAT_3 = 0x7D3; // 2003
+    protected const uint META_FORMAT_4 = 0x7D4; // 2004
 
     protected static readonly int[] MUSICVOLUME_INDICES = [1, 7];
     protected const string MUSICVOLUME_JSONPATH = "UserSettingsData.MusicVolume";
@@ -59,6 +60,12 @@ public abstract class CommonTestClass
             Assert.IsTrue(expected.SequenceEqual(value));
     }
 
+    protected static void AssertAllAreEqual(IEnumerable<uint> expected, params IEnumerable<uint>[] actual)
+    {
+        foreach (var value in actual)
+            Assert.IsTrue(expected.SequenceEqual(value));
+    }
+
     protected static void AssertAllAreEqual(int expected, params int[] actual)
     {
         foreach (var value in actual)
@@ -72,6 +79,12 @@ public abstract class CommonTestClass
     }
 
     protected static void AssertAllAreEqual(long expected, params long[] actual)
+    {
+        foreach (var value in actual)
+            Assert.AreEqual(expected, value);
+    }
+
+    protected static void AssertAllAreEqual(ulong expected, params ulong[] actual)
     {
         foreach (var value in actual)
             Assert.AreEqual(expected, value);
@@ -307,7 +320,7 @@ public abstract class CommonTestClass
 
     protected static string GetGuid(IEnumerable<byte> source)
     {
-        return new Guid(source.ToArray()).ToString("N").ToUpper();
+        return new Guid([.. source]).ToString("N").ToUpper();
     }
 
     protected static IEnumerable<IContainer> GetLoadedContainers(IPlatform platform)
@@ -317,12 +330,12 @@ public abstract class CommonTestClass
 
     protected static string GetString(IEnumerable<byte> source)
     {
-        return Encoding.UTF8.GetString(source.ToArray());
+        return Encoding.UTF8.GetString([.. source]);
     }
 
     protected static string GetUnicode(IEnumerable<byte> source)
     {
-        return Encoding.Unicode.GetString(source.ToArray());
+        return Encoding.Unicode.GetString([.. source]);
     }
 
     protected static IEnumerable<IContainer> GetWatcherChangeContainers(IPlatform platform)
