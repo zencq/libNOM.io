@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<!-- Application -->
 	<PropertyGroup>
@@ -103,7 +103,7 @@
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="IndexRange" Version="1.0.3" />
-		<PackageReference Include="System.Memory" Version="4.6.0" />
+		<PackageReference Include="System.Memory" Version="4.6.2" />
 	</ItemGroup>
 
 	<!-- Resources -->
