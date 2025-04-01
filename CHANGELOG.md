@@ -4,25 +4,34 @@ All notable changes to this project will be documented in this file. It uses the
 [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) principles and [Semantic Versioning](https://semver.org/)
 since 1.0.0.
 
-## Unreleased (0.14.1)
+## Unreleased
 
 ### Known Issues
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## 0.14.1 (2025-04-01)
+
 ### Added
 * Proper support for Worlds Part II patch 5.53 with new meta size
 * Tests for Worlds Part I and II on all platforms
 * Support for game version **Relics 5.60**
     * Detection for new packaged technology
-* Titan and Relics Expedition
+* Relics Expedition
+
 ### Changed
 * CLI
     * Renaming `Json*` arguments to make their purpose easier understandable
-### Deprecated
-### Removed
+* Bump *libNOM.map* from 0.13.5 to 0.13.6
+
 ### Fixed
 * CLI
     * Force stdout encoding for the read action to be UTF-8 as the default one may not support all characters and can break the resulting JSON
 * Exception when having a really high play time (`IContainer.TotalPlayTime` is now `ulong`)
-### Security
 
 ## 0.14.0 (2025-02-09)
 
