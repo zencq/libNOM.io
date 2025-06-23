@@ -60,7 +60,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="SharpCompress" Version="0.39.0" />
+		<PackageReference Include="SharpCompress" Version="0.40.0" />
 	</ItemGroup>
 
 	<ItemGroup>
