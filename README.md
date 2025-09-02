@@ -2,7 +2,7 @@
 
 ![Maintained](https://img.shields.io/maintenance/yes/2025)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/zencq/libNOM.io/pipeline.yml?logo=github)](https://github.com/zencq/libNOM.io/actions/workflows/pipeline.yml)
-[![Maintainability](https://api.codeclimate.com/v1/badges/5f2e527d62758832d38b/maintainability)](https://codeclimate.com/github/zencq/libNOM.io/maintainability)
+[![Maintainability](https://qlty.sh/gh/zencq/projects/libNOM.io/maintainability.svg)](https://qlty.sh/gh/zencq/projects/libNOM.io)
 
 [![.NET | Standard 2.0 - 2.1 | 8 - 9](https://img.shields.io/badge/.NET-Standard%202.0%20--%202.1%20%7C%208%20--%209-lightgrey)](https://dotnet.microsoft.com/en-us/)
 [![C# 13](https://img.shields.io/badge/C%23-13-lightgrey)](https://docs.microsoft.com/en-us/dotnet/csharp/)
