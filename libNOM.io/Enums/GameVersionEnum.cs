@@ -72,4 +72,6 @@ public enum GameVersionEnum
     WorldsPartIIWithDifficultyTag = 553,
     Titan = 555, // not actually used
     Relics = 560,
+    Beacon = 570,
+    Voyagers = 600,
 }

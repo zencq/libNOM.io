@@ -45,6 +45,8 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion) => baseVersion switch
     {
+        >= 4189 => GameVersionEnum.Voyagers, // 6.00
+        >= 4183 => GameVersionEnum.Beacon, // 5.70
         >= 4176 => GameVersionEnum.Relics, // 5.60
         >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
@@ -87,6 +89,8 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, JObject jsonObject) => baseVersion switch
     {
+        >= 4189 => GameVersionEnum.Voyagers, // 6.00
+        >= 4183 => GameVersionEnum.Beacon, // 5.70
         >= 4176 => GameVersionEnum.Relics, // 5.60
         >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50
@@ -125,6 +129,8 @@ internal static class GameVersion
     // EXTERNAL RELEASE: Add new game version.
     internal static GameVersionEnum Get(int baseVersion, string json) => baseVersion switch
     {
+        >= 4189 => GameVersionEnum.Voyagers, // 6.00
+        >= 4183 => GameVersionEnum.Beacon, // 5.70
         >= 4176 => GameVersionEnum.Relics, // 5.60
         >= 4171 => GameVersionEnum.WorldsPartIIWithDifficultyTag, // 5.53
         >= 4168 => GameVersionEnum.WorldsPartII, // 5.50

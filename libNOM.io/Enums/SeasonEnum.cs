@@ -45,5 +45,6 @@ public enum SeasonEnum
     CursedRedux,
     Titan, // 17th
     Relics, // 18th
+    Corvette, // 19th
     Future,
 }

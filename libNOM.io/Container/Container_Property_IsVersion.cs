@@ -86,4 +86,8 @@ public partial class Container : IContainer
     public bool IsVersion553WorldsPartIIWithDifficultyTag => IsVersion(GameVersionEnum.WorldsPartIIWithDifficultyTag); // { get; }
 
     public bool IsVersion560Relics => IsVersion(GameVersionEnum.Relics); // { get; }
+
+    public bool IsVersion570Beacon => IsVersion(GameVersionEnum.Beacon); // { get; }
+
+    public bool IsVersion600Voyagers => IsVersion(GameVersionEnum.Voyagers); // { get; }
 }

@@ -240,6 +240,10 @@ public interface IContainer : IComparable<IContainer>, IEquatable<IContainer>
 
     public bool IsVersion560Relics { get; }
 
+    public bool IsVersion570Beacon { get; }
+
+    public bool IsVersion600Voyagers { get; }
+
     #endregion
 
     #region Miscellaneous
