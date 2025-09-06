@@ -25,9 +25,12 @@
       },
       "IndexRange": {
         "type": "Direct",
-        "requested": "[1.0.3, )",
-        "resolved": "1.0.3",
-        "contentHash": "tqgj3LuQHDH0OfGZamyiW1i9fhpny5piqvI+8Y7IIaRly+Bhqv5Z7zSlcIwA/DlYPS/cBmVwb+J4VGEFFqmnfQ=="
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "fG+2WP1e3Fg3ZVq85XAdiwG9t0twi3r0LvOrTjtbH/31Rd5gLnV5APOD2JHAowbZYDgj9D3rXRbUvIL+ew0WZQ==",
+        "dependencies": {
+          "Microsoft.Bcl.Memory": "9.0.0"
+        }
       },
       "K4os.Compression.LZ4": {
         "type": "Direct",
@@ -51,9 +54,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.6, )",
-        "resolved": "0.13.6",
-        "contentHash": "xpf9/l5dpGC7CN0+DleUG8/cqvddnnxpgzw/4yyNYUrdpuTlHvDBE/Zpvuod4e+vh2OTZcmIOpmcSP6ASwujEw==",
+        "requested": "[0.13.8, )",
+        "resolved": "0.13.8",
+        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "14.0.0"
@@ -95,19 +98,28 @@
       },
       "System.Memory": {
         "type": "Direct",
-        "requested": "[4.6.2, )",
-        "resolved": "4.6.2",
-        "contentHash": "Eq99oXEjWicekXb8AaqwYA6p+am0XrUMenq5RB6OYIL7oYY5gUzRas9+i2zcNsRNB75MpDhFsYX+uV6y89a0Eg==",
+        "requested": "[4.6.3, )",
+        "resolved": "4.6.3",
+        "contentHash": "qdcDOgnFZY40+Q9876JUHnlHu7bosOHX8XISRoH94fwk6hgaeQGSgfZd8srWRZNt5bV9ZW2TljcegDNxsf+96A==",
         "dependencies": {
           "System.Buffers": "4.6.1",
           "System.Numerics.Vectors": "4.6.1",
-          "System.Runtime.CompilerServices.Unsafe": "6.1.1"
+          "System.Runtime.CompilerServices.Unsafe": "6.1.2"
         }
       },
       "Microsoft.Bcl.HashCode": {
         "type": "Transitive",
         "resolved": "6.0.0",
         "contentHash": "GI4jcoi6eC9ZhNOQylIBaWOQjyGaR8T6N3tC1u8p3EXfndLCVNNWa+Zp+ocjvvS3kNBN09Zma2HXL0ezO0dRfw=="
+      },
+      "Microsoft.Bcl.Memory": {
+        "type": "Transitive",
+        "resolved": "9.0.0",
+        "contentHash": "bTUtGfpGyJnohQzjdXbtc7MqNzkv7CWUSRz54+ucNm0i32rZiIU0VdVPHDBShOl1qhVKRjW8mnEBz3d2vH93tQ==",
+        "dependencies": {
+          "System.Memory": "4.5.5",
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        }
       },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
@@ -187,8 +199,8 @@
       },
       "System.Runtime.CompilerServices.Unsafe": {
         "type": "Transitive",
-        "resolved": "6.1.1",
-        "contentHash": "YkOfl8PsmWT4ASkkEFFlfajgwomK8VnhwOIx0JEego69Tw5IqXjbzUBwNKcE5KprqlK92ZCYT56nQwmyEv45Ug=="
+        "resolved": "6.1.2",
+        "contentHash": "2hBr6zdbIBTDE3EhK7NSVNdX58uTK6iHW/P/Axmm9sl1xoGSLqDvMtpecn226TNwHByFokYwJmt/aQQNlO5CRw=="
       },
       "System.Threading.Tasks.Extensions": {
         "type": "Transitive",
@@ -239,9 +251,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.6, )",
-        "resolved": "0.13.6",
-        "contentHash": "xpf9/l5dpGC7CN0+DleUG8/cqvddnnxpgzw/4yyNYUrdpuTlHvDBE/Zpvuod4e+vh2OTZcmIOpmcSP6ASwujEw==",
+        "requested": "[0.13.8, )",
+        "resolved": "0.13.8",
+        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "14.0.0"
@@ -390,9 +402,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.6, )",
-        "resolved": "0.13.6",
-        "contentHash": "xpf9/l5dpGC7CN0+DleUG8/cqvddnnxpgzw/4yyNYUrdpuTlHvDBE/Zpvuod4e+vh2OTZcmIOpmcSP6ASwujEw==",
+        "requested": "[0.13.8, )",
+        "resolved": "0.13.8",
+        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "14.0.0"
@@ -526,9 +538,9 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.6, )",
-        "resolved": "0.13.6",
-        "contentHash": "xpf9/l5dpGC7CN0+DleUG8/cqvddnnxpgzw/4yyNYUrdpuTlHvDBE/Zpvuod4e+vh2OTZcmIOpmcSP6ASwujEw==",
+        "requested": "[0.13.8, )",
+        "resolved": "0.13.8",
+        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "Octokit": "14.0.0"
