@@ -14,6 +14,16 @@ since 1.0.0.
 ### Fixed
 ### Security
 
+## 0.14.2 (2025-09-06)
+
+### Added
+* Support for game versions **Beacon 5.70** and **Voyagers 6.00**
+    * Detection for new packaged technology
+* Voyagers Expedition
+
+### Changed
+* Bump *libNOM.map* from 0.13.6 to 0.13.8
+
 ## 0.14.1 (2025-04-01)
 
 ### Added
