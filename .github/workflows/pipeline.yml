@@ -23,7 +23,7 @@ jobs:
           dotnet-version: ${{ matrix.framework.version }}
           dotnet-quality: ga
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Cache
         uses: actions/cache@v4
         with:
@@ -61,7 +61,7 @@ jobs:
           dotnet-version: ${{ matrix.framework.version }}
           dotnet-quality: ga
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Cache
         uses: actions/cache@v4
         with:
