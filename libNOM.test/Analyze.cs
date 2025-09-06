@@ -104,7 +104,7 @@ public class AnalyzeTest : CommonTestClass
         var collection = new PlatformCollection(path, settings);
 
         // Assert
-        Assert.ThrowsException<KeyNotFoundException>(() => collection.Get(path));
+        Assert.ThrowsExactly<KeyNotFoundException>(() => collection.Get(path));
     }
 
     [TestMethod]
