@@ -81,13 +81,13 @@ jobs:
         run: dotnet publish libNOM.cli --configuration Release --framework ${{ matrix.framework.dotnet }} --runtime osx-arm64
       - name: Upload (NuGet)
         if: ${{ matrix.os.name == 'macos' }} # only once
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: NuGet
           path: ./libNOM.io/bin/Release/libNOM.io.*nupkg
           if-no-files-found: error
       - name: Upload (Build)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Build (${{ matrix.os.display }})
           path: | # files not found are ignored
@@ -97,7 +97,7 @@ jobs:
           if-no-files-found: error
       - name: Upload (Release)
         if: ${{ matrix.os.name == 'macos' && startsWith(github.ref, 'refs/tags/') }} # only once and if tagged
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Release
           path: ./.github/changelogs/${{ github.ref_name }}.md
