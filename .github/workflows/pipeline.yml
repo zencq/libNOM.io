@@ -109,7 +109,7 @@ jobs:
     needs: [test, build]
     steps:
       - name: Download
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
       - name: Version
         run: echo "nupkg_version=$((((Get-Item -Path ./NuGet/libNOM.io.*.nupkg).Name -split '\.',3)[2] -split '\.',-2)[0])" >> $env:GITHUB_ENV
         shell: pwsh
