@@ -46,7 +46,7 @@ jobs:
         run: Get-ChildItem ./libNOM.test/Properties/ -File | ForEach-Object { (Get-Content $_.FullName) -Replace "{{ secrets.TESTSUITE_PASSWORD }}","${{ secrets.TESTSUITE_PASSWORD }}" | Set-Content $_.FullName }
         shell: pwsh
       - name: Unit Test
-        run: dotnet test libNOM.test --framework ${{ matrix.dotnet.framework }} --settings test.runsettings
+        run: dotnet test libNOM.test --framework ${{ matrix.dotnet.framework }}
   coverage:
     name: Coverage
     strategy:
