@@ -96,7 +96,7 @@ public class ContainerTest : CommonTestClass
         platform.RestoreBackup(backup);
 
         // Assert
-        Assert.AreEqual(1, container.BackupCollection.Count);
+        Assert.HasCount(1, container.BackupCollection);
 
         Assert.IsFalse(container.IsSynced);
         Assert.IsTrue(backupRestoredCallback);

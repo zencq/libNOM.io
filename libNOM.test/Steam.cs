@@ -103,7 +103,7 @@ public class SteamTest : CommonTestClass
 
     private static void AssertCommonMeta(IContainer container, uint[] metaA, uint[] metaB)
     {
-        Assert.AreEqual(metaA.Length, metaB.Length);
+        Assert.HasCount(metaA.Length, metaB);
 
         AssertAllAreEqual(META_HEADER, metaA[0], metaB[0]);
 

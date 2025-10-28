@@ -43,7 +43,7 @@ public class MicrosoftTest : CommonTestClass
 
     private static void AssertCommonMeta(IContainer container, uint[] metaA, uint[] metaB)
     {
-        Assert.AreEqual(metaA.Length, metaB.Length);
+        Assert.HasCount(metaA.Length, metaB);
 
         if (metaA.Length == META_LENGTH_TOTAL_VANILLA || metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
@@ -73,7 +73,7 @@ public class MicrosoftTest : CommonTestClass
             {
                 Assert.IsTrue(metaA.Take(4).SequenceEqual(metaB.Take(4)));
                 Assert.IsTrue(metaA.Skip(5).Take(67).SequenceEqual(metaB.Skip(5).Take(67)));
-                Assert.IsTrue(metaA[72] < metaB[72]);
+                Assert.IsLessThan(metaB[72], metaA[72]);
                 AssertAllAreEqual(META_FORMAT_3, metaA[73], metaB[73]);
             }
         }
@@ -90,7 +90,7 @@ public class MicrosoftTest : CommonTestClass
             {
                 Assert.IsTrue(metaA.Take(4).SequenceEqual(metaB.Take(4)));
                 Assert.IsTrue(metaA.Skip(5).Take(67).SequenceEqual(metaB.Skip(5).Take(67)));
-                Assert.IsTrue(metaA[72] < metaB[72]);
+                Assert.IsLessThan(metaB[72], metaA[72]);
                 AssertAllAreEqual(META_FORMAT_4, metaA[73], metaB[73]);
                 Assert.IsTrue(metaA.Skip(73).SequenceEqual(metaB.Skip(73)));
             }

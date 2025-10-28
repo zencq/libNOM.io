@@ -162,7 +162,7 @@ public abstract class CommonTestClass
 
             Assert.AreEqual(-2, container.CollectionIndex);
             Assert.AreEqual("AccountData", container.Identifier);
-            Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+            Assert.IsEmpty(container.UnknownKeys, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
         }
         else
             Assert.IsFalse(platform.HasAccountData);
@@ -199,7 +199,7 @@ public abstract class CommonTestClass
             Assert.AreEqual(expected.SaveName, container.SaveName);
             Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
             Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
-            Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+            Assert.IsEmpty(container.UnknownKeys, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
         }
     }
 
@@ -252,7 +252,7 @@ public abstract class CommonTestClass
                 Assert.AreEqual(expected.SaveName, container.SaveName);
                 Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
                 Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
-                Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+                Assert.IsEmpty(container.UnknownKeys, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
             }
     }
 
@@ -375,7 +375,7 @@ public abstract class CommonTestClass
         Assert.AreEqual(results.SaveName, container.SaveName);
         Assert.AreEqual(results.SaveSummary, container.SaveSummary);
         Assert.AreEqual(results.TotalPlayTime, container.TotalPlayTime);
-        Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+        Assert.IsEmpty(container.UnknownKeys, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
     }
 
     protected static void TestCommonAnalyzePath(string path, PlatformEnum platformResult, PlatformEnum? platformPreferred)
@@ -569,7 +569,7 @@ public abstract class CommonTestClass
             Assert.AreEqual(expected.SaveName, container.SaveName);
             Assert.AreEqual(expected.SaveSummary, container.SaveSummary);
             Assert.AreEqual(expected.TotalPlayTime, container.TotalPlayTime);
-            Assert.AreEqual(0, container.UnknownKeys.Count, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
+            Assert.IsEmpty(container.UnknownKeys, $"{container.Identifier}.UnknownKeys: {string.Join(" // ", container.UnknownKeys)}");
         }
     }
 
@@ -593,7 +593,7 @@ public abstract class CommonTestClass
             platform.Transfer(transferSource, i);
 
         // Assert
-        Assert.AreEqual(userDecisionsSource, transferSource.TransferBaseUserDecision.Count);
+        Assert.HasCount(userDecisionsSource, transferSource.TransferBaseUserDecision);
         Assert.AreEqual(existingContainersCount, GetExistingContainers(platform).Count());
 
         AssertCommonSourceTransferData(userIdentificationSource, platformSource, transferSource);

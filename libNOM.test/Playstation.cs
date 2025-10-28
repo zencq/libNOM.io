@@ -71,7 +71,7 @@ public class PlaystationTest : CommonTestClass
 
     private static void AssertCommonMeta(IContainer _, uint[] metaA, uint[] metaB)
     {
-        Assert.AreEqual(metaA.Length, metaB.Length);
+        Assert.HasCount(metaA.Length, metaB);
 
         if (_usesSaveStreaming)
         {
@@ -155,8 +155,8 @@ public class PlaystationTest : CommonTestClass
 
         for (int i = 0; i < metaA.Length; i++)
         {
-            metaA[i] = ToUInt32(memoryDatA.Skip(MEMORYDAT_OFFSET_META + i * META_LENGTH_TOTAL_VANILLA).Take(META_LENGTH_TOTAL_VANILLA).ToArray());
-            metaB[i] = ToUInt32(memoryDatB.Skip(MEMORYDAT_OFFSET_META + i * META_LENGTH_TOTAL_VANILLA).Take(META_LENGTH_TOTAL_VANILLA).ToArray());
+            metaA[i] = ToUInt32([.. memoryDatA.Skip(MEMORYDAT_OFFSET_META + i * META_LENGTH_TOTAL_VANILLA).Take(META_LENGTH_TOTAL_VANILLA)]);
+            metaB[i] = ToUInt32([.. memoryDatB.Skip(MEMORYDAT_OFFSET_META + i * META_LENGTH_TOTAL_VANILLA).Take(META_LENGTH_TOTAL_VANILLA)]);
 
             if (i == 1)
             {

@@ -37,7 +37,7 @@ public class SwitchTest : CommonTestClass
 
     private static void AssertCommonMeta(IContainer container, uint[] metaA, uint[] metaB)
     {
-        Assert.AreEqual(metaA.Length, metaB.Length);
+        Assert.HasCount(metaA.Length, metaB);
 
         if (metaA.Length == META_LENGTH_TOTAL_VANILLA || metaA.Length == META_LENGTH_TOTAL_WAYPOINT)
         {
@@ -50,7 +50,7 @@ public class SwitchTest : CommonTestClass
                 AssertAllAreEqual(container.MetaIndex, metaA[3], metaB[3]);
 
                 // TIMESTAMP
-                Assert.IsTrue(metaA[4] < metaB[4]);
+                Assert.IsLessThan(metaB[4], metaA[4]);
             }
 
             // Skip DECOMPRESSED SIZE and META INDEX and TIMESTAMP.
@@ -70,7 +70,7 @@ public class SwitchTest : CommonTestClass
                 Assert.AreEqual(metaA[4], metaA[77]);
                 Assert.AreEqual(metaB[4], metaB[77]);
 
-                Assert.IsTrue(metaA[4] < metaB[4]);
+                Assert.IsLessThan(metaB[4], metaA[4]);
             }
 
             // Skip DECOMPRESSED SIZE and META INDEX and TIMESTAMP.
@@ -92,7 +92,7 @@ public class SwitchTest : CommonTestClass
 
                 // TIMESTAMP
                 AssertAllAreEqual(0, metaA[4], metaB[4]);
-                Assert.IsTrue(metaA[77] < metaB[77]);
+                Assert.IsLessThan(metaB[77], metaA[77]);
             }
 
             // Skip DECOMPRESSED SIZE and META INDEX.
