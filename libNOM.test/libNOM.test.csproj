@@ -19,31 +19,18 @@
 	<!-- Build -->
 	<PropertyGroup Label="General">
 		<Nullable>enable</Nullable>
-		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+	<PropertyGroup Label="Errors and warnings">
+		<!-- When using .runsettings, this is required. See https://github.com/microsoft/testfx/issues/6491#issuecomment-3245511989 for the explanaition. -->
+		<NoWarn>$(NoWarn);MSTEST0001</NoWarn>
+		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Label="Publish">
-		<IsPackable>false</IsPackable>
+		<IsPublishable>False</IsPublishable>
 	</PropertyGroup>
 	<PropertyGroup Label="Advanced">
 		<LangVersion>13.0</LangVersion>
 		<Deterministic>True</Deterministic>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-		<IsPublishable>False</IsPublishable>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0|AnyCPU'">
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-		<IsPublishable>False</IsPublishable>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-		<IsPublishable>False</IsPublishable>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0|AnyCPU'">
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-		<IsPublishable>False</IsPublishable>
 	</PropertyGroup>
 
 	<!-- Code Analysis -->
