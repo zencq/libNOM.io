@@ -54,11 +54,11 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.8, )",
-        "resolved": "0.13.8",
-        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
+        "requested": "[0.13.9, )",
+        "resolved": "0.13.9",
+        "contentHash": "tCFRGEWg8FMGGzezFpo5Sl1662B2aRfVtuO445I7Cu+RGz9F1tcI389jBoakMdldUtA5Nh2oTXXa1ROpJhe8Kw==",
         "dependencies": {
-          "Newtonsoft.Json": "13.0.3",
+          "Newtonsoft.Json": "13.0.4",
           "Octokit": "14.0.0"
         }
       },
@@ -251,11 +251,11 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.8, )",
-        "resolved": "0.13.8",
-        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
+        "requested": "[0.13.9, )",
+        "resolved": "0.13.9",
+        "contentHash": "tCFRGEWg8FMGGzezFpo5Sl1662B2aRfVtuO445I7Cu+RGz9F1tcI389jBoakMdldUtA5Nh2oTXXa1ROpJhe8Kw==",
         "dependencies": {
-          "Newtonsoft.Json": "13.0.3",
+          "Newtonsoft.Json": "13.0.4",
           "Octokit": "14.0.0"
         }
       },
@@ -402,11 +402,11 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.8, )",
-        "resolved": "0.13.8",
-        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
+        "requested": "[0.13.9, )",
+        "resolved": "0.13.9",
+        "contentHash": "tCFRGEWg8FMGGzezFpo5Sl1662B2aRfVtuO445I7Cu+RGz9F1tcI389jBoakMdldUtA5Nh2oTXXa1ROpJhe8Kw==",
         "dependencies": {
-          "Newtonsoft.Json": "13.0.3",
+          "Newtonsoft.Json": "13.0.4",
           "Octokit": "14.0.0"
         }
       },
@@ -538,11 +538,11 @@
       },
       "libNOM.map": {
         "type": "Direct",
-        "requested": "[0.13.8, )",
-        "resolved": "0.13.8",
-        "contentHash": "L0gTNwWy+aJPHC8iBs7Oi6fGmQcYcg7oNrKRXY45S4naILwLBrbla+yp83/gbH9xJd7voF+xkGVKcTPAH/r7eg==",
+        "requested": "[0.13.9, )",
+        "resolved": "0.13.9",
+        "contentHash": "tCFRGEWg8FMGGzezFpo5Sl1662B2aRfVtuO445I7Cu+RGz9F1tcI389jBoakMdldUtA5Nh2oTXXa1ROpJhe8Kw==",
         "dependencies": {
-          "Newtonsoft.Json": "13.0.3",
+          "Newtonsoft.Json": "13.0.4",
           "Octokit": "14.0.0"
         }
       },
